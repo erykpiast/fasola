@@ -1,0 +1,15 @@
+{
+  "emptyState": {
+    "title": "No photos yet",
+    "instruction": "Tap the button below to add your first photo"
+  },
+  "addPhoto": {
+    "button": "Add Photo",
+    "camera": "Take Photo",
+    "library": "Choose from Library"
+  },
+  "errors": {
+    "permissionDenied": "Permission to access camera or photos was denied",
+    "importFailed": "Failed to import photo"
+  }
+}

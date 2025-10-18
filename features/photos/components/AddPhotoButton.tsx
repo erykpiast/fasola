@@ -4,9 +4,10 @@ import { GlassView } from "expo-glass-effect";
 import { type JSX } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { usePhotoAdd } from "../hooks/usePhotoAdd";
+import type { PhotoUri } from "@/lib/types/primitives";
 
 interface AddPhotoButtonProps {
-  onPhotoSelected: (uri: string) => void;
+  onPhotoSelected: (uri: PhotoUri) => void;
 }
 
 export function AddPhotoButton({

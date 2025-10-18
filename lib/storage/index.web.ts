@@ -1,5 +1,6 @@
 import localforage from "localforage";
 import type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
+import type { PhotoId, PhotoUri, StorageKey } from "../types/primitives";
 
 export type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
 
@@ -42,7 +43,7 @@ class WebStorage implements Storage {
     return photos.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  async savePhoto(id: string, uri: string, timestamp: number): Promise<string> {
+  async savePhoto(id: PhotoId, uri: PhotoUri, timestamp: number): Promise<PhotoId> {
     const response = await fetch(uri);
     const blob = await response.blob();
     await localforage.setItem(id, blob);
@@ -54,7 +55,7 @@ class WebStorage implements Storage {
     return id;
   }
 
-  async getPhoto(id: string): Promise<string | null> {
+  async getPhoto(id: PhotoId): Promise<PhotoUri | null> {
     const blob = await localforage.getItem<Blob>(id);
     if (blob && blob instanceof Blob) {
       return URL.createObjectURL(blob);
@@ -62,7 +63,7 @@ class WebStorage implements Storage {
     return null;
   }
 
-  async deletePhoto(id: string): Promise<void> {
+  async deletePhoto(id: PhotoId): Promise<void> {
     await localforage.removeItem(id);
 
     const metadata = await this.getMetadata();
@@ -70,15 +71,15 @@ class WebStorage implements Storage {
     await this.saveMetadata(metadata);
   }
 
-  async getItem(key: string): Promise<string | null> {
+  async getItem(key: StorageKey): Promise<string | null> {
     return localforage.getItem<string>(key);
   }
 
-  async setItem(key: string, value: string): Promise<void> {
+  async setItem(key: StorageKey, value: string): Promise<void> {
     await localforage.setItem(key, value);
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key: StorageKey): Promise<void> {
     await localforage.removeItem(key);
   }
 }

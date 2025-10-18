@@ -2,9 +2,10 @@ import { type JSX } from "react";
 import { StyleSheet, View } from "react-native";
 import { RecipeImageDisplay } from "../atoms/RecipeImageDisplay";
 import { RecipeTitleOverlay } from "../atoms/RecipeTitleOverlay";
+import type { PhotoUri } from "@/lib/types/primitives";
 
 interface RecipeHeaderProps {
-  photoUri: string;
+  photoUri: PhotoUri;
   title?: string;
 }
 

@@ -1,18 +1,20 @@
+import type { PhotoId, PhotoUri, StorageKey } from "../types/primitives";
+
 export interface PhotoMetadata {
-  id: string;
+  id: PhotoId;
   timestamp: number;
 }
 
 export interface PhotoWithUri extends PhotoMetadata {
-  uri: string;
+  uri: PhotoUri;
 }
 
 export interface Storage {
   getPhotos(): Promise<PhotoWithUri[]>;
-  savePhoto(id: string, uri: string, timestamp: number): Promise<string>;
-  getPhoto(id: string): Promise<string | null>;
-  deletePhoto(id: string): Promise<void>;
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-  removeItem(key: string): Promise<void>;
+  savePhoto(id: PhotoId, uri: PhotoUri, timestamp: number): Promise<PhotoId>;
+  getPhoto(id: PhotoId): Promise<PhotoUri | null>;
+  deletePhoto(id: PhotoId): Promise<void>;
+  getItem(key: StorageKey): Promise<string | null>;
+  setItem(key: StorageKey, value: string): Promise<void>;
+  removeItem(key: StorageKey): Promise<void>;
 }

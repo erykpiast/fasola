@@ -1,6 +1,8 @@
+import type { PhotoId, PhotoUri } from "@/lib/types/primitives";
+
 export interface Photo {
-  id: string;
-  uri: string;
+  id: PhotoId;
+  uri: PhotoUri;
   timestamp: number;
   title?: string;
 }

@@ -1,14 +1,15 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useMemo, useState } from 'react';
+import type { PhotoUri } from '@/lib/types/primitives';
 
 export function usePhotoImport(): {
   isImporting: boolean;
-  importFromCamera: () => Promise<string | null>;
-  importFromLibrary: () => Promise<string | null>;
+  importFromCamera: () => Promise<PhotoUri | null>;
+  importFromLibrary: () => Promise<PhotoUri | null>;
 } {
   const [isImporting, setIsImporting] = useState(false);
 
-  const importFromCamera = useCallback(async (): Promise<string | null> => {
+  const importFromCamera = useCallback(async (): Promise<PhotoUri | null> => {
     setIsImporting(true);
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -31,7 +32,7 @@ export function usePhotoImport(): {
     }
   }, []);
 
-  const importFromLibrary = useCallback(async (): Promise<string | null> => {
+  const importFromLibrary = useCallback(async (): Promise<PhotoUri | null> => {
     setIsImporting(true);
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();

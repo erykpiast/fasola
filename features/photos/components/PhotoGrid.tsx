@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Photo } from "../types";
+import type { RecipeId } from "@/lib/types/primitives";
 
 const { width } = Dimensions.get("window");
 const COLUMNS = 3;
@@ -18,7 +19,7 @@ const ITEM_SIZE = (width - (COLUMNS - 1) * SPACING) / COLUMNS;
 
 interface PhotoGridProps {
   photos: Photo[];
-  onPhotoTap?: (id: string) => void;
+  onPhotoTap?: (id: RecipeId) => void;
 }
 
 function PhotoItem({
@@ -26,7 +27,7 @@ function PhotoItem({
   onTap,
 }: {
   photo: Photo;
-  onTap?: (id: string) => void;
+  onTap?: (id: RecipeId) => void;
 }): JSX.Element {
   return (
     <ErrorBoundary fallback={<View style={styles.item} />}>

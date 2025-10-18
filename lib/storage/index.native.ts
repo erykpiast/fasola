@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Directory, File, Paths } from "expo-file-system";
 import type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
+import type { PhotoId, PhotoUri, StorageKey } from "../types/primitives";
 
 export type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
 
@@ -48,7 +49,7 @@ class NativeStorage implements Storage {
     return photos.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  async savePhoto(id: string, uri: string, timestamp: number): Promise<string> {
+  async savePhoto(id: PhotoId, uri: PhotoUri, timestamp: number): Promise<PhotoId> {
     await this.ensurePhotosDirectory();
     const filename = `${id}.jpg`;
 
@@ -63,13 +64,13 @@ class NativeStorage implements Storage {
     return id;
   }
 
-  async getPhoto(id: string): Promise<string | null> {
+  async getPhoto(id: PhotoId): Promise<PhotoUri | null> {
     const filename = `${id}.jpg`;
     const file = new File(this.photosDirectory.uri, filename);
     return file.exists ? file.uri : null;
   }
 
-  async deletePhoto(id: string): Promise<void> {
+  async deletePhoto(id: PhotoId): Promise<void> {
     const filename = `${id}.jpg`;
     const file = new File(this.photosDirectory.uri, filename);
     if (file.exists) {
@@ -81,15 +82,15 @@ class NativeStorage implements Storage {
     await this.saveMetadata(metadata);
   }
 
-  async getItem(key: string): Promise<string | null> {
+  async getItem(key: StorageKey): Promise<string | null> {
     return AsyncStorage.getItem(key);
   }
 
-  async setItem(key: string, value: string): Promise<void> {
+  async setItem(key: StorageKey, value: string): Promise<void> {
     await AsyncStorage.setItem(key, value);
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key: StorageKey): Promise<void> {
     await AsyncStorage.removeItem(key);
   }
 }

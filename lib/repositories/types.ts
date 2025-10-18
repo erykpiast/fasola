@@ -1,9 +1,10 @@
 import type { Recipe, RecipeMetadata } from "../types/recipe";
+import type { RecipeId } from "../types/primitives";
 
 export interface RecipeRepository {
   getAll(): Promise<Recipe[]>;
-  getById(id: string): Promise<Recipe | null>;
+  getById(id: RecipeId): Promise<Recipe | null>;
   save(recipe: Omit<Recipe, "id" | "timestamp">): Promise<Recipe>;
-  update(id: string, metadata: RecipeMetadata): Promise<Recipe>;
-  delete(id: string): Promise<void>;
+  update(id: RecipeId, metadata: RecipeMetadata): Promise<Recipe>;
+  delete(id: RecipeId): Promise<void>;
 }

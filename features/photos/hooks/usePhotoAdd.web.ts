@@ -1,13 +1,14 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { DataUrl } from "@/lib/types/primitives";
 
 export function usePhotoAdd(): {
-  importPhoto: (onPhotoSelected: (uri: string) => void) => void;
+  importPhoto: (onPhotoSelected: (uri: DataUrl) => void) => void;
   isImporting: boolean;
 } {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const importPhoto = useCallback((onPhotoSelected: (uri: string) => void): void => {
+  const importPhoto = useCallback((onPhotoSelected: (uri: DataUrl) => void): void => {
     if (!fileInputRef.current) {
       const input = document.createElement("input");
       input.type = "file";

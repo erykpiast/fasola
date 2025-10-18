@@ -4,9 +4,10 @@ import { useLocalSearchParams } from "expo-router";
 import { Suspense, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import type { RecipeId } from "@/lib/types/primitives";
 
 function RecipeDetailContent(): JSX.Element | null {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: RecipeId }>();
   const { recipes } = useRecipes();
 
   const recipe = recipes.find((r) => r.id === id);

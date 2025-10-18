@@ -9,6 +9,7 @@ import type { Photo } from "../features/photos/types";
 import { useRecipes } from "../features/recipes-list/hooks/useRecipes";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
+import type { PhotoUri, RecipeId } from "../lib/types/primitives";
 
 function ErrorFallback(): JSX.Element {
   return <View style={{ flex: 1 }} />;
@@ -26,11 +27,11 @@ function Content(): JSX.Element {
     title: recipe.metadata.title,
   }));
 
-  const handleAddPhoto = async (uri: string): Promise<void> => {
+  const handleAddPhoto = async (uri: PhotoUri): Promise<void> => {
     await addRecipe(uri, { tags: [] });
   };
 
-  const handlePhotoTap = (id: string): void => {
+  const handlePhotoTap = (id: RecipeId): void => {
     router.push(`/recipe/${id}`);
   };
 

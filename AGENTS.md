@@ -15,6 +15,13 @@ All package management operations must be executed via `npm`:
 
 **Explicit Return Types Required.** All exported functions in `.ts` and `.tsx` files must have explicitly typed return values.
 
+**Semantic Type Aliases Required.** Use semantic type aliases from `@/lib/types/primitives` instead of primitive `string` types for domain concepts:
+
+- Use `RecipeId` or `PhotoId` for identifiers (not `string`)
+- Use `PhotoUri`, `ImageUri`, `FileUri`, or `DataUrl` for URIs (not `string`)
+- Use `StorageKey` for storage keys (not `string`)
+- Only use bare `string` for truly generic text content (titles, descriptions, messages)
+
 ## React Hooks
 
 **Memoization Required.** All custom React hooks must implement proper memoization:

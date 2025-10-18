@@ -1,6 +1,7 @@
 import { use, useCallback, useMemo, useState } from "react";
 import { recipeRepository } from "@/lib/repositories/recipes";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
+import type { PhotoUri, RecipeId } from "@/lib/types/primitives";
 
 let recipesPromise: Promise<Recipe[]> | null = null;
 
@@ -13,15 +14,15 @@ function getRecipesPromise(): Promise<Recipe[]> {
 
 export function useRecipes(): {
   recipes: Recipe[];
-  addRecipe: (photoUri: string, metadata: RecipeMetadata) => Promise<void>;
-  updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
-  deleteRecipe: (id: string) => Promise<void>;
+  addRecipe: (photoUri: PhotoUri, metadata: RecipeMetadata) => Promise<void>;
+  updateRecipe: (id: RecipeId, metadata: RecipeMetadata) => Promise<void>;
+  deleteRecipe: (id: RecipeId) => Promise<void>;
 } {
   const initialRecipes = use(getRecipesPromise());
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
 
   const addRecipe = useCallback(
-    async (photoUri: string, metadata: RecipeMetadata): Promise<void> => {
+    async (photoUri: PhotoUri, metadata: RecipeMetadata): Promise<void> => {
       const newRecipe = await recipeRepository.save({ photoUri, metadata });
       setRecipes((prev) => [...prev, newRecipe]);
       recipesPromise = null;
@@ -30,7 +31,7 @@ export function useRecipes(): {
   );
 
   const updateRecipe = useCallback(
-    async (id: string, metadata: RecipeMetadata): Promise<void> => {
+    async (id: RecipeId, metadata: RecipeMetadata): Promise<void> => {
       const updatedRecipe = await recipeRepository.update(id, metadata);
       setRecipes((prev) => prev.map((r) => (r.id === id ? updatedRecipe : r)));
       recipesPromise = null;
@@ -38,7 +39,7 @@ export function useRecipes(): {
     []
   );
 
-  const deleteRecipe = useCallback(async (id: string): Promise<void> => {
+  const deleteRecipe = useCallback(async (id: RecipeId): Promise<void> => {
     await recipeRepository.delete(id);
     setRecipes((prev) => prev.filter((r) => r.id !== id));
     recipesPromise = null;

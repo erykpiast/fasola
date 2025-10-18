@@ -1,9 +1,10 @@
 import { storage } from "../storage";
 import type { Recipe } from "../types/recipe";
+import type { StorageKey } from "../types/primitives";
 
-const LEGACY_PHOTOS_KEY = "@photos";
+const LEGACY_PHOTOS_KEY: StorageKey = "@photos";
 
-export async function migrateIfNeeded(newKey: string): Promise<void> {
+export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
   const [recipes, photos] = await Promise.all([
     storage.getItem(newKey),
     storage.getItem(LEGACY_PHOTOS_KEY),

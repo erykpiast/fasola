@@ -3,15 +3,16 @@ import { useCallback, useMemo } from "react";
 import { ActionSheetIOS, Alert, Platform } from "react-native";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { usePhotoImport } from "./usePhotoImport";
+import type { PhotoUri } from "@/lib/types/primitives";
 
 export function usePhotoAdd(): {
-  importPhoto: (onPhotoSelected: (uri: string) => void) => Promise<void>;
+  importPhoto: (onPhotoSelected: (uri: PhotoUri) => void) => Promise<void>;
   isImporting: boolean;
 } {
   const { importFromCamera, importFromLibrary, isImporting } = usePhotoImport();
   const { t } = useTranslation();
 
-  const importPhoto = useCallback(async (onPhotoSelected: (uri: string) => void) => {
+  const importPhoto = useCallback(async (onPhotoSelected: (uri: PhotoUri) => void) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const handleCamera = async () => {

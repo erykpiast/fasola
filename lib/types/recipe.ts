@@ -1,6 +1,8 @@
+import type { PhotoUri, RecipeId } from "./primitives";
+
 export interface Recipe {
-  id: string;
-  photoUri: string;
+  id: RecipeId;
+  photoUri: PhotoUri;
   timestamp: number;
   metadata: RecipeMetadata;
 }

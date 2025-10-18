@@ -3,8 +3,9 @@ import { storage } from "../storage";
 import type { Recipe, RecipeMetadata } from "../types/recipe";
 import { migrateIfNeeded } from "./photosToRecipesMigration";
 import type { RecipeRepository } from "./types";
+import type { RecipeId, StorageKey } from "../types/primitives";
 
-const RECIPES_KEY = "@recipes";
+const RECIPES_KEY: StorageKey = "@recipes";
 
 class AsyncStorageRecipeRepository implements RecipeRepository {
   async getAll(): Promise<Recipe[]> {
@@ -30,7 +31,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     return recipesWithUris.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  async getById(id: string): Promise<Recipe | null> {
+  async getById(id: RecipeId): Promise<Recipe | null> {
     const recipes = await this.getAll();
     return recipes.find((r) => r.id === id) || null;
   }
@@ -60,7 +61,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     };
   }
 
-  async update(id: string, metadata: RecipeMetadata): Promise<Recipe> {
+  async update(id: RecipeId, metadata: RecipeMetadata): Promise<Recipe> {
     const recipes = await this.getAll();
     const index = recipes.findIndex((r) => r.id === id);
 
@@ -77,7 +78,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     return recipes[index];
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: RecipeId): Promise<void> {
     await storage.deletePhoto(id);
 
     const recipes = await this.getAll();

@@ -6,9 +6,10 @@ import {
   useWindowDimensions,
   type ViewStyle,
 } from "react-native";
+import type { ImageUri } from "@/lib/types/primitives";
 
 interface RecipeImageDisplayProps {
-  uri: string;
+  uri: ImageUri;
   style?: ViewStyle;
 }
 

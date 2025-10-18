@@ -1,6 +1,8 @@
 import localforage from "localforage";
 import type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
 
+export type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
+
 localforage.config({
   name: "fasola-photos",
   storeName: "photos",
@@ -8,20 +10,22 @@ localforage.config({
 
 const METADATA_KEY = "__metadata__";
 
-export class WebStorage implements Storage {
-  async #getMetadata(): Promise<Record<string, PhotoMetadata>> {
+class WebStorage implements Storage {
+  private async getMetadata(): Promise<Record<string, PhotoMetadata>> {
     const metadata = await localforage.getItem<Record<string, PhotoMetadata>>(
       METADATA_KEY
     );
     return metadata || {};
   }
 
-  async #saveMetadata(metadata: Record<string, PhotoMetadata>): Promise<void> {
+  private async saveMetadata(
+    metadata: Record<string, PhotoMetadata>
+  ): Promise<void> {
     await localforage.setItem(METADATA_KEY, metadata);
   }
 
   async getPhotos(): Promise<PhotoWithUri[]> {
-    const metadata = await this.#getMetadata();
+    const metadata = await this.getMetadata();
     const photos: PhotoWithUri[] = [];
 
     for (const [id, data] of Object.entries(metadata)) {
@@ -43,9 +47,9 @@ export class WebStorage implements Storage {
     const blob = await response.blob();
     await localforage.setItem(id, blob);
 
-    const metadata = await this.#getMetadata();
+    const metadata = await this.getMetadata();
     metadata[id] = { id, timestamp };
-    await this.#saveMetadata(metadata);
+    await this.saveMetadata(metadata);
 
     return id;
   }
@@ -61,9 +65,9 @@ export class WebStorage implements Storage {
   async deletePhoto(id: string): Promise<void> {
     await localforage.removeItem(id);
 
-    const metadata = await this.#getMetadata();
+    const metadata = await this.getMetadata();
     delete metadata[id];
-    await this.#saveMetadata(metadata);
+    await this.saveMetadata(metadata);
   }
 
   async getItem(key: string): Promise<string | null> {
@@ -78,3 +82,5 @@ export class WebStorage implements Storage {
     await localforage.removeItem(key);
   }
 }
+
+export const storage = new WebStorage();

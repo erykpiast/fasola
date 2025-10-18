@@ -1,15 +1,14 @@
 import { router } from "expo-router";
-import { Suspense, type JSX } from "react";
+import { Suspense, useCallback, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { StyleSheet, View } from "react-native";
 import { AddPhotoButton } from "../features/photos/components/AddPhotoButton";
 import { EmptyState } from "../features/photos/components/EmptyState";
-import { PhotoGrid } from "../features/photos/components/PhotoGrid";
-import type { Photo } from "../features/photos/types";
+import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/hooks/useRecipes";
+import type { PhotoUri, RecipeId } from "../lib/types/primitives";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
-import type { PhotoUri, RecipeId } from "../lib/types/primitives";
 
 function ErrorFallback(): JSX.Element {
   return <View style={{ flex: 1 }} />;
@@ -20,27 +19,23 @@ function Content(): JSX.Element {
   const colors = getColors(theme);
   const { recipes, addRecipe } = useRecipes();
 
-  const photos: Array<Photo> = recipes.map((recipe) => ({
-    id: recipe.id,
-    uri: recipe.photoUri,
-    timestamp: recipe.timestamp,
-    title: recipe.metadata.title,
-  }));
+  const handleAddPhoto = useCallback(
+    async (uri: PhotoUri): Promise<void> => {
+      await addRecipe(uri, { tags: [] });
+    },
+    [addRecipe]
+  );
 
-  const handleAddPhoto = async (uri: PhotoUri): Promise<void> => {
-    await addRecipe(uri, { tags: [] });
-  };
-
-  const handlePhotoTap = (id: RecipeId): void => {
+  const handleRecipeTap = useCallback((id: RecipeId): void => {
     router.push(`/recipe/${id}`);
-  };
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {photos.length === 0 ? (
+      {recipes.length === 0 ? (
         <EmptyState />
       ) : (
-        <PhotoGrid photos={photos} onPhotoTap={handlePhotoTap} />
+        <RecipeGrid recipes={recipes} onRecipeTap={handleRecipeTap} />
       )}
       <AddPhotoButton onPhotoSelected={handleAddPhoto} />
     </View>

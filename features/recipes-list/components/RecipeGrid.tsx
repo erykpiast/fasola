@@ -1,5 +1,7 @@
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import { RecipeTitleOverlay } from "@/lib/components/atoms/RecipeTitleOverlay";
+import type { Recipe } from "@/lib/types/recipe";
+import type { RecipeId } from "@/lib/types/primitives";
 import { Suspense, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
@@ -9,31 +11,29 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Photo } from "../types";
-import type { RecipeId } from "@/lib/types/primitives";
 
 const { width } = Dimensions.get("window");
 const COLUMNS = 3;
 const SPACING = 2;
 const ITEM_SIZE = (width - (COLUMNS - 1) * SPACING) / COLUMNS;
 
-function PhotoItem({
-  photo,
+function RecipeItem({
+  recipe,
   onTap,
 }: {
-  photo: Photo;
+  recipe: Recipe;
   onTap?: (id: RecipeId) => void;
 }): JSX.Element {
   return (
     <ErrorBoundary fallback={<View style={styles.item} />}>
       <Suspense fallback={<View style={styles.item} />}>
-        <Pressable onPress={() => onTap?.(photo.id)}>
+        <Pressable onPress={() => onTap?.(recipe.id)}>
           <View style={styles.item}>
             <RecipeImageDisplay
-              uri={photo.uri}
+              uri={recipe.photoUri}
               style={{ width: ITEM_SIZE, height: ITEM_SIZE }}
             />
-            <RecipeTitleOverlay title={photo.title} />
+            <RecipeTitleOverlay title={recipe.metadata.title} />
           </View>
         </Pressable>
       </Suspense>
@@ -41,17 +41,17 @@ function PhotoItem({
   );
 }
 
-export function PhotoGrid({
-  photos,
-  onPhotoTap,
+export function RecipeGrid({
+  recipes,
+  onRecipeTap,
 }: {
-  photos: Array<Photo>;
-  onPhotoTap?: (id: RecipeId) => void;
+  recipes: Array<Recipe>;
+  onRecipeTap?: (id: RecipeId) => void;
 }): JSX.Element {
   return (
     <FlatList
-      data={photos}
-      renderItem={({ item }) => <PhotoItem photo={item} onTap={onPhotoTap} />}
+      data={recipes}
+      renderItem={({ item }) => <RecipeItem recipe={item} onTap={onRecipeTap} />}
       keyExtractor={(item) => item.id}
       numColumns={COLUMNS}
       columnWrapperStyle={styles.row}

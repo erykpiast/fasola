@@ -28,7 +28,7 @@ export function AddPhotoButton({
         { opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <GlassView style={styles.glass} blurIntensity={20} tint={theme}>
+      <GlassView style={styles.glass}>
         <Text style={[styles.text, { color: colors.text }]}>+</Text>
       </GlassView>
     </Pressable>

@@ -1,26 +1,18 @@
-import { useRecipes } from "@/features/recipes-list/hooks/useRecipes";
-import { RecipeHeader } from "@/lib/components/molecules/RecipeHeader";
+import { RecipeViewScreen } from "@/features/recipe-preview/components/RecipeViewScreen";
 import { useLocalSearchParams } from "expo-router";
 import { Suspense, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import type { RecipeId } from "@/lib/types/primitives";
 
 function RecipeDetailContent(): JSX.Element | null {
   const { id } = useLocalSearchParams<{ id: RecipeId }>();
-  const { recipes } = useRecipes();
 
-  const recipe = recipes.find((r) => r.id === id);
-
-  if (!recipe) {
+  if (!id) {
     return null;
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <RecipeHeader photoUri={recipe.photoUri} title={recipe.metadata.title} />
-    </ScrollView>
-  );
+  return <RecipeViewScreen id={id} />;
 }
 
 export default function RecipeDetailScreen(): JSX.Element {
@@ -34,9 +26,6 @@ export default function RecipeDetailScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   loading: {
     flex: 1,
     justifyContent: "center",

@@ -1,8 +1,8 @@
 import { type JSX } from "react";
 import { View, StyleSheet } from "react-native";
-import type { RecipeMetadata } from "@lib/types/recipe";
-import { TagList } from "@lib/components/atoms/TagList";
-import { SourceDisplay } from "@lib/components/atoms/SourceDisplay";
+import type { RecipeMetadata } from "@/lib/types/recipe";
+import { TagList } from "@/lib/components/atoms/TagList";
+import { SourceDisplay } from "@/lib/components/atoms/SourceDisplay";
 
 export function RecipeMetadataDisplay({
   metadata,

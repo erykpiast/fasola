@@ -1,7 +1,7 @@
 import { GlassView } from "expo-glass-effect";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { getColors } from "../../../platform/theme/glassStyles";
-import { useTheme } from "../../../platform/theme/useTheme";
+import { getColors } from "@/platform/theme/glassStyles";
+import { useTheme } from "@/platform/theme/useTheme";
 import { usePhotoAdd } from "../hooks/usePhotoAdd";
 
 interface AddPhotoButtonProps {

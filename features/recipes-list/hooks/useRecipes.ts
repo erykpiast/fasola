@@ -1,6 +1,6 @@
 import { use, useCallback, useMemo, useState } from "react";
-import { recipeRepository } from "../../../lib/repositories/recipes";
-import type { Recipe, RecipeMetadata } from "../../../lib/types/recipe";
+import { recipeRepository } from "@/lib/repositories/recipes";
+import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 
 let recipesPromise: Promise<Recipe[]> | null = null;
 

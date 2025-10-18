@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { useCallback, useMemo } from "react";
 import { ActionSheetIOS, Alert, Platform } from "react-native";
-import { useTranslation } from "../../../platform/i18n/useTranslation";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 import { usePhotoImport } from "./usePhotoImport";
 
 export function usePhotoAdd(): {

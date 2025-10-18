@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { useTranslation } from '../../../platform/i18n/useTranslation';
-import { useTheme } from '../../../platform/theme/useTheme';
-import { getColors } from '../../../platform/theme/glassStyles';
+import { useTranslation } from '@/platform/i18n/useTranslation';
+import { useTheme } from '@/platform/theme/useTheme';
+import { getColors } from '@/platform/theme/glassStyles';
 
 export function EmptyState(): JSX.Element {
   const { t } = useTranslation();

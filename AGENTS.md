@@ -19,3 +19,9 @@ All package management operations must be executed via `npm`:
 **Memoization Required.** All custom React hooks must implement proper memoization:
 - Wrap all returned functions in `useCallback`
 - Wrap all returned objects in `useMemo`
+
+## Import Paths
+
+**Use Path Aliases.** Always prefer `@/` imports over relative imports `../../`:
+- Allowed: `../sibling` (one level above)
+- Required: `@/platform/theme/useTheme` instead of `../../../platform/theme/useTheme`

@@ -1,11 +1,17 @@
-import { FlatList, StyleSheet, Dimensions, View, Pressable } from 'react-native';
-import { Photo } from '../types';
-import { ErrorBoundary } from 'react-error-boundary';
-import { Suspense } from 'react';
-import { RecipeImageDisplay } from '@/lib/components/atoms/RecipeImageDisplay';
-import { RecipeTitleOverlay } from '@/lib/components/atoms/RecipeTitleOverlay';
+import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import { RecipeTitleOverlay } from "@/lib/components/atoms/RecipeTitleOverlay";
+import { Suspense, type JSX } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import {
+  Dimensions,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
+import { Photo } from "../types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const COLUMNS = 3;
 const SPACING = 2;
 const ITEM_SIZE = (width - (COLUMNS - 1) * SPACING) / COLUMNS;
@@ -15,13 +21,22 @@ interface PhotoGridProps {
   onPhotoTap?: (id: string) => void;
 }
 
-function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => void }): JSX.Element {
+function PhotoItem({
+  photo,
+  onTap,
+}: {
+  photo: Photo;
+  onTap?: (id: string) => void;
+}): JSX.Element {
   return (
     <ErrorBoundary fallback={<View style={styles.item} />}>
       <Suspense fallback={<View style={styles.item} />}>
         <Pressable onPress={() => onTap?.(photo.id)}>
           <View style={styles.item}>
-            <RecipeImageDisplay uri={photo.uri} style={{ width: ITEM_SIZE, height: ITEM_SIZE }} />
+            <RecipeImageDisplay
+              uri={photo.uri}
+              style={{ width: ITEM_SIZE, height: ITEM_SIZE }}
+            />
             <RecipeTitleOverlay title={photo.title} />
           </View>
         </Pressable>
@@ -30,7 +45,10 @@ function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => voi
   );
 }
 
-export function PhotoGrid({ photos, onPhotoTap }: PhotoGridProps): JSX.Element {
+export function PhotoGrid({
+  photos,
+  onPhotoTap,
+}: PhotoGridProps): JSX.Element {
   return (
     <FlatList
       data={photos}
@@ -55,6 +73,6 @@ const styles = StyleSheet.create({
   item: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
-    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    backgroundColor: "rgba(128, 128, 128, 0.1)",
   },
 });

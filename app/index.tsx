@@ -1,7 +1,7 @@
-import { Suspense } from "react";
+import { router } from "expo-router";
+import { Suspense, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { StyleSheet, View } from "react-native";
-import { router } from "expo-router";
 import { AddPhotoButton } from "../features/photos/components/AddPhotoButton";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { PhotoGrid } from "../features/photos/components/PhotoGrid";
@@ -36,7 +36,11 @@ function Content(): JSX.Element {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {photos.length === 0 ? <EmptyState /> : <PhotoGrid photos={photos} onPhotoTap={handlePhotoTap} />}
+      {photos.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <PhotoGrid photos={photos} onPhotoTap={handlePhotoTap} />
+      )}
       <AddPhotoButton onPhotoSelected={handleAddPhoto} />
     </View>
   );

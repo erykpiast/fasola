@@ -1,3 +1,4 @@
+import { type JSX } from "react";
 import { StyleSheet, View } from "react-native";
 import { RecipeImageDisplay } from "../atoms/RecipeImageDisplay";
 import { RecipeTitleOverlay } from "../atoms/RecipeTitleOverlay";
@@ -7,7 +8,10 @@ interface RecipeHeaderProps {
   title?: string;
 }
 
-export function RecipeHeader({ photoUri, title }: RecipeHeaderProps): JSX.Element {
+export function RecipeHeader({
+  photoUri,
+  title,
+}: RecipeHeaderProps): JSX.Element {
   return (
     <View style={styles.container}>
       <RecipeImageDisplay uri={photoUri} />

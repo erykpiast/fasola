@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { type JSX } from "react";
 import { StyleSheet, Text, type ViewStyle } from "react-native";
 
 interface RecipeTitleOverlayProps {

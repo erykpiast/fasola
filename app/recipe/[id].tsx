@@ -1,7 +1,7 @@
 import { useRecipes } from "@/features/recipes-list/hooks/useRecipes";
 import { RecipeHeader } from "@/lib/components/molecules/RecipeHeader";
 import { useLocalSearchParams } from "expo-router";
-import { Suspense } from "react";
+import { Suspense, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 

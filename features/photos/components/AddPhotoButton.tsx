@@ -1,14 +1,17 @@
-import { GlassView } from "expo-glass-effect";
-import { Pressable, StyleSheet, Text } from "react-native";
 import { getColors } from "@/platform/theme/glassStyles";
 import { useTheme } from "@/platform/theme/useTheme";
+import { GlassView } from "expo-glass-effect";
+import { type JSX } from "react";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { usePhotoAdd } from "../hooks/usePhotoAdd";
 
 interface AddPhotoButtonProps {
   onPhotoSelected: (uri: string) => void;
 }
 
-export function AddPhotoButton({ onPhotoSelected }: AddPhotoButtonProps): JSX.Element {
+export function AddPhotoButton({
+  onPhotoSelected,
+}: AddPhotoButtonProps): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { importPhoto } = usePhotoAdd();

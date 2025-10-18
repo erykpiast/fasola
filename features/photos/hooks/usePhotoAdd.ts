@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { useCallback, useMemo } from "react";
 import { ActionSheetIOS, Alert, Platform } from "react-native";
 import { useTranslation } from "../../../platform/i18n/useTranslation";
 import { usePhotoImport } from "./usePhotoImport";
@@ -10,7 +11,7 @@ export function usePhotoAdd(): {
   const { importFromCamera, importFromLibrary, isImporting } = usePhotoImport();
   const { t } = useTranslation();
 
-  const importPhoto = async (onPhotoSelected: (uri: string) => void) => {
+  const importPhoto = useCallback(async (onPhotoSelected: (uri: string) => void) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const handleCamera = async () => {
@@ -48,10 +49,13 @@ export function usePhotoAdd(): {
         { text: "Cancel", style: "cancel" },
       ]);
     }
-  };
+  }, [importFromCamera, importFromLibrary, t]);
 
-  return {
-    importPhoto,
-    isImporting,
-  };
+  return useMemo(
+    () => ({
+      importPhoto,
+      isImporting,
+    }),
+    [importPhoto, isImporting]
+  );
 }

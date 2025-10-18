@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 export function usePhotoAdd(): {
   importPhoto: (onPhotoSelected: (uri: string) => void) => void;
@@ -7,7 +7,7 @@ export function usePhotoAdd(): {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const importPhoto = (onPhotoSelected: (uri: string) => void): void => {
+  const importPhoto = useCallback((onPhotoSelected: (uri: string) => void): void => {
     if (!fileInputRef.current) {
       const input = document.createElement("input");
       input.type = "file";
@@ -42,10 +42,13 @@ export function usePhotoAdd(): {
     }
 
     fileInputRef.current.click();
-  };
+  }, []);
 
-  return {
-    importPhoto,
-    isImporting,
-  };
+  return useMemo(
+    () => ({
+      importPhoto,
+      isImporting,
+    }),
+    [importPhoto, isImporting]
+  );
 }

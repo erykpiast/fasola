@@ -13,3 +13,9 @@ All package management operations must be executed via `npm`:
 ## TypeScript Code Style
 
 **Explicit Return Types Required.** All exported functions in `.ts` and `.tsx` files must have explicitly typed return values.
+
+## React Hooks
+
+**Memoization Required.** All custom React hooks must implement proper memoization:
+- Wrap all returned functions in `useCallback`
+- Wrap all returned objects in `useMemo`

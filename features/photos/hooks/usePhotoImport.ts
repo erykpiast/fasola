@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export function usePhotoImport(): {
   isImporting: boolean;
@@ -8,7 +8,7 @@ export function usePhotoImport(): {
 } {
   const [isImporting, setIsImporting] = useState(false);
 
-  const importFromCamera = async (): Promise<string | null> => {
+  const importFromCamera = useCallback(async (): Promise<string | null> => {
     setIsImporting(true);
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -29,9 +29,9 @@ export function usePhotoImport(): {
     } finally {
       setIsImporting(false);
     }
-  };
+  }, []);
 
-  const importFromLibrary = async (): Promise<string | null> => {
+  const importFromLibrary = useCallback(async (): Promise<string | null> => {
     setIsImporting(true);
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -53,11 +53,14 @@ export function usePhotoImport(): {
     } finally {
       setIsImporting(false);
     }
-  };
+  }, []);
 
-  return {
-    isImporting,
-    importFromCamera,
-    importFromLibrary,
-  };
+  return useMemo(
+    () => ({
+      isImporting,
+      importFromCamera,
+      importFromLibrary,
+    }),
+    [isImporting, importFromCamera, importFromLibrary]
+  );
 }

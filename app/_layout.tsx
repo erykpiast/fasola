@@ -4,7 +4,7 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from "react";
 import { useTheme } from "../platform/theme/useTheme";
 
-export default function RootLayout() {
+export default function RootLayout(): JSX.Element {
   const theme = useTheme();
 
   useEffect(() => {

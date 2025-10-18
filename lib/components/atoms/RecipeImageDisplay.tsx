@@ -6,7 +6,7 @@ interface RecipeImageDisplayProps {
   style?: ViewStyle;
 }
 
-export function RecipeImageDisplay({ uri, style }: RecipeImageDisplayProps) {
+export function RecipeImageDisplay({ uri, style }: RecipeImageDisplayProps): JSX.Element {
   const { width } = useWindowDimensions();
 
   return (

@@ -11,7 +11,12 @@ function getRecipesPromise(): Promise<Recipe[]> {
   return recipesPromise;
 }
 
-export function useRecipes() {
+export function useRecipes(): {
+  recipes: Recipe[];
+  addRecipe: (photoUri: string, metadata: RecipeMetadata) => Promise<void>;
+  updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
+  deleteRecipe: (id: string) => Promise<void>;
+} {
   const initialRecipes = use(getRecipesPromise());
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
 

@@ -10,11 +10,11 @@ import { useRecipes } from "../features/recipes-list/hooks/useRecipes";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
 
-function ErrorFallback() {
+function ErrorFallback(): JSX.Element {
   return <View style={{ flex: 1 }} />;
 }
 
-function Content() {
+function Content(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { recipes, addRecipe } = useRecipes();
@@ -26,11 +26,11 @@ function Content() {
     title: recipe.metadata.title,
   }));
 
-  const handleAddPhoto = async (uri: string) => {
+  const handleAddPhoto = async (uri: string): Promise<void> => {
     await addRecipe(uri, { tags: [] });
   };
 
-  const handlePhotoTap = (id: string) => {
+  const handlePhotoTap = (id: string): void => {
     router.push(`/recipe/${id}`);
   };
 
@@ -42,7 +42,7 @@ function Content() {
   );
 }
 
-export default function Index() {
+export default function Index(): JSX.Element {
   return (
     <ErrorBoundary fallback={<ErrorFallback />}>
       <Suspense fallback={<View style={{ flex: 1 }} />}>

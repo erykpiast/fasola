@@ -7,7 +7,7 @@ interface RecipeHeaderProps {
   title?: string;
 }
 
-export function RecipeHeader({ photoUri, title }: RecipeHeaderProps) {
+export function RecipeHeader({ photoUri, title }: RecipeHeaderProps): JSX.Element {
   return (
     <View style={styles.container}>
       <RecipeImageDisplay uri={photoUri} />

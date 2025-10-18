@@ -1,10 +1,13 @@
 import { useRef, useState } from "react";
 
-export function usePhotoAdd() {
+export function usePhotoAdd(): {
+  importPhoto: (onPhotoSelected: (uri: string) => void) => void;
+  isImporting: boolean;
+} {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const importPhoto = (onPhotoSelected: (uri: string) => void) => {
+  const importPhoto = (onPhotoSelected: (uri: string) => void): void => {
     if (!fileInputRef.current) {
       const input = document.createElement("input");
       input.type = "file";

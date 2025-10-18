@@ -8,12 +8,12 @@ interface AddPhotoButtonProps {
   onPhotoSelected: (uri: string) => void;
 }
 
-export function AddPhotoButton({ onPhotoSelected }: AddPhotoButtonProps) {
+export function AddPhotoButton({ onPhotoSelected }: AddPhotoButtonProps): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { importPhoto } = usePhotoAdd();
 
-  const handlePress = () => {
+  const handlePress = (): void => {
     importPhoto(onPhotoSelected);
   };
 

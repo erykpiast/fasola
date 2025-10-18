@@ -6,14 +6,18 @@ interface RecipeTitleOverlayProps {
   style?: ViewStyle;
 }
 
-export function RecipeTitleOverlay({ title, style }: RecipeTitleOverlayProps) {
+export function RecipeTitleOverlay({
+  title,
+  style,
+}: RecipeTitleOverlayProps): JSX.Element | null {
   if (!title) {
     return null;
   }
 
   return (
     <LinearGradient
-      colors={["transparent", "rgba(0,0,0,0.5)"]}
+      colors={["transparent", "rgba(0,0,0,0.8)"]}
+      locations={[0, 1]}
       style={[styles.gradient, style]}
     >
       <Text style={styles.title}>{title}</Text>

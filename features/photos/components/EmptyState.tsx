@@ -3,7 +3,7 @@ import { useTranslation } from '../../../platform/i18n/useTranslation';
 import { useTheme } from '../../../platform/theme/useTheme';
 import { getColors } from '../../../platform/theme/glassStyles';
 
-export function EmptyState() {
+export function EmptyState(): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const colors = getColors(theme);

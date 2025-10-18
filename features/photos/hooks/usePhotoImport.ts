@@ -1,7 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 
-export function usePhotoImport() {
+export function usePhotoImport(): {
+  isImporting: boolean;
+  importFromCamera: () => Promise<string | null>;
+  importFromLibrary: () => Promise<string | null>;
+} {
   const [isImporting, setIsImporting] = useState(false);
 
   const importFromCamera = async (): Promise<string | null> => {

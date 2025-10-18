@@ -9,3 +9,7 @@ All package management operations must be executed via `npm`:
 - Add packages: `npm install <package>`
 - Remove packages: `npm uninstall <package>`
 - Run scripts: `npm run <script>`
+
+## TypeScript Code Style
+
+**Explicit Return Types Required.** All exported functions in `.ts` and `.tsx` files must have explicitly typed return values.

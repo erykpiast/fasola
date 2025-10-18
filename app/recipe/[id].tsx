@@ -1,11 +1,11 @@
-import { useLocalSearchParams, router } from "expo-router";
-import { ScrollView, StyleSheet, ActivityIndicator, View } from "react-native";
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 import { useRecipes } from "@/features/recipes-list/hooks/useRecipes";
 import { RecipeHeader } from "@/lib/components/molecules/RecipeHeader";
+import { useLocalSearchParams } from "expo-router";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
-function RecipeDetailContent() {
+function RecipeDetailContent(): JSX.Element | null {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipes } = useRecipes();
 
@@ -22,7 +22,7 @@ function RecipeDetailContent() {
   );
 }
 
-export default function RecipeDetailScreen() {
+export default function RecipeDetailScreen(): JSX.Element {
   return (
     <ErrorBoundary fallback={<View style={styles.error} />}>
       <Suspense fallback={<ActivityIndicator style={styles.loading} />}>

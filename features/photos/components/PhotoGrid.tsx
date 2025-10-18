@@ -15,7 +15,7 @@ interface PhotoGridProps {
   onPhotoTap?: (id: string) => void;
 }
 
-function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => void }) {
+function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => void }): JSX.Element {
   return (
     <ErrorBoundary fallback={<View style={styles.item} />}>
       <Suspense fallback={<View style={styles.item} />}>
@@ -30,7 +30,7 @@ function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => voi
   );
 }
 
-export function PhotoGrid({ photos, onPhotoTap }: PhotoGridProps) {
+export function PhotoGrid({ photos, onPhotoTap }: PhotoGridProps): JSX.Element {
   return (
     <FlatList
       data={photos}

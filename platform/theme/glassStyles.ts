@@ -15,6 +15,6 @@ export const colors = {
   },
 };
 
-export function getColors(theme: Theme) {
+export function getColors(theme: Theme): typeof colors.light {
   return colors[theme];
 }

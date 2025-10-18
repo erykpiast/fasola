@@ -12,4 +12,7 @@ export interface Storage {
   savePhoto(id: string, uri: string, timestamp: number): Promise<string>;
   getPhoto(id: string): Promise<string | null>;
   deletePhoto(id: string): Promise<void>;
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
 }

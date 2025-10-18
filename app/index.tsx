@@ -4,7 +4,8 @@ import { StyleSheet, View } from "react-native";
 import { AddPhotoButton } from "../features/photos/components/AddPhotoButton";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { PhotoGrid } from "../features/photos/components/PhotoGrid";
-import { usePhotos } from "../features/photos/hooks/usePhotos";
+import type { Photo } from "../features/photos/types";
+import { useRecipes } from "../features/recipes-list/hooks/useRecipes";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
 
@@ -15,12 +16,22 @@ function ErrorFallback() {
 function Content() {
   const theme = useTheme();
   const colors = getColors(theme);
-  const { photos, addPhoto } = usePhotos();
+  const { recipes, addRecipe } = useRecipes();
+
+  const photos: Photo[] = recipes.map((recipe) => ({
+    id: recipe.id,
+    uri: recipe.photoUri,
+    timestamp: recipe.timestamp,
+  }));
+
+  const handleAddPhoto = async (uri: string) => {
+    await addRecipe(uri, { tags: [] });
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {photos.length === 0 ? <EmptyState /> : <PhotoGrid photos={photos} />}
-      <AddPhotoButton onPhotoSelected={addPhoto} />
+      <AddPhotoButton onPhotoSelected={handleAddPhoto} />
     </View>
   );
 }

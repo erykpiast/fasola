@@ -42,4 +42,28 @@ export const storage: Storage = {
     }
     return storageInstance.deletePhoto(id);
   },
+
+  async getItem(key: string): Promise<string | null> {
+    if (!storageInstance) {
+      const StorageClass = await storagePromise;
+      storageInstance = new StorageClass();
+    }
+    return storageInstance.getItem(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (!storageInstance) {
+      const StorageClass = await storagePromise;
+      storageInstance = new StorageClass();
+    }
+    return storageInstance.setItem(key, value);
+  },
+
+  async removeItem(key: string): Promise<void> {
+    if (!storageInstance) {
+      const StorageClass = await storagePromise;
+      storageInstance = new StorageClass();
+    }
+    return storageInstance.removeItem(key);
+  },
 };

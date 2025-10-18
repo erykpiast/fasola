@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Directory, File, Paths } from "expo-file-system";
 import type { PhotoMetadata, PhotoWithUri, Storage } from "./types";
 
@@ -55,7 +56,7 @@ export class NativeStorage implements Storage {
     metadata[id] = { id, timestamp };
     await this.#saveMetadata(metadata);
 
-    return destinationFile.uri;
+    return id;
   }
 
   async getPhoto(id: string): Promise<string | null> {
@@ -74,5 +75,17 @@ export class NativeStorage implements Storage {
     const metadata = await this.#getMetadata();
     delete metadata[id];
     await this.#saveMetadata(metadata);
+  }
+
+  async getItem(key: string): Promise<string | null> {
+    return AsyncStorage.getItem(key);
+  }
+
+  async setItem(key: string, value: string): Promise<void> {
+    await AsyncStorage.setItem(key, value);
+  }
+
+  async removeItem(key: string): Promise<void> {
+    await AsyncStorage.removeItem(key);
   }
 }

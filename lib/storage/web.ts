@@ -47,13 +47,12 @@ export class WebStorage implements Storage {
     metadata[id] = { id, timestamp };
     await this.#saveMetadata(metadata);
 
-    const savedUri = await this.getPhoto(id);
-    return savedUri || uri;
+    return id;
   }
 
   async getPhoto(id: string): Promise<string | null> {
     const blob = await localforage.getItem<Blob>(id);
-    if (blob) {
+    if (blob && blob instanceof Blob) {
       return URL.createObjectURL(blob);
     }
     return null;
@@ -65,5 +64,17 @@ export class WebStorage implements Storage {
     const metadata = await this.#getMetadata();
     delete metadata[id];
     await this.#saveMetadata(metadata);
+  }
+
+  async getItem(key: string): Promise<string | null> {
+    return localforage.getItem<string>(key);
+  }
+
+  async setItem(key: string, value: string): Promise<void> {
+    await localforage.setItem(key, value);
+  }
+
+  async removeItem(key: string): Promise<void> {
+    await localforage.removeItem(key);
   }
 }

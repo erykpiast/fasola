@@ -30,9 +30,9 @@ class NativeStorage implements Storage {
     await this.metadataFile.write(JSON.stringify(metadata));
   }
 
-  async getPhotos(): Promise<PhotoWithUri[]> {
+  async getPhotos(): Promise<Array<PhotoWithUri>> {
     const metadata = await this.getMetadata();
-    const photos: PhotoWithUri[] = [];
+    const photos: Array<PhotoWithUri> = [];
 
     for (const [id, data] of Object.entries(metadata)) {
       const filename = `${id}.jpg`;

@@ -45,7 +45,7 @@ export function PhotoGrid({
   photos,
   onPhotoTap,
 }: {
-  photos: Photo[];
+  photos: Array<Photo>;
   onPhotoTap?: (id: RecipeId) => void;
 }): JSX.Element {
   return (

@@ -12,7 +12,7 @@ export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
 
   if (!recipes && photos) {
     const oldPhotos = JSON.parse(photos);
-    const newRecipes: Recipe[] = oldPhotos.map((photo: any) => ({
+    const newRecipes: Array<Recipe> = oldPhotos.map((photo: any) => ({
       id: photo.id,
       photoUri: photo.uri,
       timestamp: photo.timestamp,

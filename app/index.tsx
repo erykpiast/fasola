@@ -20,7 +20,7 @@ function Content(): JSX.Element {
   const colors = getColors(theme);
   const { recipes, addRecipe } = useRecipes();
 
-  const photos: Photo[] = recipes.map((recipe) => ({
+  const photos: Array<Photo> = recipes.map((recipe) => ({
     id: recipe.id,
     uri: recipe.photoUri,
     timestamp: recipe.timestamp,

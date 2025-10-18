@@ -8,7 +8,7 @@ import type { RecipeId, StorageKey } from "../types/primitives";
 const RECIPES_KEY: StorageKey = "@recipes";
 
 class AsyncStorageRecipeRepository implements RecipeRepository {
-  async getAll(): Promise<Recipe[]> {
+  async getAll(): Promise<Array<Recipe>> {
     await migrateIfNeeded(RECIPES_KEY);
 
     const data = await storage.getItem(RECIPES_KEY);
@@ -16,7 +16,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
       return [];
     }
 
-    const recipes: Recipe[] = JSON.parse(data);
+    const recipes: Array<Recipe> = JSON.parse(data);
 
     const recipesWithUris = await Promise.all(
       recipes.map(async (recipe) => {
@@ -50,7 +50,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     };
 
     const data = await storage.getItem(RECIPES_KEY);
-    const recipes: Recipe[] = data ? JSON.parse(data) : [];
+    const recipes: Array<Recipe> = data ? JSON.parse(data) : [];
     recipes.push(newRecipe);
     await storage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 

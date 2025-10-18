@@ -25,9 +25,9 @@ class WebStorage implements Storage {
     await localforage.setItem(METADATA_KEY, metadata);
   }
 
-  async getPhotos(): Promise<PhotoWithUri[]> {
+  async getPhotos(): Promise<Array<PhotoWithUri>> {
     const metadata = await this.getMetadata();
-    const photos: PhotoWithUri[] = [];
+    const photos: Array<PhotoWithUri> = [];
 
     for (const [id, data] of Object.entries(metadata)) {
       const uri = await this.getPhoto(id);

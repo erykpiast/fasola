@@ -2,7 +2,7 @@ import { Fragment, type JSX } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 export function TagList({ tags, style }: {
-  tags: string[];
+  tags: Array<string>;
   style?: object;
 }): JSX.Element | null {
   if (!tags || tags.length === 0) {

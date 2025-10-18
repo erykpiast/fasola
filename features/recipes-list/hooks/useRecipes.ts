@@ -3,9 +3,9 @@ import { recipeRepository } from "@/lib/repositories/recipes";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import type { PhotoUri, RecipeId } from "@/lib/types/primitives";
 
-let recipesPromise: Promise<Recipe[]> | null = null;
+let recipesPromise: Promise<Array<Recipe>> | null = null;
 
-function getRecipesPromise(): Promise<Recipe[]> {
+function getRecipesPromise(): Promise<Array<Recipe>> {
   if (!recipesPromise) {
     recipesPromise = recipeRepository.getAll();
   }
@@ -13,13 +13,13 @@ function getRecipesPromise(): Promise<Recipe[]> {
 }
 
 export function useRecipes(): {
-  recipes: Recipe[];
+  recipes: Array<Recipe>;
   addRecipe: (photoUri: PhotoUri, metadata: RecipeMetadata) => Promise<void>;
   updateRecipe: (id: RecipeId, metadata: RecipeMetadata) => Promise<void>;
   deleteRecipe: (id: RecipeId) => Promise<void>;
 } {
   const initialRecipes = use(getRecipesPromise());
-  const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
+  const [recipes, setRecipes] = useState<Array<Recipe>>(initialRecipes);
 
   const addRecipe = useCallback(
     async (photoUri: PhotoUri, metadata: RecipeMetadata): Promise<void> => {

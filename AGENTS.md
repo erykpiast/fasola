@@ -15,6 +15,11 @@ All package management operations must be executed via `npm`:
 
 **Explicit Return Types Required.** All exported functions in `.ts` and `.tsx` files must have explicitly typed return values.
 
+**Array Type Notation.** Use `Array<T>` notation instead of `T[]` for all array types:
+
+- Correct: `Array<string>`, `Array<Recipe>`, `Promise<Array<User>>`
+- Incorrect: `string[]`, `Recipe[]`, `Promise<User[]>`
+
 **Semantic Type Aliases Required.** Use semantic type aliases from `@/lib/types/primitives` instead of primitive `string` types for domain concepts:
 
 - Use `RecipeId` or `PhotoId` for identifiers (not `string`)

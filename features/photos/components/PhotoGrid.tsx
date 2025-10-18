@@ -1,8 +1,9 @@
-import { FlatList, StyleSheet, Dimensions, View } from 'react-native';
-import { Image } from 'expo-image';
+import { FlatList, StyleSheet, Dimensions, View, Pressable } from 'react-native';
 import { Photo } from '../types';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Suspense } from 'react';
+import { RecipeImageDisplay } from '@/lib/components/atoms/RecipeImageDisplay';
+import { RecipeTitleOverlay } from '@/lib/components/atoms/RecipeTitleOverlay';
 
 const { width } = Dimensions.get('window');
 const COLUMNS = 3;
@@ -11,28 +12,29 @@ const ITEM_SIZE = (width - (COLUMNS - 1) * SPACING) / COLUMNS;
 
 interface PhotoGridProps {
   photos: Photo[];
+  onPhotoTap?: (id: string) => void;
 }
 
-function PhotoItem({ photo }: { photo: Photo }) {
+function PhotoItem({ photo, onTap }: { photo: Photo; onTap?: (id: string) => void }) {
   return (
     <ErrorBoundary fallback={<View style={styles.item} />}>
       <Suspense fallback={<View style={styles.item} />}>
-        <Image
-          source={{ uri: photo.uri }}
-          style={styles.item}
-          contentFit="cover"
-          transition={200}
-        />
+        <Pressable onPress={() => onTap?.(photo.id)}>
+          <View style={styles.item}>
+            <RecipeImageDisplay uri={photo.uri} style={{ width: ITEM_SIZE, height: ITEM_SIZE }} />
+            <RecipeTitleOverlay title={photo.title} />
+          </View>
+        </Pressable>
       </Suspense>
     </ErrorBoundary>
   );
 }
 
-export function PhotoGrid({ photos }: PhotoGridProps) {
+export function PhotoGrid({ photos, onPhotoTap }: PhotoGridProps) {
   return (
     <FlatList
       data={photos}
-      renderItem={({ item }) => <PhotoItem photo={item} />}
+      renderItem={({ item }) => <PhotoItem photo={item} onTap={onPhotoTap} />}
       keyExtractor={(item) => item.id}
       numColumns={COLUMNS}
       columnWrapperStyle={styles.row}

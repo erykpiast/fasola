@@ -1,0 +1,23 @@
+import { StyleSheet, View } from "react-native";
+import { RecipeImageDisplay } from "../atoms/RecipeImageDisplay";
+import { RecipeTitleOverlay } from "../atoms/RecipeTitleOverlay";
+
+interface RecipeHeaderProps {
+  photoUri: string;
+  title?: string;
+}
+
+export function RecipeHeader({ photoUri, title }: RecipeHeaderProps) {
+  return (
+    <View style={styles.container}>
+      <RecipeImageDisplay uri={photoUri} />
+      <RecipeTitleOverlay title={title} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    position: "relative",
+  },
+});

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import { AddPhotoButton } from "../features/photos/components/AddPhotoButton";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { PhotoGrid } from "../features/photos/components/PhotoGrid";
@@ -22,15 +23,20 @@ function Content() {
     id: recipe.id,
     uri: recipe.photoUri,
     timestamp: recipe.timestamp,
+    title: recipe.metadata.title,
   }));
 
   const handleAddPhoto = async (uri: string) => {
     await addRecipe(uri, { tags: [] });
   };
 
+  const handlePhotoTap = (id: string) => {
+    router.push(`/recipe/${id}`);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {photos.length === 0 ? <EmptyState /> : <PhotoGrid photos={photos} />}
+      {photos.length === 0 ? <EmptyState /> : <PhotoGrid photos={photos} onPhotoTap={handlePhotoTap} />}
       <AddPhotoButton onPhotoSelected={handleAddPhoto} />
     </View>
   );

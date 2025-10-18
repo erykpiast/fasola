@@ -1,0 +1,31 @@
+import { Image } from "expo-image";
+import { StyleSheet, View, useWindowDimensions, type ViewStyle } from "react-native";
+
+interface RecipeImageDisplayProps {
+  uri: string;
+  style?: ViewStyle;
+}
+
+export function RecipeImageDisplay({ uri, style }: RecipeImageDisplayProps) {
+  const { width } = useWindowDimensions();
+
+  return (
+    <View style={[styles.container, { width, height: width }, style]}>
+      <Image
+        source={{ uri }}
+        style={styles.image}
+        contentFit="cover"
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+});

@@ -6,13 +6,11 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { usePhotoAdd } from "../hooks/usePhotoAdd";
 import type { PhotoUri } from "@/lib/types/primitives";
 
-interface AddPhotoButtonProps {
-  onPhotoSelected: (uri: PhotoUri) => void;
-}
-
 export function AddPhotoButton({
   onPhotoSelected,
-}: AddPhotoButtonProps): JSX.Element {
+}: {
+  onPhotoSelected: (uri: PhotoUri) => void;
+}): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { importPhoto } = usePhotoAdd();

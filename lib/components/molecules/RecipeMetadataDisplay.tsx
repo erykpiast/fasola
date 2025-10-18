@@ -4,15 +4,13 @@ import type { RecipeMetadata } from "@lib/types/recipe";
 import { TagList } from "@lib/components/atoms/TagList";
 import { SourceDisplay } from "@lib/components/atoms/SourceDisplay";
 
-interface RecipeMetadataDisplayProps {
-  metadata: RecipeMetadata;
-  style?: object;
-}
-
 export function RecipeMetadataDisplay({
   metadata,
   style,
-}: RecipeMetadataDisplayProps): JSX.Element | null {
+}: {
+  metadata: RecipeMetadata;
+  style?: object;
+}): JSX.Element | null {
   const hasTags = metadata.tags && metadata.tags.length > 0;
   const hasSource = !!metadata.source;
 

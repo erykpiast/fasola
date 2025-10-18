@@ -8,15 +8,13 @@ import {
 } from "react-native";
 import type { ImageUri } from "@/lib/types/primitives";
 
-interface RecipeImageDisplayProps {
-  uri: ImageUri;
-  style?: ViewStyle;
-}
-
 export function RecipeImageDisplay({
   uri,
   style,
-}: RecipeImageDisplayProps): JSX.Element {
+}: {
+  uri: ImageUri;
+  style?: ViewStyle;
+}): JSX.Element {
   const { width } = useWindowDimensions();
 
   return (

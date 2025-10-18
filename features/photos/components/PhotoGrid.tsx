@@ -17,11 +17,6 @@ const COLUMNS = 3;
 const SPACING = 2;
 const ITEM_SIZE = (width - (COLUMNS - 1) * SPACING) / COLUMNS;
 
-interface PhotoGridProps {
-  photos: Photo[];
-  onPhotoTap?: (id: RecipeId) => void;
-}
-
 function PhotoItem({
   photo,
   onTap,
@@ -49,7 +44,10 @@ function PhotoItem({
 export function PhotoGrid({
   photos,
   onPhotoTap,
-}: PhotoGridProps): JSX.Element {
+}: {
+  photos: Photo[];
+  onPhotoTap?: (id: RecipeId) => void;
+}): JSX.Element {
   return (
     <FlatList
       data={photos}

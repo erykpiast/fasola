@@ -3,11 +3,6 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 
-interface SourceDisplayProps {
-  source?: string;
-  style?: object;
-}
-
 const isUrl = (str: string): boolean => {
   return str.startsWith("http://") || str.startsWith("https://");
 };
@@ -24,7 +19,10 @@ const getHostname = (url: string): string => {
 export function SourceDisplay({
   source,
   style,
-}: SourceDisplayProps): JSX.Element | null {
+}: {
+  source?: string;
+  style?: object;
+}): JSX.Element | null {
   if (!source) {
     return null;
   }

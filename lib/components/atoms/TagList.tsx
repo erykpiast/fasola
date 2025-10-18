@@ -1,12 +1,10 @@
 import { Fragment, type JSX } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-interface TagListProps {
+export function TagList({ tags, style }: {
   tags: string[];
   style?: object;
-}
-
-export function TagList({ tags, style }: TagListProps): JSX.Element | null {
+}): JSX.Element | null {
   if (!tags || tags.length === 0) {
     return null;
   }

@@ -2,15 +2,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { type JSX } from "react";
 import { StyleSheet, Text, type ViewStyle } from "react-native";
 
-interface RecipeTitleOverlayProps {
-  title?: string;
-  style?: ViewStyle;
-}
-
 export function RecipeTitleOverlay({
   title,
   style,
-}: RecipeTitleOverlayProps): JSX.Element | null {
+}: {
+  title?: string;
+  style?: ViewStyle;
+}): JSX.Element | null {
   if (!title) {
     return null;
   }

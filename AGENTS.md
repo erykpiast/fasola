@@ -52,3 +52,11 @@ All package management operations must be executed via `npm`:
 - Use regular function declarations with explicit return types
 - Correct: `export function Component(props: Props): JSX.Element`
 - Incorrect: `export const Component: React.FC<Props> = (props) => {}`
+
+**Inline Props and Return Types.** All component and hook interfaces must be defined inline in the function declaration:
+
+- Define component props inline: `function Component(props: { title: string; onPress: () => void }): JSX.Element`
+- Define hook return types inline: `function useData(): { data: string[]; loading: boolean }`
+- Define hook parameter types inline: `function useApi(config: { url: string; method: string }): void`
+- Do NOT define separate interfaces for single-use props or return types
+- Keep interfaces only when they are exported or shared across multiple functions

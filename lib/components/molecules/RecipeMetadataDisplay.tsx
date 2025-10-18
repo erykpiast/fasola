@@ -1,4 +1,4 @@
-import React from "react";
+import { type JSX } from "react";
 import { View, StyleSheet } from "react-native";
 import type { RecipeMetadata } from "@lib/types/recipe";
 import { TagList } from "@lib/components/atoms/TagList";
@@ -9,10 +9,10 @@ interface RecipeMetadataDisplayProps {
   style?: object;
 }
 
-export const RecipeMetadataDisplay: React.FC<RecipeMetadataDisplayProps> = ({
+export function RecipeMetadataDisplay({
   metadata,
   style,
-}) => {
+}: RecipeMetadataDisplayProps): JSX.Element | null {
   const hasTags = metadata.tags && metadata.tags.length > 0;
   const hasSource = !!metadata.source;
 
@@ -26,7 +26,7 @@ export const RecipeMetadataDisplay: React.FC<RecipeMetadataDisplayProps> = ({
       {hasSource && <SourceDisplay source={metadata.source} style={styles.source} />}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

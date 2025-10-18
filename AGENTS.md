@@ -44,3 +44,11 @@ All package management operations must be executed via `npm`:
 - For component return types: `function Component(): JSX.Element`
 - Combine with other React imports: `import { useState, useEffect, type JSX } from "react";`
 - Do NOT import the default `React` export unless you specifically need it (e.g., for `React.memo`, `React.forwardRef`)
+
+## React Components
+
+**No React.FC.** Do not use `React.FC` or `React.FunctionComponent` type annotations:
+
+- Use regular function declarations with explicit return types
+- Correct: `export function Component(props: Props): JSX.Element`
+- Incorrect: `export const Component: React.FC<Props> = (props) => {}`

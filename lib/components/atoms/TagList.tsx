@@ -1,4 +1,4 @@
-import React from "react";
+import { Fragment, type JSX } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 interface TagListProps {
@@ -6,7 +6,7 @@ interface TagListProps {
   style?: object;
 }
 
-export const TagList: React.FC<TagListProps> = ({ tags, style }) => {
+export function TagList({ tags, style }: TagListProps): JSX.Element | null {
   if (!tags || tags.length === 0) {
     return null;
   }
@@ -14,14 +14,14 @@ export const TagList: React.FC<TagListProps> = ({ tags, style }) => {
   return (
     <View style={[styles.container, style]}>
       {tags.map((tag, index) => (
-        <React.Fragment key={`${tag}-${index}`}>
+        <Fragment key={`${tag}-${index}`}>
           <Text style={styles.tag}>{tag}</Text>
           {index < tags.length - 1 && <Text style={styles.separator}> </Text>}
-        </React.Fragment>
+        </Fragment>
       ))}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

@@ -1,4 +1,4 @@
-import React from "react";
+import { type JSX } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
@@ -21,10 +21,10 @@ const getHostname = (url: string): string => {
   }
 };
 
-export const SourceDisplay: React.FC<SourceDisplayProps> = ({
+export function SourceDisplay({
   source,
   style,
-}) => {
+}: SourceDisplayProps): JSX.Element | null {
   if (!source) {
     return null;
   }
@@ -59,7 +59,7 @@ export const SourceDisplay: React.FC<SourceDisplayProps> = ({
   }
 
   return content;
-};
+}
 
 const styles = StyleSheet.create({
   container: {

@@ -1,6 +1,5 @@
 import { type JSX, useCallback, useRef } from "react";
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +17,7 @@ import { MetadataFormFields } from "./MetadataFormFields";
 import { useRecipeForm } from "../hooks/useRecipeForm";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { Alert } from "@/lib/alert";
 
 export function EditRecipeForm({
   recipe,
@@ -39,30 +39,23 @@ export function EditRecipeForm({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     if (isDirty) {
-      if (Platform.OS === "web") {
-        const confirmed = window.confirm(
-          `${t("recipeForm.discardChanges.title")}\n\n${t("recipeForm.discardChanges.message")}`
-        );
-        if (confirmed) {
-          router.back();
-        }
-      } else {
-        Alert.alert(
-          t("recipeForm.discardChanges.title"),
-          t("recipeForm.discardChanges.message"),
-          [
-            { text: t("recipeForm.discardChanges.cancel"), style: "cancel" },
-            {
-              text: t("recipeForm.discardChanges.discard"),
-              style: "destructive",
-              onPress: () => {
+      Alert.alert(
+        t("recipeForm.discardChanges.title"),
+        t("recipeForm.discardChanges.message"),
+        [
+          { text: t("recipeForm.discardChanges.cancel"), style: "cancel" },
+          {
+            text: t("recipeForm.discardChanges.discard"),
+            style: "destructive",
+            onPress: () => {
+              if (Platform.OS !== "web") {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                router.back();
-              },
+              }
+              router.back();
             },
-          ],
-        );
-      }
+          },
+        ],
+      );
     } else {
       router.back();
     }

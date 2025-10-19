@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActionSheetIOS, Alert, Platform } from "react-native";
+import { ActionSheetIOS, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import type { PhotoUri } from "@/lib/types/primitives";
+import { Alert } from "@/lib/alert";
 
 export function usePhotoImport(): {
   startImport: () => Promise<void>;

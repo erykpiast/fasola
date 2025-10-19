@@ -4,8 +4,8 @@ import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState, type JSX } from "react";
-import { Alert, Platform } from "react-native";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { Alert } from "@/lib/alert";
 
 export default function EditRecipeScreen(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,11 +24,7 @@ export default function EditRecipeScreen(): JSX.Element {
         router.back();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        if (Platform.OS === "web") {
-          window.alert(`${t("errors.saveFailed")}\n\n${errorMessage}`);
-        } else {
-          Alert.alert(t("errors.saveFailed"), errorMessage);
-        }
+        Alert.alert(t("errors.saveFailed"), errorMessage);
       } finally {
         setIsSubmitting(false);
       }

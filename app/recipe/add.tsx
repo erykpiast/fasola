@@ -4,10 +4,11 @@ import type { PhotoUri } from "@/lib/types/primitives";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { router, useLocalSearchParams } from "expo-router";
 import { type JSX, useCallback, useState } from "react";
-import { Alert, Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { Alert } from "@/lib/alert";
 
 export default function AddRecipeScreen(): JSX.Element {
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
@@ -26,11 +27,7 @@ export default function AddRecipeScreen(): JSX.Element {
         router.back();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        if (Platform.OS === "web") {
-          window.alert(`${t("errors.saveFailed")}\n\n${errorMessage}`);
-        } else {
-          Alert.alert(t("errors.saveFailed"), errorMessage);
-        }
+        Alert.alert(t("errors.saveFailed"), errorMessage);
       } finally {
         setIsSubmitting(false);
       }

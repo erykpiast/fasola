@@ -44,7 +44,9 @@ export function SourceDisplay({
         color="#666"
         style={styles.icon}
       />
-      <Text style={styles.text}>{displayText}</Text>
+      <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
+        {displayText}
+      </Text>
     </View>
   );
 
@@ -70,6 +72,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: "#666",
+    flex: 1,
   },
   pressed: {
     opacity: 0.7,

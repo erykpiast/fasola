@@ -22,10 +22,26 @@
       "placeholder": "Add tags..."
     },
     "submit": "Add recipe",
-    "submitEdit": "Save changes"
+    "submitEdit": "Save changes",
+    "discardChanges": {
+      "title": "Discard changes?",
+      "message": "You have unsaved changes. Are you sure you want to discard them?",
+      "cancel": "Cancel",
+      "discard": "Discard"
+    }
+  },
+  "recipeMetadata": {
+    "emptyState": "No additional details"
+  },
+  "accessibility": {
+    "close": "Close",
+    "removeTag": "Remove tag"
   },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",
-    "importFailed": "Failed to import photo"
+    "importFailed": "Failed to import photo",
+    "saveFailed": "Failed to save recipe",
+    "loadFailed": "Failed to load recipe",
+    "invalidTags": "Tags must start with # and contain no spaces"
   }
 }

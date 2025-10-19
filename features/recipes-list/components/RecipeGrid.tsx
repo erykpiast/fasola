@@ -1,5 +1,4 @@
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
-import { RecipeTitleOverlay } from "@/lib/components/atoms/RecipeTitleOverlay";
 import type { Recipe } from "@/lib/types/recipe";
 import type { RecipeId } from "@/lib/types/primitives";
 import { Suspense, type JSX } from "react";
@@ -30,7 +29,6 @@ function RecipeItem({
         <Pressable onPress={() => onTap?.(recipe.id)}>
           <View style={styles.item}>
             <RecipeImageDisplay uri={recipe.photoUri} style={styles.image} />
-            <RecipeTitleOverlay title={recipe.metadata.title} />
           </View>
         </Pressable>
       </Suspense>

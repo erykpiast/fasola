@@ -46,6 +46,8 @@ export const FormInput = forwardRef<
     <View style={[styles.container, style]}>
       <Text style={[styles.label, getThemeColors(theme).label]}>{label}</Text>
       <TextInput
+        accessibilityLabel={label}
+        accessibilityHint={placeholder}
         autoFocus={autoFocus}
         ref={ref}
         style={[

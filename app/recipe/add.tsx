@@ -3,23 +3,39 @@ import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import type { PhotoUri } from "@/lib/types/primitives";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { router, useLocalSearchParams } from "expo-router";
-import { type JSX, useCallback } from "react";
-import { StyleSheet } from "react-native";
+import { type JSX, useCallback, useState } from "react";
+import { Alert, Platform, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 
 export default function AddRecipeScreen(): JSX.Element {
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
   const { addRecipe } = useRecipes();
   const theme = useTheme();
+  const { t } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(
     async (metadata: RecipeMetadata) => {
-      if (!uri) return;
-      await addRecipe(uri, metadata);
-      router.back();
+      if (!uri || isSubmitting) return;
+
+      setIsSubmitting(true);
+      try {
+        await addRecipe(uri, metadata);
+        router.back();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (Platform.OS === "web") {
+          window.alert(`${t("errors.saveFailed")}\n\n${errorMessage}`);
+        } else {
+          Alert.alert(t("errors.saveFailed"), errorMessage);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [uri, addRecipe],
+    [uri, addRecipe, isSubmitting, t],
   );
 
   if (!uri) {

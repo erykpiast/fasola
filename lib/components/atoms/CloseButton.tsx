@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { type JSX } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 
 export function CloseButton({
   onPress,
@@ -9,11 +10,14 @@ export function CloseButton({
   onPress: () => void;
 }): JSX.Element {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Pressable
       onPress={onPress}
       style={[styles.button, getThemeColors(theme).button]}
+      accessibilityLabel={t("accessibility.close")}
+      accessibilityRole="button"
     >
       <MaterialIcons
         name="close"

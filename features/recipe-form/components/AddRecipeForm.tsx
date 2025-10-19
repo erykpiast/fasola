@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import type { PhotoUri } from "@/lib/types/primitives";
@@ -34,23 +35,45 @@ export function AddRecipeForm({
   });
 
   const handleClose = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     if (isDirty) {
-      Alert.alert(
-        "Discard changes?",
-        "You have unsaved changes. Are you sure you want to discard them?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: () => router.back(),
-          },
-        ],
-      );
+      if (Platform.OS === "web") {
+        const confirmed = window.confirm(
+          `${t("recipeForm.discardChanges.title")}\n\n${t("recipeForm.discardChanges.message")}`
+        );
+        if (confirmed) {
+          router.back();
+        }
+      } else {
+        Alert.alert(
+          t("recipeForm.discardChanges.title"),
+          t("recipeForm.discardChanges.message"),
+          [
+            { text: t("recipeForm.discardChanges.cancel"), style: "cancel" },
+            {
+              text: t("recipeForm.discardChanges.discard"),
+              style: "destructive",
+              onPress: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                router.back();
+              },
+            },
+          ],
+        );
+      }
     } else {
       router.back();
     }
-  }, [isDirty]);
+  }, [isDirty, t]);
+
+  const handleFormSubmit = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    handleSubmit();
+  }, [handleSubmit]);
 
   return (
     <KeyboardAvoidingView
@@ -79,8 +102,10 @@ export function AddRecipeForm({
 
       <View style={[styles.footer, getThemeColors(theme).footer]}>
         <Pressable
-          onPress={handleSubmit}
+          onPress={handleFormSubmit}
           style={[styles.submitButton, getThemeColors(theme).submitButton]}
+          accessibilityLabel={t("recipeForm.submit")}
+          accessibilityRole="button"
         >
           <Text
             style={[styles.submitButtonText, getThemeColors(theme).buttonText]}

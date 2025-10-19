@@ -19,7 +19,9 @@ export function RecipeTitleOverlay({
       locations={[0, 1]}
       style={[styles.gradient, style]}
     >
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+        {title}
+      </Text>
     </LinearGradient>
   );
 }

@@ -1,5 +1,6 @@
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { parseTags, validateTags } from "@/lib/utils/recipeValidation";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useCallback, useMemo, useState } from "react";
 
 const emptyMetadata: RecipeMetadata = {
@@ -18,6 +19,7 @@ export function useRecipeForm(config: {
   handleSubmit: () => void;
   isDirty: boolean;
 } {
+  const { t } = useTranslation();
   const initialValues = config.initialValues ?? emptyMetadata;
 
   const [values, setValues] = useState<RecipeMetadata>(initialValues);
@@ -49,7 +51,7 @@ export function useRecipeForm(config: {
 
     // Validate tags
     if (trimmedValues.tags.length > 0 && !validateTags(trimmedValues.tags)) {
-      newErrors.tags = "Tags must start with # and contain no spaces";
+      newErrors.tags = t("errors.invalidTags");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -59,7 +61,7 @@ export function useRecipeForm(config: {
 
     // Submit validated and trimmed metadata
     config.onSubmit(trimmedValues);
-  }, [values, config]);
+  }, [values, config, t]);
 
   return {
     values,

@@ -13,7 +13,9 @@ export function TagList({ tags, style }: {
     <View style={[styles.container, style]}>
       {tags.map((tag, index) => (
         <Fragment key={`${tag}-${index}`}>
-          <Text style={styles.tag}>{tag}</Text>
+          <Text style={styles.tag} numberOfLines={1} ellipsizeMode="tail">
+            {tag}
+          </Text>
           {index < tags.length - 1 && <Text style={styles.separator}> </Text>}
         </Fragment>
       ))}

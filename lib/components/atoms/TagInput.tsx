@@ -1,5 +1,6 @@
 import { parseTags } from "@/lib/utils/recipeValidation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import {
   Pressable,
@@ -28,6 +29,7 @@ export function TagInput({
   placeholder?: string;
 }): JSX.Element {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<TextInput>(null);
 
@@ -91,6 +93,8 @@ export function TagInput({
         style={[styles.inlineContainer, getThemeColors(theme).inlineContainer]}
       >
         <TextInput
+          accessibilityLabel={label}
+          accessibilityHint={placeholder}
           ref={inputRef}
           style={[styles.input, getThemeColors(theme).input]}
           value={inputValue}
@@ -107,6 +111,8 @@ export function TagInput({
             key={tag}
             onPress={() => handleRemoveTag(tag)}
             style={[styles.tagPill, getThemeColors(theme).tagPill]}
+            accessibilityLabel={`${t("accessibility.removeTag")} ${tag}`}
+            accessibilityRole="button"
           >
             <Text style={[styles.tagText, getThemeColors(theme).tagText]}>
               {tag}

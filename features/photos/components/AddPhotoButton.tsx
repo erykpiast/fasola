@@ -3,25 +3,16 @@ import { useTheme } from "@/platform/theme/useTheme";
 import { GlassView } from "expo-glass-effect";
 import { type JSX } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { usePhotoAdd } from "../hooks/usePhotoAdd";
-import type { PhotoUri } from "@/lib/types/primitives";
+import { usePhotoImport } from "../hooks/usePhotoImport";
 
-export function AddPhotoButton({
-  onPhotoSelected,
-}: {
-  onPhotoSelected: (uri: PhotoUri) => void;
-}): JSX.Element {
+export function AddPhotoButton(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
-  const { importPhoto } = usePhotoAdd();
-
-  const handlePress = (): void => {
-    importPhoto(onPhotoSelected);
-  };
+  const { startImport } = usePhotoImport();
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={startImport}
       style={({ pressed }) => [
         styles.container,
         { opacity: pressed ? 0.7 : 1 },

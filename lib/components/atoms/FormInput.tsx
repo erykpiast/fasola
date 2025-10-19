@@ -1,34 +1,53 @@
-import { type JSX } from "react";
+import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import { forwardRef, type JSX } from "react";
 import {
   StyleSheet,
   Text,
   TextInput,
   View,
+  type TextInput as TextInputType,
   type ViewStyle,
 } from "react-native";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
 
-export function FormInput({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  multiline = false,
-  style,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  multiline?: boolean;
-  style?: ViewStyle;
-}): JSX.Element {
+export const FormInput = forwardRef<
+  TextInputType,
+  {
+    autoFocus?: boolean;
+    label: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    placeholder?: string;
+    multiline?: boolean;
+    style?: ViewStyle;
+    returnKeyType?: "done" | "next";
+    onSubmitEditing?: () => void;
+    blurOnSubmit?: boolean;
+    onFocus?: () => void;
+  }
+>(function FormInput(
+  {
+    autoFocus = false,
+    label,
+    value,
+    onChangeText,
+    placeholder,
+    multiline = false,
+    style,
+    returnKeyType = "done",
+    onSubmitEditing,
+    blurOnSubmit = true,
+    onFocus,
+  },
+  ref
+): JSX.Element {
   const theme = useTheme();
 
   return (
     <View style={[styles.container, style]}>
       <Text style={[styles.label, getThemeColors(theme).label]}>{label}</Text>
       <TextInput
+        autoFocus={autoFocus}
+        ref={ref}
         style={[
           styles.input,
           multiline && styles.multiline,
@@ -39,10 +58,14 @@ export function FormInput({
         placeholder={placeholder}
         placeholderTextColor={getThemeColors(theme).placeholder.color}
         multiline={multiline}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
+        submitBehavior={blurOnSubmit ? "blurAndSubmit" : undefined}
+        onFocus={onFocus}
       />
     </View>
   );
-}
+});
 
 function getThemeColors(theme: Theme) {
   const isDark = theme === "dark";

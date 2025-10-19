@@ -1,8 +1,8 @@
-import { type JSX } from "react";
-import { View, StyleSheet } from "react-native";
-import type { RecipeMetadata } from "@/lib/types/recipe";
-import { TagList } from "@/lib/components/atoms/TagList";
 import { SourceDisplay } from "@/lib/components/atoms/SourceDisplay";
+import { TagList } from "@/lib/components/atoms/TagList";
+import type { RecipeMetadata } from "@/lib/types/recipe";
+import { type JSX } from "react";
+import { StyleSheet, View } from "react-native";
 
 export function RecipeMetadataDisplay({
   metadata,
@@ -20,8 +20,10 @@ export function RecipeMetadataDisplay({
 
   return (
     <View style={[styles.container, style]}>
+      {hasSource && (
+        <SourceDisplay source={metadata.source} style={styles.source} />
+      )}
       {hasTags && <TagList tags={metadata.tags} style={styles.tags} />}
-      {hasSource && <SourceDisplay source={metadata.source} style={styles.source} />}
     </View>
   );
 }

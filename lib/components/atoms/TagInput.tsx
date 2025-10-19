@@ -1,5 +1,6 @@
+import { parseTags } from "@/lib/utils/recipeValidation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
-import { useCallback, useState, type JSX } from "react";
+import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -9,33 +10,38 @@ import {
   type ViewStyle,
 } from "react-native";
 
-function extractTags(
-  inputValue: string,
-  existingTags: Array<string>
-): Array<string> {
-  return inputValue
-    .split(/[,\s]+/)
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0)
-    .map((tag) => (tag.startsWith("#") ? tag : `#${tag}`))
-    .filter((tag) => !existingTags.includes(tag));
-}
-
 export function TagInput({
+  ref,
   tags,
   onChange,
   style,
+  onFocus,
+  label = "Tags",
+  placeholder = "Add tags...",
 }: {
+  ref?: React.RefObject<TextInput | null>;
   tags: Array<string>;
   onChange: (tags: Array<string>) => void;
   style?: ViewStyle;
+  onFocus?: () => void;
+  label?: string;
+  placeholder?: string;
 }): JSX.Element {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<TextInput>(null);
 
-  const handleBlur = useCallback(() => {
+  useEffect(() => {
+    if (ref && inputRef.current) {
+      ref.current = inputRef.current;
+    }
+  }, [ref]);
+
+  const addTags = useCallback(() => {
     if (inputValue.trim()) {
-      const newTags = extractTags(inputValue, tags);
+      const newTags = parseTags(inputValue).filter(
+        (tag) => !tags.includes(tag)
+      );
 
       if (newTags.length > 0) {
         onChange([...tags, ...newTags]);
@@ -43,6 +49,33 @@ export function TagInput({
       setInputValue("");
     }
   }, [inputValue, tags, onChange]);
+
+  const handleSubmit = useCallback(() => {
+    addTags();
+    inputRef.current?.blur();
+  }, [addTags]);
+
+  const handleChangeText = useCallback(
+    (text: string) => {
+      // Check if last character is comma or space
+      if (text.endsWith(",") || text.endsWith(" ")) {
+        const textWithoutDelimiter = text.slice(0, -1);
+        if (textWithoutDelimiter.trim()) {
+          const newTags = parseTags(textWithoutDelimiter).filter(
+            (tag) => !tags.includes(tag)
+          );
+
+          if (newTags.length > 0) {
+            onChange([...tags, ...newTags]);
+          }
+          setInputValue("");
+          return;
+        }
+      }
+      setInputValue(text);
+    },
+    [tags, onChange]
+  );
 
   const handleRemoveTag = useCallback(
     (tagToRemove: string) => {
@@ -53,33 +86,37 @@ export function TagInput({
 
   return (
     <View style={[styles.container, style]}>
-      <Text style={[styles.label, getThemeColors(theme).label]}>Tags</Text>
-      {tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {tags.map((tag) => (
-            <Pressable
-              key={tag}
-              onPress={() => handleRemoveTag(tag)}
-              style={[styles.tagPill, getThemeColors(theme).tagPill]}
-            >
-              <Text style={[styles.tagText, getThemeColors(theme).tagText]}>
-                {tag}
-              </Text>
-              <Text style={[styles.removeIcon, getThemeColors(theme).tagText]}>
-                ×
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-      <TextInput
-        style={[styles.input, getThemeColors(theme).input]}
-        value={inputValue}
-        onChangeText={setInputValue}
-        onBlur={handleBlur}
-        placeholder="Add tags (comma or space separated)"
-        placeholderTextColor={getThemeColors(theme).placeholder.color}
-      />
+      <Text style={[styles.label, getThemeColors(theme).label]}>{label}</Text>
+      <View
+        style={[styles.inlineContainer, getThemeColors(theme).inlineContainer]}
+      >
+        <TextInput
+          ref={inputRef}
+          style={[styles.input, getThemeColors(theme).input]}
+          value={inputValue}
+          onChangeText={handleChangeText}
+          onBlur={addTags}
+          onSubmitEditing={handleSubmit}
+          onFocus={onFocus}
+          returnKeyType="done"
+          placeholder={placeholder}
+          placeholderTextColor={getThemeColors(theme).placeholder.color}
+        />
+        {tags.map((tag) => (
+          <Pressable
+            key={tag}
+            onPress={() => handleRemoveTag(tag)}
+            style={[styles.tagPill, getThemeColors(theme).tagPill]}
+          >
+            <Text style={[styles.tagText, getThemeColors(theme).tagText]}>
+              {tag}
+            </Text>
+            <Text style={[styles.removeIcon, getThemeColors(theme).tagText]}>
+              ×
+            </Text>
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
@@ -91,11 +128,13 @@ function getThemeColors(theme: Theme) {
     label: {
       color: isDark ? "#E5E5E5" : "#1F1F1F",
     },
-    input: {
+    inlineContainer: {
       backgroundColor: isDark
         ? "rgba(255, 255, 255, 0.1)"
         : "rgba(0, 0, 0, 0.05)",
       borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
+    },
+    input: {
       color: isDark ? "#FFFFFF" : "#000000",
     },
     placeholder: {
@@ -120,10 +159,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  tagsContainer: {
+  inlineContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "center",
     gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 48,
   },
   tagPill: {
     flexDirection: "row",
@@ -141,10 +186,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flex: 1,
+    minWidth: 120,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     fontSize: 16,
   },
 });

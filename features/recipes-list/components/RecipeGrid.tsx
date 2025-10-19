@@ -29,10 +29,7 @@ function RecipeItem({
       <Suspense fallback={<View style={styles.item} />}>
         <Pressable onPress={() => onTap?.(recipe.id)}>
           <View style={styles.item}>
-            <RecipeImageDisplay
-              uri={recipe.photoUri}
-              style={{ width: ITEM_SIZE, height: ITEM_SIZE }}
-            />
+            <RecipeImageDisplay uri={recipe.photoUri} style={styles.image} />
             <RecipeTitleOverlay title={recipe.metadata.title} />
           </View>
         </Pressable>
@@ -73,5 +70,9 @@ const styles = StyleSheet.create({
     width: ITEM_SIZE,
     height: ITEM_SIZE,
     backgroundColor: "rgba(128, 128, 128, 0.1)",
+  },
+  image: {
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
   },
 });

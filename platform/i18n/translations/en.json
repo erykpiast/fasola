@@ -8,6 +8,21 @@
     "camera": "Take Photo",
     "library": "Choose from Library"
   },
+  "recipeForm": {
+    "title": {
+      "label": "Title",
+      "placeholder": "Recipe name"
+    },
+    "source": {
+      "label": "Source",
+      "placeholder": "URL or book name"
+    },
+    "tags": {
+      "label": "Tags",
+      "placeholder": "Add tags..."
+    },
+    "submit": "Add recipe"
+  },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",
     "importFailed": "Failed to import photo"

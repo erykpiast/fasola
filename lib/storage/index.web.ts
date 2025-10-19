@@ -72,7 +72,8 @@ class WebStorage implements Storage {
   }
 
   async getItem(key: StorageKey): Promise<string | null> {
-    return localforage.getItem<string>(key);
+    const value = await localforage.getItem<string>(key);
+    return value ?? null;
   }
 
   async setItem(key: StorageKey, value: string): Promise<void> {

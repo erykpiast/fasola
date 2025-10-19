@@ -1,17 +1,8 @@
-import { use } from "react";
-import { recipeRepository } from "@/lib/repositories/recipes";
-import type { Recipe } from "@/lib/types/recipe";
+import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import type { RecipeId } from "@/lib/types/primitives";
-
-const recipeCache = new Map<RecipeId, Promise<Recipe | null>>();
-
-function getRecipePromise(id: RecipeId): Promise<Recipe | null> {
-  if (!recipeCache.has(id)) {
-    recipeCache.set(id, recipeRepository.getById(id));
-  }
-  return recipeCache.get(id)!;
-}
+import type { Recipe } from "@/lib/types/recipe";
 
 export function useRecipeById(id: RecipeId): Recipe | null {
-  return use(getRecipePromise(id));
+  const { recipes } = useRecipes();
+  return recipes.find((recipe) => recipe.id === id) ?? null;
 }

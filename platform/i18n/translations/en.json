@@ -21,7 +21,8 @@
       "label": "Tags",
       "placeholder": "Add tags..."
     },
-    "submit": "Add recipe"
+    "submit": "Add recipe",
+    "submitEdit": "Save changes"
   },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",

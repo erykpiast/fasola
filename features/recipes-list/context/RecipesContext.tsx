@@ -14,6 +14,7 @@ import {
 type RecipesContextValue = {
   recipes: Array<Recipe>;
   addRecipe: (photoUri: PhotoUri, metadata: RecipeMetadata) => Promise<void>;
+  updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextValue | null>(null);
@@ -43,8 +44,18 @@ export function RecipesProvider({
     []
   );
 
+  const updateRecipe = useCallback(
+    async (id: string, metadata: RecipeMetadata) => {
+      const updatedRecipe = await recipeRepository.update(id, metadata);
+      setRecipes((prev) =>
+        prev.map((recipe) => (recipe.id === id ? updatedRecipe : recipe))
+      );
+    },
+    []
+  );
+
   return (
-    <RecipesContext.Provider value={{ recipes, addRecipe }}>
+    <RecipesContext.Provider value={{ recipes, addRecipe, updateRecipe }}>
       {children}
     </RecipesContext.Provider>
   );

@@ -1,11 +1,21 @@
 import { router } from "expo-router";
 import { Suspense, useCallback, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { StyleSheet, Text, View } from "react-native";
-import { AddPhotoButton } from "../features/photos/components/AddPhotoButton";
+import {
+  StyleSheet,
+  Text,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { EmptyState } from "../features/photos/components/EmptyState";
+import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
+import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
+import { CancelSearchButton } from "../features/search/components/CancelSearchButton";
+import { SearchBar } from "../features/search/components/SearchBar";
+import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import type { RecipeId } from "../lib/types/primitives";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
@@ -23,19 +33,46 @@ function Content(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { recipes } = useRecipes();
+  const { filteredRecipes, searchTerm, setSearchTerm, clearSearch } =
+    useRecipeFilter(recipes);
+  const { isFocused, handleFocus, handleBlur, handleCancel } =
+    useSearchFocus();
 
   const handleRecipeTap = useCallback((id: RecipeId): void => {
     router.push(`/recipe/${id}`);
   }, []);
+
+  const handleCancelPress = useCallback(() => {
+    handleCancel();
+    clearSearch();
+  }, [handleCancel, clearSearch]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {recipes.length === 0 ? (
         <EmptyState />
       ) : (
-        <RecipeGrid recipes={recipes} onRecipeTap={handleRecipeTap} />
+        <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} />
       )}
-      <AddPhotoButton />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoid}
+      >
+        <View style={styles.bottomBar}>
+          <SearchBar
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            isFocused={isFocused}
+          />
+          {isFocused ? (
+            <CancelSearchButton onPress={handleCancelPress} />
+          ) : (
+            <AddRecipeButton />
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -53,6 +90,18 @@ export default function Index(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  keyboardAvoid: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  bottomBar: {
+    flexDirection: "row",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   suspenseFallback: {
     flex: 1,

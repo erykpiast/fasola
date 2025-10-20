@@ -33,6 +33,9 @@
   "recipeMetadata": {
     "emptyState": "No additional details"
   },
+  "search": {
+    "placeholder": "Search recipes..."
+  },
   "accessibility": {
     "close": "Close",
     "removeTag": "Remove tag"

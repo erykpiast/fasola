@@ -1,10 +1,12 @@
+import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext";
+import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
+import { OpenCVWebViewSetup } from "@/lib/photo-processor/OpenCVWebViewSetup";
 import { Stack } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 import { Suspense, useEffect, type JSX } from "react";
+import { StyleSheet, View } from "react-native";
 import "../platform/i18n/config";
 import { useTheme } from "../platform/theme/useTheme";
-import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
-import { StyleSheet, View } from "react-native";
 
 export default function RootLayout(): JSX.Element {
   const theme = useTheme();
@@ -15,9 +17,12 @@ export default function RootLayout(): JSX.Element {
 
   return (
     <Suspense fallback={<View style={styles.suspenseFallback} />}>
-      <RecipesProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </RecipesProvider>
+      <DebugProvider>
+        <RecipesProvider>
+          <OpenCVWebViewSetup />
+          <Stack screenOptions={{ headerShown: false }} />
+        </RecipesProvider>
+      </DebugProvider>
     </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+import { DebugVisualization } from "@/features/photo-adjustment/components/DebugVisualization";
+import type { ImageUri } from "@/lib/types/primitives";
 import { Image } from "expo-image";
 import { type JSX } from "react";
 import {
@@ -6,7 +8,6 @@ import {
   useWindowDimensions,
   type ViewStyle,
 } from "react-native";
-import type { ImageUri } from "@/lib/types/primitives";
 
 export function RecipeImageDisplay({
   uri,
@@ -20,6 +21,7 @@ export function RecipeImageDisplay({
   return (
     <View style={[styles.container, { width, height: width }, style]}>
       <Image source={{ uri }} style={styles.image} contentFit="cover" />
+      <DebugVisualization width={width} height={width} />
     </View>
   );
 }

@@ -1,8 +1,14 @@
 import { storage } from "../storage";
 import type { Recipe } from "../types/recipe";
-import type { StorageKey } from "../types/primitives";
+import type { StorageKey, PhotoUri, RecipeId } from "../types/primitives";
 
 const LEGACY_PHOTOS_KEY: StorageKey = "@photos";
+
+interface LegacyPhoto {
+  id: RecipeId;
+  uri: PhotoUri;
+  timestamp: number;
+}
 
 export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
   const [recipes, photos] = await Promise.all([
@@ -11,8 +17,8 @@ export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
   ]);
 
   if (!recipes && photos) {
-    const oldPhotos = JSON.parse(photos);
-    const newRecipes: Array<Recipe> = oldPhotos.map((photo: any) => ({
+    const oldPhotos = JSON.parse(photos) as Array<LegacyPhoto>;
+    const newRecipes: Array<Recipe> = oldPhotos.map((photo: LegacyPhoto) => ({
       id: photo.id,
       photoUri: photo.uri,
       timestamp: photo.timestamp,

@@ -4,14 +4,22 @@ import { RecipeMetadataDisplay } from "@/lib/components/molecules/RecipeMetadata
 import type { RecipeId } from "@/lib/types/primitives";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useRouter } from "expo-router";
-import { type JSX } from "react";
+import { type JSX, useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useRecipeById } from "../hooks/useRecipeById";
+import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
 
 export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
   const recipe = useRecipeById(id);
   const router = useRouter();
   const theme = useTheme();
+  const { setDebugData } = useDebugContext();
+
+  useEffect(() => {
+    return () => {
+      setDebugData(null);
+    };
+  }, [setDebugData]);
 
   if (!recipe) {
     return null;

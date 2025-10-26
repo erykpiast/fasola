@@ -1,11 +1,12 @@
+import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
 import { EditRecipeForm } from "@/features/recipe-form/components/EditRecipeForm";
 import { useRecipeById } from "@/features/recipe-preview/hooks/useRecipeById";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
-import type { RecipeMetadata } from "@/lib/types/recipe";
-import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useState, type JSX } from "react";
-import { useTranslation } from "@/platform/i18n/useTranslation";
 import { Alert } from "@/lib/alert";
+import type { RecipeMetadata } from "@/lib/types/recipe";
+import { useTranslation } from "@/platform/i18n/useTranslation";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState, type JSX } from "react";
 
 export default function EditRecipeScreen(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,6 +14,13 @@ export default function EditRecipeScreen(): JSX.Element {
   const { updateRecipe } = useRecipes();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setDebugData } = useDebugContext();
+
+  useEffect(() => {
+    return () => {
+      setDebugData(null);
+    };
+  }, [setDebugData]);
 
   const handleSubmit = useCallback(
     async (metadata: RecipeMetadata) => {
@@ -23,7 +31,8 @@ export default function EditRecipeScreen(): JSX.Element {
         await updateRecipe(recipe.id, metadata);
         router.back();
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         Alert.alert(t("errors.saveFailed"), errorMessage);
       } finally {
         setIsSubmitting(false);

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Suspense, useCallback, type JSX } from "react";
+import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
   StyleSheet,
@@ -19,6 +19,7 @@ import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import type { RecipeId } from "../lib/types/primitives";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
+import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 
 function ErrorFallback({ error }: { error?: Error }): JSX.Element {
   return (
@@ -37,6 +38,13 @@ function Content(): JSX.Element {
     useRecipeFilter(recipes);
   const { isFocused, handleFocus, handleBlur, handleCancel } =
     useSearchFocus();
+  const { setDebugData } = useDebugContext();
+
+  useEffect(() => {
+    return () => {
+      setDebugData(null);
+    };
+  }, [setDebugData]);
 
   const handleRecipeTap = useCallback((id: RecipeId): void => {
     router.push(`/recipe/${id}`);

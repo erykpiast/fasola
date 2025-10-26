@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import type { PhotoUri } from "@/lib/types/primitives";
+import { useCallback, useMemo, useState } from "react";
 
 export function usePhotoImport(): {
   startImport: () => Promise<void>;
   isImporting: boolean;
 } {
   const [isImporting, setIsImporting] = useState(false);
+  const { processPhoto } = usePhotoAdjustment();
 
   const startImport = useCallback(async () => {
     setIsImporting(true);
@@ -27,21 +28,22 @@ export function usePhotoImport(): {
 
       if (!result.canceled && result.assets[0]) {
         const uri = result.assets[0].uri;
+        const processResult = await processPhoto(uri);
         router.push({
           pathname: "/recipe/add",
-          params: { uri },
+          params: { uri: processResult.processedUri || uri },
         });
       }
     } finally {
       setIsImporting(false);
     }
-  }, []);
+  }, [processPhoto]);
 
   return useMemo(
     () => ({
       startImport,
       isImporting,
     }),
-    [startImport, isImporting],
+    [startImport, isImporting]
   );
 }

@@ -1,31 +1,34 @@
-import { type JSX, useCallback, useRef } from "react";
+import { Alert } from "@/lib/alert";
+import { CloseButton } from "@/lib/components/atoms/CloseButton";
+import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import type { PhotoUri } from "@/lib/types/primitives";
+import type { RecipeMetadata } from "@/lib/types/recipe";
+import { useTranslation } from "@/platform/i18n/useTranslation";
+import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
+import { useCallback, useRef, type JSX } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import type { RecipeMetadata } from "@/lib/types/recipe";
-import type { PhotoUri } from "@/lib/types/primitives";
-import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
-import { CloseButton } from "@/lib/components/atoms/CloseButton";
-import { MetadataFormFields } from "./MetadataFormFields";
 import { useRecipeForm } from "../hooks/useRecipeForm";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
-import { useTranslation } from "@/platform/i18n/useTranslation";
-import { Alert } from "@/lib/alert";
+import { MetadataFormFields } from "./MetadataFormFields";
+import { ProcessingOverlay } from "./ProcessingOverlay";
 
 export function AddRecipeForm({
   photoUri,
   onSubmit,
+  isProcessing = false,
 }: {
   photoUri: PhotoUri;
   onSubmit: (metadata: RecipeMetadata) => void;
+  isProcessing?: boolean;
 }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -49,12 +52,14 @@ export function AddRecipeForm({
             style: "destructive",
             onPress: () => {
               if (Platform.OS !== "web") {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Warning
+                );
               }
               router.back();
             },
           },
-        ],
+        ]
       );
     } else {
       router.back();
@@ -81,6 +86,7 @@ export function AddRecipeForm({
       >
         <View style={styles.imageContainer}>
           <RecipeImageDisplay uri={photoUri} />
+          {isProcessing && <ProcessingOverlay />}
           <CloseButton onPress={handleClose} />
         </View>
 
@@ -96,12 +102,21 @@ export function AddRecipeForm({
       <View style={[styles.footer, getThemeColors(theme).footer]}>
         <Pressable
           onPress={handleFormSubmit}
-          style={[styles.submitButton, getThemeColors(theme).submitButton]}
+          style={[
+            styles.submitButton,
+            getThemeColors(theme).submitButton,
+            isProcessing && styles.submitButtonDisabled,
+          ]}
           accessibilityLabel={t("recipeForm.submit")}
           accessibilityRole="button"
+          disabled={isProcessing}
         >
           <Text
-            style={[styles.submitButtonText, getThemeColors(theme).buttonText]}
+            style={[
+              styles.submitButtonText,
+              getThemeColors(theme).buttonText,
+              isProcessing && styles.submitButtonTextDisabled,
+            ]}
           >
             {t("recipeForm.submit")}
           </Text>
@@ -158,8 +173,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
   submitButtonText: {
     fontSize: 18,
     fontWeight: "600",
+  },
+  submitButtonTextDisabled: {
+    opacity: 0.7,
   },
 });

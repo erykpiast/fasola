@@ -1,4 +1,5 @@
 import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
+import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { AddRecipeForm } from "@/features/recipe-form/components/AddRecipeForm";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { Alert } from "@/lib/alert";
@@ -12,12 +13,28 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddRecipeScreen(): JSX.Element {
-  const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
+  const { uri: originalUri } = useLocalSearchParams<{
+    uri: PhotoUri;
+  }>();
   const { addRecipe } = useRecipes();
   const theme = useTheme();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processedUri, setProcessedUri] = useState<PhotoUri | null>(null);
+  const [isProcessing, setIsProcessing] = useState(true);
   const { setDebugData } = useDebugContext();
+  const { processPhoto } = usePhotoAdjustment();
+
+  useEffect(() => {
+    if (originalUri) {
+      processPhoto(originalUri).then((result) => {
+        if (result.success && result.processedUri) {
+          setProcessedUri(result.processedUri as PhotoUri);
+        }
+        setIsProcessing(false);
+      });
+    }
+  }, [originalUri, processPhoto]);
 
   useEffect(() => {
     return () => {
@@ -27,6 +44,7 @@ export default function AddRecipeScreen(): JSX.Element {
 
   const handleSubmit = useCallback(
     async (metadata: RecipeMetadata) => {
+      const uri = processedUri || originalUri;
       if (!uri || isSubmitting) return;
 
       setIsSubmitting(true);
@@ -41,10 +59,10 @@ export default function AddRecipeScreen(): JSX.Element {
         setIsSubmitting(false);
       }
     },
-    [uri, addRecipe, isSubmitting, t]
+    [processedUri, originalUri, addRecipe, isSubmitting, t]
   );
 
-  if (!uri) {
+  if (!originalUri) {
     return (
       <SafeAreaView
         style={[styles.container, getThemeColors(theme).container]}
@@ -54,7 +72,11 @@ export default function AddRecipeScreen(): JSX.Element {
 
   return (
     <SafeAreaView style={[styles.container, getThemeColors(theme).container]}>
-      <AddRecipeForm photoUri={uri} onSubmit={handleSubmit} />
+      <AddRecipeForm
+        photoUri={processedUri || originalUri}
+        onSubmit={handleSubmit}
+        isProcessing={isProcessing}
+      />
     </SafeAreaView>
   );
 }

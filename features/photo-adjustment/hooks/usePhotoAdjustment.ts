@@ -6,6 +6,7 @@ import {
 } from "@/lib/photo-processor/types";
 import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
 import { useCallback, useMemo, useState } from "react";
+import { Platform } from "react-native";
 
 /**
  * Hook for automatic photo adjustment processing.
@@ -21,6 +22,10 @@ export function usePhotoAdjustment(): {
   const processPhoto = useCallback(
     async (photoUri: PhotoUri): Promise<ProcessingResult> => {
       setIsProcessing(true);
+
+      if (Platform.OS === "web") {
+        await new Promise((resolve) => setTimeout(resolve, 60_000));
+      }
 
       try {
         const opencv = await loadOpenCV();

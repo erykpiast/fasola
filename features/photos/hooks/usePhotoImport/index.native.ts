@@ -1,4 +1,3 @@
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { Alert } from "@/lib/alert";
 import type { PhotoUri } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
@@ -14,7 +13,6 @@ export function usePhotoImport(): {
 } {
   const [isImporting, setIsImporting] = useState(false);
   const { t } = useTranslation();
-  const { processPhoto } = usePhotoAdjustment();
 
   const importFromCamera = useCallback(async (): Promise<PhotoUri | null> => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -61,10 +59,9 @@ export function usePhotoImport(): {
       try {
         const uri = await importFromCamera();
         if (uri) {
-          const result = await processPhoto(uri);
           router.push({
             pathname: "/recipe/add",
-            params: { uri: result.processedUri || uri },
+            params: { uri },
           });
         }
       } finally {
@@ -77,10 +74,9 @@ export function usePhotoImport(): {
       try {
         const uri = await importFromLibrary();
         if (uri) {
-          const result = await processPhoto(uri);
           router.push({
             pathname: "/recipe/add",
-            params: { uri: result.processedUri || uri },
+            params: { uri },
           });
         }
       } finally {
@@ -109,7 +105,7 @@ export function usePhotoImport(): {
         { text: "Cancel", style: "cancel" },
       ]);
     }
-  }, [importFromCamera, importFromLibrary, processPhoto, t]);
+  }, [importFromCamera, importFromLibrary, t]);
 
   return useMemo(
     () => ({

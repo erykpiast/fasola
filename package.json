@@ -41,6 +41,8 @@
     "expo-web-browser": "15.0.8",
     "i18next": "25.6.0",
     "localforage": "1.10.0",
+    "ml-levenberg-marquardt": "4.1.1",
+    "optimization-js": "1.5.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-error-boundary": "6.0.0",

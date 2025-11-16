@@ -1,64 +1,275 @@
 /**
- * Basic OpenCV demo functions to verify OpenCV setup works on web and native.
- * Performs simple Canny edge detection for demonstration purposes.
+ * Page dewarping pipeline using OpenCV.js and optimization libraries.
+ * Implements the full cubic sheet model for flattening curved pages.
+ *
+ * PIPELINE ORCHESTRATION:
+ * ======================
+ * This is the main entry point that coordinates all phases of the dewarping algorithm.
+ *
+ * The complete pipeline:
+ *
+ * 1. INITIALIZATION (0-5%)
+ *    - Validate mathematical functions
+ *    - Set up progress tracking
+ *
+ * 2. PREPROCESSING (5-25%)
+ *    - Adaptive thresholding → binary text
+ *    - Canny edge detection → edge map
+ *    - Morphological operations → connected components
+ *    - Hough line detection → initial text line estimates
+ *    - Contour detection → page boundary
+ *
+ * 3. SPAN DETECTION (25-40%)
+ *    - Compute edge density map (smoothed edge information)
+ *    - Extract initial span estimates from Hough lines
+ *    - Refine spans using gradient descent (50 iterations)
+ *    - Each span has position + curvature parameters
+ *
+ * 4. MODEL FITTING (40-70%)
+ *    - Sample keypoints along refined spans
+ *    - Fit 16-parameter cubic sheet model
+ *    - Use Levenberg-Marquardt optimization (up to 100 iterations)
+ *    - Minimize reprojection error of keypoints
+ *
+ * 5. REMAPPING (70-95%)
+ *    - Generate transformation maps (mapX, mapY)
+ *    - For each output pixel, compute source location in input
+ *    - Apply remap with cubic interpolation
+ *    - Optional: adaptive threshold for clean text output
+ *
+ * 6. FINALIZATION (95-100%)
+ *    - Generate debug visualizations (if enabled)
+ *    - Collect processing metrics
+ *    - Return dewarped image
+ *
+ * Error handling:
+ * - If any phase fails, return original image (graceful degradation)
+ * - Log errors for debugging
+ * - Populate debug data with partial results
+ *
+ * Progress reporting:
+ * - Each phase reports progress 0-100 with descriptive messages
+ * - Allows UI to show real-time feedback to user
  */
 
 import { Mat } from "@techstark/opencv-js";
-import type { DebugVisualizationData } from "../types";
+import {
+  collectKeypointsFromSpans,
+  computeEdgeDensity,
+  fitCubicSheet,
+  refineSpans,
+} from "../optimization/dewarp-optimizer";
+import type { DewarpDebugData } from "../types";
+import { DEFAULT_DEWARP_CONFIG } from "../types";
+import { reportPhaseInit, validateMathFunctions } from "./page-dewarp-core";
+import type { OpenCVPreprocessing } from "./page-dewarp-preprocessing";
+import {
+  extractSpanEstimates,
+  preprocessImage,
+} from "./page-dewarp-preprocessing";
+import type { OpenCVRemap } from "./page-dewarp-remap";
+import {
+  applyDewarp,
+  generateDewarpMaps,
+  generateRemapDebugData,
+} from "./page-dewarp-remap";
 
 /**
  * Result of geometry correction with optional debug data.
  */
 export interface GeometryCorrectionResult {
   mat: Mat | null;
-  debug?: DebugVisualizationData;
+  debug?: DewarpDebugData;
 }
 
 /**
- * Basic demo: Apply Canny edge detection and return original image.
- * This is a minimal demonstration to verify OpenCV is working.
- * @param cv - OpenCV instance
- * @param src - Source Mat
- * @param config - Geometry configuration (unused in demo)
- * @param collectDebugData - Whether to collect debug visualization data
- * @returns Original Mat with basic edge detection in debug data
+ * Apply page dewarping to straighten curved pages.
+ * Uses cubic sheet model and optimization to flatten warped text.
  */
 export function applyGeometryCorrection(
-  cv: {
-    Mat: new () => Mat;
-    cvtColor: (src: Mat, dst: Mat, code: number) => void;
-    Canny: (src: Mat, dst: Mat, threshold1: number, threshold2: number) => void;
-    imshow: (canvas: HTMLCanvasElement, mat: Mat) => void;
-    COLOR_RGBA2GRAY: number;
-  },
+  cv: any,
   src: Mat,
   collectDebugData: boolean = false
 ): GeometryCorrectionResult {
-  let debugData: DebugVisualizationData | undefined;
+  const startTime = Date.now();
+  const progressLog: Array<{
+    phase: string;
+    timestamp: number;
+    message: string;
+  }> = [];
 
-  if (collectDebugData) {
-    const gray = new cv.Mat();
-    const edges = new cv.Mat();
+  const logProgress = (
+    phase: string,
+    progress: number,
+    message: string
+  ): void => {
+    progressLog.push({
+      phase,
+      timestamp: Date.now() - startTime,
+      message,
+    });
+    console.info(phase, progress, message);
+  };
 
-    try {
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.Canny(gray, edges, 50, 150);
+  try {
+    reportPhaseInit(logProgress);
+    const mathValidation = validateMathFunctions();
+
+    logProgress("Preprocessing", 5, "Starting preprocessing");
+
+    const preprocessingResult = preprocessImage(
+      cv as OpenCVPreprocessing,
+      src,
+      DEFAULT_DEWARP_CONFIG.preprocessing,
+      collectDebugData,
+      logProgress
+    );
+
+    const spanEstimates = extractSpanEstimates(
+      preprocessingResult.lines,
+      src.cols,
+      src.rows,
+      DEFAULT_DEWARP_CONFIG.spanDetection.numSpans
+    );
+
+    logProgress("Optimization", 25, "Computing edge density");
+
+    const edgeDensity = computeEdgeDensity(cv, preprocessingResult.edgeMat, 5);
+
+    const spanResult = refineSpans(
+      spanEstimates,
+      edgeDensity,
+      src.cols,
+      src.rows,
+      logProgress
+    );
+
+    logProgress("Optimization", 40, "Collecting keypoints");
+
+    const keypoints = collectKeypointsFromSpans(spanResult.spans, src.cols, 20);
+
+    const sheetResult = fitCubicSheet(
+      keypoints,
+      src.cols,
+      src.rows,
+      DEFAULT_DEWARP_CONFIG.modelFitting,
+      logProgress
+    );
+
+    logProgress("Remapping", 70, "Generating transformation maps");
+
+    const { mapX, mapY } = generateDewarpMaps(
+      cv as OpenCVRemap,
+      sheetResult.params,
+      src.cols,
+      src.rows,
+      DEFAULT_DEWARP_CONFIG.output.width,
+      DEFAULT_DEWARP_CONFIG.output.height,
+      logProgress
+    );
+
+    logProgress("Remapping", 85, "Applying dewarping");
+
+    const dewarped = applyDewarp(
+      cv as OpenCVRemap,
+      src,
+      mapX,
+      mapY,
+      DEFAULT_DEWARP_CONFIG.output.adaptiveThreshold,
+      logProgress
+    );
+
+    mapX.delete();
+    mapY.delete();
+    preprocessingResult.edgeMat.delete();
+
+    logProgress("Finalizing", 95, "Generating debug data");
+
+    let debugData: DewarpDebugData | undefined;
+
+    if (collectDebugData) {
+      const remapDebugData = generateRemapDebugData(
+        cv as OpenCVRemap,
+        src,
+        dewarped,
+        sheetResult.params,
+        mapX,
+        mapY,
+        collectDebugData
+      );
 
       debugData = {
-        edges: matToDataUrl(cv, edges),
+        mathValidation,
         imageWidth: src.cols,
         imageHeight: src.rows,
+        ...preprocessingResult.debugData,
+        preprocessingStats: preprocessingResult.debugData
+          ?.preprocessingStats || {
+          contoursFound: 0,
+          linesDetected: 0,
+          pageBounds: { width: 0, height: 0 },
+        },
+        optimizationMetrics: {
+          spanIterations: spanResult.iterations,
+          spanError: spanResult.error,
+          modelIterations: sheetResult.iterations,
+          modelError: sheetResult.error,
+          parameters: sheetResult.params.coefficients,
+        },
+        ...remapDebugData,
+        remapStats: remapDebugData?.remapStats || {
+          resolution: { width: 0, height: 0 },
+          interpolation: "INTER_CUBIC",
+        },
+        processingTime: Date.now() - startTime,
+        progressLog,
       };
-    } finally {
-      gray.delete();
-      edges.delete();
     }
-  }
 
-  console.log(
-    "[OpenCV Demo] Returning original image with basic edge detection"
-  );
-  return { mat: src, debug: debugData };
+    logProgress(
+      "Complete",
+      100,
+      `Processing complete in ${Date.now() - startTime}ms`
+    );
+
+    console.log(
+      `[Page Dewarp] Processing complete in ${Date.now() - startTime}ms`
+    );
+
+    return { mat: dewarped, debug: debugData };
+  } catch (error) {
+    console.error("[Page Dewarp] Error during processing:", error);
+
+    logProgress("Error", 0, `Processing failed: ${error}`);
+
+    return {
+      mat: src,
+      debug: collectDebugData
+        ? {
+            imageWidth: src.cols,
+            imageHeight: src.rows,
+            preprocessingStats: {
+              contoursFound: 0,
+              linesDetected: 0,
+              pageBounds: { width: 0, height: 0 },
+            },
+            optimizationMetrics: {
+              spanIterations: 0,
+              spanError: 0,
+              modelIterations: 0,
+              modelError: 0,
+              parameters: [],
+            },
+            remapStats: {
+              resolution: { width: 0, height: 0 },
+              interpolation: "INTER_CUBIC",
+            },
+            processingTime: Date.now() - startTime,
+            progressLog,
+          }
+        : undefined,
+    };
+  }
 }
 
 /**

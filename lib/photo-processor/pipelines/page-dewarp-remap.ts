@@ -143,8 +143,8 @@ export function generateDewarpMaps(
     progressCallback("Remapping", 70, "Generating transformation maps");
   }
 
-  const mapX = new cv.Mat(outputHeight, outputWidth, cv.Mat.CV_32FC1);
-  const mapY = new cv.Mat(outputHeight, outputWidth, cv.Mat.CV_32FC1);
+  const mapX = new cv.Mat(outputHeight, outputWidth, cv.CV_32FC1);
+  const mapY = new cv.Mat(outputHeight, outputWidth, cv.CV_32FC1);
 
   const focalLength = Math.max(sourceWidth, sourceHeight);
 
@@ -388,11 +388,16 @@ function createBeforeAfter(cv: OpenCVRemap, src: Mat, dewarped: Mat): DataUrl {
     cv.INTER_LINEAR
   );
 
+  const matVector = new cv.MatVector();
+  matVector.push_back(src);
+  matVector.push_back(resized);
+
   const combined = new cv.Mat();
-  cv.hconcat([src, resized], combined);
+  cv.hconcat(matVector, combined);
 
   const result = matToDataUrl(cv, combined);
 
+  matVector.delete();
   resized.delete();
   combined.delete();
 

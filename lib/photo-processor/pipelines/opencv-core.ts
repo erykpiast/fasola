@@ -53,12 +53,7 @@
  */
 
 import { Mat } from "@techstark/opencv-js";
-import {
-  collectKeypointsFromSpans,
-  computeEdgeDensity,
-  fitCubicSheet,
-  refineSpans,
-} from "../optimization/dewarp-optimizer";
+import { runOptimization } from "../optimization-loader.web";
 import type { DewarpDebugData } from "../types";
 import { DEFAULT_DEWARP_CONFIG } from "../types";
 import { reportPhaseInit, validateMathFunctions } from "./page-dewarp-core";
@@ -86,11 +81,11 @@ export interface GeometryCorrectionResult {
  * Apply page dewarping to straighten curved pages.
  * Uses cubic sheet model and optimization to flatten warped text.
  */
-export function applyGeometryCorrection(
+export async function applyGeometryCorrection(
   cv: any,
   src: Mat,
   collectDebugData: boolean = false
-): GeometryCorrectionResult {
+): Promise<GeometryCorrectionResult> {
   const startTime = Date.now();
   const progressLog: Array<{
     phase: string;
@@ -132,29 +127,34 @@ export function applyGeometryCorrection(
       DEFAULT_DEWARP_CONFIG.spanDetection.numSpans
     );
 
-    logProgress("Optimization", 25, "Computing edge density");
+    logProgress("Optimization", 25, "Running optimization in worker");
 
-    const edgeDensity = computeEdgeDensity(cv, preprocessingResult.edgeMat, 5);
+    // Extract edge Mat data for worker
+    const edgeData = new Uint8Array(preprocessingResult.edgeMat.data);
 
-    const spanResult = refineSpans(
+    // Run optimization in worker (or main thread as fallback)
+    const optimizationResult = await runOptimization({
+      edgeData,
+      width: preprocessingResult.edgeMat.cols,
+      height: preprocessingResult.edgeMat.rows,
       spanEstimates,
-      edgeDensity,
-      src.cols,
-      src.rows,
-      logProgress
-    );
+      imageWidth: src.cols,
+      imageHeight: src.rows,
+      kernelSize: 5,
+      progressCallback: logProgress,
+    });
 
-    logProgress("Optimization", 40, "Collecting keypoints");
+    const spanResult = {
+      spans: optimizationResult.spans,
+      iterations: 0,
+      error: 0,
+    };
 
-    const keypoints = collectKeypointsFromSpans(spanResult.spans, src.cols, 20);
-
-    const sheetResult = fitCubicSheet(
-      keypoints,
-      src.cols,
-      src.rows,
-      DEFAULT_DEWARP_CONFIG.modelFitting,
-      logProgress
-    );
+    const sheetResult = {
+      params: optimizationResult.params,
+      iterations: 0,
+      error: 0,
+    };
 
     logProgress("Remapping", 70, "Generating transformation maps");
 
@@ -178,10 +178,6 @@ export function applyGeometryCorrection(
       DEFAULT_DEWARP_CONFIG.output.adaptiveThreshold,
       logProgress
     );
-
-    mapX.delete();
-    mapY.delete();
-    preprocessingResult.edgeMat.delete();
 
     logProgress("Finalizing", 95, "Generating debug data");
 
@@ -225,6 +221,11 @@ export function applyGeometryCorrection(
         progressLog,
       };
     }
+
+    // Clean up temporary Mats after debug data generation
+    mapX.delete();
+    mapY.delete();
+    preprocessingResult.edgeMat.delete();
 
     logProgress(
       "Complete",

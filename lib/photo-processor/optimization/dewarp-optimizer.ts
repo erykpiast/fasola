@@ -23,7 +23,6 @@
  * for the best-fitting parameters.
  */
 
-import type { Mat } from "@techstark/opencv-js";
 import { levenbergMarquardt } from "ml-levenberg-marquardt";
 import type {
   CubicSheetParams,
@@ -372,12 +371,11 @@ export function fitCubicSheet(
  * Think of it like a "heat map" of where text is likely to be.
  */
 export function computeEdgeDensity(
-  cv: { Mat: new () => Mat },
-  edgeMat: Mat,
+  edgeData: Uint8Array,
+  width: number,
+  height: number,
   kernelSize: number = 5
 ): Array<Array<number>> {
-  const height = edgeMat.rows;
-  const width = edgeMat.cols;
   const density: Array<Array<number>> = [];
 
   for (let y = 0; y < height; y++) {
@@ -393,7 +391,7 @@ export function computeEdgeDensity(
 
           if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
             const idx = ny * width + nx;
-            sum += edgeMat.data[idx];
+            sum += edgeData[idx];
             count++;
           }
         }

@@ -1,6 +1,8 @@
 /**
  * OpenCV.js loader for web platform.
  * Uses @techstark/opencv-js npm package.
+ * All OpenCV operations run on the main thread.
+ * CPU-intensive optimization runs in a separate worker (optimization-loader.web.ts).
  */
 
 import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
@@ -26,6 +28,7 @@ let loadingPromise: Promise<OpenCVInstance> | null = null;
 /**
  * Load and initialize OpenCV.js library.
  * Returns cached instance on subsequent calls.
+ * All operations run on the main thread.
  */
 export async function loadOpenCV(): Promise<OpenCVInstance> {
   if (rawOpenCVInstance) {
@@ -38,6 +41,7 @@ export async function loadOpenCV(): Promise<OpenCVInstance> {
 
   loadingPromise = (async () => {
     try {
+      console.log("[OpenCV Web] Loading OpenCV.js on main thread");
       const cv = await cvReadyPromise;
       rawOpenCVInstance = cv;
       return createOpenCVInstance(cv);
@@ -73,7 +77,7 @@ export function getWebViewBridge(): OpenCVWebViewBridge {
 }
 
 /**
- * Create a platform-agnostic OpenCV instance wrapper.
+ * Create an OpenCV instance wrapper for main thread execution.
  */
 function createOpenCVInstance(cv: RawOpenCVInstance): OpenCVInstance {
   return {
@@ -81,7 +85,10 @@ function createOpenCVInstance(cv: RawOpenCVInstance): OpenCVInstance {
       imageUri: PhotoUri,
       operations: Array<ImageOperation>
     ): Promise<ProcessImageResult> {
-      console.log("[OpenCV Web] Processing image with operations:", operations);
+      console.log(
+        "[OpenCV Web] Processing image on main thread with operations:",
+        operations
+      );
 
       let src: Mat | null = null;
       let processedMat: Mat | null = null;
@@ -103,7 +110,7 @@ function createOpenCVInstance(cv: RawOpenCVInstance): OpenCVInstance {
             // No processing needed
             continue;
           } else if (operation.type === "geometry") {
-            const result = applyGeometryCorrection(
+            const result = await applyGeometryCorrection(
               { ...cv, COLOR_RGBA2GRAY: cv.COLOR_RGBA2GRAY },
               processedMat!,
               operation.debug

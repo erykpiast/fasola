@@ -42,3 +42,5 @@ yarn-error.*
 
 # Generated WebView bundle
 lib/photo-processor/opencv-webview-bridge.bundle.js
+lib/photo-processor/*.bundle.js
+lib/photo-processor/*.bundle.map

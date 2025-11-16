@@ -15,3 +15,8 @@ declare module "*/opencv-webview-bridge.bundle.js" {
   const content: string;
   export default content;
 }
+
+declare module "*/optimization.worker.bundle.js" {
+  const content: string;
+  export default content;
+}

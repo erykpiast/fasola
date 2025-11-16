@@ -171,7 +171,7 @@ async function processImage(
         continue;
       } else if (operation.type === "geometry") {
         // Use shared geometry correction function
-        const { mat: result, debug } = applyGeometryCorrection(
+        const { mat: result, debug } = await applyGeometryCorrection(
           cv,
           processedMat,
           operation.debug

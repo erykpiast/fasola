@@ -41,10 +41,36 @@ import type {
 import { evaluateCubicPolynomial, project3DTo2D } from "./page-dewarp-core";
 
 /**
+ * OpenCV Size type.
+ */
+export interface CVSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * OpenCV Scalar type for color values.
+ */
+export interface CVScalar {
+  readonly length: number;
+}
+
+/**
+ * OpenCV MatVector type for collections of Mat objects.
+ */
+export interface CVMatVector {
+  push_back: (mat: Mat) => void;
+  delete: () => void;
+  size: () => number;
+  get: (index: number) => Mat;
+}
+
+/**
  * OpenCV interface for remapping operations.
  */
 export interface OpenCVRemap {
-  Mat: new () => Mat;
+  Mat: new (rows?: number, cols?: number, type?: number) => Mat;
+  MatVector: new () => CVMatVector;
   remap: (
     src: Mat,
     dst: Mat,
@@ -52,7 +78,7 @@ export interface OpenCVRemap {
     map2: Mat,
     interpolation: number,
     borderMode?: number,
-    borderValue?: any
+    borderValue?: CVScalar
   ) => void;
   convertScaleAbs: (src: Mat, dst: Mat, alpha?: number, beta?: number) => void;
   adaptiveThreshold: (
@@ -68,36 +94,38 @@ export interface OpenCVRemap {
   resize: (
     src: Mat,
     dst: Mat,
-    dsize: any,
+    dsize: CVSize,
     fx?: number,
     fy?: number,
     interpolation?: number
   ) => void;
-  hconcat: (src: Array<Mat>, dst: Mat) => void;
+  hconcat: (src: CVMatVector, dst: Mat) => void;
   line: (
     img: Mat,
     pt1: Point2D,
     pt2: Point2D,
-    color: any,
+    color: CVScalar,
     thickness?: number
   ) => void;
   circle: (
     img: Mat,
     center: Point2D,
     radius: number,
-    color: any,
+    color: CVScalar,
     thickness?: number
   ) => void;
   imshow: (canvas: HTMLCanvasElement, mat: Mat) => void;
+  CV_32FC1: number;
   INTER_CUBIC: number;
   INTER_LINEAR: number;
   BORDER_CONSTANT: number;
   ADAPTIVE_THRESH_GAUSSIAN_C: number;
   THRESH_BINARY: number;
+  THRESH_BINARY_INV: number;
   COLOR_RGBA2GRAY: number;
   COLOR_GRAY2RGBA: number;
-  Size: new (width: number, height: number) => any;
-  Scalar: new (...values: Array<number>) => any;
+  Size: new (width: number, height: number) => CVSize;
+  Scalar: new (...values: Array<number>) => CVScalar;
 }
 
 /**
@@ -150,15 +178,36 @@ export function generateDewarpMaps(
 
   for (let y = 0; y < outputHeight; y++) {
     for (let x = 0; x < outputWidth; x++) {
-      const normX = (x - outputWidth / 2) / outputWidth;
-      const normY = (y - outputHeight / 2) / outputHeight;
+      // Map output coordinates to source coordinates maintaining aspect ratio
+      const outputAspect = outputWidth / outputHeight;
+      const sourceAspect = sourceWidth / sourceHeight;
+      
+      let srcX: number, srcY: number;
+      
+      if (sourceAspect > outputAspect) {
+        // Source is wider - fit by height
+        const scale = sourceHeight / outputHeight;
+        srcX = (x - outputWidth / 2) * scale + sourceWidth / 2;
+        srcY = (y - outputHeight / 2) * scale + sourceHeight / 2;
+      } else {
+        // Source is taller - fit by width
+        const scale = sourceWidth / outputWidth;
+        srcX = (x - outputWidth / 2) * scale + sourceWidth / 2;
+        srcY = (y - outputHeight / 2) * scale + sourceHeight / 2;
+      }
+      
+      // Normalize coordinates for polynomial evaluation
+      const normX = (srcX - sourceWidth / 2) / sourceWidth;
+      const normY = (srcY - sourceHeight / 2) / sourceHeight;
 
       const z = evaluateCubicPolynomial(normX, normY, sheetParams.coefficients);
 
+      // Create 3D point in source coordinate system
+      // Use focal length as the reference for z-scaling to maintain consistent depth
       const point3D: Point3D = {
-        x: normX * sourceWidth,
-        y: normY * sourceHeight,
-        z: z * sourceWidth,
+        x: srcX - sourceWidth / 2,
+        y: srcY - sourceHeight / 2,
+        z: z * focalLength,
       };
 
       const projected = project3DTo2D(point3D, focalLength, {
@@ -425,7 +474,7 @@ function visualizeSurfaceMesh(
       const point3D: Point3D = {
         x: normX * src.cols,
         y: normY * src.rows,
-        z: z * src.cols,
+        z: z * focalLength,
       };
 
       const projected = project3DTo2D(point3D, focalLength, {

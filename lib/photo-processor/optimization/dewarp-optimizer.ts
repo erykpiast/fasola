@@ -33,6 +33,7 @@ import type {
 import {
   createFlatSheetParams,
   evaluateCubicPolynomial,
+  project3DTo2D,
   sampleKeypointsOnSpan,
 } from "../pipelines/page-dewarp-core";
 
@@ -42,37 +43,47 @@ import {
  *
  * SPAN REFINEMENT EXPLAINED:
  * =========================
- * We start with rough estimates of where text lines are (from Hough line detection).
- * Now we refine these estimates to maximize the amount of text edge pixels
- * that lie along each span.
+ * We start with rough estimates of where text lines are (from contour detection).
+ * Now we refine these estimates to maximize the amount of text contour density
+ * that lies along each span.
  *
  * The intuition:
- * - Text has strong horizontal edges (top and bottom of letters)
- * - A well-positioned span should pass through these edge pixels
- * - We can measure "edge density" along a span by sampling points
+ * - Text contours indicate where text regions are located
+ * - A well-positioned span should pass through these text regions
+ * - We can measure "contour density" along a span by sampling points
  *
  * The optimization:
- * - Cost function: Lower edge density = higher error
+ * - Cost function: Lower contour density = higher error
  * - Parameters: yPosition and curvature for each span
  * - Method: Gradient descent (adjust params in direction that reduces error)
  * - Learning rate: How much to adjust params each iteration (0.1 for position)
  *
  * Why gradient descent vs. Levenberg-Marquardt?
  * - This is a simpler problem (fewer parameters: 2 per span vs. 16 total)
- * - The cost function is noisy (edge density isn't perfectly smooth)
+ * - The cost function is noisy (contour density isn't perfectly smooth)
  * - Gradient descent is more robust to local minima for this type of problem
  */
 export function refineSpans(
   initialSpans: Array<SpanParams>,
-  edgeDensity: Array<Array<number>>,
+  contours: Array<{ x: number; y: number; width: number; height: number }>,
   imageWidth: number,
   imageHeight: number,
+  kernelSize: number = 5,
   progressCallback?: DewarpProgressCallback
 ): {
   spans: Array<SpanParams>;
   iterations: number;
   error: number;
 } {
+  progressCallback?.("Span Detection", 25, "Computing contour density");
+
+  const contourDensity = computeContourDensity(
+    contours,
+    imageWidth,
+    imageHeight,
+    kernelSize
+  );
+
   progressCallback?.("Span Detection", 25, "Refining span positions");
 
   const numIterations = 50;
@@ -84,7 +95,7 @@ export function refineSpans(
   for (let iter = 0; iter < numIterations; iter++) {
     iterations = iter + 1;
 
-    const error = evaluateSpanFit(currentSpans, edgeDensity, imageWidth);
+    const error = evaluateSpanFit(currentSpans, contourDensity, imageWidth);
 
     if (error < bestError) {
       bestError = error;
@@ -101,7 +112,7 @@ export function refineSpans(
 
     const gradients = computeSpanGradients(
       currentSpans,
-      edgeDensity,
+      contourDensity,
       imageWidth,
       imageHeight
     );
@@ -135,27 +146,27 @@ export function refineSpans(
 }
 
 /**
- * Evaluate how well spans match edge density.
+ * Evaluate how well spans match contour density.
  *
  * This is our cost/error function for span optimization.
- * Lower edge density = higher error = worse fit.
+ * Lower contour density = higher error = worse fit.
  *
  * Algorithm:
  * 1. For each span, sample 20 points along its curve
- * 2. Look up the edge density at each sample point
- * 3. Sum up the edge density for all points
+ * 2. Look up the contour density at each sample point
+ * 3. Sum up the contour density for all points
  * 4. Convert to error: error = 1 / (density + 1)
  *    (Higher density → lower error)
  *
  * Why this works:
- * - Text lines have high edge density (letters create edges)
- * - Background areas have low edge density
+ * - Text regions have high contour density (detected text contours)
+ * - Background areas have low contour density
  * - A span positioned along text will have high total density
  * - The optimization will push spans toward text regions
  */
 function evaluateSpanFit(
   spans: Array<SpanParams>,
-  edgeDensity: Array<Array<number>>,
+  contourDensity: Array<Array<number>>,
   imageWidth: number
 ): number {
   let totalError = 0;
@@ -171,11 +182,11 @@ function evaluateSpanFit(
 
       if (
         y >= 0 &&
-        y < edgeDensity.length &&
+        y < contourDensity.length &&
         x >= 0 &&
-        x < edgeDensity[0].length
+        x < contourDensity[0].length
       ) {
-        spanDensity += edgeDensity[y][x];
+        spanDensity += contourDensity[y][x];
       }
     }
 
@@ -209,7 +220,7 @@ function evaluateSpanFit(
  */
 function computeSpanGradients(
   spans: Array<SpanParams>,
-  edgeDensity: Array<Array<number>>,
+  contourDensity: Array<Array<number>>,
   imageWidth: number,
   imageHeight: number
 ): Array<{ yGrad: number; cGrad: number }> {
@@ -217,14 +228,14 @@ function computeSpanGradients(
   const gradients: Array<{ yGrad: number; cGrad: number }> = [];
 
   for (const span of spans) {
-    const baseError = evaluateSpanFit([span], edgeDensity, imageWidth);
+    const baseError = evaluateSpanFit([span], contourDensity, imageWidth);
 
     const yPlus = { ...span, yPosition: span.yPosition + epsilon };
-    const yPlusError = evaluateSpanFit([yPlus], edgeDensity, imageWidth);
+    const yPlusError = evaluateSpanFit([yPlus], contourDensity, imageWidth);
     const yGrad = (yPlusError - baseError) / epsilon;
 
     const cPlus = { ...span, curvature: span.curvature + epsilon };
-    const cPlusError = evaluateSpanFit([cPlus], edgeDensity, imageWidth);
+    const cPlusError = evaluateSpanFit([cPlus], contourDensity, imageWidth);
     const cGrad = (cPlusError - baseError) / epsilon;
 
     gradients.push({ yGrad, cGrad });
@@ -236,35 +247,30 @@ function computeSpanGradients(
 /**
  * Fit cubic sheet model to keypoints using Levenberg-Marquardt.
  *
- * LEVENBERG-MARQUARDT ALGORITHM:
- * ==============================
- * This is the core optimization that finds the 16 cubic sheet coefficients.
+ * THE INVERSE PROBLEM (following Matt Zucker's page_dewarp.py):
+ * ===========================================================
+ * Given: Observed keypoint positions in the curved photo
+ * Find: 3D cubic surface that, when projected, produces those positions
  *
- * The problem:
- * - We have keypoints: 2D positions in the photo (x_photo, y_photo)
- * - We need to find: 16 coefficients that describe a 3D surface
- * - The surface, when projected to 2D, should match the keypoint positions
+ * Key insight:
+ * - Keypoints are sampled from curved text lines (spans) in the photo
+ * - On a FLAT page, these would be on straight horizontal lines
+ * - We create a "flat grid" of where keypoints SHOULD be
+ * - Then find the 3D surface that warps this flat grid → observed positions
  *
- * Why Levenberg-Marquardt (LM)?
- * - It's designed for non-linear least squares problems (minimize sum of squared errors)
- * - Our problem: minimize Σ(predicted_position - actual_keypoint_position)²
- * - LM combines gradient descent (when far from solution) and Gauss-Newton
- *   (when close to solution) for fast, robust convergence
+ * Algorithm:
+ * 1. Create flat page positions (uniform grid)
+ * 2. For current cubic coefficients:
+ *    a. Take flat (x, y) position
+ *    b. Evaluate cubic polynomial: z = f(x, y, coefficients)
+ *    c. Project 3D point (x, y, z) → 2D position
+ *    d. Compute error vs. observed position
+ * 3. LM adjusts coefficients to minimize error
  *
- * How it works:
- * 1. Start with initial guess (flat page: all coefficients = 0)
- * 2. For current coefficients:
- *    a. Evaluate the cubic polynomial at each keypoint → get z values
- *    b. Project (x, y, z) back to 2D → get predicted positions
- *    c. Compare predicted vs. actual keypoint positions → compute errors
- * 3. Compute Jacobian (how errors change with each coefficient)
- * 4. Update coefficients to reduce error
- * 5. Repeat until error stops decreasing (converged)
- *
- * The result: 16 coefficients that best explain the observed page curvature.
+ * This solves the inverse problem: observed 2D photo → inferred 3D shape
  */
 export function fitCubicSheet(
-  keypoints: Array<Point2D>,
+  observedKeypoints: Array<Point2D>,
   imageWidth: number,
   imageHeight: number,
   config: {
@@ -279,10 +285,42 @@ export function fitCubicSheet(
 } {
   progressCallback?.("Model Fitting", 40, "Initializing cubic sheet model");
 
-  const normalizedKeypoints = keypoints.map((p) => ({
+  if (observedKeypoints.length === 0) {
+    console.warn(
+      "[Dewarp Optimizer] No keypoints provided, using flat page model"
+    );
+    progressCallback?.(
+      "Model Fitting",
+      70,
+      "No keypoints, using flat page model"
+    );
+    return {
+      params: createFlatSheetParams(),
+      iterations: 0,
+      error: 0,
+    };
+  }
+
+  const normalizedObserved = observedKeypoints.map((p) => ({
     x: (p.x - imageWidth / 2) / imageWidth,
     y: (p.y - imageHeight / 2) / imageHeight,
   }));
+
+  const numKeypoints = observedKeypoints.length;
+  const minY = Math.min(...normalizedObserved.map((p) => p.y));
+  const maxY = Math.max(...normalizedObserved.map((p) => p.y));
+  const yRange = maxY - minY;
+
+  const flatPositions = observedKeypoints.map((p, i) => {
+    const normalizedX = (p.x - imageWidth / 2) / imageWidth;
+
+    const rowProgress = i / numKeypoints;
+    const flatY = minY + rowProgress * yRange;
+
+    return { x: normalizedX, y: flatY };
+  });
+
+  const focalLength = Math.max(imageWidth, imageHeight);
 
   const initialParams = createFlatSheetParams();
   const x0 = initialParams.coefficients;
@@ -290,7 +328,7 @@ export function fitCubicSheet(
   progressCallback?.(
     "Model Fitting",
     45,
-    "Running Levenberg-Marquardt optimization"
+    `Running Levenberg-Marquardt optimization for ${numKeypoints} keypoints`
   );
 
   const fittedParams = [...x0];
@@ -299,17 +337,32 @@ export function fitCubicSheet(
 
   try {
     const data = {
-      x: normalizedKeypoints.map((p) => p.x),
-      y: normalizedKeypoints.map((p) => 0),
+      x: flatPositions.map((_, i) => i),
+      y: normalizedObserved.map((kp) => kp.y),
     };
 
     const result = levenbergMarquardt(
       data,
-      (params: Array<number>, x: number) => {
-        const pointIndex = data.x.indexOf(x);
-        const y = normalizedKeypoints[pointIndex].y;
-        const z = evaluateCubicPolynomial(x, y, params);
-        return z;
+      (coefficients: Array<number>) => (t: number) => {
+        const index = Math.floor(t);
+        const flatPos = flatPositions[index];
+
+        const z = evaluateCubicPolynomial(flatPos.x, flatPos.y, coefficients);
+
+        const point3D = {
+          x: flatPos.x * imageWidth,
+          y: flatPos.y * imageHeight,
+          z: z * focalLength,
+        };
+
+        const projected = project3DTo2D(point3D, focalLength, {
+          x: imageWidth / 2,
+          y: imageHeight / 2,
+        });
+
+        const projectedNormY = (projected.y - imageHeight / 2) / imageHeight;
+
+        return projectedNormY;
       },
       {
         initialValues: x0,
@@ -392,6 +445,80 @@ export function computeEdgeDensity(
           if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
             const idx = ny * width + nx;
             sum += edgeData[idx];
+            count++;
+          }
+        }
+      }
+
+      row.push(sum / count);
+    }
+    density.push(row);
+  }
+
+  return density;
+}
+
+/**
+ * Compute density map from detected text contours.
+ *
+ * This creates a "heat map" showing where text is located based on contour rectangles.
+ * Similar to edge density, but derived from contour positions rather than edge pixels.
+ *
+ * WHY CONTOUR DENSITY:
+ * - Text contours indicate where text regions are located
+ * - A well-positioned span should pass through text regions
+ * - We smooth the contour presence using a kernel for continuous optimization
+ *
+ * Algorithm:
+ * 1. Create a binary map indicating contour presence
+ * 2. Apply smoothing kernel (average over neighborhood)
+ * 3. Return normalized density values
+ */
+export function computeContourDensity(
+  contours: Array<{ x: number; y: number; width: number; height: number }>,
+  imageWidth: number,
+  imageHeight: number,
+  kernelSize: number = 5
+): Array<Array<number>> {
+  const binaryMap: Array<Array<number>> = [];
+  for (let y = 0; y < imageHeight; y++) {
+    binaryMap.push(new Array(imageWidth).fill(0));
+  }
+
+  for (const contour of contours) {
+    const { x, width, height } = contour;
+    const y = contour.y;
+
+    for (
+      let cy = Math.max(0, Math.floor(y));
+      cy < Math.min(imageHeight, Math.ceil(y + height));
+      cy++
+    ) {
+      for (
+        let cx = Math.max(0, Math.floor(x));
+        cx < Math.min(imageWidth, Math.ceil(x + width));
+        cx++
+      ) {
+        binaryMap[cy][cx] = 255;
+      }
+    }
+  }
+
+  const density: Array<Array<number>> = [];
+
+  for (let y = 0; y < imageHeight; y++) {
+    const row: Array<number> = [];
+    for (let x = 0; x < imageWidth; x++) {
+      let sum = 0;
+      let count = 0;
+
+      for (let dy = -kernelSize; dy <= kernelSize; dy++) {
+        for (let dx = -kernelSize; dx <= kernelSize; dx++) {
+          const ny = y + dy;
+          const nx = x + dx;
+
+          if (ny >= 0 && ny < imageHeight && nx >= 0 && nx < imageWidth) {
+            sum += binaryMap[ny][nx];
             count++;
           }
         }

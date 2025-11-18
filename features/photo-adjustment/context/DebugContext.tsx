@@ -4,23 +4,38 @@ import { createContext, useContext, useState, useCallback, useMemo, type JSX, ty
 interface DebugContextValue {
   debugData: DebugVisualizationData | null;
   setDebugData: (data: DebugVisualizationData | null) => void;
+  isVisible: boolean;
+  setIsVisible: (visible: boolean) => void;
+  toggleVisibility: () => void;
 }
 
 const DebugContext = createContext<DebugContextValue | null>(null);
 
 export function DebugProvider(props: { children: ReactNode }): JSX.Element {
   const [debugData, setDebugDataState] = useState<DebugVisualizationData | null>(null);
+  const [isVisible, setIsVisibleState] = useState(false);
 
   const setDebugData = useCallback((data: DebugVisualizationData | null) => {
     setDebugDataState(data);
+  }, []);
+
+  const setIsVisible = useCallback((visible: boolean) => {
+    setIsVisibleState(visible);
+  }, []);
+
+  const toggleVisibility = useCallback(() => {
+    setIsVisibleState((prev) => !prev);
   }, []);
 
   const value = useMemo(
     () => ({
       debugData,
       setDebugData,
+      isVisible,
+      setIsVisible,
+      toggleVisibility,
     }),
-    [debugData, setDebugData]
+    [debugData, setDebugData, isVisible, setIsVisible, toggleVisibility]
   );
 
   return (

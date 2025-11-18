@@ -21,7 +21,7 @@ export function RecipeImageDisplay({
   return (
     <View style={[styles.container, { width, height: width }, style]}>
       <Image source={{ uri }} style={styles.image} contentFit="cover" />
-      <DebugVisualization width={width} />
+      <DebugVisualization />
     </View>
   );
 }

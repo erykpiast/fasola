@@ -1,13 +1,15 @@
 import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
 import type { DewarpDebugData } from "@/lib/photo-processor/types";
-import { useState, type JSX } from "react";
+import { useCallback, useState, type JSX } from "react";
 import {
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 
 type TabName = "preprocessing" | "optimization" | "remapping" | "metrics";
@@ -16,12 +18,19 @@ type TabName = "preprocessing" | "optimization" | "remapping" | "metrics";
  * Debug visualization with multi-phase data display.
  * Shows preprocessing, optimization, and remapping results.
  */
-export function DebugVisualization(props: {
-  width: number;
-}): JSX.Element | null {
-  const { width } = props;
-  const { debugData } = useDebugContext();
+export function DebugVisualization(): JSX.Element | null {
+  const { width } = useWindowDimensions();
+  const { debugData, isVisible, toggleVisibility, setIsVisible } =
+    useDebugContext();
   const [selectedTab, setSelectedTab] = useState<TabName>("preprocessing");
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+  }, [setIsVisible]);
+
+  const handleToggle = useCallback(() => {
+    toggleVisibility();
+  }, [toggleVisibility]);
 
   if (!debugData) {
     return null;
@@ -30,49 +39,74 @@ export function DebugVisualization(props: {
   const dewarpData = debugData as DewarpDebugData;
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      <View style={styles.tabBar}>
-        <Tab
-          name="preprocessing"
-          label="Preprocessing"
-          selectedTab={selectedTab}
-          onPress={() => setSelectedTab("preprocessing")}
-        />
-        <Tab
-          name="optimization"
-          label="Optimization"
-          selectedTab={selectedTab}
-          onPress={() => setSelectedTab("optimization")}
-        />
-        <Tab
-          name="remapping"
-          label="Remapping"
-          selectedTab={selectedTab}
-          onPress={() => setSelectedTab("remapping")}
-        />
-        <Tab
-          name="metrics"
-          label="Metrics"
-          selectedTab={selectedTab}
-          onPress={() => setSelectedTab("metrics")}
-        />
-      </View>
+    <>
+      {!isVisible && (
+        <TouchableOpacity
+          style={styles.debugToggle}
+          onPress={handleToggle}
+          accessibilityLabel="Toggle debug visualization"
+          accessibilityRole="button"
+        >
+          <Text style={styles.debugToggleText}>🔍</Text>
+        </TouchableOpacity>
+      )}
 
-      <ScrollView style={styles.content}>
-        <TabContent name="preprocessing" selectedTab={selectedTab}>
-          <PreprocessingTab dewarpData={dewarpData} width={width} />
-        </TabContent>
-        <TabContent name="optimization" selectedTab={selectedTab}>
-          <OptimizationTab dewarpData={dewarpData} width={width} />
-        </TabContent>
-        <TabContent name="remapping" selectedTab={selectedTab}>
-          <RemappingTab dewarpData={dewarpData} width={width} />
-        </TabContent>
-        <TabContent name="metrics" selectedTab={selectedTab}>
-          <MetricsTab dewarpData={dewarpData} width={width} />
-        </TabContent>
-      </ScrollView>
-    </View>
+      <Modal
+        visible={isVisible}
+        animationType="fade"
+        onRequestClose={handleClose}
+        statusBarTranslucent
+      >
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <View style={styles.tabBar}>
+              <Tab
+                name="preprocessing"
+                label="Preprocessing"
+                selectedTab={selectedTab}
+                onPress={() => setSelectedTab("preprocessing")}
+              />
+              <Tab
+                name="optimization"
+                label="Optimization"
+                selectedTab={selectedTab}
+                onPress={() => setSelectedTab("optimization")}
+              />
+              <Tab
+                name="remapping"
+                label="Remapping"
+                selectedTab={selectedTab}
+                onPress={() => setSelectedTab("remapping")}
+              />
+              <Tab
+                name="metrics"
+                label="Metrics"
+                selectedTab={selectedTab}
+                onPress={() => setSelectedTab("metrics")}
+              />
+            </View>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.content}>
+            <TabContent name="preprocessing" selectedTab={selectedTab}>
+              <PreprocessingTab dewarpData={dewarpData} width={width} />
+            </TabContent>
+            <TabContent name="optimization" selectedTab={selectedTab}>
+              <OptimizationTab dewarpData={dewarpData} width={width} />
+            </TabContent>
+            <TabContent name="remapping" selectedTab={selectedTab}>
+              <RemappingTab dewarpData={dewarpData} width={width} />
+            </TabContent>
+            <TabContent name="metrics" selectedTab={selectedTab}>
+              <MetricsTab dewarpData={dewarpData} width={width} />
+            </TabContent>
+          </ScrollView>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -123,13 +157,27 @@ function PreprocessingTab(props: {
           width={width}
         />
       )}
+      {dewarpData.erodedText && (
+        <DebugImage
+          uri={dewarpData.erodedText}
+          label="Processed Binary"
+          width={width}
+        />
+      )}
       {dewarpData.edgeMap && (
         <DebugImage uri={dewarpData.edgeMap} label="Edge Map" width={width} />
       )}
       {dewarpData.detectedLines && (
         <DebugImage
           uri={dewarpData.detectedLines}
-          label="Detected Lines"
+          label="Detected Contours (cyan) / Text Contours (green)"
+          width={width}
+        />
+      )}
+      {dewarpData.fittedLines && (
+        <DebugImage
+          uri={dewarpData.fittedLines}
+          label="Fitted Lines (colored by text line)"
           width={width}
         />
       )}
@@ -137,6 +185,13 @@ function PreprocessingTab(props: {
         <DebugImage
           uri={dewarpData.pageBoundary}
           label="Page Boundary"
+          width={width}
+        />
+      )}
+      {dewarpData.spanEstimates && (
+        <DebugImage
+          uri={dewarpData.spanEstimates}
+          label="Span Estimates"
           width={width}
         />
       )}
@@ -230,7 +285,7 @@ function RemappingTab(props: {
         <DebugImage
           uri={dewarpData.beforeAfter}
           label="Before/After Comparison"
-          width={width * 2}
+          width={width}
         />
       )}
       {dewarpData.remapStats && (
@@ -312,19 +367,51 @@ function DebugImage(props: {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  debugToggle: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    top: 16,
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1000,
   },
-  tabBar: {
+  debugToggleText: {
+    fontSize: 24,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+  },
+  header: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.95)",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.2)",
+  },
+  tabBar: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  closeButton: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#00ffff",
+    fontSize: 24,
+    fontWeight: "300",
   },
   tab: {
     flex: 1,

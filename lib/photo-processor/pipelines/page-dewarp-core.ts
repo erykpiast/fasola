@@ -65,14 +65,6 @@ export interface SpanParams {
 }
 
 /**
- * Mathematical validation results.
- */
-export interface MathValidation {
-  polynomialTest: boolean;
-  projectionTest: boolean;
-}
-
-/**
  * Evaluate a cubic polynomial at a given point.
  * z(x, y) = Σ(i=0..3) Σ(j=0..3) c_ij * x^i * y^j
  *
@@ -265,7 +257,10 @@ export function createFlatSheetParams(): CubicSheetParams {
 /**
  * Validate mathematical functions.
  */
-export function validateMathFunctions(): MathValidation {
+export function validateMathFunctions(): {
+  polynomialTest: boolean;
+  projectionTest: boolean;
+} {
   const polynomialTest = testCubicPolynomial();
   const projectionTest = testProjection();
 

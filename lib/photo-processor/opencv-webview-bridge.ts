@@ -13,6 +13,7 @@ import {
   loadImageToMat,
   matToDataUrl,
 } from "./pipelines/opencv-core";
+import type { DewarpDebugData } from "./types";
 
 interface OpenCVGlobal {
   onRuntimeInitialized?: () => void;
@@ -163,7 +164,7 @@ async function processImage(
     src = await loadImageToMat(cv, imageUri);
     processedMat = src;
 
-    let debugData = undefined;
+    let debugData: DewarpDebugData | undefined = undefined;
 
     // Apply operations sequentially
     for (const operation of operations) {
@@ -208,7 +209,11 @@ async function processImage(
 /**
  * Send successful result back to React Native.
  */
-function sendResult(requestId: string, processedUri: string, debugData?: any): void {
+function sendResult(
+  requestId: string,
+  processedUri: string,
+  debugData?: DewarpDebugData
+): void {
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(
       JSON.stringify({

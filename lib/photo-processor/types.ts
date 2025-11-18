@@ -15,9 +15,12 @@ export interface DebugVisualizationData {
 export interface DewarpDebugData extends DebugVisualizationData {
   mathValidation?: { polynomialTest: boolean; projectionTest: boolean };
   binaryText?: DataUrl;
+  erodedText?: DataUrl;
   edgeMap?: DataUrl;
   detectedLines?: DataUrl;
+  fittedLines?: DataUrl;
   pageBoundary?: DataUrl;
+  spanEstimates?: DataUrl;
   preprocessingStats: {
     contoursFound: number;
     linesDetected: number;
@@ -81,48 +84,5 @@ export const DEFAULT_ADJUSTMENT_CONFIG: {
   },
   debug: {
     enabled: true,
-  },
-};
-
-/**
- * Default configuration for page dewarping.
- */
-export const DEFAULT_DEWARP_CONFIG: {
-  preprocessing: {
-    edgeThresholdLow: number;
-    edgeThresholdHigh: number;
-    textDilationKernel: number;
-  };
-  spanDetection: {
-    numSpans: number;
-    spanSpacing: number;
-  };
-  modelFitting: {
-    maxIterations: number;
-    tolerance: number;
-  };
-  output: {
-    width: number;
-    height: number;
-    adaptiveThreshold: boolean;
-  };
-} = {
-  preprocessing: {
-    edgeThresholdLow: 50,
-    edgeThresholdHigh: 150,
-    textDilationKernel: 3,
-  },
-  spanDetection: {
-    numSpans: 10,
-    spanSpacing: 50,
-  },
-  modelFitting: {
-    maxIterations: 100,
-    tolerance: 0.001,
-  },
-  output: {
-    width: 1200,
-    height: 1600,
-    adaptiveThreshold: true,
   },
 };

@@ -1,7 +1,7 @@
 /**
  * Optimization Web Worker
  * Runs CPU-intensive pure-JavaScript optimization functions off the main thread.
- * Handles edge density computation, span refinement, keypoint collection, and cubic sheet fitting.
+ * Handles contour density computation, span refinement, keypoint collection, and cubic sheet fitting.
  */
 
 import type {
@@ -10,10 +10,9 @@ import type {
   Point2D,
   SpanParams,
 } from "./pipelines/page-dewarp-core";
-import { DEFAULT_DEWARP_CONFIG } from "./types";
+import { DEFAULT_DEWARP_CONFIG } from "./config";
 import {
   collectKeypointsFromSpans,
-  computeEdgeDensity,
   fitCubicSheet,
   refineSpans,
 } from "./optimization/dewarp-optimizer";
@@ -21,9 +20,7 @@ import {
 interface OptimizationRequest {
   type: "optimize";
   requestId: string;
-  edgeData: Uint8Array;
-  width: number;
-  height: number;
+  contours: Array<{ x: number; y: number; width: number; height: number }>;
   spanEstimates: Array<SpanParams>;
   imageWidth: number;
   imageHeight: number;
@@ -52,7 +49,7 @@ interface ProgressMessage {
  * Run the full optimization pipeline.
  */
 async function runOptimization(request: OptimizationRequest): Promise<void> {
-  const { requestId, edgeData, width, height, spanEstimates, imageWidth, imageHeight, kernelSize } = request;
+  const { requestId, contours, spanEstimates, imageWidth, imageHeight, kernelSize } = request;
 
   try {
     console.log("[Optimization Worker] Starting optimization pipeline");
@@ -69,17 +66,14 @@ async function runOptimization(request: OptimizationRequest): Promise<void> {
       self.postMessage(progressMsg);
     };
 
-    // Step 1: Compute edge density
-    progressCallback("Optimization", 25, "Computing edge density");
-    const edgeDensity = computeEdgeDensity(edgeData, width, height, kernelSize);
-
-    // Step 2: Refine spans
+    // Step 1: Refine spans using contour density
     progressCallback("Optimization", 30, "Refining text line spans");
     const spanResult = refineSpans(
       spanEstimates,
-      edgeDensity,
+      contours,
       imageWidth,
       imageHeight,
+      kernelSize,
       progressCallback
     );
 

@@ -53,39 +53,32 @@
  */
 
 import { Mat } from "@techstark/opencv-js";
+import { DEFAULT_DEWARP_CONFIG } from "../config";
+import type { OpenCVPreprocessing } from "../opencv";
 import { runOptimization } from "../optimization-loader.web";
 import type { DewarpDebugData } from "../types";
-import { DEFAULT_DEWARP_CONFIG } from "../types";
 import { reportPhaseInit, validateMathFunctions } from "./page-dewarp-core";
-import type { OpenCVPreprocessing } from "./page-dewarp-preprocessing";
-import {
-  extractSpanEstimates,
-  preprocessImage,
-} from "./page-dewarp-preprocessing";
 import type { OpenCVRemap } from "./page-dewarp-remap";
 import {
   applyDewarp,
   generateDewarpMaps,
   generateRemapDebugData,
 } from "./page-dewarp-remap";
-
-/**
- * Result of geometry correction with optional debug data.
- */
-export interface GeometryCorrectionResult {
-  mat: Mat | null;
-  debug?: DewarpDebugData;
-}
+import {
+  extractSpanEstimatesFromContours,
+  preprocessImage,
+  visualizeSpanEstimates,
+} from "./preprocessing";
 
 /**
  * Apply page dewarping to straighten curved pages.
  * Uses cubic sheet model and optimization to flatten warped text.
  */
 export async function applyGeometryCorrection(
-  cv: any,
+  cv: OpenCVPreprocessing & OpenCVRemap,
   src: Mat,
   collectDebugData: boolean = false
-): Promise<GeometryCorrectionResult> {
+): Promise<{ mat: Mat | null; debug?: DewarpDebugData }> {
   const startTime = Date.now();
   const progressLog: Array<{
     phase: string;
@@ -112,31 +105,42 @@ export async function applyGeometryCorrection(
 
     logProgress("Preprocessing", 5, "Starting preprocessing");
 
-    const preprocessingResult = preprocessImage(
-      cv as OpenCVPreprocessing,
+    const result = await preprocessImage(
+      cv,
       src,
-      DEFAULT_DEWARP_CONFIG.preprocessing,
+      {
+        adaptiveWindowSize:
+          DEFAULT_DEWARP_CONFIG.preprocessing.adaptiveThresholdBlockSize,
+        textMinWidth: DEFAULT_DEWARP_CONFIG.preprocessing.textMinWidth,
+        textMinHeight: DEFAULT_DEWARP_CONFIG.preprocessing.textMinHeight,
+        textMinAspect: DEFAULT_DEWARP_CONFIG.preprocessing.textMinAspect,
+        textMaxThickness: DEFAULT_DEWARP_CONFIG.preprocessing.textMaxThickness,
+        pageMinAreaRatio: DEFAULT_DEWARP_CONFIG.preprocessing.pageMinAreaRatio,
+        pageMinAspectRatio:
+          DEFAULT_DEWARP_CONFIG.preprocessing.pageMinAspectRatio,
+        pageMaxAspectRatio:
+          DEFAULT_DEWARP_CONFIG.preprocessing.pageMaxAspectRatio,
+      },
       collectDebugData,
       logProgress
     );
 
-    const spanEstimates = extractSpanEstimates(
-      preprocessingResult.lines,
-      src.cols,
+    const preprocessingDebugData = result.debugData;
+
+    const spanEstimates = extractSpanEstimatesFromContours(
+      result.textContours,
       src.rows,
       DEFAULT_DEWARP_CONFIG.spanDetection.numSpans
     );
 
     logProgress("Optimization", 25, "Running optimization in worker");
 
-    // Extract edge Mat data for worker
-    const edgeData = new Uint8Array(preprocessingResult.edgeMat.data);
+    // Extract contour rectangles for optimization
+    const contours = result.textContours.map((tc) => tc.rect);
 
     // Run optimization in worker (or main thread as fallback)
     const optimizationResult = await runOptimization({
-      edgeData,
-      width: preprocessingResult.edgeMat.cols,
-      height: preprocessingResult.edgeMat.rows,
+      contours,
       spanEstimates,
       imageWidth: src.cols,
       imageHeight: src.rows,
@@ -159,7 +163,7 @@ export async function applyGeometryCorrection(
     logProgress("Remapping", 70, "Generating transformation maps");
 
     const { mapX, mapY } = generateDewarpMaps(
-      cv as OpenCVRemap,
+      cv,
       sheetResult.params,
       src.cols,
       src.rows,
@@ -171,7 +175,7 @@ export async function applyGeometryCorrection(
     logProgress("Remapping", 85, "Applying dewarping");
 
     const dewarped = applyDewarp(
-      cv as OpenCVRemap,
+      cv,
       src,
       mapX,
       mapY,
@@ -185,7 +189,7 @@ export async function applyGeometryCorrection(
 
     if (collectDebugData) {
       const remapDebugData = generateRemapDebugData(
-        cv as OpenCVRemap,
+        cv,
         src,
         dewarped,
         sheetResult.params,
@@ -198,9 +202,9 @@ export async function applyGeometryCorrection(
         mathValidation,
         imageWidth: src.cols,
         imageHeight: src.rows,
-        ...preprocessingResult.debugData,
-        preprocessingStats: preprocessingResult.debugData
-          ?.preprocessingStats || {
+        ...preprocessingDebugData,
+        spanEstimates: visualizeSpanEstimates(cv, src, spanEstimates),
+        preprocessingStats: preprocessingDebugData?.preprocessingStats || {
           contoursFound: 0,
           linesDetected: 0,
           pageBounds: { width: 0, height: 0 },
@@ -225,7 +229,6 @@ export async function applyGeometryCorrection(
     // Clean up temporary Mats after debug data generation
     mapX.delete();
     mapY.delete();
-    preprocessingResult.edgeMat.delete();
 
     logProgress(
       "Complete",

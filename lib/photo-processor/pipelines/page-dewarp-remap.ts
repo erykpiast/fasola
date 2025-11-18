@@ -178,46 +178,37 @@ export function generateDewarpMaps(
 
   for (let y = 0; y < outputHeight; y++) {
     for (let x = 0; x < outputWidth; x++) {
-      // Map output coordinates to source coordinates maintaining aspect ratio
-      const outputAspect = outputWidth / outputHeight;
-      const sourceAspect = sourceWidth / sourceHeight;
-      
-      let srcX: number, srcY: number;
-      
-      if (sourceAspect > outputAspect) {
-        // Source is wider - fit by height
-        const scale = sourceHeight / outputHeight;
-        srcX = (x - outputWidth / 2) * scale + sourceWidth / 2;
-        srcY = (y - outputHeight / 2) * scale + sourceHeight / 2;
-      } else {
-        // Source is taller - fit by width
-        const scale = sourceWidth / outputWidth;
-        srcX = (x - outputWidth / 2) * scale + sourceWidth / 2;
-        srcY = (y - outputHeight / 2) * scale + sourceHeight / 2;
-      }
-      
-      // Normalize coordinates for polynomial evaluation
-      const normX = (srcX - sourceWidth / 2) / sourceWidth;
-      const normY = (srcY - sourceHeight / 2) / sourceHeight;
+      const normX = (x - outputWidth / 2) / outputWidth;
+      const normY = (y - outputHeight / 2) / outputHeight;
 
       const z = evaluateCubicPolynomial(normX, normY, sheetParams.coefficients);
 
-      // Create 3D point in source coordinate system
-      // Use focal length as the reference for z-scaling to maintain consistent depth
-      const point3D: Point3D = {
-        x: srcX - sourceWidth / 2,
-        y: srcY - sourceHeight / 2,
-        z: z * focalLength,
-      };
+      // When z is 0 (flat page), this should be a simple coordinate mapping
+      if (Math.abs(z) < 1e-10) {
+        // Direct mapping from output to source coordinates
+        const sourceX = (x / outputWidth) * sourceWidth;
+        const sourceY = (y / outputHeight) * sourceHeight;
 
-      const projected = project3DTo2D(point3D, focalLength, {
-        x: sourceWidth / 2,
-        y: sourceHeight / 2,
-      });
+        const idx = y * outputWidth + x;
+        mapX.data32F[idx] = sourceX;
+        mapY.data32F[idx] = sourceY;
+      } else {
+        // Apply perspective projection for curved pages
+        const point3D: Point3D = {
+          x: normX * sourceWidth,
+          y: normY * sourceHeight,
+          z: z * sourceWidth,
+        };
 
-      const idx = y * outputWidth + x;
-      mapX.data32F[idx] = projected.x;
-      mapY.data32F[idx] = projected.y;
+        const projected = project3DTo2D(point3D, focalLength, {
+          x: sourceWidth / 2,
+          y: sourceHeight / 2,
+        });
+
+        const idx = y * outputWidth + x;
+        mapX.data32F[idx] = projected.x;
+        mapY.data32F[idx] = projected.y;
+      }
     }
 
     if (y % 50 === 0 && progressCallback) {
@@ -474,7 +465,7 @@ function visualizeSurfaceMesh(
       const point3D: Point3D = {
         x: normX * src.cols,
         y: normY * src.rows,
-        z: z * focalLength,
+        z: z * src.cols,
       };
 
       const projected = project3DTo2D(point3D, focalLength, {

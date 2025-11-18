@@ -11,7 +11,7 @@ export type {
   PassthroughOperation,
 } from "@/lib/photo-processor/opencv-loader.d";
 
-export function loadOpenCV(): Promise<void>;
+export function loadOpenCV(): Promise<OpenCVInstance>;
 export function isOpenCVLoaded(): boolean;
-export function getOpenCVInstance(): Promise<any>;
-export function getWebViewBridge(): any;
+export function getOpenCVInstance(): OpenCVInstance | null;
+export function getWebViewBridge(): OpenCVWebViewBridge;

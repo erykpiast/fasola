@@ -10,19 +10,16 @@ import type {
   Point2D,
   SpanParams,
 } from "./pipelines/page-dewarp-core";
-import { DEFAULT_DEWARP_CONFIG } from "./pipelines/page-dewarp-core";
+import { DEFAULT_DEWARP_CONFIG } from "./config";
 import {
   collectKeypointsFromSpans,
-  computeEdgeDensity,
   fitCubicSheet,
   refineSpans,
 } from "./optimization/dewarp-optimizer";
 import workerCode from "./optimization.worker.bundle.js";
 
 interface OptimizationRequest {
-  edgeData: Uint8Array;
-  width: number;
-  height: number;
+  contours: Array<{ x: number; y: number; width: number; height: number }>;
   spanEstimates: Array<SpanParams>;
   imageWidth: number;
   imageHeight: number;
@@ -156,9 +153,7 @@ function runOptimizationInWorker(
     worker!.postMessage({
       type: "optimize",
       requestId,
-      edgeData: request.edgeData,
-      width: request.width,
-      height: request.height,
+      contours: request.contours,
       spanEstimates: request.spanEstimates,
       imageWidth: request.imageWidth,
       imageHeight: request.imageHeight,
@@ -184,9 +179,7 @@ function runOptimizationOnMainThread(
   return new Promise((resolve, reject) => {
     try {
       const {
-        edgeData,
-        width,
-        height,
+        contours,
         spanEstimates,
         imageWidth,
         imageHeight,
@@ -194,17 +187,14 @@ function runOptimizationOnMainThread(
         progressCallback,
       } = request;
 
-      // Step 1: Compute edge density
-      progressCallback?.("Optimization", 25, "Computing edge density");
-      const edgeDensity = computeEdgeDensity(edgeData, width, height, kernelSize);
-
-      // Step 2: Refine spans
+      // Step 1: Refine spans using contour density
       progressCallback?.("Optimization", 30, "Refining text line spans");
       const spanResult = refineSpans(
         spanEstimates,
-        edgeDensity,
+        contours,
         imageWidth,
         imageHeight,
+        kernelSize,
         progressCallback
       );
 

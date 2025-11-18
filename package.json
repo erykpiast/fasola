@@ -13,7 +13,8 @@
     "build:optimization-worker": "node scripts/build-optimization-worker.js",
     "build:opencv": "npm run build:opencv-bridge && npm run build:optimization-worker",
     "prebuild": "npm run build:opencv",
-    "prestart": "npm run build:opencv"
+    "prestart": "npm run build:opencv",
+    "test:photo-processor": "tsx lib/photo-processor/test-pipeline.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "15.0.2",
@@ -62,8 +63,10 @@
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/react": "19.1.17",
+    "canvas": "3.2.0",
     "eslint": "9.37.0",
     "eslint-config-expo": "10.0.0",
+    "tsx": "4.20.6",
     "typescript": "5.9.3"
   },
   "private": true,

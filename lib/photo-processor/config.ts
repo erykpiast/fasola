@@ -28,10 +28,10 @@ export const DEFAULT_DEWARP_CONFIG: {
 } = {
   preprocessing: {
     adaptiveThresholdBlockSize: 51,
-    textMinWidth: 4,
+    textMinWidth: 200,
     textMinHeight: 10,
     textMinAspect: 1.5,
-    textMaxThickness: 140,
+    textMaxThickness: 40,
     pageMinAreaRatio: 0.6,
     pageMinAspectRatio: 1.2,
     pageMaxAspectRatio: 1.9,

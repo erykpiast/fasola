@@ -335,34 +335,52 @@ export function fitCubicSheet(
   let iterations = 0;
   let finalError = 0;
 
-  try {
-    const data = {
-      x: flatPositions.map((_, i) => i),
-      y: normalizedObserved.map((kp) => kp.y),
+  const sampleCount = numKeypoints;
+  const constraintX: Array<number> = [];
+  const constraintTargets: Array<number> = [];
+
+  for (let i = 0; i < sampleCount; i++) {
+    constraintX.push(i); // Y constraint
+    constraintTargets.push(normalizedObserved[i].y);
+
+    constraintX.push(sampleCount + i); // X constraint (offset)
+    constraintTargets.push(normalizedObserved[i].x);
+  }
+
+  const evaluateProjection = (
+    coefficients: Array<number>,
+    sampleIndex: number
+  ): { normX: number; normY: number } => {
+    const flatPos = flatPositions[sampleIndex];
+
+    const z = evaluateCubicPolynomial(flatPos.x, flatPos.y, coefficients);
+
+    const point3D = {
+      x: flatPos.x * imageWidth,
+      y: flatPos.y * imageHeight,
+      z: z * focalLength,
     };
 
+    const projected = project3DTo2D(point3D, focalLength, {
+      x: imageWidth / 2,
+      y: imageHeight / 2,
+    });
+
+    return {
+      normX: (projected.x - imageWidth / 2) / imageWidth,
+      normY: (projected.y - imageHeight / 2) / imageHeight,
+    };
+  };
+
+  try {
     const result = levenbergMarquardt(
-      data,
+      { x: constraintX, y: constraintTargets },
       (coefficients: Array<number>) => (t: number) => {
-        const index = Math.floor(t);
-        const flatPos = flatPositions[index];
+        const isXConstraint = t >= sampleCount;
+        const sampleIndex = Math.floor(t % sampleCount);
+        const projection = evaluateProjection(coefficients, sampleIndex);
 
-        const z = evaluateCubicPolynomial(flatPos.x, flatPos.y, coefficients);
-
-        const point3D = {
-          x: flatPos.x * imageWidth,
-          y: flatPos.y * imageHeight,
-          z: z * focalLength,
-        };
-
-        const projected = project3DTo2D(point3D, focalLength, {
-          x: imageWidth / 2,
-          y: imageHeight / 2,
-        });
-
-        const projectedNormY = (projected.y - imageHeight / 2) / imageHeight;
-
-        return projectedNormY;
+        return isXConstraint ? projection.normX : projection.normY;
       },
       {
         initialValues: x0,

@@ -93,7 +93,7 @@ export function extractSpanEstimatesFromContours(
     return extractSpanEstimates([], 0, imageHeight, numSpans);
   }
 
-  const contoursByY = textContours
+  const availableY = textContours
     .map((tc) => tc.rect.y + tc.rect.height / 2)
     .sort((a, b) => a - b);
 
@@ -103,18 +103,30 @@ export function extractSpanEstimatesFromContours(
   for (let i = 0; i < numSpans; i++) {
     const targetY = step * (i + 1);
 
-    const closestY = contoursByY.reduce((prev, curr) => {
-      return Math.abs(curr - targetY) < Math.abs(prev - targetY) ? curr : prev;
-    }, contoursByY[0]);
+    let yPosition = targetY;
 
-    const yPosition =
-      Math.abs(closestY - targetY) < step / 2 ? closestY : targetY;
+    if (availableY.length > 0) {
+      let closestIndex = 0;
+      let closestDistance = Math.abs(availableY[0] - targetY);
+
+      for (let idx = 1; idx < availableY.length; idx++) {
+        const distance = Math.abs(availableY[idx] - targetY);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = idx;
+        }
+      }
+
+      yPosition = availableY.splice(closestIndex, 1)[0];
+    }
 
     spans.push({
-      yPosition,
+      yPosition: Math.max(0, Math.min(imageHeight, yPosition)),
       curvature: 0,
     });
   }
+
+  spans.sort((a, b) => a.yPosition - b.yPosition);
 
   return spans;
 }

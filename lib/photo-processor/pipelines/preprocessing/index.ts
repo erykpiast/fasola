@@ -50,6 +50,10 @@ import {
 import { yieldToMainThread } from "./utils";
 
 export {
+  visualizeDetectedSpans,
+  visualizeKeypointCloud,
+} from "./debug-visualization";
+export {
   extractSpanEstimates,
   extractSpanEstimatesFromContours,
   visualizeSpanEstimates,

@@ -5,7 +5,11 @@
 import type { OpenCVPreprocessing } from "@/lib/photo-processor/opencv";
 import type { DataUrl } from "@/lib/types/primitives";
 import type { Mat } from "@techstark/opencv-js";
-import type { Point2D } from "../page-dewarp-core";
+import {
+  sampleKeypointsOnSpan,
+  type Point2D,
+  type SpanParams,
+} from "../page-dewarp-core";
 import type { PageBounds } from "./line-fitting";
 
 /**
@@ -427,4 +431,77 @@ export function generatePreprocessingDebugData(
       },
     },
   };
+}
+
+/**
+ * Visualize optimized spans (curved baselines) on the source image.
+ */
+export function visualizeDetectedSpans(
+  cv: OpenCVPreprocessing,
+  src: Mat,
+  spans: Array<SpanParams>
+): DataUrl {
+  const visualization = new cv.Mat();
+  src.copyTo(visualization);
+  const color = new cv.Scalar(255, 0, 255, 255);
+
+  for (let i = 0; i < spans.length; i++) {
+    const span = spans[i];
+    const samples = sampleKeypointsOnSpan(span, src.cols, 80);
+
+    for (let j = 0; j < samples.length - 1; j++) {
+      const start = samples[j];
+      const end = samples[j + 1];
+      cv.line(
+        visualization,
+        { x: Math.round(start.x), y: Math.round(start.y) },
+        { x: Math.round(end.x), y: Math.round(end.y) },
+        color,
+        2
+      );
+    }
+
+    const midIdx = Math.floor(samples.length / 2);
+    const labelPos = samples[midIdx];
+    cv.putText(
+      visualization,
+      `s${i + 1}`,
+      { x: Math.round(labelPos.x), y: Math.round(labelPos.y - 6) },
+      cv.FONT_HERSHEY_SIMPLEX,
+      0.6,
+      color,
+      2
+    );
+  }
+
+  const result = matToDataUrl(cv, visualization);
+  visualization.delete();
+  return result;
+}
+
+/**
+ * Visualize keypoint cloud sampled from optimized spans.
+ */
+export function visualizeKeypointCloud(
+  cv: OpenCVPreprocessing,
+  src: Mat,
+  keypoints: Array<Point2D>
+): DataUrl {
+  const visualization = new cv.Mat();
+  src.copyTo(visualization);
+  const pointColor = new cv.Scalar(0, 255, 255, 255);
+
+  for (const point of keypoints) {
+    cv.circle(
+      visualization,
+      { x: Math.round(point.x), y: Math.round(point.y) },
+      4,
+      pointColor,
+      -1
+    );
+  }
+
+  const result = matToDataUrl(cv, visualization);
+  visualization.delete();
+  return result;
 }

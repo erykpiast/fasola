@@ -67,6 +67,8 @@ import {
 import {
   extractSpanEstimatesFromContours,
   preprocessImage,
+  visualizeDetectedSpans,
+  visualizeKeypointCloud,
   visualizeSpanEstimates,
 } from "./preprocessing";
 
@@ -159,6 +161,7 @@ export async function applyGeometryCorrection(
       iterations: 0,
       error: 0,
     };
+    const keypoints = optimizationResult.keypoints;
 
     logProgress("Remapping", 70, "Generating transformation maps");
 
@@ -204,6 +207,8 @@ export async function applyGeometryCorrection(
         imageHeight: src.rows,
         ...preprocessingDebugData,
         spanEstimates: visualizeSpanEstimates(cv, src, spanEstimates),
+        detectedSpans: visualizeDetectedSpans(cv, src, spanResult.spans),
+        keypointCloud: visualizeKeypointCloud(cv, src, keypoints),
         preprocessingStats: preprocessingDebugData?.preprocessingStats || {
           contoursFound: 0,
           linesDetected: 0,

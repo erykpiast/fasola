@@ -1,6 +1,5 @@
-import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext";
+import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
-import { OpenCVWebViewSetup } from "@/lib/photo-processor/OpenCVWebViewSetup";
 import { Stack } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 import { Suspense, useEffect, type JSX } from "react";
@@ -10,6 +9,7 @@ import { useTheme } from "../platform/theme/useTheme";
 
 export default function RootLayout(): JSX.Element {
   const theme = useTheme();
+  const { WebViewSetup } = usePhotoAdjustment();
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(theme === "dark" ? "#000000" : "#F5F5F5");
@@ -17,12 +17,10 @@ export default function RootLayout(): JSX.Element {
 
   return (
     <Suspense fallback={<View style={styles.suspenseFallback} />}>
-      <DebugProvider>
-        <RecipesProvider>
-          <OpenCVWebViewSetup />
-          <Stack screenOptions={{ headerShown: false }} />
-        </RecipesProvider>
-      </DebugProvider>
+      <RecipesProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <WebViewSetup />
+      </RecipesProvider>
     </Suspense>
   );
 }

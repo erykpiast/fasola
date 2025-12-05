@@ -1,88 +1,76 @@
 import type { DataUrl } from "@/lib/types/primitives";
 
-/**
- * Debug visualization data from basic edge detection.
- */
-export interface DebugVisualizationData {
-  edges?: DataUrl;
-  imageWidth: number;
-  imageHeight: number;
+// Core configuration for photo adjustment pipeline
+export interface PhotoAdjustmentConfig {
+  geometry: {
+    enabled: boolean;
+    // page-dewarp-js configuration options
+    xMargin: number; // Horizontal page margin as % of page width (default: 5)
+    yMargin: number; // Vertical page margin as % of page height (default: 5)
+    outputZoom: number; // Output zoom factor (default: 1.0)
+    noBinary: boolean; // Skip binary thresholding on output (default: true for recipe photos)
+  };
+  lighting: {
+    enabled: boolean;
+    whiteBalance: "gray-world" | "simple" | "none";
+    claheClipLimit: number; // 2.0-3.5
+    claheTileSize: number; // 8
+  };
+  clarity: {
+    enabled: boolean;
+    denoiseStrength: number; // 3-7
+    sharpenRadius: number; // 1.2-1.8
+    sharpenAmount: number; // 0.8-1.4
+    sharpenThreshold: number; // 2-4
+  };
 }
 
-/**
- * Enhanced debug data for page dewarping.
- */
-export interface DewarpDebugData extends DebugVisualizationData {
-  mathValidation?: { polynomialTest: boolean; projectionTest: boolean };
-  binaryText?: DataUrl;
-  erodedText?: DataUrl;
-  edgeMap?: DataUrl;
-  detectedLines?: DataUrl;
-  fittedLines?: DataUrl;
-  pageBoundary?: DataUrl;
-  spanEstimates?: DataUrl;
-  preprocessingStats: {
-    contoursFound: number;
-    linesDetected: number;
-    pageBounds: { width: number; height: number };
-  };
-  detectedSpans?: DataUrl;
-  keypointCloud?: DataUrl;
-  optimizationMetrics: {
-    spanIterations: number;
-    spanError: number;
-    modelIterations: number;
-    modelError: number;
-    parameters: Array<number>;
-  };
-  meshGrid?: DataUrl;
-  beforeAfter?: DataUrl;
-  surfaceMesh?: DataUrl;
-  remapStats: {
-    resolution: { width: number; height: number };
-    interpolation: string;
-  };
-  processingTime: number;
-  progressLog: Array<{ phase: string; timestamp: number; message: string }>;
-}
-
-/**
- * Result of photo processing operation.
- */
+// Processing result from photo adjustment pipeline
 export interface ProcessingResult {
   success: boolean;
   processedUri?: DataUrl;
   error?: ProcessingError;
-  debug?: DebugVisualizationData;
 }
 
-/**
- * Error information from photo processing.
- */
-interface ProcessingError {
-  code: "PROCESSING_FAILED";
+// Error types that can occur during processing
+export interface ProcessingError {
+  code: "PROCESSING_FAILED" | "DEWARP_FAILED" | "NO_PAGE_DETECTED";
   message: string;
 }
 
-/**
- * Default configuration for basic OpenCV demo.
- */
-export const DEFAULT_ADJUSTMENT_CONFIG: {
-  geometry: {
-    enabled: boolean;
-    minPageArea: number;
-    padding: number;
-  };
-  debug?: {
-    enabled: boolean;
-  };
-} = {
+// Default configuration optimized for recipe photos
+export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
   geometry: {
     enabled: true,
-    minPageArea: 0.5,
-    padding: 0.0,
+    xMargin: 5,
+    yMargin: 5,
+    outputZoom: 1.0,
+    noBinary: true,
   },
-  debug: {
-    enabled: true,
+  lighting: {
+    enabled: false, // Phase 2
+    whiteBalance: "gray-world",
+    claheClipLimit: 2.5,
+    claheTileSize: 8,
+  },
+  clarity: {
+    enabled: false, // Phase 3
+    denoiseStrength: 5,
+    sharpenRadius: 1.5,
+    sharpenAmount: 1.1,
+    sharpenThreshold: 3,
   },
 };
+
+// Message types for WebView bridge communication (native only)
+export interface DewarpMessage {
+  type: "dewarp" | "ready" | "result" | "error" | "log";
+  id?: string;
+  imageData?: string;
+  config?: Partial<PhotoAdjustmentConfig["geometry"]>;
+  result?: string;
+  error?: string;
+  message?: string;
+}
+
+

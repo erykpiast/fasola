@@ -7,18 +7,18 @@ import type { DataUrl } from "@/lib/types/primitives";
 export async function dataUrlToImageData(dataUrl: DataUrl): Promise<ImageData> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    
+
     img.onload = (): void => {
       try {
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        
+
         const ctx = canvas.getContext("2d");
         if (!ctx) {
           throw new Error("Failed to get 2D context");
         }
-        
+
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         resolve(imageData);
@@ -26,11 +26,11 @@ export async function dataUrlToImageData(dataUrl: DataUrl): Promise<ImageData> {
         reject(error);
       }
     };
-    
+
     img.onerror = (): void => {
       reject(new Error("Failed to load image from data URL"));
     };
-    
+
     img.src = dataUrl;
   });
 }
@@ -46,12 +46,12 @@ export function imageDataToDataUrl(
   const canvas = document.createElement("canvas");
   canvas.width = imageData.width;
   canvas.height = imageData.height;
-  
+
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new Error("Failed to get 2D context");
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
   return canvas.toDataURL("image/jpeg", quality) as DataUrl;
 }
@@ -65,7 +65,7 @@ export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
   if (typeof window !== "undefined" && window.fetch) {
     const response = await fetch(uri);
     const blob = await response.blob();
-    
+
     return new Promise<DataUrl>((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = (): void => resolve(reader.result as DataUrl);
@@ -73,7 +73,7 @@ export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
       reader.readAsDataURL(blob);
     });
   }
-  
+
   throw new Error("File loading not supported in this environment");
 }
 
@@ -83,6 +83,3 @@ export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
 export function isDataUrl(str: string): str is DataUrl {
   return str.startsWith("data:");
 }
-
-
-

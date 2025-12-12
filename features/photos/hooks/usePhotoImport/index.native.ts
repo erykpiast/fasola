@@ -1,4 +1,3 @@
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { Alert } from "@/lib/alert";
 import type { PhotoUri } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
@@ -14,7 +13,6 @@ export function usePhotoImport(): {
 } {
   const [isImporting, setIsImporting] = useState(false);
   const { t } = useTranslation();
-  const { processPhoto } = usePhotoAdjustment();
 
   const importFromCamera = useCallback(async (): Promise<PhotoUri | null> => {
     setIsImporting(true);
@@ -74,28 +72,19 @@ export function usePhotoImport(): {
     async (uri: PhotoUri): Promise<void> => {
       setIsImporting(true);
       try {
-        // Automatically process photo through adjustment pipeline
-        const result = await processPhoto(uri);
-
-        // Navigate to recipe creation with processed photo
-        // Falls back to original photo if processing fails
-        const finalUri = result.processedUri || uri;
-        router.push({
-          pathname: "/recipe/add",
-          params: { uri: finalUri },
-        });
-      } catch (error) {
-        console.error("Photo processing error:", error);
-        // Fall back to original photo on error
+        // Navigate immediately with original photo
+        // Processing will happen on the add recipe screen
         router.push({
           pathname: "/recipe/add",
           params: { uri },
         });
+      } catch (error) {
+        console.error("Photo import error:", error);
       } finally {
         setIsImporting(false);
       }
     },
-    [processPhoto]
+    []
   );
 
   const startImport = useCallback(async () => {

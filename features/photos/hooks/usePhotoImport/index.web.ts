@@ -1,4 +1,3 @@
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -8,7 +7,6 @@ export function usePhotoImport(): {
   isImporting: boolean;
 } {
   const [isImporting, setIsImporting] = useState(false);
-  const { processPhoto } = usePhotoAdjustment();
 
   const startImport = useCallback(async () => {
     setIsImporting(true);
@@ -29,23 +27,19 @@ export function usePhotoImport(): {
       if (!result.canceled && result.assets[0]) {
         const uri = result.assets[0].uri;
 
-        // Automatically process photo through adjustment pipeline
-        const processingResult = await processPhoto(uri);
-
-        // Navigate to recipe creation with processed photo
-        // Falls back to original photo if processing fails
-        const finalUri = processingResult.processedUri || uri;
+        // Navigate immediately with original photo
+        // Processing will happen on the add recipe screen
         router.push({
           pathname: "/recipe/add",
-          params: { uri: finalUri },
+          params: { uri },
         });
       }
     } catch (error) {
-      console.error("Photo import/processing error:", error);
+      console.error("Photo import error:", error);
     } finally {
       setIsImporting(false);
     }
-  }, [processPhoto]);
+  }, []);
 
   return useMemo(
     () => ({

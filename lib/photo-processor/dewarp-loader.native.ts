@@ -1,5 +1,5 @@
 import type { DataUrl } from "@/lib/types/primitives";
-import type { PhotoAdjustmentConfig, DewarpMessage } from "./types";
+import type { DewarpMessage, PhotoAdjustmentConfig } from "./types";
 
 interface DewarpResult {
   success: boolean;
@@ -59,7 +59,7 @@ export async function dewarpImage(
   config: Partial<PhotoAdjustmentConfig["geometry"]>
 ): Promise<DewarpResult> {
   console.log("[Phase 1] Starting geometry correction (native)");
-  
+
   if (!isWebViewReady) {
     console.warn("[Phase 1] WebView not ready, skipping processing");
     return {
@@ -69,11 +69,13 @@ export async function dewarpImage(
   }
 
   return new Promise<DewarpResult>((resolve, reject) => {
-    const id = `dewarp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+    const id = `dewarp_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
     // Register pending request
     pendingRequests.set(id, { resolve, reject });
-    
+
     // Send message to WebView
     const message: DewarpMessage = {
       type: "dewarp",
@@ -81,9 +83,9 @@ export async function dewarpImage(
       imageData: imageUri,
       config,
     };
-    
+
     sendToWebView(message);
-    
+
     // Set timeout to prevent hanging
     setTimeout(() => {
       if (pendingRequests.has(id)) {

@@ -3,40 +3,7 @@
  * Uses OpenCV's built-in CLAHE for local contrast enhancement
  */
 
-interface Mat {
-  delete(): void;
-  isDeleted(): boolean;
-}
-
-interface MatVector {
-  get(index: number): Mat;
-  delete(): void;
-  size(): number;
-}
-
-interface Size {
-  new (width: number, height: number): Size;
-}
-
-interface CLAHE {
-  new (clipLimit: number, tileGridSize: Size): CLAHE;
-  apply(src: Mat, dst: Mat): void;
-  delete(): void;
-}
-
-interface CV {
-  Mat: {
-    new (): Mat;
-  };
-  MatVector: new () => MatVector;
-  Size: Size;
-  CLAHE: CLAHE;
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  split(src: Mat, dst: MatVector): void;
-  merge(src: MatVector, dst: Mat): void;
-  COLOR_BGR2Lab: number;
-  COLOR_Lab2BGR: number;
-}
+import type { CV, CVMat } from "../../types/opencv";
 
 /**
  * Apply CLAHE to enhance local contrast
@@ -44,10 +11,10 @@ interface CV {
  */
 export function applyCLAHE(
   cv: CV,
-  src: Mat,
+  src: CVMat,
   clipLimit: number,
   tileSize: number
-): Mat {
+): CVMat {
   console.log(
     `  Applying CLAHE (clipLimit=${clipLimit}, tileSize=${tileSize})`
   );

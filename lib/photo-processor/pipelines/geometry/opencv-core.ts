@@ -330,13 +330,9 @@ export function loadImageToMat(
         "target" in error
       ) {
         // Likely an Event (e.g., Event from <img> onerror)
-        const evt = error as Event & {
-          target?: EventTarget & { src?: string };
-        };
-        const src =
-          evt?.target && "src" in evt.target
-            ? (evt.target as any).src
-            : undefined;
+        const evt = error as Event;
+        const target = evt.target as HTMLImageElement | null;
+        const src = target?.src;
         errorMsg = `Event type: ${evt.type}${src ? `, image src: ${src}` : ""}`;
       } else {
         errorMsg = String(error);

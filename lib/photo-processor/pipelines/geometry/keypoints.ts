@@ -1,8 +1,5 @@
+import type { CV } from "../../types/opencv";
 import { projectXY } from "./projection";
-
-interface CV {
-  Mat: new () => unknown;
-}
 
 /**
  * Builds an index mapping each keypoint to its position in the parameter vector.
@@ -51,6 +48,6 @@ export function projectKeypoints(
     xyCoords.push([x, y]);
   }
 
-  return projectXY(cv as any, xyCoords, pvec);
+  return projectXY(cv, xyCoords, pvec);
 }
 

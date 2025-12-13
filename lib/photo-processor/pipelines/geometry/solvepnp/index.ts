@@ -1,9 +1,6 @@
+import type { CV } from "../../../types/opencv";
 import { solveDLT } from "./dlt";
 import { refinePose } from "./optimizer";
-
-interface CV {
-  Mat: new () => unknown;
-}
 
 /**
  * Finds an object pose from 3D-2D point correspondences.
@@ -20,7 +17,7 @@ export function solvePnP(
     throw new Error("solvePnP: objectPoints and imagePoints must have same length");
   }
 
-  const initPose = solveDLT(cv as any, objectPoints, imagePoints, cameraMatrix);
+  const initPose = solveDLT(cv, objectPoints, imagePoints, cameraMatrix);
 
   const refined = refinePose(
     initPose.rvec,

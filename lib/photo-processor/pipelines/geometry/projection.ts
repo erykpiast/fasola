@@ -1,21 +1,10 @@
+import type { CV, CVMat } from "../../types/opencv";
 import { Config } from "./config";
-
-interface Mat {
-  delete(): void;
-  doubleAt(row: number, col: number): number;
-}
-
-interface CV {
-  Mat: new () => Mat;
-  matFromArray(rows: number, cols: number, type: number, data: Array<number>): Mat;
-  Rodrigues(src: Mat, dst: Mat): void;
-  CV_64F: number;
-}
 
 /**
  * Returns the 3x3 camera intrinsic matrix.
  */
-export function getK(cv: CV): Mat {
+export function getK(cv: CV): CVMat {
   const f_val = Config.FOCAL_LENGTH;
   const data = [f_val, 0, 0, 0, f_val, 0, 0, 0, 1];
   return cv.matFromArray(3, 3, cv.CV_64F, data);

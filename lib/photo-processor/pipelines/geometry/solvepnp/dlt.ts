@@ -1,24 +1,4 @@
-interface Mat {
-  delete(): void;
-  doubleAt(row: number, col: number): number;
-}
-
-interface CV {
-  Mat: new () => Mat;
-  MatVector: new () => MatVector;
-  matFromArray(rows: number, cols: number, type: number, data: Array<number>): Mat;
-  findHomography(src: Mat, dst: Mat): Mat;
-  Rodrigues(src: Mat, dst: Mat): void;
-  CV_32FC2: number;
-  CV_64F: number;
-}
-
-interface MatVector {
-  push_back(mat: Mat): void;
-  size(): number;
-  get(index: number): Mat;
-  delete(): void;
-}
+import type { CV, CVMat } from "../../../types/opencv";
 
 /**
  * Estimates initial pose (R, t) from 3D-2D correspondences.
@@ -49,7 +29,7 @@ function computeHomography(
   cv: CV,
   objectPoints: Array<[number, number, number]>,
   imagePoints: Array<[number, number]>
-): Mat {
+): CVMat {
   const srcData: Array<number> = [];
   const dstData: Array<number> = [];
   for (let i = 0; i < objectPoints.length; i++) {
@@ -70,7 +50,7 @@ function computeHomography(
 
 function decomposeHomographyToPose(
   cv: CV,
-  H: Mat,
+  H: CVMat,
   K: Array<number>
 ): { rvec: Array<number>; tvec: Array<number> } {
   const fx = K[0];

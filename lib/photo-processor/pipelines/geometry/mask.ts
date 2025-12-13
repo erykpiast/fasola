@@ -1,56 +1,11 @@
+import type { CV, CVMat } from "../../types/opencv";
 import { Config } from "./config";
 import { getContours, type ContourInfo } from "./contours";
-
-interface Mat {
-  clone(): Mat;
-  delete(): void;
-  isDeleted(): boolean;
-}
-
-interface Size {
-  new (width: number, height: number): Size;
-}
-
-interface Point {
-  new (x: number, y: number): Point;
-}
-
-interface CV {
-  Mat: new () => Mat;
-  MatVector: new () => MatVector;
-  Size: Size;
-  Point: Point;
-  getStructuringElement(shape: number, ksize: Size): Mat;
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  adaptiveThreshold(
-    src: Mat,
-    dst: Mat,
-    maxValue: number,
-    adaptiveMethod: number,
-    thresholdType: number,
-    blockSize: number,
-    C: number
-  ): void;
-  dilate(src: Mat, dst: Mat, kernel: Mat): void;
-  erode(src: Mat, dst: Mat, kernel: Mat, anchor?: Point, iterations?: number): void;
-  bitwise_and(src1: Mat, src2: Mat, dst: Mat): void;
-  MORPH_RECT: number;
-  COLOR_RGB2GRAY: number;
-  ADAPTIVE_THRESH_MEAN_C: number;
-  THRESH_BINARY_INV: number;
-}
-
-interface MatVector {
-  push_back(mat: Mat): void;
-  size(): number;
-  get(index: number): Mat;
-  delete(): void;
-}
 
 /**
  * Creates a rectangular structuring element for morphological operations.
  */
-export function box(cv: CV, width: number, height: number): Mat {
+export function box(cv: CV, width: number, height: number): CVMat {
   return cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(width, height));
 }
 
@@ -60,12 +15,12 @@ export function box(cv: CV, width: number, height: number): Mat {
 export class Mask {
   private cv: CV;
   private name: string;
-  private small: Mat;
-  private pagemask: Mat;
+  private small: CVMat;
+  private pagemask: CVMat;
   private text: boolean;
-  public value: Mat | null = null;
+  public value: CVMat | null = null;
 
-  constructor(cv: CV, name: string, small: Mat, pagemask: Mat, text = true) {
+  constructor(cv: CV, name: string, small: CVMat, pagemask: CVMat, text = true) {
     this.cv = cv;
     this.name = name;
     this.small = small;

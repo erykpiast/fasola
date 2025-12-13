@@ -3,38 +3,7 @@
  * Adjusts color channels to neutralize color casts
  */
 
-interface Mat {
-  rows: number;
-  cols: number;
-  data: Uint8Array;
-  channels(): number;
-  delete(): void;
-  isDeleted(): boolean;
-}
-
-interface MatVector {
-  get(index: number): Mat;
-  delete(): void;
-  size(): number;
-  push_back(mat: Mat): void;
-}
-
-interface Scalar {
-  new (...values: Array<number>): Scalar;
-}
-
-interface CV {
-  Mat: {
-    new (): Mat;
-  };
-  MatVector: new () => MatVector;
-  Scalar: Scalar;
-  split(src: Mat, dst: MatVector): void;
-  merge(src: MatVector, dst: Mat): void;
-  mean(src: Mat): Scalar;
-  multiply(src1: Mat, src2: number | Scalar, dst: Mat): void;
-  minMaxLoc(src: Mat): { maxVal: number };
-}
+import type { CV, CVMat } from "../../types/opencv";
 
 type WhiteBalanceAlgorithm = "gray-world" | "simple" | "none";
 
@@ -43,9 +12,9 @@ type WhiteBalanceAlgorithm = "gray-world" | "simple" | "none";
  */
 export function applyWhiteBalance(
   cv: CV,
-  src: Mat,
+  src: CVMat,
   algorithm: WhiteBalanceAlgorithm
-): Mat {
+): CVMat {
   if (algorithm === "none") {
     return src;
   }
@@ -65,7 +34,7 @@ export function applyWhiteBalance(
  * Gray-World white balance
  * Assumes the average color in the image should be neutral gray
  */
-function grayWorldWhiteBalance(cv: CV, src: Mat): Mat {
+function grayWorldWhiteBalance(cv: CV, src: CVMat): CVMat {
   // Split into BGR channels
   const channels = new cv.MatVector();
   cv.split(src, channels);
@@ -92,9 +61,9 @@ function grayWorldWhiteBalance(cv: CV, src: Mat): Mat {
   const rScaled = new cv.Mat();
 
   // Scale each channel by multiplying with scalar (not squaring!)
-  (cv as any).convertScaleAbs(bChannel, bScaled, scaleB, 0);
-  (cv as any).convertScaleAbs(gChannel, gScaled, scaleG, 0);
-  (cv as any).convertScaleAbs(rChannel, rScaled, scaleR, 0);
+  cv.convertScaleAbs(bChannel, bScaled, scaleB, 0);
+  cv.convertScaleAbs(gChannel, gScaled, scaleG, 0);
+  cv.convertScaleAbs(rChannel, rScaled, scaleR, 0);
 
   // Merge back
   const result = new cv.Mat();
@@ -119,7 +88,7 @@ function grayWorldWhiteBalance(cv: CV, src: Mat): Mat {
  * Simple white balance
  * Uses the brightest pixels as white reference
  */
-function simpleWhiteBalance(cv: CV, src: Mat): Mat {
+function simpleWhiteBalance(cv: CV, src: CVMat): CVMat {
   // Split into BGR channels
   const channels = new cv.MatVector();
   cv.split(src, channels);
@@ -143,9 +112,9 @@ function simpleWhiteBalance(cv: CV, src: Mat): Mat {
   const rScaled = new cv.Mat();
 
   // Scale each channel by multiplying with scalar (not squaring!)
-  (cv as any).convertScaleAbs(bChannel, bScaled, scaleB, 0);
-  (cv as any).convertScaleAbs(gChannel, gScaled, scaleG, 0);
-  (cv as any).convertScaleAbs(rChannel, rScaled, scaleR, 0);
+  cv.convertScaleAbs(bChannel, bScaled, scaleB, 0);
+  cv.convertScaleAbs(gChannel, gScaled, scaleG, 0);
+  cv.convertScaleAbs(rChannel, rScaled, scaleR, 0);
 
   // Merge back
   const result = new cv.Mat();

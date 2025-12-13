@@ -4,6 +4,7 @@
  */
 
 import type { DataUrl } from "@/lib/types/primitives";
+import type { CV } from "../../types/opencv";
 import { loadImageMat, matToDataUrl } from "../geometry/utils";
 import { applyCLAHE } from "./clahe";
 import { applyIlluminationCorrection } from "./illumination";
@@ -13,19 +14,6 @@ export interface LightingConfig {
   whiteBalance: "gray-world" | "simple" | "none";
   claheClipLimit: number;
   claheTileSize: number;
-}
-
-interface Mat {
-  delete(): void;
-  isDeleted(): boolean;
-}
-
-interface CV {
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  COLOR_RGBA2BGR: number;
-  Mat: {
-    new (): Mat;
-  };
 }
 
 /**
@@ -43,12 +31,12 @@ export async function processLighting(
   });
 
   console.log("  Loading image...");
-  const cv2_img = await loadImageMat(cv as any, imageDataUrl);
+  const cv2_img = await loadImageMat(cv, imageDataUrl);
 
   // Convert RGBA to BGR
   const bgr = new cv.Mat();
-  cv.cvtColor(cv2_img as any, bgr, cv.COLOR_RGBA2BGR);
-  (cv2_img as any).delete();
+  cv.cvtColor(cv2_img, bgr, cv.COLOR_RGBA2BGR);
+  cv2_img.delete();
 
   console.log(`  Loaded image at ${bgr.rows}x${bgr.cols}`);
 
@@ -57,23 +45,19 @@ export async function processLighting(
   try {
     // Phase 1: White balance correction
     if (config.whiteBalance !== "none") {
-      const balanced = applyWhiteBalance(
-        cv as any,
-        current,
-        config.whiteBalance
-      );
+      const balanced = applyWhiteBalance(cv, current, config.whiteBalance);
       if (current !== bgr) current.delete();
       current = balanced;
     }
 
     // Phase 2: Illumination correction
-    const illuminated = applyIlluminationCorrection(cv as any, current);
+    const illuminated = applyIlluminationCorrection(cv, current);
     if (current !== bgr) current.delete();
     current = illuminated;
 
     // Phase 3: CLAHE for local contrast
     const enhanced = applyCLAHE(
-      cv as any,
+      cv,
       current,
       config.claheClipLimit,
       config.claheTileSize
@@ -83,7 +67,7 @@ export async function processLighting(
 
     // Convert to data URL
     console.log("  Converting result to data URL...");
-    const result = matToDataUrl(cv as any, current as any);
+    const result = matToDataUrl(cv, current);
 
     // Cleanup
     current.delete();

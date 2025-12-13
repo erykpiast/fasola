@@ -1,23 +1,7 @@
 import type { DataUrl } from "@/lib/types/primitives";
+import type { CV, CVMat } from "../../types/opencv";
 
-interface Mat {
-  rows: number;
-  cols: number;
-  channels(): number;
-  data: Uint8Array;
-  delete(): void;
-  copyTo(dst: Mat): void;
-}
-
-interface CV {
-  Mat: new () => Mat;
-  matFromImageData(imageData: ImageData): Mat;
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  COLOR_GRAY2RGBA: number;
-  COLOR_RGB2RGBA: number;
-}
-
-export function imgsize(img: Mat): string {
+export function imgsize(img: CVMat): string {
   return `${img.cols}x${img.rows}`;
 }
 
@@ -27,7 +11,7 @@ export function imgsize(img: Mat): string {
 export async function loadImageMat(
   cv: CV,
   imageDataUrl: DataUrl
-): Promise<Mat> {
+): Promise<CVMat> {
   const img = new Image();
   await new Promise<void>((resolve, reject) => {
     img.onload = () => resolve();
@@ -50,7 +34,7 @@ export async function loadImageMat(
 /**
  * Converts an OpenCV Mat to a DataUrl.
  */
-export function matToDataUrl(cv: CV, mat: Mat): DataUrl {
+export function matToDataUrl(cv: CV, mat: CVMat): DataUrl {
   const img = new cv.Mat();
   if (mat.channels() === 1) {
     cv.cvtColor(mat, img, cv.COLOR_GRAY2RGBA);
@@ -99,7 +83,7 @@ export function roundNearestMultiple(i: number, factor: number): number {
  * Converts pixel coordinates to normalized coordinates centered at the image center.
  */
 export function pix2norm(
-  shape: Mat | { rows: number; cols: number } | [number, number],
+  shape: CVMat | { rows: number; cols: number } | [number, number],
   pts: Array<[number, number]>
 ): Array<[number, number]> {
   const height = Array.isArray(shape) ? shape[0] : shape.rows;
@@ -115,7 +99,7 @@ export function pix2norm(
  * Converts normalized coordinates back to pixel coordinates.
  */
 export function norm2pix(
-  shape: Mat | { rows: number; cols: number } | [number, number],
+  shape: CVMat | { rows: number; cols: number } | [number, number],
   pts: Array<[number, number]>,
   asInteger = true
 ): Array<[number, number]> {

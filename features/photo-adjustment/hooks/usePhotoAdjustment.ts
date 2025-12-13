@@ -7,7 +7,7 @@ import {
   type ProcessingResult,
   DEFAULT_CONFIG,
 } from "@/lib/photo-processor";
-import type { PhotoUri } from "@/lib/types/primitives";
+import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
 import { useCallback, useMemo, useState, type JSX } from "react";
 
 interface UsePhotoAdjustmentReturn {
@@ -47,7 +47,7 @@ export function usePhotoAdjustment({
         console.error("[Photo Adjustment] Photo processing error:", error);
         return {
           success: false,
-          processedUri: photoUri as any,
+          processedUri: photoUri as DataUrl,
           error: {
             code: "PROCESSING_FAILED",
             message: error instanceof Error ? error.message : "Unknown error",

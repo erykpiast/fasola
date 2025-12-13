@@ -5,8 +5,8 @@ export interface PhotoAdjustmentConfig {
   geometry: {
     enabled: boolean;
     // page-dewarp-js configuration options
-    xMargin: number; // Horizontal page margin as % of page width (default: 5)
-    yMargin: number; // Vertical page margin as % of page height (default: 5)
+    xMargin: number; // Horizontal page margin in pixels (default: 50, same as original)
+    yMargin: number; // Vertical page margin in pixels (default: 20, same as original)
     outputZoom: number; // Output zoom factor (default: 1.0)
     noBinary: boolean; // Skip binary thresholding on output (default: true for recipe photos)
   };
@@ -42,8 +42,8 @@ export interface ProcessingError {
 export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
   geometry: {
     enabled: true,
-    xMargin: 5,
-    yMargin: 5,
+    xMargin: 50, // Match original page-dewarp-js default
+    yMargin: 20, // Match original page-dewarp-js default
     outputZoom: 1.0,
     noBinary: true,
   },
@@ -72,5 +72,3 @@ export interface DewarpMessage {
   error?: string;
   message?: string;
 }
-
-

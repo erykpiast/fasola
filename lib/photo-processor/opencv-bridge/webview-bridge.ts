@@ -2,8 +2,13 @@
 // This code runs inside the WebView and communicates with React Native via postMessage
 
 import type { DataUrl } from "@/lib/types/primitives";
-import { processDewarp, type DewarpConfig } from "../pipelines";
-import type { GeometryProcessingMessage } from "./types";
+import {
+  processDewarp,
+  processLighting,
+  type DewarpConfig,
+  type LightingConfig,
+} from "../pipelines";
+import type { ProcessingMessage } from "./types";
 
 declare global {
   interface Window {
@@ -136,7 +141,7 @@ declare global {
         throw new Error("OpenCV not initialized");
       }
 
-      console.log("Processing image");
+      console.log("Processing image (geometry)");
 
       const result = await processDewarp(cv, imageDataUrl, config);
 
@@ -151,7 +156,49 @@ declare global {
         );
       }
 
-      console.log("Image processed successfully");
+      console.log("Image processed successfully (geometry)");
+    } catch (error) {
+      const err = error as Error;
+      console.log("Processing error: " + err.message);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: "error",
+            id: id,
+            error: err.message,
+          })
+        );
+      }
+    }
+  }
+
+  // Process lighting correction request
+  async function processLightingRequest(
+    id: string,
+    imageDataUrl: DataUrl,
+    config: LightingConfig
+  ): Promise<void> {
+    try {
+      if (!isReady || !cv) {
+        throw new Error("OpenCV not initialized");
+      }
+
+      console.log("Processing image (lighting)");
+
+      const result = await processLighting(cv, imageDataUrl, config);
+
+      // Send result back to React Native
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: "result",
+            id: id,
+            result: result,
+          })
+        );
+      }
+
+      console.log("Image processed successfully (lighting)");
     } catch (error) {
       const err = error as Error;
       console.log("Processing error: " + err.message);
@@ -170,10 +217,16 @@ declare global {
   // Handle messages from React Native
   window.addEventListener("message", function (event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data) as GeometryProcessingMessage;
+      const message = JSON.parse(event.data) as ProcessingMessage;
 
       if (message.type === "geometry") {
         processGeometryRequest(
+          message.id!,
+          message.imageData!,
+          message.config || {}
+        );
+      } else if (message.type === "lighting") {
+        processLightingRequest(
           message.id!,
           message.imageData!,
           message.config || {}
@@ -194,4 +247,3 @@ declare global {
 
   console.log("Bridge script loaded, waiting for OpenCV");
 })();
-

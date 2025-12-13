@@ -2,12 +2,16 @@ import { router } from "expo-router";
 import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
+import {
+  DebugProvider,
+  useDebugContext,
+} from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
@@ -19,7 +23,6 @@ import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import type { RecipeId } from "../lib/types/primitives";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
-import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 
 function ErrorFallback({ error }: { error?: Error }): JSX.Element {
   return (
@@ -36,8 +39,7 @@ function Content(): JSX.Element {
   const { recipes } = useRecipes();
   const { filteredRecipes, searchTerm, setSearchTerm, clearSearch } =
     useRecipeFilter(recipes);
-  const { isFocused, handleFocus, handleBlur, handleCancel } =
-    useSearchFocus();
+  const { isFocused, handleFocus, handleBlur, handleCancel } = useSearchFocus();
   const { setDebugData } = useDebugContext();
 
   useEffect(() => {
@@ -87,11 +89,13 @@ function Content(): JSX.Element {
 
 export default function Index(): JSX.Element {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={<View style={styles.suspenseFallback} />}>
-        <Content />
-      </Suspense>
-    </ErrorBoundary>
+    <DebugProvider>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<View style={styles.suspenseFallback} />}>
+          <Content />
+        </Suspense>
+      </ErrorBoundary>
+    </DebugProvider>
   );
 }
 

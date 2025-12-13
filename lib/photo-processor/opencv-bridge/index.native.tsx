@@ -5,6 +5,7 @@ import type { WebViewMessageEvent } from "react-native-webview";
 import WebView from "react-native-webview";
 import type { PhotoAdjustmentConfig } from "../types";
 import type {
+  ClarityProcessingResult,
   GeometryProcessingResult,
   LightingProcessingResult,
   ProcessingMessage,
@@ -35,6 +36,13 @@ const pendingLightingRequests = new Map<
   string,
   {
     resolve: (result: LightingProcessingResult) => void;
+    reject: (error: Error) => void;
+  }
+>();
+const pendingClarityRequests = new Map<
+  string,
+  {
+    resolve: (result: ClarityProcessingResult) => void;
     reject: (error: Error) => void;
   }
 >();
@@ -80,6 +88,17 @@ export function handleOpenCVMessage(message: ProcessingMessage): void {
       pendingLightingRequests.delete(message.id);
       return;
     }
+
+    // Check if it's a clarity request
+    const clarityPending = pendingClarityRequests.get(message.id);
+    if (clarityPending && message.result) {
+      clarityPending.resolve({
+        success: true,
+        processedUri: message.result as DataUrl,
+      });
+      pendingClarityRequests.delete(message.id);
+      return;
+    }
   } else if (message.type === "error" && message.id) {
     // Check if it's a geometry request
     const geometryPending = pendingGeometryRequests.get(message.id);
@@ -100,6 +119,17 @@ export function handleOpenCVMessage(message: ProcessingMessage): void {
         error: message.error || "Unknown error",
       });
       pendingLightingRequests.delete(message.id);
+      return;
+    }
+
+    // Check if it's a clarity request
+    const clarityPending = pendingClarityRequests.get(message.id);
+    if (clarityPending) {
+      clarityPending.resolve({
+        success: false,
+        error: message.error || "Unknown error",
+      });
+      pendingClarityRequests.delete(message.id);
       return;
     }
   }
@@ -192,6 +222,54 @@ export async function processLighting(
     setTimeout(() => {
       if (pendingLightingRequests.has(id)) {
         pendingLightingRequests.delete(id);
+        resolve({
+          success: false,
+          error: "Processing timeout",
+        });
+      }
+    }, 30000); // 30 second timeout
+  });
+}
+
+/**
+ * Process image via WebView bridge (clarity enhancement)
+ */
+export async function processClarity(
+  imageUri: DataUrl,
+  config: Partial<PhotoAdjustmentConfig["clarity"]>
+): Promise<ClarityProcessingResult> {
+  console.log("[OpenCV Bridge] Starting clarity enhancement (native)");
+
+  if (!isWebViewReady) {
+    console.warn("[OpenCV Bridge] WebView not ready, skipping processing");
+    return {
+      success: false,
+      error: "WebView not initialized",
+    };
+  }
+
+  return new Promise<ClarityProcessingResult>((resolve, reject) => {
+    const id = `clarity_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Register pending request
+    pendingClarityRequests.set(id, { resolve, reject });
+
+    // Send message to WebView
+    const message: ProcessingMessage = {
+      type: "clarity",
+      id,
+      imageData: imageUri,
+      config,
+    };
+
+    sendToWebView(message);
+
+    // Set timeout to prevent hanging
+    setTimeout(() => {
+      if (pendingClarityRequests.has(id)) {
+        pendingClarityRequests.delete(id);
         resolve({
           success: false,
           error: "Processing timeout",

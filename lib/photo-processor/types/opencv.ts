@@ -113,6 +113,13 @@ export interface CV {
     sigmaX: number,
     sigmaY?: number
   ): void;
+  bilateralFilter(
+    src: CVMat,
+    dst: CVMat,
+    d: number,
+    sigmaColor: number,
+    sigmaSpace: number
+  ): void;
   adaptiveThreshold(
     src: CVMat,
     dst: CVMat,
@@ -154,6 +161,7 @@ export interface CV {
   divide(src1: CVMat, src2: CVMat, dst: CVMat, scale?: number): void;
   multiply(src1: CVMat, src2: number | CVScalar, dst: CVMat): void;
   add(src1: CVMat, src2: CVMat, dst: CVMat): void;
+  subtract(src1: CVMat, src2: CVMat, dst: CVMat): void;
   addWeighted(
     src1: CVMat,
     alpha: number,

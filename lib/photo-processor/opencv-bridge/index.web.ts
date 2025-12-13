@@ -1,9 +1,11 @@
 import type { DataUrl } from "@/lib/types/primitives";
 import type { JSX } from "react";
+import { applyClarityCorrection } from "../pipelines/clarity/clarity";
 import { applyGeometryCorrection } from "../pipelines/geometry";
 import { applyLightingCorrection } from "../pipelines/lighting";
 import type { PhotoAdjustmentConfig } from "../types";
 import type {
+  ClarityProcessingResult,
   GeometryProcessingResult,
   LightingProcessingResult,
 } from "./types";
@@ -72,6 +74,35 @@ export async function processLighting(
     };
   } catch (error) {
     console.error("[OpenCV Bridge] Lighting correction failed:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Process image via browser OpenCV (clarity enhancement)
+ */
+export async function processClarity(
+  imageUri: DataUrl,
+  config: Partial<PhotoAdjustmentConfig["clarity"]>
+): Promise<ClarityProcessingResult> {
+  try {
+    console.log("[OpenCV Bridge] Starting clarity enhancement (web/opencv)");
+
+    // Apply clarity enhancement using browser-compatible OpenCV
+    const processedUri = await applyClarityCorrection(imageUri, config);
+
+    console.log("[OpenCV Bridge] Clarity enhancement complete (web)");
+
+    return {
+      success: true,
+      processedUri,
+    };
+  } catch (error) {
+    console.error("[OpenCV Bridge] Clarity enhancement failed:", error);
 
     return {
       success: false,

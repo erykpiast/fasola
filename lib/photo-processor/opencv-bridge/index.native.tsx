@@ -5,8 +5,9 @@ import type { WebViewMessageEvent } from "react-native-webview";
 import WebView from "react-native-webview";
 import type { PhotoAdjustmentConfig } from "../types";
 import type {
-  GeometryProcessingMessage,
   GeometryProcessingResult,
+  LightingProcessingResult,
+  ProcessingMessage,
 } from "./types";
 
 // Import bridge code as raw string (thanks to metro-workers-transformer.js)
@@ -15,7 +16,7 @@ import bridgeCode from "./webview-bridge";
 
 interface OpenCVBridgeSetupProps {
   onReady?: () => void;
-  onMessage?: (message: GeometryProcessingMessage) => void;
+  onMessage?: (message: ProcessingMessage) => void;
 }
 
 // Global reference to the WebView for sending messages
@@ -23,16 +24,23 @@ let webViewRef: WebView | null = null;
 
 // State management for WebView communication
 let isWebViewReady = false;
-const pendingRequests = new Map<
+const pendingGeometryRequests = new Map<
   string,
   {
     resolve: (result: GeometryProcessingResult) => void;
     reject: (error: Error) => void;
   }
 >();
+const pendingLightingRequests = new Map<
+  string,
+  {
+    resolve: (result: LightingProcessingResult) => void;
+    reject: (error: Error) => void;
+  }
+>();
 
 // Send message to WebView
-function sendToWebView(message: GeometryProcessingMessage): void {
+function sendToWebView(message: ProcessingMessage): void {
   if (webViewRef) {
     webViewRef.postMessage(JSON.stringify(message));
   }
@@ -49,24 +57,50 @@ export function setOpenCVReady(): void {
 /**
  * Handle messages from WebView
  */
-export function handleOpenCVMessage(message: GeometryProcessingMessage): void {
+export function handleOpenCVMessage(message: ProcessingMessage): void {
   if (message.type === "result" && message.id) {
-    const pending = pendingRequests.get(message.id);
-    if (pending && message.result) {
-      pending.resolve({
+    // Check if it's a geometry request
+    const geometryPending = pendingGeometryRequests.get(message.id);
+    if (geometryPending && message.result) {
+      geometryPending.resolve({
         success: true,
         processedUri: message.result as DataUrl,
       });
-      pendingRequests.delete(message.id);
+      pendingGeometryRequests.delete(message.id);
+      return;
+    }
+
+    // Check if it's a lighting request
+    const lightingPending = pendingLightingRequests.get(message.id);
+    if (lightingPending && message.result) {
+      lightingPending.resolve({
+        success: true,
+        processedUri: message.result as DataUrl,
+      });
+      pendingLightingRequests.delete(message.id);
+      return;
     }
   } else if (message.type === "error" && message.id) {
-    const pending = pendingRequests.get(message.id);
-    if (pending) {
-      pending.resolve({
+    // Check if it's a geometry request
+    const geometryPending = pendingGeometryRequests.get(message.id);
+    if (geometryPending) {
+      geometryPending.resolve({
         success: false,
         error: message.error || "Unknown error",
       });
-      pendingRequests.delete(message.id);
+      pendingGeometryRequests.delete(message.id);
+      return;
+    }
+
+    // Check if it's a lighting request
+    const lightingPending = pendingLightingRequests.get(message.id);
+    if (lightingPending) {
+      lightingPending.resolve({
+        success: false,
+        error: message.error || "Unknown error",
+      });
+      pendingLightingRequests.delete(message.id);
+      return;
     }
   }
 }
@@ -94,10 +128,10 @@ export async function processGeometry(
       .substr(2, 9)}`;
 
     // Register pending request
-    pendingRequests.set(id, { resolve, reject });
+    pendingGeometryRequests.set(id, { resolve, reject });
 
     // Send message to WebView
-    const message: GeometryProcessingMessage = {
+    const message: ProcessingMessage = {
       type: "geometry",
       id,
       imageData: imageUri,
@@ -108,8 +142,56 @@ export async function processGeometry(
 
     // Set timeout to prevent hanging
     setTimeout(() => {
-      if (pendingRequests.has(id)) {
-        pendingRequests.delete(id);
+      if (pendingGeometryRequests.has(id)) {
+        pendingGeometryRequests.delete(id);
+        resolve({
+          success: false,
+          error: "Processing timeout",
+        });
+      }
+    }, 30000); // 30 second timeout
+  });
+}
+
+/**
+ * Process image via WebView bridge (lighting correction)
+ */
+export async function processLighting(
+  imageUri: DataUrl,
+  config: Partial<PhotoAdjustmentConfig["lighting"]>
+): Promise<LightingProcessingResult> {
+  console.log("[OpenCV Bridge] Starting lighting correction (native)");
+
+  if (!isWebViewReady) {
+    console.warn("[OpenCV Bridge] WebView not ready, skipping processing");
+    return {
+      success: false,
+      error: "WebView not initialized",
+    };
+  }
+
+  return new Promise<LightingProcessingResult>((resolve, reject) => {
+    const id = `lighting_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Register pending request
+    pendingLightingRequests.set(id, { resolve, reject });
+
+    // Send message to WebView
+    const message: ProcessingMessage = {
+      type: "lighting",
+      id,
+      imageData: imageUri,
+      config,
+    };
+
+    sendToWebView(message);
+
+    // Set timeout to prevent hanging
+    setTimeout(() => {
+      if (pendingLightingRequests.has(id)) {
+        pendingLightingRequests.delete(id);
         resolve({
           success: false,
           error: "Processing timeout",
@@ -135,9 +217,7 @@ export function OpenCVBridgeSetup(props: OpenCVBridgeSetupProps): JSX.Element {
 
   const handleMessage = (event: WebViewMessageEvent): void => {
     try {
-      const message = JSON.parse(
-        event.nativeEvent.data
-      ) as GeometryProcessingMessage;
+      const message = JSON.parse(event.nativeEvent.data) as ProcessingMessage;
 
       if (message.type === "log") {
         // Forward WebView logs to React Native console

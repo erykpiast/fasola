@@ -4,12 +4,9 @@
  */
 
 import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
+import { processGeometry, processLighting } from "./opencv-bridge";
+import type { PhotoAdjustmentConfig, ProcessingResult } from "./types";
 import { loadImageAsDataUrl } from "./utils/loadImageAsDataUrl";
-import { processGeometry } from "./opencv-bridge";
-import type {
-  PhotoAdjustmentConfig,
-  ProcessingResult,
-} from "./types";
 
 /**
  * Process a photo through the complete adjustment pipeline
@@ -53,8 +50,21 @@ export async function processPhoto(
       imageDataUrl = result.processedUri!;
     }
 
-    // Future: Phase 2 - Lighting correction
-    // if (config.lighting.enabled) { ... }
+    // Phase 2: Lighting correction
+    if (config.lighting.enabled) {
+      console.log("[Photo Processor] Running lighting correction");
+      const result = await processLighting(imageDataUrl, config.lighting);
+
+      if (!result.success) {
+        console.warn(
+          "[Photo Processor] Lighting correction failed, continuing with current image:",
+          result.error
+        );
+        // Continue with current image (graceful degradation)
+      } else {
+        imageDataUrl = result.processedUri!;
+      }
+    }
 
     // Future: Phase 3 - Clarity enhancement
     // if (config.clarity.enabled) { ... }
@@ -77,11 +87,10 @@ export async function processPhoto(
 }
 
 // Re-export types and utilities for convenience
-export type { PhotoAdjustmentConfig, ProcessingResult } from "./types";
-export { DEFAULT_CONFIG } from "./types";
 export {
+  handleOpenCVMessage,
   OpenCVBridgeSetup,
   setOpenCVReady,
-  handleOpenCVMessage,
 } from "./opencv-bridge";
-
+export { DEFAULT_CONFIG } from "./types";
+export type { PhotoAdjustmentConfig, ProcessingResult } from "./types";

@@ -34,7 +34,11 @@ export interface ProcessingResult {
 
 // Error types that can occur during processing
 export interface ProcessingError {
-  code: "PROCESSING_FAILED" | "DEWARP_FAILED" | "NO_PAGE_DETECTED";
+  code:
+    | "PROCESSING_FAILED"
+    | "DEWARP_FAILED"
+    | "NO_PAGE_DETECTED"
+    | "LIGHTING_FAILED";
   message: string;
 }
 
@@ -48,7 +52,7 @@ export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
     noBinary: true,
   },
   lighting: {
-    enabled: false, // Phase 2
+    enabled: true,
     whiteBalance: "gray-world",
     claheClipLimit: 2.5,
     claheTileSize: 8,

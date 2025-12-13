@@ -4,7 +4,11 @@
  */
 
 import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
-import { processGeometry, processLighting } from "./opencv-bridge";
+import {
+  processClarity,
+  processGeometry,
+  processLighting,
+} from "./opencv-bridge";
 import type { PhotoAdjustmentConfig, ProcessingResult } from "./types";
 import { loadImageAsDataUrl } from "./utils/loadImageAsDataUrl";
 
@@ -66,8 +70,21 @@ export async function processPhoto(
       }
     }
 
-    // Future: Phase 3 - Clarity enhancement
-    // if (config.clarity.enabled) { ... }
+    // Phase 3: Clarity enhancement
+    if (config.clarity.enabled) {
+      console.log("[Photo Processor] Running clarity enhancement");
+      const result = await processClarity(imageDataUrl, config.clarity);
+
+      if (!result.success) {
+        console.warn(
+          "[Photo Processor] Clarity enhancement failed, continuing with current image:",
+          result.error
+        );
+        // Continue with current image (graceful degradation)
+      } else {
+        imageDataUrl = result.processedUri!;
+      }
+    }
 
     return {
       success: true,

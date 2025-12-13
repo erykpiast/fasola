@@ -28,11 +28,25 @@ export interface LightingProcessingMessage {
 }
 
 /**
+ * Message types for clarity processing
+ */
+export interface ClarityProcessingMessage {
+  type: "clarity" | "ready" | "result" | "error" | "log";
+  id?: string;
+  imageData?: DataUrl;
+  config?: Partial<PhotoAdjustmentConfig["clarity"]>;
+  result?: DataUrl;
+  error?: string;
+  message?: string;
+}
+
+/**
  * Union type for all processing messages
  */
 export type ProcessingMessage =
   | GeometryProcessingMessage
-  | LightingProcessingMessage;
+  | LightingProcessingMessage
+  | ClarityProcessingMessage;
 
 /**
  * Result from geometry processing
@@ -47,6 +61,15 @@ export interface GeometryProcessingResult {
  * Result from lighting processing
  */
 export interface LightingProcessingResult {
+  success: boolean;
+  processedUri?: DataUrl;
+  error?: string;
+}
+
+/**
+ * Result from clarity processing
+ */
+export interface ClarityProcessingResult {
   success: boolean;
   processedUri?: DataUrl;
   error?: string;

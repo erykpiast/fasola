@@ -38,7 +38,8 @@ export interface ProcessingError {
     | "PROCESSING_FAILED"
     | "DEWARP_FAILED"
     | "NO_PAGE_DETECTED"
-    | "LIGHTING_FAILED";
+    | "LIGHTING_FAILED"
+    | "CLARITY_FAILED";
   message: string;
 }
 
@@ -58,7 +59,7 @@ export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
     claheTileSize: 8,
   },
   clarity: {
-    enabled: false, // Phase 3
+    enabled: true,
     denoiseStrength: 5,
     sharpenRadius: 1.5,
     sharpenAmount: 1.1,

@@ -5,8 +5,10 @@ import type { DataUrl } from "@/lib/types/primitives";
 import {
   processDewarp,
   processLighting,
+  processClarity,
   type DewarpConfig,
   type LightingConfig,
+  type ClarityConfig,
 } from "../pipelines";
 import type { WindowCV } from "../types/opencv";
 import type { ProcessingMessage } from "./types";
@@ -215,6 +217,48 @@ declare global {
     }
   }
 
+  // Process clarity enhancement request
+  async function processClarityRequest(
+    id: string,
+    imageDataUrl: DataUrl,
+    config: ClarityConfig
+  ): Promise<void> {
+    try {
+      if (!isReady || !cv) {
+        throw new Error("OpenCV not initialized");
+      }
+
+      console.log("Processing image (clarity)");
+
+      const result = await processClarity(cv, imageDataUrl, config);
+
+      // Send result back to React Native
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: "result",
+            id: id,
+            result: result,
+          })
+        );
+      }
+
+      console.log("Image processed successfully (clarity)");
+    } catch (error) {
+      const err = error as Error;
+      console.log("Processing error: " + err.message);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(
+          JSON.stringify({
+            type: "error",
+            id: id,
+            error: err.message,
+          })
+        );
+      }
+    }
+  }
+
   // Handle messages from React Native
   window.addEventListener("message", function (event: MessageEvent): void {
     try {
@@ -228,6 +272,12 @@ declare global {
         );
       } else if (message.type === "lighting") {
         processLightingRequest(
+          message.id!,
+          message.imageData!,
+          message.config || {}
+        );
+      } else if (message.type === "clarity") {
+        processClarityRequest(
           message.id!,
           message.imageData!,
           message.config || {}

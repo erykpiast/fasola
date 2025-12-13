@@ -1,1 +1,1 @@
-export { processDewarp, type DewarpConfig } from "./dewarp/dewarp-pipeline";
+export { processDewarp, type DewarpConfig } from "./geometry/dewarp-pipeline";

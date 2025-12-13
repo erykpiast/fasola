@@ -6,8 +6,11 @@ const esbuild = require("esbuild");
 const path = require("path");
 
 module.exports.transform = function ({ src, filename, options }) {
-  // Bundle TypeScript WebView bridge file with esbuild
-  if (filename.endsWith("dewarp-webview-bridge.ts")) {
+  // Bundle TypeScript files with esbuild for WebView and Web Worker contexts
+  if (
+    filename.endsWith("opencv-bridge/webview-bridge.ts") ||
+    filename.endsWith("optimization/worker.ts")
+  ) {
     try {
       const workspaceRoot = path.resolve(__dirname);
       const result = esbuild.buildSync({
@@ -38,9 +41,7 @@ module.exports.transform = function ({ src, filename, options }) {
         options,
       });
     } catch (error) {
-      throw new Error(
-        `Failed to bundle dewarp-webview-bridge.ts: ${error.message}`
-      );
+      throw new Error(`Failed to bundle ${filename}: ${error.message}`);
     }
   }
   // Use default transformer for all other files

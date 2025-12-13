@@ -1,9 +1,9 @@
-// WebView bridge for opencv.js dewarping
+// WebView bridge for opencv.js geometry processing
 // This code runs inside the WebView and communicates with React Native via postMessage
 
 import type { DataUrl } from "@/lib/types/primitives";
-import { processDewarp, type DewarpConfig } from "./pipelines";
-import type { DewarpMessage } from "./types";
+import { processDewarp, type DewarpConfig } from "../pipelines";
+import type { GeometryProcessingMessage } from "./types";
 
 declare global {
   interface Window {
@@ -12,7 +12,7 @@ declare global {
     };
     cv?: any;
     handleOpenCVLoadError?: () => void;
-    initDewarp?: () => void;
+    initOpenCV?: () => void;
   }
 }
 
@@ -43,13 +43,13 @@ declare global {
       window.ReactNativeWebView.postMessage(
         JSON.stringify({
           type: "log",
-          message: "[Bridge] " + logMessage,
+          message: "[OpenCV Bridge] " + logMessage,
         })
       );
     }
   };
 
-  console.log("Starting bridge initialization");
+  console.log("Starting OpenCV bridge initialization");
 
   let cv: any = null;
   let isReady = false;
@@ -68,7 +68,7 @@ declare global {
   };
 
   // Initialize when opencv.js loads
-  window.initDewarp = function (): void {
+  window.initOpenCV = function (): void {
     console.log("OpenCV script loaded, initializing");
 
     // OpenCV.js may not be immediately ready even after script loads
@@ -125,8 +125,8 @@ declare global {
     }
   };
 
-  // Process dewarp request
-  async function processDewarpRequest(
+  // Process geometry correction request
+  async function processGeometryRequest(
     id: string,
     imageDataUrl: DataUrl,
     config: DewarpConfig
@@ -170,10 +170,10 @@ declare global {
   // Handle messages from React Native
   window.addEventListener("message", function (event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data) as DewarpMessage;
+      const message = JSON.parse(event.data) as GeometryProcessingMessage;
 
-      if (message.type === "dewarp") {
-        processDewarpRequest(
+      if (message.type === "geometry") {
+        processGeometryRequest(
           message.id!,
           message.imageData!,
           message.config || {}
@@ -194,3 +194,4 @@ declare global {
 
   console.log("Bridge script loaded, waiting for OpenCV");
 })();
+

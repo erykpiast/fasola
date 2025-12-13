@@ -4,9 +4,7 @@ const config = getDefaultConfig(__dirname);
 
 // Use custom transformer for raw .js file loading
 config.transformer.babelTransformerPath = require.resolve(
-  "./metro-raw-loader-transformer.js"
+  "./metro-workers-transformer.js"
 );
 
 module.exports = config;
-
-

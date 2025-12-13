@@ -29,13 +29,13 @@ import type {
   DewarpProgressCallback,
   Point2D,
   SpanParams,
-} from "../pipelines/page-dewarp-core";
+} from "../pipelines/geometry/page-dewarp-core";
 import {
   createFlatSheetParams,
   evaluateCubicPolynomial,
   project3DTo2D,
   sampleKeypointsOnSpan,
-} from "../pipelines/page-dewarp-core";
+} from "../pipelines/geometry/page-dewarp-core";
 
 /**
  * Refine span parameters using optimization.

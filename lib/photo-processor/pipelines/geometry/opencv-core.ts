@@ -55,7 +55,7 @@
 import { Mat } from "@techstark/opencv-js";
 import { DEFAULT_DEWARP_CONFIG } from "../config";
 import type { OpenCVPreprocessing } from "../opencv";
-import { runOptimization } from "../optimization-loader.web";
+import { runOptimization } from "../../optimization/loader.web";
 import type { DewarpDebugData } from "../types";
 import { reportPhaseInit, validateMathFunctions } from "./page-dewarp-core";
 import type { OpenCVRemap } from "./page-dewarp-remap";

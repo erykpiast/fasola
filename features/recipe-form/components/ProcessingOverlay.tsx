@@ -1,6 +1,8 @@
+import { useTheme } from "@/platform/theme/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { type JSX, useEffect, useRef } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   StyleSheet,
@@ -10,6 +12,7 @@ import {
 
 export function ProcessingOverlay(): JSX.Element {
   const { width: screenWidth } = useWindowDimensions();
+  const theme = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -90,6 +93,12 @@ export function ProcessingOverlay(): JSX.Element {
           style={styles.gradient}
         />
       </Animated.View>
+      <View style={styles.indicatorContainer}>
+        <ActivityIndicator
+          size="large"
+          color={theme === "dark" ? "#FFFFFF" : "#000000"}
+        />
+      </View>
     </View>
   );
 }
@@ -107,5 +116,10 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+  },
+  indicatorContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

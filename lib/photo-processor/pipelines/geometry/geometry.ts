@@ -1,13 +1,20 @@
 import type { DataUrl } from "@/lib/types/primitives";
+import type { CV, WindowCV } from "../../types/opencv";
 import { processDewarp } from "./dewarp-pipeline";
 import type { PhotoAdjustmentConfig } from "../../types";
+
+declare global {
+  interface Window {
+    cv?: WindowCV;
+  }
+}
 
 /**
  * Load OpenCV.js for web platform
  */
-async function loadOpenCV(): Promise<any> {
-  if ((window as any).cv?.Mat) {
-    const cv = (window as any).cv;
+async function loadOpenCV(): Promise<CV> {
+  if (window.cv?.Mat) {
+    const cv = window.cv;
     delete cv.then;
     return cv;
   }
@@ -20,14 +27,14 @@ async function loadOpenCV(): Promise<any> {
   }
 
   const startTime = Date.now();
-  while (!(window as any).cv?.Mat) {
+  while (!window.cv?.Mat) {
     if (Date.now() - startTime > 60000) {
       throw new Error("OpenCV.js load timeout");
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
-  const cv = (window as any).cv;
+  const cv = window.cv;
   delete cv.then;
   return cv;
 }

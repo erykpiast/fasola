@@ -8,6 +8,7 @@ import {
   type DewarpConfig,
   type LightingConfig,
 } from "../pipelines";
+import type { WindowCV } from "../types/opencv";
 import type { ProcessingMessage } from "./types";
 
 declare global {
@@ -15,7 +16,7 @@ declare global {
     ReactNativeWebView?: {
       postMessage: (message: string) => void;
     };
-    cv?: any;
+    cv?: WindowCV;
     handleOpenCVLoadError?: () => void;
     initOpenCV?: () => void;
   }
@@ -56,7 +57,7 @@ declare global {
 
   console.log("Starting OpenCV bridge initialization");
 
-  let cv: any = null;
+  let cv: WindowCV | null = null;
   let isReady = false;
 
   // Handle OpenCV load error

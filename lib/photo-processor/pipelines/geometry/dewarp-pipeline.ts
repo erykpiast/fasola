@@ -1,4 +1,5 @@
 import type { DataUrl } from "@/lib/types/primitives";
+import type { CV, CVMat } from "../../types/opencv";
 import { Config } from "./config";
 import { type ContourInfo } from "./contours";
 import { Mask } from "./mask";
@@ -19,93 +20,6 @@ export interface DewarpConfig {
   yMargin?: number;
   outputZoom?: number;
   noBinary?: boolean;
-}
-
-interface Mat {
-  rows: number;
-  cols: number;
-  clone(): Mat;
-  delete(): void;
-  isDeleted(): boolean;
-  floatPtr(row: number, col: number): Float32Array;
-  channels(): number;
-  data: Uint8Array;
-  copyTo(dst: Mat): void;
-}
-
-interface Size {
-  new (width: number, height: number): Size;
-}
-
-interface Point {
-  new (x: number, y: number): Point;
-}
-
-interface Scalar {
-  new (...args: Array<number>): Scalar;
-}
-
-interface CV {
-  Mat: {
-    new (): Mat;
-    zeros(rows: number, cols: number, type: number): Mat;
-  };
-  MatVector: new () => unknown;
-  Size: Size;
-  Point: Point;
-  Scalar: Scalar;
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  resize(
-    src: Mat,
-    dst: Mat,
-    dsize: Size,
-    fx: number,
-    fy: number,
-    interpolation: number
-  ): void;
-  rectangle(
-    img: Mat,
-    pt1: Point,
-    pt2: Point,
-    color: Scalar,
-    thickness: number
-  ): void;
-  remap(
-    src: Mat,
-    dst: Mat,
-    map1: Mat,
-    map2: Mat,
-    interpolation: number,
-    borderMode: number
-  ): void;
-  adaptiveThreshold(
-    src: Mat,
-    dst: Mat,
-    maxValue: number,
-    adaptiveMethod: number,
-    thresholdType: number,
-    blockSize: number,
-    C: number
-  ): void;
-  getStructuringElement(shape: number, ksize: Size): Mat;
-  dilate(src: Mat, dst: Mat, kernel: Mat): void;
-  erode(
-    src: Mat,
-    dst: Mat,
-    kernel: Mat,
-    anchor?: Point,
-    iterations?: number
-  ): void;
-  bitwise_and(src1: Mat, src2: Mat, dst: Mat): void;
-  COLOR_RGBA2BGR: number;
-  COLOR_RGB2GRAY: number;
-  CV_8UC1: number;
-  CV_32F: number;
-  INTER_AREA: number;
-  INTER_CUBIC: number;
-  BORDER_REPLICATE: number;
-  ADAPTIVE_THRESH_MEAN_C: number;
-  THRESH_BINARY: number;
 }
 
 function linspace(start: number, end: number, num: number): Array<number> {
@@ -158,8 +72,8 @@ function buildRemapMaps(
   heightSmall: number,
   pageDims: [number, number],
   params: Array<number>,
-  img: Mat
-): { mapX: Mat; mapY: Mat; mapXSmall: Mat; mapYSmall: Mat } {
+  img: CVMat
+): { mapX: CVMat; mapY: CVMat; mapXSmall: CVMat; mapYSmall: CVMat } {
   const [pageWidthNorm, pageHeightNorm] = pageDims;
 
   const pageXRange = linspace(0, pageWidthNorm, widthSmall);
@@ -172,13 +86,13 @@ function buildRemapMaps(
     }
   }
 
-  const projPoints = projectXY(cv as any, pageXYCoords, params);
+  const projPoints = projectXY(cv, pageXYCoords, params);
   const imagePoints = norm2pix(img, projPoints, false);
 
   const mapXSmall = new cv.Mat();
-  (mapXSmall as any).create(heightSmall, widthSmall, cv.CV_32F);
+  mapXSmall.create(heightSmall, widthSmall, cv.CV_32F);
   const mapYSmall = new cv.Mat();
-  (mapYSmall as any).create(heightSmall, widthSmall, cv.CV_32F);
+  mapYSmall.create(heightSmall, widthSmall, cv.CV_32F);
 
   let invalidPointCount = 0;
   for (let i = 0; i < imagePoints.length; i++) {
@@ -226,13 +140,13 @@ function buildRemapMaps(
 
 function applyRemapAndThreshold(
   cv: CV,
-  img: Mat,
-  mapX: Mat,
-  mapY: Mat,
+  img: CVMat,
+  mapX: CVMat,
+  mapY: CVMat,
   width: number,
   height: number,
   noBinary: boolean
-): Mat {
+): CVMat {
   const imgGray = new cv.Mat();
   cv.cvtColor(img, imgGray, cv.COLOR_RGB2GRAY);
 
@@ -241,7 +155,7 @@ function applyRemapAndThreshold(
 
   imgGray.delete();
 
-  let result: Mat;
+  let result: CVMat;
   if (noBinary) {
     result = remapped;
   } else {
@@ -282,11 +196,11 @@ export async function processDewarp(
   const noBinary = config.noBinary ?? Config.NO_BINARY !== 0;
 
   console.log("  Loading image...");
-  const cv2_img = await loadImageMat(cv as any, imageDataUrl);
+  const cv2_img = await loadImageMat(cv, imageDataUrl);
 
   const bgr = new cv.Mat();
-  cv.cvtColor(cv2_img as any, bgr, cv.COLOR_RGBA2BGR);
-  (cv2_img as any).delete();
+  cv.cvtColor(cv2_img, bgr, cv.COLOR_RGBA2BGR);
+  cv2_img.delete();
 
   const small = resizeToScreen(cv, bgr);
   console.log(`  Loaded image at ${imgsize(bgr)} --> ${imgsize(small)}`);
@@ -385,7 +299,7 @@ export async function processDewarp(
   return result;
 }
 
-function resizeToScreen(cv: CV, img: Mat): Mat {
+function resizeToScreen(cv: CV, img: CVMat): CVMat {
   const { rows: height, cols: width } = img;
   const scl_x = width / Config.SCREEN_MAX_W;
   const scl_y = height / Config.SCREEN_MAX_H;
@@ -402,10 +316,10 @@ function resizeToScreen(cv: CV, img: Mat): Mat {
 
 function calculatePageExtents(
   cv: CV,
-  small: Mat,
+  small: CVMat,
   xMargin: number,
   yMargin: number
-): { pagemask: Mat; page_outline: Array<[number, number]> } {
+): { pagemask: CVMat; page_outline: Array<[number, number]> } {
   const { rows: height, cols: width } = small;
   const xmin = xMargin;
   const ymin = yMargin;
@@ -432,11 +346,11 @@ function calculatePageExtents(
 function contourInfo(
   cv: CV,
   name: string,
-  small: Mat,
-  pagemask: Mat,
+  small: CVMat,
+  pagemask: CVMat,
   text: boolean
 ): Array<ContourInfo> {
-  const mask = new Mask(cv as any, name, small as any, pagemask as any, text);
+  const mask = new Mask(cv, name, small, pagemask, text);
   const contours = mask.contours();
   mask.destroy();
   return contours;
@@ -445,8 +359,8 @@ function contourInfo(
 function iterativelyAssembleSpans(
   cv: CV,
   name: string,
-  small: Mat,
-  pagemask: Mat,
+  small: CVMat,
+  pagemask: CVMat,
   contour_list: Array<ContourInfo>
 ): Array<Array<ContourInfo>> {
   let result = assembleSpans(name, small, pagemask, contour_list);
@@ -469,8 +383,8 @@ function iterativelyAssembleSpans(
 
 function attemptReassembleSpans(
   name: string,
-  small: Mat,
-  pagemask: Mat,
+  small: CVMat,
+  pagemask: CVMat,
   contour_list: Array<ContourInfo>,
   prevResult: { spans: Array<Array<ContourInfo>> }
 ): { spans: Array<Array<ContourInfo>> } {
@@ -490,7 +404,7 @@ async function getPageDims(
 
   function objective(dimsLocal: Float64Array): number {
     const pts: Array<[number, number]> = [[dimsLocal[0], dimsLocal[1]]];
-    const proj = projectXY(cv as any, pts, params);
+    const proj = projectXY(cv, pts, params);
     const p = proj[0];
     return Math.pow(dst_br[0] - p[0], 2) + Math.pow(dst_br[1] - p[1], 2);
   }
@@ -506,7 +420,7 @@ async function getPageDims(
 
 async function threshold(
   cv: CV,
-  img: Mat,
+  img: CVMat,
   pageDims: [number, number],
   params: Array<number>,
   outputZoom: number,
@@ -537,7 +451,7 @@ async function threshold(
     noBinary
   );
 
-  const dataUrl = matToDataUrl(cv as any, result as any);
+  const dataUrl = matToDataUrl(cv, result);
 
   mapXSmall.delete();
   mapYSmall.delete();

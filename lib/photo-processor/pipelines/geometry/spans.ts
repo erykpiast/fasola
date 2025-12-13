@@ -198,7 +198,7 @@ export function assembleSpans(
 }
 
 function computeColumnMeans(
-  mask: { data: Uint8Array; cols: number },
+  mask: { data: Uint8Array; cols: number; rows: number },
   width: number,
   height: number
 ): Array<number> {
@@ -231,7 +231,7 @@ function sampleContourPoints(
   step: number
 ): Array<[number, number]> {
   const { width, height } = cinfo.rect;
-  const means = computeColumnMeans(cinfo.mask as any, width, height);
+  const means = computeColumnMeans(cinfo.mask, width, height);
 
   const start = Math.floor(((means.length - 1) % step) / 2);
   const { x: xmin, y: ymin } = cinfo.rect;
@@ -244,11 +244,13 @@ function sampleContourPoints(
   return points;
 }
 
+import type { CVMat } from "../../types/opencv";
+
 /**
  * Extracts evenly-spaced sample points along each span's center line.
  */
 export function sampleSpans(
-  shape: Mat | { rows: number; cols: number } | [number, number],
+  shape: CVMat | { rows: number; cols: number } | [number, number],
   spans: Array<Array<ContourInfo>>
 ): Array<Array<[number, number]>> {
   const spanPoints: Array<Array<[number, number]>> = [];
@@ -266,11 +268,6 @@ export function sampleSpans(
     }
   }
   return spanPoints;
-}
-
-interface Mat {
-  rows: number;
-  cols: number;
 }
 
 function getPrincipalAxis(points: Array<[number, number]>): [number, number] {
@@ -440,8 +437,8 @@ function computeSpanCoordinates(
  */
 export function keypointsFromSamples(
   name: string,
-  small: Mat | { rows: number; cols: number } | [number, number],
-  pagemask: Mat | { rows: number; cols: number } | [number, number],
+  small: CVMat | { rows: number; cols: number } | [number, number],
+  pagemask: CVMat | { rows: number; cols: number } | [number, number],
   page_outline: Array<[number, number]>,
   spanPoints: Array<Array<[number, number]>>
 ): {

@@ -3,42 +3,13 @@
  * Uses background estimation and division normalization
  */
 
-interface Mat {
-  rows: number;
-  cols: number;
-  delete(): void;
-  isDeleted(): boolean;
-}
-
-interface Size {
-  new (width: number, height: number): Size;
-}
-
-interface CV {
-  Mat: {
-    new (): Mat;
-  };
-  Size: Size;
-  GaussianBlur(
-    src: Mat,
-    dst: Mat,
-    ksize: Size,
-    sigmaX: number,
-    sigmaY?: number
-  ): void;
-  divide(src1: Mat, src2: Mat, dst: Mat, scale?: number): void;
-  multiply(src: Mat, alpha: number, dst: Mat): void;
-  add(src1: Mat, src2: Mat, dst: Mat): void;
-  cvtColor(src: Mat, dst: Mat, code: number): void;
-  COLOR_BGR2GRAY: number;
-  COLOR_GRAY2BGR: number;
-}
+import type { CV, CVMat } from "../../types/opencv";
 
 /**
  * Apply illumination correction to normalize lighting
  * Estimates and removes background illumination gradient
  */
-export function applyIlluminationCorrection(cv: CV, src: Mat): Mat {
+export function applyIlluminationCorrection(cv: CV, src: CVMat): CVMat {
   console.log("  Applying illumination correction");
 
   // Convert to grayscale for background estimation
@@ -60,14 +31,7 @@ export function applyIlluminationCorrection(cv: CV, src: Mat): Mat {
   // Add small constant to avoid division by zero
   // Use addWeighted to add scalar: dst = src1*alpha + src2*beta + gamma
   const backgroundWithEpsilon = new cv.Mat();
-  (cv as any).addWeighted(
-    background,
-    1.0,
-    background,
-    0.0,
-    1.0,
-    backgroundWithEpsilon
-  );
+  cv.addWeighted(background, 1.0, background, 0.0, 1.0, backgroundWithEpsilon);
 
   const normalized = new cv.Mat();
   cv.divide(gray, backgroundWithEpsilon, normalized, 255.0);

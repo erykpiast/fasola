@@ -7,7 +7,7 @@
  */
 
 import type { DataUrl } from "@/lib/types/primitives";
-import { processDewarp, type DewarpConfig } from "./pipelines/dewarp-pipeline";
+import { processDewarp, type DewarpConfig } from "./pipelines";
 
 // OpenCV.js loading state
 let opencvInstance: any = null;

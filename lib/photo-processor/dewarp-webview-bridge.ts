@@ -2,7 +2,7 @@
 // This code runs inside the WebView and communicates with React Native via postMessage
 
 import type { DataUrl } from "@/lib/types/primitives";
-import { processDewarp, type DewarpConfig } from "./pipelines/dewarp-pipeline";
+import { processDewarp, type DewarpConfig } from "./pipelines";
 import type { DewarpMessage } from "./types";
 
 declare global {

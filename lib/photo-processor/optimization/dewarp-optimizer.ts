@@ -113,8 +113,7 @@ export function refineSpans(
     const gradients = computeSpanGradients(
       currentSpans,
       contourDensity,
-      imageWidth,
-      imageHeight
+      imageWidth
     );
 
     for (let i = 0; i < currentSpans.length; i++) {
@@ -221,8 +220,7 @@ function evaluateSpanFit(
 function computeSpanGradients(
   spans: Array<SpanParams>,
   contourDensity: Array<Array<number>>,
-  imageWidth: number,
-  imageHeight: number
+  imageWidth: number
 ): Array<{ yGrad: number; cGrad: number }> {
   const epsilon = 0.1;
   const gradients: Array<{ yGrad: number; cGrad: number }> = [];

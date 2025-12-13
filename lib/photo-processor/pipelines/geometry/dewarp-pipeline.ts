@@ -143,8 +143,6 @@ function applyRemapAndThreshold(
   img: CVMat,
   mapX: CVMat,
   mapY: CVMat,
-  width: number,
-  height: number,
   noBinary: boolean
 ): CVMat {
   const imgGray = new cv.Mat();
@@ -242,8 +240,6 @@ export async function processDewarp(
 
   console.log("  Getting keypoints...");
   const { corners, ycoords, xcoords } = keypointsFromSamples(
-    "dewarp",
-    small,
     pagemask,
     page_outline,
     spanPoints
@@ -263,8 +259,6 @@ export async function processDewarp(
 
   params = await optimiseParams(
     cv,
-    "dewarp",
-    small,
     dstpoints,
     spanCounts,
     params
@@ -363,7 +357,7 @@ function iterativelyAssembleSpans(
   pagemask: CVMat,
   contour_list: Array<ContourInfo>
 ): Array<Array<ContourInfo>> {
-  let result = assembleSpans(name, small, pagemask, contour_list);
+  let result = assembleSpans(contour_list);
   if (result.spans.length < 3) {
     console.log(
       `  detecting lines because only ${result.spans.length} text spans`
@@ -382,13 +376,13 @@ function iterativelyAssembleSpans(
 }
 
 function attemptReassembleSpans(
-  name: string,
-  small: CVMat,
-  pagemask: CVMat,
+  _name: string,
+  _small: CVMat,
+  _pagemask: CVMat,
   contour_list: Array<ContourInfo>,
   prevResult: { spans: Array<Array<ContourInfo>> }
 ): { spans: Array<Array<ContourInfo>> } {
-  const newResult = assembleSpans(name, small, pagemask, contour_list);
+  const newResult = assembleSpans(contour_list);
   return newResult.spans.length > prevResult.spans.length
     ? newResult
     : prevResult;
@@ -426,7 +420,7 @@ async function threshold(
   outputZoom: number,
   noBinary: boolean
 ): Promise<DataUrl> {
-  const { width, height, widthSmall, heightSmall } = computeOutputDimensions(
+  const { width: _width, height: _height, widthSmall, heightSmall } = computeOutputDimensions(
     pageDims,
     img.rows,
     outputZoom
@@ -446,8 +440,6 @@ async function threshold(
     img,
     mapX,
     mapY,
-    width,
-    height,
     noBinary
   );
 

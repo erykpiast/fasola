@@ -1,4 +1,4 @@
-import type { CV, CVMat, CVRect, CVMoments } from "../../types/opencv";
+import type { CV, CVMat, CVRect } from "../../types/opencv";
 import { Config } from "./config";
 
 export interface ContourInfo {
@@ -31,10 +31,14 @@ class ContourInfoImpl implements ContourInfo {
   point1: [number, number];
   pred: ContourInfo | null = null;
   succ: ContourInfo | null = null;
-  private cv: CV;
 
-  constructor(cv: CV, contour: CVMat, moments: { center: [number, number]; tangent: [number, number] }, rect: CVRect, mask: CVMat) {
-    this.cv = cv;
+  constructor(
+    _cv: CV,
+    contour: CVMat,
+    moments: { center: [number, number]; tangent: [number, number] },
+    rect: CVRect,
+    mask: CVMat
+  ) {
     this.contour = contour;
     this.rect = rect;
     this.mask = mask;
@@ -93,14 +97,20 @@ class ContourInfoImpl implements ContourInfo {
   }
 }
 
-function intervalMeasureOverlap(int_a: [number, number], int_b: [number, number]): number {
+function intervalMeasureOverlap(
+  int_a: [number, number],
+  int_b: [number, number]
+): number {
   return Math.min(int_a[1], int_b[1]) - Math.max(int_a[0], int_b[0]);
 }
 
 /**
  * Calculates center of mass and principal axis orientation using image moments.
  */
-export function blobMeanAndTangent(cv: CV, contour: CVMat): { center: [number, number]; tangent: [number, number] } | null {
+export function blobMeanAndTangent(
+  cv: CV,
+  contour: CVMat
+): { center: [number, number]; tangent: [number, number] } | null {
   const moments = cv.moments(contour);
   const area = moments.m00;
 
@@ -213,7 +223,11 @@ interface ContourStats {
   sampleRejectedRects: Array<{ reason: string; rect: CVRect }>;
 }
 
-function filterContourByGeometry(contour: CVMat, rect: CVRect, stats: ContourStats): { valid: boolean; reason?: string } {
+function filterContourByGeometry(
+  _contour: CVMat,
+  rect: CVRect,
+  stats: ContourStats
+): { valid: boolean; reason?: string } {
   const { width, height } = rect;
 
   if (width < Config.TEXT_MIN_WIDTH) {
@@ -243,7 +257,12 @@ function filterContourByGeometry(contour: CVMat, rect: CVRect, stats: ContourSta
   return { valid: true };
 }
 
-function filterContourByThickness(cv: CV, tightMask: CVMat, rect: CVRect, stats: ContourStats): { valid: boolean; reason?: string } {
+function filterContourByThickness(
+  cv: CV,
+  tightMask: CVMat,
+  rect: CVRect,
+  stats: ContourStats
+): { valid: boolean; reason?: string } {
   const colSums = new cv.Mat();
   cv.reduce(tightMask, colSums, 0, cv.REDUCE_SUM, cv.CV_32S);
 
@@ -268,7 +287,7 @@ function filterContourByThickness(cv: CV, tightMask: CVMat, rect: CVRect, stats:
 /**
  * Finds and filters text contours from a binary mask.
  */
-export function getContours(cv: CV, name: string, small: CVMat, mask: CVMat): Array<ContourInfo> {
+export function getContours(cv: CV, mask: CVMat): Array<ContourInfo> {
   const contoursVec = findRawContours(cv, mask);
 
   const contoursOut: Array<ContourInfo> = [];
@@ -298,7 +317,12 @@ export function getContours(cv: CV, name: string, small: CVMat, mask: CVMat): Ar
 
     const tightMask = makeTightMask(cv, contour, xmin, ymin, width, height);
 
-    const thicknessResult = filterContourByThickness(cv, tightMask, rect, stats);
+    const thicknessResult = filterContourByThickness(
+      cv,
+      tightMask,
+      rect,
+      stats
+    );
     if (!thicknessResult.valid) {
       tightMask.delete();
       contour.delete();
@@ -328,4 +352,3 @@ export function getContours(cv: CV, name: string, small: CVMat, mask: CVMat): Ar
 
   return contoursOut;
 }
-

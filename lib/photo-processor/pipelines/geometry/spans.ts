@@ -167,9 +167,6 @@ function extractSpans(
  * Groups contours into horizontal text lines using proximity/alignment scoring.
  */
 export function assembleSpans(
-  name: string,
-  small: unknown,
-  pagemask: unknown,
   cinfoList: Array<ContourInfo>
 ): { spans: Array<Array<ContourInfo>>; stats: SpanStats } {
   sortContoursForAssembly(cinfoList);
@@ -436,8 +433,6 @@ function computeSpanCoordinates(
  * Computes page corners and normalized coordinates for optimization.
  */
 export function keypointsFromSamples(
-  name: string,
-  small: CVMat | { rows: number; cols: number } | [number, number],
   pagemask: CVMat | { rows: number; cols: number } | [number, number],
   page_outline: Array<[number, number]>,
   spanPoints: Array<Array<[number, number]>>

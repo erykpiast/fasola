@@ -152,10 +152,10 @@ function solvePlanar(
 }
 
 function solveGenericDLT(
-  cv: CV,
-  objectPoints: Array<[number, number, number]>,
-  imagePoints: Array<[number, number]>,
-  K: Array<number>
+  _cv: CV,
+  _objectPoints: Array<[number, number, number]>,
+  _imagePoints: Array<[number, number]>,
+  _K: Array<number>
 ): { rvec: Array<number>; tvec: Array<number> } {
   throw new Error("Non-planar DLT not implemented - input points must have Z=0");
 }

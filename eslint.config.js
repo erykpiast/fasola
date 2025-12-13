@@ -11,6 +11,14 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/array-type": ["error", { default: "generic" }],
       "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          caughtErrors: "all",
+        },
+      ],
     },
   },
 ]);

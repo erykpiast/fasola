@@ -14,15 +14,13 @@ export function box(cv: CV, width: number, height: number): CVMat {
  */
 export class Mask {
   private cv: CV;
-  private name: string;
   private small: CVMat;
   private pagemask: CVMat;
   private text: boolean;
   public value: CVMat | null = null;
 
-  constructor(cv: CV, name: string, small: CVMat, pagemask: CVMat, text = true) {
+  constructor(cv: CV, _name: string, small: CVMat, pagemask: CVMat, text = true) {
     this.cv = cv;
-    this.name = name;
     this.small = small;
     this.pagemask = pagemask;
     this.text = text;
@@ -88,7 +86,7 @@ export class Mask {
     if (!this.value) {
       return [];
     }
-    return getContours(this.cv, this.name, this.small, this.value);
+    return getContours(this.cv, this.value);
   }
 
   destroy(): void {

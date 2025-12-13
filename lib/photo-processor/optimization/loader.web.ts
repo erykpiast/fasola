@@ -4,19 +4,20 @@
  * Falls back to main thread if worker initialization fails.
  */
 
+import { DEFAULT_DEWARP_CONFIG } from "../config";
 import type {
   CubicSheetParams,
   DewarpProgressCallback,
   Point2D,
   SpanParams,
-} from "./pipelines/page-dewarp-core";
-import { DEFAULT_DEWARP_CONFIG } from "./config";
+} from "../pipelines/geometry/page-dewarp-core";
 import {
   collectKeypointsFromSpans,
   fitCubicSheet,
   refineSpans,
-} from "./optimization/dewarp-optimizer";
-import workerCode from "./optimization.worker.bundle.js";
+} from "./dewarp-optimizer";
+// @ts-expect-error - Metro transformer bundles this as a string, not the actual module
+import workerCode from "./worker";
 
 interface OptimizationRequest {
   contours: Array<{ x: number; y: number; width: number; height: number }>;
@@ -87,7 +88,11 @@ function initializeWorker(): void {
       } else if (message.type === "progress") {
         const pending = pendingRequests.get(message.requestId);
         if (pending && pending.progressCallback) {
-          pending.progressCallback(message.phase, message.progress, message.message);
+          pending.progressCallback(
+            message.phase,
+            message.progress,
+            message.message
+          );
         }
       }
     };
@@ -200,7 +205,11 @@ function runOptimizationOnMainThread(
 
       // Step 3: Collect keypoints
       progressCallback?.("Optimization", 40, "Collecting keypoints");
-      const keypoints = collectKeypointsFromSpans(spanResult.spans, imageWidth, 20);
+      const keypoints = collectKeypointsFromSpans(
+        spanResult.spans,
+        imageWidth,
+        20
+      );
 
       // Step 4: Fit cubic sheet model
       progressCallback?.("Model Fitting", 45, "Fitting 3D page model");
@@ -222,4 +231,3 @@ function runOptimizationOnMainThread(
     }
   });
 }
-

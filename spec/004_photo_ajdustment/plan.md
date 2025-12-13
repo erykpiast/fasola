@@ -156,7 +156,7 @@ export interface ProcessingError {
 - [ ] lib/photo-processor/types.ts - Core interfaces and types
 - [ ] features/photo-adjustment/hooks/usePhotoAdjustment.ts - Platform-agnostic processing hook
 - [ ] metro.config.js - Metro bundler configuration
-- [ ] metro-raw-loader-transformer.js - Custom transformer to load .js files as raw strings
+- [ ] metro-workers-transformer.js - Custom transformer to load .js files as raw strings
 
 #### Tests:
 

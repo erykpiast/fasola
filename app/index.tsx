@@ -8,10 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import {
-  DebugProvider,
-  useDebugContext,
-} from "../features/photo-adjustment/context/DebugContext";
+import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
@@ -89,13 +86,11 @@ function Content(): JSX.Element {
 
 export default function Index(): JSX.Element {
   return (
-    <DebugProvider>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<View style={styles.suspenseFallback} />}>
-          <Content />
-        </Suspense>
-      </ErrorBoundary>
-    </DebugProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Suspense fallback={<View style={styles.suspenseFallback} />}>
+        <Content />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

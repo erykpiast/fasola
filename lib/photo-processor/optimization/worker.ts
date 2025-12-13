@@ -4,18 +4,18 @@
  * Handles contour density computation, span refinement, keypoint collection, and cubic sheet fitting.
  */
 
+import { DEFAULT_DEWARP_CONFIG } from "../config";
 import type {
   CubicSheetParams,
   DewarpProgressCallback,
   Point2D,
   SpanParams,
-} from "./pipelines/page-dewarp-core";
-import { DEFAULT_DEWARP_CONFIG } from "./config";
+} from "../pipelines/geometry/page-dewarp-core";
 import {
   collectKeypointsFromSpans,
   fitCubicSheet,
   refineSpans,
-} from "./optimization/dewarp-optimizer";
+} from "./dewarp-optimizer";
 
 interface OptimizationRequest {
   type: "optimize";
@@ -49,13 +49,24 @@ interface ProgressMessage {
  * Run the full optimization pipeline.
  */
 async function runOptimization(request: OptimizationRequest): Promise<void> {
-  const { requestId, contours, spanEstimates, imageWidth, imageHeight, kernelSize } = request;
+  const {
+    requestId,
+    contours,
+    spanEstimates,
+    imageWidth,
+    imageHeight,
+    kernelSize,
+  } = request;
 
   try {
     console.log("[Optimization Worker] Starting optimization pipeline");
 
     // Create progress callback that sends messages back to main thread
-    const progressCallback: DewarpProgressCallback = (phase, progress, message) => {
+    const progressCallback: DewarpProgressCallback = (
+      phase,
+      progress,
+      message
+    ) => {
       const progressMsg: ProgressMessage = {
         type: "progress",
         requestId,
@@ -79,7 +90,11 @@ async function runOptimization(request: OptimizationRequest): Promise<void> {
 
     // Step 3: Collect keypoints
     progressCallback("Optimization", 40, "Collecting keypoints");
-    const keypoints = collectKeypointsFromSpans(spanResult.spans, imageWidth, 20);
+    const keypoints = collectKeypointsFromSpans(
+      spanResult.spans,
+      imageWidth,
+      20
+    );
 
     // Step 4: Fit cubic sheet model
     progressCallback("Model Fitting", 45, "Fitting 3D page model");
@@ -128,4 +143,3 @@ self.addEventListener("message", (event: MessageEvent) => {
 
 // Worker is ready
 console.log("[Optimization Worker] Worker initialized and ready");
-

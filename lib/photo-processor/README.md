@@ -1,300 +1,190 @@
-# Photo Processor - Phase 1 Implementation
+# Photo Processor
+
+Platform-agnostic image processing library for React Native and Web. Provides geometry correction (page dewarping) with a unified API across platforms.
 
 ## Overview
 
-**Phase 1 Status:** Geometry correction with page-dewarp-js complete.
+This library processes photos through configurable pipelines. The geometry correction algorithm is a web-compatible implementation based on [page-dewarp-js](https://github.com/erykpiast/page-dewarp-js), which detects curved page boundaries, estimates 3D page shape, and generates flattened output.
 
-The photo processor automatically enhances recipe photos using `page-dewarp-js` for geometry correction. Photos imported through the camera or library are automatically processed to detect and flatten curved book pages, correct perspective distortion, and create scan-like rectangular outputs.
+The key challenge is running OpenCV.js across platforms:
 
-## Architecture
+- **Web**: OpenCV.js runs directly in the browser
+- **Native (iOS/Android)**: OpenCV.js runs inside a hidden WebView, with message-passing to React Native
 
-### Platform-Specific Implementations
+## Directory Structure
 
-**Web Platform:**
-
-- Direct integration using browser-compatible OpenCV.js
-- Custom dewarping implementation adapted from page-dewarp-js
-- Runs processing directly in browser using native Canvas API
-- No WebView or iframe overhead
-- Loads OpenCV.js from CDN on-demand (cached after first use)
-
-**Native Platform (iOS/Android):**
-
-- WebView-based processing using `react-native-webview`
-- Loads `page-dewarp-js` from CDN (ESM module) inside WebView
-- Bridge code communicates between React Native and WebView
-- Hidden WebView component initialized at app root
-
-### Key Components
-
-#### 1. Type Definitions (`types.ts`)
-
-- `PhotoAdjustmentConfig` - Configuration for all processing pipelines
-- `ProcessingResult` - Result of photo processing operations
-- `ProcessingError` - Error types for processing failures
-- `DEFAULT_CONFIG` - Recipe-optimized default settings
-
-#### 2. Platform-Specific Loaders
-
-- `dewarp-loader.ts` - Platform-agnostic export (auto-resolves to .web or .native)
-- `dewarp-loader.web.ts` - Direct page-dewarp-js integration for web
-- `dewarp-loader.native.ts` - WebView bridge for native platforms
-
-#### 2.1. Processing Pipelines
-
-- `pipelines/geometry.ts` - Geometry correction pipeline with recipe-optimized defaults
-- `page-dewarp-browser.ts` - Browser-compatible page dewarping using OpenCV.js
-- `utils/image-utils.ts` - Image conversion utilities (DataURL ↔ ImageData)
-
-#### 3. WebView Infrastructure (Native Only)
-
-- `dewarp-webview-bridge.js` - JavaScript code running in WebView
-- `DewarpWebViewSetup.native.tsx` - Hidden WebView component
-- `DewarpWebViewSetup.web.tsx` - No-op stub for web
-- `metro-raw-loader-transformer.js` - Loads .js files as raw strings
-- `metro.config.js` - Metro configuration for custom transformer
-
-#### 4. Processing Hook
-
-- `usePhotoAdjustment.ts` - Platform-agnostic hook for photo processing
-- Automatically selects correct implementation based on platform
-- Provides `processPhoto()` function and `WebViewSetup` component
-
-## Usage
-
-### Basic Usage
-
-```typescript
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
-
-function MyComponent() {
-  const { processPhoto, isProcessing } = usePhotoAdjustment();
-
-  const handlePhoto = async (uri: PhotoUri) => {
-    const result = await processPhoto(uri);
-
-    if (result.success) {
-      console.log("Processed photo:", result.processedUri);
-    } else {
-      console.error("Processing failed:", result.error);
-      // Fall back to original photo
-    }
-  };
-}
+```
+photo-processor/
+├── index.ts                 # Main entry point: processPhoto()
+├── types.ts                 # Type definitions
+├── config.ts                # Default dewarp configuration
+│
+├── opencv-bridge/           # Platform-specific OpenCV loading
+│   ├── index.ts             # Platform resolution (→ .native or .web)
+│   ├── index.native.tsx     # React Native WebView bridge
+│   ├── index.web.ts         # Direct browser OpenCV
+│   ├── webview-bridge.ts    # Code injected into WebView
+│   └── types.ts             # Bridge message types
+│
+├── optimization/            # CPU-intensive optimization code
+│   ├── dewarp-optimizer.ts  # Span refinement + cubic sheet fitting
+│   ├── loader.web.ts        # Web Worker loader with fallback
+│   └── worker.ts            # Worker entry point (bundled dynamically)
+│
+├── pipelines/               # Processing pipelines
+│   ├── index.ts             # Pipeline exports
+│   └── geometry/            # Geometry correction pipeline
+│
+└── utils/                   # Utilities
+    └── loadImageAsDataUrl.* # Platform-specific image loading
 ```
 
-### App Root Setup
+## Platform Resolution
 
-The WebView must be initialized at the app root (already done in `app/_layout.tsx`):
+Metro bundler automatically resolves platform-specific files:
 
-```typescript
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
+| Import                       | Web                         | Native                         |
+| ---------------------------- | --------------------------- | ------------------------------ |
+| `./opencv-bridge`            | `index.web.ts`              | `index.native.tsx`             |
+| `./utils/loadImageAsDataUrl` | `loadImageAsDataUrl.web.ts` | `loadImageAsDataUrl.native.ts` |
 
-export default function RootLayout() {
-  const { WebViewSetup } = usePhotoAdjustment();
+## Data Flow
 
-  return (
-    <>
-      <Stack />
-      <WebViewSetup />
-    </>
-  );
-}
+### Web Platform
+
+```mermaid
+flowchart LR
+    subgraph App
+        A[processPhoto]
+    end
+
+    subgraph OpenCVBridge["opencv-bridge/index.web.ts"]
+        B[processGeometry]
+    end
+
+    subgraph Pipeline["pipelines/geometry/"]
+        C[applyGeometryCorrection]
+        D[processDewarp]
+    end
+
+    subgraph Optimization["optimization/"]
+        E[Web Worker]
+        F[Main Thread Fallback]
+    end
+
+    subgraph Browser
+        G[OpenCV.js]
+    end
+
+    A --> B --> C --> D
+    D --> G
+    D --> E
+    E -.->|if unavailable| F
 ```
 
-### Integration with Photo Import
+### Native Platform (iOS/Android)
 
-The `usePhotoImport` hook automatically processes photos:
+```mermaid
+flowchart LR
+    subgraph ReactNative["React Native"]
+        A[processPhoto]
+        B[processGeometry]
+        C[OpenCVBridgeSetup]
+    end
 
-```typescript
-// Already integrated in both index.native.ts and index.web.ts
-const { processPhoto } = usePhotoAdjustment();
+    subgraph WebView["Hidden WebView"]
+        D[webview-bridge.ts]
+        E[processDewarp]
+        F[OpenCV.js from CDN]
+    end
 
-// After importing photo
-const result = await processPhoto(uri);
-router.push({ pathname: "/recipe/add", params: { uri: result.processedUri } });
+    A --> B
+    B -->|postMessage| D
+    D --> E --> F
+    F --> E
+    E --> D
+    D -->|postMessage| B
+    C -.->|mounts| WebView
 ```
 
-## Current Status
+## OpenCV Bridge
 
-### Phase 0: ✅ Complete
+### Native Implementation
 
-- Platform-agnostic infrastructure
-- WebView setup for native platforms
-- Direct integration for web
-- Automatic processing on photo import
+On native platforms, OpenCV.js cannot run directly in React Native's JavaScript engine. Instead:
 
-### Phase 1: ✅ Complete
+1. **`OpenCVBridgeSetup`** renders a hidden `<WebView>` component
+2. The WebView loads `webview-bridge.ts` (bundled by Metro) + OpenCV.js from CDN
+3. When OpenCV is ready, it sends a `"ready"` message
+4. Processing requests are sent via `postMessage`, results returned the same way
 
-- ✅ Geometry correction using page-dewarp-js
-- ✅ Curved page detection and flattening
-- ✅ Perspective correction
-- ✅ Image conversion utilities (DataURL ↔ ImageData)
-- ✅ Recipe-optimized default configuration
-- ✅ Error handling with fallback to original photo
+```mermaid
+sequenceDiagram
+    participant App as React Native App
+    participant Bridge as OpenCVBridgeSetup
+    participant WV as WebView
+    participant CV as OpenCV.js
 
-### Phase 2: ⏳ Pending
+    App->>Bridge: Mount component
+    Bridge->>WV: Inject webview-bridge.ts
+    WV->>CV: Load from CDN
+    CV-->>WV: onRuntimeInitialized
+    WV-->>Bridge: postMessage("ready")
+    Bridge-->>App: setOpenCVReady()
 
-- Lighting normalization
-- White balance correction
-- Shadow removal (CLAHE)
+    Note over App,CV: Processing Request
 
-### Phase 3: ⏳ Pending
-
-- Sharpness enhancement
-- Noise reduction
-- Unsharp mask
-
-## Configuration
-
-Default configuration (optimized for recipe photos):
-
-```typescript
-{
-  geometry: {
-    enabled: true,
-    xMargin: 5,      // 5% horizontal margin
-    yMargin: 5,      // 5% vertical margin
-    outputZoom: 1.0, // Full resolution
-    noBinary: true,  // Keep color output
-  },
-  lighting: {
-    enabled: false,  // Phase 2
-    // ...
-  },
-  clarity: {
-    enabled: false,  // Phase 3
-    // ...
-  },
-}
+    App->>Bridge: processGeometry(imageData)
+    Bridge->>WV: postMessage({type:"geometry"})
+    WV->>CV: processDewarp()
+    CV-->>WV: result
+    WV-->>Bridge: postMessage({type:"result"})
+    Bridge-->>App: GeometryProcessingResult
 ```
 
-## Error Handling
+### Web Implementation
 
-Processing failures automatically fall back to the original photo:
+On web, OpenCV.js loads directly in the browser on-demand. CPU-intensive optimization runs in a Web Worker (with main-thread fallback if workers are unavailable).
 
-```typescript
-const result = await processPhoto(uri);
+## Optimization Worker
 
-// result.success === false → uses original photo
-// result.processedUri will be the original URI if processing failed
+The dewarp algorithm has CPU-intensive phases (span refinement, cubic sheet fitting) that would block the UI. On web, these run in a Web Worker:
+
+```mermaid
+flowchart TB
+    subgraph MainThread["Main Thread"]
+        A[opencv-core.ts]
+        B[loader.web.ts]
+    end
+
+    subgraph Worker["Web Worker"]
+        C[worker.ts]
+        D[dewarp-optimizer.ts]
+    end
+
+    A -->|runOptimization| B
+    B -->|postMessage| C
+    C --> D
+    D --> C
+    C -->|postMessage| B
+    B --> A
+
+    B -.->|fallback if Worker unavailable| D
 ```
 
-Error codes:
+The worker is bundled dynamically by the Metro transformer at build time—no manual rebuild needed.
 
-- `PROCESSING_FAILED` - General processing error
-- `DEWARP_FAILED` - Page dewarping failed (Phase 1)
-- `NO_PAGE_DETECTED` - No page boundaries found (Phase 1)
+## Pipeline Structure
 
-## Testing
+The processing pipeline is designed for extensibility. Currently only geometry correction is implemented. Future phases (lighting, clarity) can be added as additional pipeline stages.
 
-### Manual Testing
+Each pipeline phase receives a `DataUrl` image, applies transformations, and returns a processed `DataUrl`.
 
-**Phase 1:** Photos are automatically processed with geometry correction.
+## Metro Configuration
 
-1. **Web:**
+A custom transformer (`metro-workers-transformer.js`) uses esbuild to bundle TypeScript files that need to run in isolated contexts:
 
-   ```bash
-   npx expo start
-   ```
+- **`webview-bridge.ts`** → bundled as string for WebView injection (native)
+- **`worker.ts`** → bundled as string for Web Worker creation (web)
 
-   Then press `w` for web
-
-   - Click "Add Recipe" → Select photo from library
-   - Photo is automatically processed with geometry correction
-   - Recipe creation screen opens with processed photo
-   - Check browser console for "[Phase 1] Processing photo with geometry correction"
-
-2. **Native (iOS/Android):**
-   ```bash
-   npx expo start
-   ```
-   Then press `i` for iOS or `a` for Android
-   - Tap "Add Recipe" → Choose "Camera" or "Library"
-   - Photo is automatically processed via WebView
-   - Recipe creation screen opens with processed photo
-   - Check logs for "[Phase 1] Starting geometry correction"
-
-### Test Cases
-
-Recommended test images for Phase 1:
-
-1. **Straight page at angle** - Should be corrected to rectangle
-2. **Curved book page** - Should be flattened and straightened
-3. **Recipe card** - Should detect boundaries and crop
-4. **No page visible** - Should fallback to original
-5. **Very dark/bright photo** - Processing should still work (lighting correction in Phase 2)
-
-### Integration Tests
-
-To be added:
-
-- Automated geometry correction verification
-- Processing time benchmarks (target: < 5 seconds)
-- Error handling scenarios
-- Memory usage profiling
-
-## Implementation Notes
-
-### Phase 1: Geometry Correction
-
-Phase 1 implements automatic geometry correction using `page-dewarp-js`:
-
-- **Web:** Uses npm package directly for optimal performance
-- **Native:** Loads from CDN inside WebView to avoid bundler issues
-- **Automatic processing:** Triggered on every photo import
-- **Error handling:** Falls back to original photo if processing fails
-- **Configuration:** Recipe-optimized defaults (5% margins, no binarization)
-
-### Platform Differences
-
-**Web (Direct OpenCV.js):**
-
-```typescript
-// Uses browser-compatible OpenCV.js (loaded from CDN)
-// Custom dewarping implementation
-const result = await dewarpImage(imageDataUrl, config);
-// Processing happens directly in browser
-```
-
-**Native (WebView Bridge):**
-
-```typescript
-// Loads page-dewarp-js from CDN inside WebView
-// Communication via postMessage
-sendToWebView({ type: "dewarp", imageData, config });
-// Response handled asynchronously
-```
-
-### Implementation Strategy
-
-**Web Platform:**
-
-- Custom browser-compatible dewarping implementation using OpenCV.js
-- Adapted from `page-dewarp-js` algorithm but using HTML5 Canvas API
-- Loads OpenCV.js from official CDN (cached after first load)
-- No Node.js dependencies (canvas, fs, etc.)
-- Direct processing without iframe overhead
-
-**Native Platform:**
-
-- Uses original `page-dewarp-js` library loaded from CDN inside WebView
-- WebView provides Node.js-like environment
-- Message-based communication with React Native
-
-**Why Different Approaches?**
-
-- **page-dewarp-js** has Node.js dependencies (`canvas`, `fs`) that don't work in browsers
-- **Web:** Custom OpenCV.js implementation avoids these dependencies
-- **Native:** WebView can run the original library from CDN
-- Both achieve the same result: perspective correction and page boundary detection
-
-## Next Steps
-
-Phase 2 will implement:
-
-1. Lighting normalization pipeline
-2. White balance correction
-3. Shadow removal using CLAHE
-4. Illumination correction
-5. Processing feedback UI
+This allows both the native bridge and web worker loader to import the bundled code as strings without a separate build step.

@@ -307,8 +307,6 @@ export function minimize(
  */
 export async function optimiseParams(
   cv: CV,
-  name: string,
-  small: unknown,
   dstpoints: Array<[number, number]>,
   spanCounts: Array<number>,
   params: Array<number>

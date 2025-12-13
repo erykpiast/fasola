@@ -33,7 +33,6 @@ import type { Point2D, SpanParams } from "../page-dewarp-core";
  */
 export function extractSpanEstimates(
   lines: Array<{ start: Point2D; end: Point2D }>,
-  imageWidth: number,
   imageHeight: number,
   numSpans: number
 ): Array<SpanParams> {
@@ -90,7 +89,7 @@ export function extractSpanEstimatesFromContours(
   numSpans: number
 ): Array<SpanParams> {
   if (textContours.length === 0) {
-    return extractSpanEstimates([], 0, imageHeight, numSpans);
+    return extractSpanEstimates([], imageHeight, numSpans);
   }
 
   const availableY = textContours

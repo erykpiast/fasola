@@ -45,7 +45,7 @@ export function MetadataFormFields({
       }
 
       if (Platform.OS === "web") {
-        containerRef.current.measure((x, y, width, height) => {
+        containerRef.current.measure((_x, y, _width, height) => {
           scrollToElement(scrollViewRef.current!, y, height);
         });
 

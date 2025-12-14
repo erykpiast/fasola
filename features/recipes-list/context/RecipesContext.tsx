@@ -13,7 +13,11 @@ import {
 
 type RecipesContextValue = {
   recipes: Array<Recipe>;
-  addRecipe: (photoUri: PhotoUri, metadata: RecipeMetadata) => Promise<void>;
+  addRecipe: (
+    photoUri: PhotoUri,
+    metadata: RecipeMetadata,
+    recognizedText?: string
+  ) => Promise<void>;
   updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
 };
 
@@ -37,8 +41,16 @@ export function RecipesProvider({
   const [recipes, setRecipes] = useState<Array<Recipe>>(initialRecipes);
 
   const addRecipe = useCallback(
-    async (photoUri: PhotoUri, metadata: RecipeMetadata) => {
-      const newRecipe = await recipeRepository.save({ photoUri, metadata });
+    async (
+      photoUri: PhotoUri,
+      metadata: RecipeMetadata,
+      recognizedText?: string
+    ) => {
+      const newRecipe = await recipeRepository.save({
+        photoUri,
+        metadata,
+        recognizedText,
+      });
       setRecipes((prev) => [newRecipe, ...prev]);
     },
     []

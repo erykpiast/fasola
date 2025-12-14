@@ -24,6 +24,7 @@ export function usePhotoAdjustment({
   geometry = DEFAULT_CONFIG.geometry,
   lighting = DEFAULT_CONFIG.lighting,
   clarity = DEFAULT_CONFIG.clarity,
+  ocr = DEFAULT_CONFIG.ocr,
 }: Partial<PhotoAdjustmentConfig> = DEFAULT_CONFIG): UsePhotoAdjustmentReturn {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -32,8 +33,9 @@ export function usePhotoAdjustment({
       geometry: { ...DEFAULT_CONFIG.geometry, ...geometry },
       lighting: { ...DEFAULT_CONFIG.lighting, ...lighting },
       clarity: { ...DEFAULT_CONFIG.clarity, ...clarity },
+      ocr: { ...DEFAULT_CONFIG.ocr, ...ocr },
     }),
-    [geometry, lighting, clarity]
+    [geometry, lighting, clarity, ocr]
   );
 
   const processPhotoCallback = useCallback(

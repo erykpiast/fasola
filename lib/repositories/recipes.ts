@@ -47,6 +47,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
       photoUri: id,
       timestamp,
       metadata: recipe.metadata,
+      recognizedText: recipe.recognizedText,
     };
 
     const data = await storage.getItem(RECIPES_KEY);

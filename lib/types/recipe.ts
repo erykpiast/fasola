@@ -5,6 +5,7 @@ export interface Recipe {
   photoUri: PhotoUri;
   timestamp: number;
   metadata: RecipeMetadata;
+  recognizedText?: string;
 }
 
 export interface RecipeMetadata {

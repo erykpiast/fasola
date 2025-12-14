@@ -1,4 +1,5 @@
 import type { DataUrl } from "@/lib/types/primitives";
+import type { OcrResult } from "./ocr-bridge/types";
 
 // Core configuration for photo adjustment pipeline
 export interface PhotoAdjustmentConfig {
@@ -23,12 +24,16 @@ export interface PhotoAdjustmentConfig {
     sharpenAmount: number; // 0.8-1.4
     sharpenThreshold: number; // 2-4
   };
+  ocr: {
+    enabled: boolean;
+  };
 }
 
 // Processing result from photo adjustment pipeline
 export interface ProcessingResult {
   success: boolean;
   processedUri?: DataUrl;
+  ocrResult?: OcrResult;
   error?: ProcessingError;
 }
 
@@ -39,7 +44,8 @@ export interface ProcessingError {
     | "DEWARP_FAILED"
     | "NO_PAGE_DETECTED"
     | "LIGHTING_FAILED"
-    | "CLARITY_FAILED";
+    | "CLARITY_FAILED"
+    | "OCR_FAILED";
   message: string;
 }
 
@@ -64,6 +70,9 @@ export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
     sharpenRadius: 1.5,
     sharpenAmount: 1.1,
     sharpenThreshold: 3,
+  },
+  ocr: {
+    enabled: true,
   },
 };
 

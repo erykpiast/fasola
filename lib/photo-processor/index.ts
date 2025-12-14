@@ -4,11 +4,13 @@
  */
 
 import type { DataUrl, PhotoUri } from "@/lib/types/primitives";
+import type { OcrResult } from "./ocr-bridge/types";
 import {
   processClarity,
   processGeometry,
   processLighting,
 } from "./opencv-bridge";
+import { processTextRecognition } from "./pipelines/text-recognition";
 import type { PhotoAdjustmentConfig, ProcessingResult } from "./types";
 import { loadImageAsDataUrl } from "./utils/loadImageAsDataUrl";
 
@@ -86,9 +88,27 @@ export async function processPhoto(
       }
     }
 
+    // Phase 4: Text Recognition
+    let ocrResult: OcrResult | undefined;
+    if (config.ocr.enabled) {
+      console.log("[Photo Processor] Running text recognition");
+      const result = await processTextRecognition(imageDataUrl);
+
+      if (!result.success) {
+        console.warn(
+          "[Photo Processor] Text recognition failed, continuing without OCR:",
+          result.error
+        );
+        // Continue - OCR failure shouldn't block image processing
+      } else {
+        ocrResult = result.ocrResult;
+      }
+    }
+
     return {
       success: true,
       processedUri: imageDataUrl,
+      ocrResult,
     };
   } catch (error) {
     console.error("[Photo Processor] Processing error:", error);

@@ -13,6 +13,10 @@ import {
   CUISINE_LABELS,
   SEASON_LABELS,
 } from "./labels";
+import {
+  classifyWithEmbeddings,
+  type LabelEmbedding,
+} from "./embeddings";
 
 interface ClassificationRequest {
   type: "classify";
@@ -38,12 +42,6 @@ interface ProgressMessage {
   requestId: string;
   phase: string;
   message: string;
-}
-
-interface LabelEmbedding {
-  key: string;
-  category: ClassificationCategory;
-  embedding: Array<number>;
 }
 
 interface EmbeddingOutput {
@@ -142,24 +140,9 @@ class EmbedderSingleton {
 }
 
 /**
- * Compute cosine similarity between two normalized embeddings
- * Since embeddings are normalized by MiniLM, this is just the dot product
+ * Generate text embedding and classify
  */
-function cosineSimilarity(
-  embedding1: Array<number>,
-  embedding2: Array<number>
-): number {
-  let dotProduct = 0;
-  for (let i = 0; i < embedding1.length; i++) {
-    dotProduct += embedding1[i] * embedding2[i];
-  }
-  return dotProduct;
-}
-
-/**
- * Classify text using embedding similarity
- */
-async function classifyWithEmbeddings(
+async function generateEmbeddingAndClassify(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   embedder: any,
   text: string,
@@ -173,27 +156,8 @@ async function classifyWithEmbeddings(
   })) as EmbeddingOutput;
   const textEmbedding: Array<number> = Array.from(output.data);
 
-  const suggestions: Array<{
-    tag: string;
-    confidence: number;
-    category: ClassificationCategory;
-  }> = [];
-
-  const SIMILARITY_THRESHOLD = 0.453;
-
-  for (const label of labelEmbeddings) {
-    const similarity = cosineSimilarity(textEmbedding, label.embedding);
-
-    if (similarity >= SIMILARITY_THRESHOLD) {
-      suggestions.push({
-        tag: `#${label.key}`,
-        confidence: similarity,
-        category: label.category,
-      });
-    }
-  }
-
-  return suggestions;
+  // Use shared classification function
+  return classifyWithEmbeddings(textEmbedding, labelEmbeddings);
 }
 
 /**
@@ -234,13 +198,11 @@ async function runClassification(
       }
     );
 
-    const suggestions = await classifyWithEmbeddings(
+    const suggestions = await generateEmbeddingAndClassify(
       embedder,
       text,
       labelEmbeddings
     );
-
-    suggestions.sort((a, b) => b.confidence - a.confidence);
 
     const response: ClassificationResponse = {
       type: "classification-result",
@@ -282,3 +244,4 @@ self.addEventListener("message", (event: MessageEvent) => {
 
 // Worker is ready
 console.log("[Classification Worker] Worker initialized and ready");
+

@@ -1,9 +1,14 @@
 /**
- * Web Text Classifier using Transformers.js
- * Runs MiniLM embedding classification in a Web Worker
+ * Web Text Classifier
+ * Supports both MiniLM embeddings (via worker) and TF-IDF
  */
 
-import type { ClassificationResult, TagSuggestion } from "./index.d";
+import type {
+  ClassificationMethod,
+  ClassificationResult,
+  TagSuggestion,
+} from "./index.d";
+import { classifyWithTfIdf } from "./tfidf";
 import { extractTitle } from "./title-extractor";
 
 // @ts-expect-error - Metro transformer bundles this as a string
@@ -81,9 +86,7 @@ function initializeWorker(): void {
         }
       } else if (message.type === "progress") {
         const progress = message as ProgressMessage;
-        console.log(
-          `[Text Classifier] ${progress.phase}: ${progress.message}`
-        );
+        console.log(`[Text Classifier] ${progress.phase}: ${progress.message}`);
       }
     };
 
@@ -135,15 +138,61 @@ async function classifyWithWorker(text: string): Promise<ClassificationResult> {
 }
 
 /**
+ * Classify text using TF-IDF scoring
+ */
+function classifyWithTfIdfMethod(text: string): ClassificationResult {
+  const startTime = Date.now();
+
+  try {
+    const title = extractTitle(text);
+    const allSuggestions = classifyWithTfIdf(text);
+
+    // Filter to top suggestions (max 2 per category with confidence >= 0.3)
+    const suggestions: Array<TagSuggestion> = [];
+    const counts = { season: 0, cuisine: 0, "food-category": 0 };
+
+    for (const suggestion of allSuggestions) {
+      if (counts[suggestion.category] < 2 && suggestion.confidence >= 0.3) {
+        suggestions.push(suggestion);
+        counts[suggestion.category]++;
+      }
+    }
+
+    return {
+      title,
+      suggestions,
+      processingTimeMs: Date.now() - startTime,
+    };
+  } catch (error) {
+    console.error("[Text Classifier] TF-IDF classification failed:", error);
+    return {
+      title: extractTitle(text),
+      suggestions: [],
+      processingTimeMs: Date.now() - startTime,
+    };
+  }
+}
+
+/**
  * Classify text and extract recipe metadata
  */
-export async function classifyText(text: string): Promise<ClassificationResult> {
+export async function classifyText(
+  text: string,
+  method: ClassificationMethod = "embeddings"
+): Promise<ClassificationResult> {
   const startTime = Date.now();
 
   try {
     // Extract title first (synchronous, fast)
     const title = extractTitle(text);
 
+    // Use TF-IDF if requested
+    if (method === "tfidf") {
+      const result = classifyWithTfIdfMethod(text);
+      return { ...result, title };
+    }
+
+    // Use embeddings (default)
     // Try to initialize worker if not already done
     if (!worker && !workerReady) {
       initializeWorker();
@@ -181,10 +230,10 @@ export async function classifyText(text: string): Promise<ClassificationResult> 
 /**
  * Hook to precompute label embeddings (no-op on web, model loads on first use)
  */
-export function useLabelEmbeddings(): { isReady: boolean; error: string | null } {
+export function useLabelEmbeddings(): {
+  isReady: boolean;
+  error: string | null;
+} {
   // On web, we don't precompute - model loads lazily on first classification
   return { isReady: true, error: null };
 }
-
-
-

@@ -34,11 +34,19 @@ export function useTextClassification(): {
         setIsClassifying(true);
         setClassificationError(undefined);
 
+        const startTime = Date.now();
         console.log("[Text Classification] Starting classification...");
-        const result = await classifyText(text);
+        let result = await classifyText(text, "embeddings");
+
+        if (result.suggestions.length === 0) {
+          console.log(
+            "[Text Classification] No suggestions found with embeddings, using TF-IDF..."
+          );
+          result = await classifyText(text, "tfidf");
+        }
 
         console.log(
-          `[Text Classification] Completed in ${result.processingTimeMs}ms`,
+          `[Text Classification] Completed in ${Date.now() - startTime}ms`,
           result
         );
 
@@ -64,6 +72,3 @@ export function useTextClassification(): {
 
   return { classify, isClassifying };
 }
-
-
-

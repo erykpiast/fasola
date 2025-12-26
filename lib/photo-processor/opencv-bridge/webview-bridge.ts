@@ -2,14 +2,12 @@
 // This code runs inside the WebView and communicates with React Native via postMessage
 
 import type { DataUrl } from "@/lib/types/primitives";
+import { processClarity, type ClarityConfig } from "../pipelines/clarity";
 import {
   processDewarp,
-  processLighting,
-  processClarity,
   type DewarpConfig,
-  type LightingConfig,
-  type ClarityConfig,
-} from "../pipelines";
+} from "../pipelines/geometry/dewarp-pipeline";
+import { processLighting, type LightingConfig } from "../pipelines/lighting";
 import type { WindowCV } from "../types/opencv";
 import type { ProcessingMessage } from "./types";
 

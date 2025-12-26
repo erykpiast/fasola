@@ -9,6 +9,11 @@
 export type ClassificationCategory = "season" | "cuisine" | "food-category";
 
 /**
+ * Classification method type
+ */
+export type ClassificationMethod = "embeddings" | "tfidf";
+
+/**
  * Tag suggestion with confidence score
  */
 export interface TagSuggestion {
@@ -29,9 +34,13 @@ export interface ClassificationResult {
 /**
  * Classify text and extract recipe metadata
  * @param text - Extracted OCR text
+ * @param method - Classification method (default: embeddings)
  * @returns Classification result with title and tag suggestions
  */
-export function classifyText(text: string): Promise<ClassificationResult>;
+export function classifyText(
+  text: string,
+  method?: ClassificationMethod
+): Promise<ClassificationResult>;
 
 
 

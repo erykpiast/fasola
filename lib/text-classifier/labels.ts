@@ -146,7 +146,7 @@ export const CATEGORY_LABELS = {
   dessert:
     "sweet, cake, cookies, pudding, chocolate, fruit, ice cream, sugar, brownie, cheesecake, pie, tart, custard, mousse, caramel",
   beverage:
-    "drink, liquid, coffee, tea, juice, smoothie, cocktail, mocktail, soda, lemonade, latte, cocoa, shake, sparkling water",
+    "drink, liquid, coffee, tea, juice, smoothie, cocktail, mocktail, lemonade, latte, cocoa, shake, sparkling water",
   preserves:
     "jam, jelly, marmalade, pickle, pickled, fermented, canned, preserved, stored, chutney, relish, compote, confit, brine, cured",
 } as const;

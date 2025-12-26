@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * CLI for testing text classifier in Node.js using MiniLM embeddings
- * Usage: npx tsx lib/text-classifier/cli.ts <text-file-path>
+ * CLI for testing text classifier in Node.js
+ * Supports both MiniLM embeddings and TF-IDF for comparison
+ * Usage: npx tsx lib/text-classifier/cli.ts <text-file-path> [--method=embeddings|tfidf|both]
  */
 
 import { pipeline } from "@huggingface/transformers";
 import { readFileSync } from "fs";
+import { classifyWithEmbeddings, type LabelEmbedding } from "./embeddings";
 import type { ClassificationCategory } from "./index.d";
 import {
   ALL_CATEGORY_KEYS,
@@ -16,6 +18,7 @@ import {
   CUISINE_LABELS,
   SEASON_LABELS,
 } from "./labels";
+import { classifyWithTfIdf } from "./tfidf";
 import { extractTitle } from "./title-extractor";
 
 interface TagSuggestion {
@@ -24,25 +27,8 @@ interface TagSuggestion {
   category: ClassificationCategory;
 }
 
-interface LabelEmbedding {
-  key: string;
-  category: ClassificationCategory;
-  embedding: Array<number>;
-}
-
 interface EmbeddingOutput {
   data: Float32Array | Array<number>;
-}
-
-function cosineSimilarity(
-  embedding1: Array<number>,
-  embedding2: Array<number>
-): number {
-  let dotProduct = 0;
-  for (let i = 0; i < embedding1.length; i++) {
-    dotProduct += embedding1[i] * embedding2[i];
-  }
-  return dotProduct;
 }
 
 async function computeLabelEmbeddings(
@@ -93,7 +79,7 @@ async function computeLabelEmbeddings(
   return labelEmbeddings;
 }
 
-async function classifyWithEmbeddings(
+async function generateEmbeddingAndClassify(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   embedder: any,
   text: string,
@@ -105,39 +91,81 @@ async function classifyWithEmbeddings(
   })) as EmbeddingOutput;
   const textEmbedding: Array<number> = Array.from(output.data);
 
-  const suggestions: Array<TagSuggestion> = [];
-  const SIMILARITY_THRESHOLD = 0.453;
+  // Use shared classification function
+  return classifyWithEmbeddings(textEmbedding, labelEmbeddings);
+}
 
-  for (const label of labelEmbeddings) {
-    const similarity = cosineSimilarity(textEmbedding, label.embedding);
+function printResults(
+  allSuggestions: Array<TagSuggestion>,
+  methodName: string
+): void {
+  console.log("=".repeat(60));
+  console.log(`RESULTS (${methodName})`);
+  console.log("=".repeat(60));
+  console.log();
 
-    if (similarity >= SIMILARITY_THRESHOLD) {
-      suggestions.push({
-        tag: `#${label.key}`,
-        confidence: similarity,
-        category: label.category,
-      });
+  if (allSuggestions.length === 0) {
+    console.log("No tags found");
+  } else {
+    console.log("Tag Suggestions (confidence scores):");
+    console.log();
+
+    const grouped = {
+      season: allSuggestions.filter((s) => s.category === "season"),
+      cuisine: allSuggestions.filter((s) => s.category === "cuisine"),
+      "food-category": allSuggestions.filter(
+        (s) => s.category === "food-category"
+      ),
+    };
+
+    for (const [category, suggestions] of Object.entries(grouped)) {
+      if (suggestions.length > 0) {
+        console.log(`  ${category.toUpperCase()}:`);
+        for (const suggestion of suggestions) {
+          const confidence = suggestion.confidence.toFixed(3);
+          const bar = "█".repeat(Math.floor(suggestion.confidence * 50));
+          console.log(`    ${suggestion.tag.padEnd(20)} ${confidence} ${bar}`);
+        }
+        console.log();
+      }
     }
   }
-
-  return suggestions;
 }
 
 /**
- * Run the full classification pipeline
+ * Run TF-IDF classification
  */
-async function runClassification(text: string): Promise<void> {
+async function runTfIdfClassification(text: string): Promise<void> {
+  const startTime = Date.now();
+
+  console.log("=".repeat(60));
+  console.log("TEXT CLASSIFIER TEST (TF-IDF)");
+  console.log("=".repeat(60));
+  console.log();
+
+  console.log("Classifying text with TF-IDF...");
+  const allSuggestions = classifyWithTfIdf(text);
+  allSuggestions.sort((a, b) => b.confidence - a.confidence);
+
+  console.log();
+  printResults(allSuggestions, "TF-IDF");
+
+  const totalTime = Date.now() - startTime;
+  console.log(
+    `Processing time: ${totalTime}ms (${(totalTime / 1000).toFixed(1)}s)`
+  );
+  console.log();
+}
+
+/**
+ * Run embeddings classification
+ */
+async function runEmbeddingsClassification(text: string): Promise<void> {
   const startTime = Date.now();
 
   console.log("=".repeat(60));
   console.log("TEXT CLASSIFIER TEST (MiniLM Embeddings)");
   console.log("=".repeat(60));
-  console.log();
-
-  // Extract title
-  console.log("Extracting title...");
-  const title = extractTitle(text);
-  console.log(`Title: ${title || "(none found)"}`);
   console.log();
 
   console.log("Loading MiniLM embedding model (this may take a moment)...");
@@ -174,46 +202,14 @@ async function runClassification(text: string): Promise<void> {
   console.log();
 
   console.log("Classifying text...");
-  const allSuggestions = await classifyWithEmbeddings(
+  const allSuggestions = await generateEmbeddingAndClassify(
     embedder,
     text,
     labelEmbeddings
   );
 
-  allSuggestions.sort((a, b) => b.confidence - a.confidence);
-
   console.log();
-  console.log("=".repeat(60));
-  console.log("RESULTS");
-  console.log("=".repeat(60));
-  console.log();
-
-  if (allSuggestions.length === 0) {
-    console.log("No tags found");
-  } else {
-    console.log("Tag Suggestions (similarity scores):");
-    console.log();
-
-    const grouped = {
-      season: allSuggestions.filter((s) => s.category === "season"),
-      cuisine: allSuggestions.filter((s) => s.category === "cuisine"),
-      "food-category": allSuggestions.filter(
-        (s) => s.category === "food-category"
-      ),
-    };
-
-    for (const [category, suggestions] of Object.entries(grouped)) {
-      if (suggestions.length > 0) {
-        console.log(`  ${category.toUpperCase()}:`);
-        for (const suggestion of suggestions) {
-          const similarity = suggestion.confidence.toFixed(3);
-          const bar = "█".repeat(Math.floor(suggestion.confidence * 50));
-          console.log(`    ${suggestion.tag.padEnd(20)} ${similarity} ${bar}`);
-        }
-        console.log();
-      }
-    }
-  }
+  printResults(allSuggestions, "MiniLM Embeddings");
 
   const totalTime = Date.now() - startTime;
   console.log(
@@ -223,20 +219,68 @@ async function runClassification(text: string): Promise<void> {
 }
 
 /**
+ * Run both methods for comparison
+ */
+async function runBothMethods(text: string): Promise<void> {
+  console.log("=".repeat(60));
+  console.log("TEXT CLASSIFIER COMPARISON TEST");
+  console.log("=".repeat(60));
+  console.log();
+
+  // Extract title
+  console.log("Extracting title...");
+  const title = extractTitle(text);
+  console.log(`Title: ${title || "(none found)"}`);
+  console.log();
+  console.log();
+
+  // Run TF-IDF
+  await runTfIdfClassification(text);
+
+  console.log();
+  console.log();
+
+  // Run Embeddings
+  await runEmbeddingsClassification(text);
+}
+
+/**
  * Main entry point
  */
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: npx tsx lib/text-classifier/cli.ts <text-file-path>");
+    console.error(
+      "Usage: npx tsx lib/text-classifier/cli.ts <text-file-path> [--method=embeddings|tfidf|both]"
+    );
     console.error("");
-    console.error("Example:");
-    console.error("  npx tsx lib/text-classifier/cli.ts recipe.txt");
+    console.error("Examples:");
+    console.error(
+      "  npx tsx lib/text-classifier/cli.ts recipe.txt --method=embeddings"
+    );
+    console.error(
+      "  npx tsx lib/text-classifier/cli.ts recipe.txt --method=tfidf"
+    );
+    console.error(
+      "  npx tsx lib/text-classifier/cli.ts recipe.txt --method=both"
+    );
+    console.error(
+      "  npx tsx lib/text-classifier/cli.ts recipe.txt  (defaults to both)"
+    );
     process.exit(1);
   }
 
   const filePath = args[0];
+  const methodArg = args.find((arg) => arg.startsWith("--method="));
+  const method = methodArg ? methodArg.split("=")[1] : "both";
+
+  if (!["embeddings", "tfidf", "both"].includes(method)) {
+    console.error(
+      `Error: Invalid method '${method}'. Must be 'embeddings', 'tfidf', or 'both'`
+    );
+    process.exit(1);
+  }
 
   try {
     const text = readFileSync(filePath, "utf-8");
@@ -246,7 +290,25 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    await runClassification(text);
+    if (method === "both") {
+      await runBothMethods(text);
+    } else if (method === "tfidf") {
+      // Extract title first
+      console.log("Extracting title...");
+      const title = extractTitle(text);
+      console.log(`Title: ${title || "(none found)"}`);
+      console.log();
+      console.log();
+      await runTfIdfClassification(text);
+    } else {
+      // embeddings
+      console.log("Extracting title...");
+      const title = extractTitle(text);
+      console.log(`Title: ${title || "(none found)"}`);
+      console.log();
+      console.log();
+      await runEmbeddingsClassification(text);
+    }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       console.error(`Error: File '${filePath}' not found`);

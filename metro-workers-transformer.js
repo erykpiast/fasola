@@ -9,7 +9,8 @@ module.exports.transform = function ({ src, filename, options }) {
   // Bundle TypeScript files with esbuild for WebView and Web Worker contexts
   if (
     filename.endsWith("opencv-bridge/webview-bridge.ts") ||
-    filename.endsWith("optimization/worker.ts")
+    filename.endsWith("optimization/worker.ts") ||
+    filename.endsWith("text-classifier/worker.ts")
   ) {
     try {
       const workspaceRoot = path.resolve(__dirname);

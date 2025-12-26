@@ -42,7 +42,7 @@ This app uses custom native modules (like `expo-text-extractor` for OCR) that re
 
 2. **Trust the developer profile** (first time only):
    - On your iPhone: **Settings → General → VPN & Device Management**
-   - Tap your developer profile and tap **Trust**
+   - Tap your developer profile and tap Trust
 
 3. **Start the development server**:
 

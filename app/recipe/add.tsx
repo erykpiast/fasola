@@ -1,6 +1,11 @@
 import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { AddRecipeForm } from "@/features/recipe-form/components/AddRecipeForm";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
+import {
+  TextRecognitionProvider,
+  useTextRecognition,
+} from "@/features/text-recognition/context/TextRecognitionContext";
+import { useTextClassification } from "@/features/text-recognition/hooks/useTextClassification";
 import { Alert } from "@/lib/alert";
 import type { PhotoUri } from "@/lib/types/primitives";
 import type { RecipeMetadata } from "@/lib/types/recipe";
@@ -11,7 +16,7 @@ import { useCallback, useEffect, useState, type JSX } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function AddRecipeScreen(): JSX.Element {
+function AddRecipeScreenContent(): JSX.Element {
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
   const { addRecipe } = useRecipes();
   const theme = useTheme();
@@ -20,6 +25,10 @@ export default function AddRecipeScreen(): JSX.Element {
   const { processPhoto, isProcessing } = usePhotoAdjustment();
   const [displayUri, setDisplayUri] = useState<PhotoUri>(uri);
   const [recognizedText, setRecognizedText] = useState<string | undefined>();
+  const { setOcrText } = useTextRecognition();
+
+  // Trigger classification automatically
+  useTextClassification();
 
   useEffect(() => {
     if (!uri) return;
@@ -33,11 +42,13 @@ export default function AddRecipeScreen(): JSX.Element {
       if (result.ocrResult?.success && result.ocrResult.text) {
         console.log("[AddRecipe] OCR extracted text:", result.ocrResult.text);
         setRecognizedText(result.ocrResult.text);
+        // Update context with OCR text to trigger classification
+        setOcrText(result.ocrResult.text);
       }
     };
 
     processImage();
-  }, [uri, processPhoto]);
+  }, [uri, processPhoto, setOcrText]);
 
   const handleSubmit = useCallback(
     async (metadata: RecipeMetadata) => {
@@ -74,6 +85,14 @@ export default function AddRecipeScreen(): JSX.Element {
         onSubmit={handleSubmit}
       />
     </SafeAreaView>
+  );
+}
+
+export default function AddRecipeScreen(): JSX.Element {
+  return (
+    <TextRecognitionProvider>
+      <AddRecipeScreenContent />
+    </TextRecognitionProvider>
   );
 }
 

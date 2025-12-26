@@ -1,3 +1,4 @@
+import { useTextRecognition } from "@/features/text-recognition/context/TextRecognitionContext";
 import { Alert } from "@/lib/alert";
 import { CloseButton } from "@/lib/components/atoms/CloseButton";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
@@ -7,7 +8,7 @@ import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useCallback, useRef, type JSX } from "react";
+import { useCallback, useEffect, useRef, type JSX } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -33,9 +34,11 @@ export function AddRecipeForm({
   const theme = useTheme();
   const { t } = useTranslation();
   const scrollViewRef = useRef<ScrollView>(null);
-  const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
-    onSubmit,
-  });
+  const { classificationResult } = useTextRecognition();
+  const { values, handleChange, handleSubmit, isDirty, updateFromExtraction } =
+    useRecipeForm({
+      onSubmit,
+    });
 
   const handleClose = useCallback(() => {
     if (Platform.OS !== "web") {
@@ -72,6 +75,17 @@ export function AddRecipeForm({
     }
     handleSubmit();
   }, [handleSubmit]);
+
+  // Auto-populate form fields from classification results
+  useEffect(() => {
+    if (classificationResult) {
+      const suggestedTags = classificationResult.suggestions
+        .filter((s) => s.confidence >= 0.8)
+        .map((s) => s.tag);
+
+      updateFromExtraction(classificationResult.title, suggestedTags);
+    }
+  }, [classificationResult, updateFromExtraction]);
 
   return (
     <KeyboardAvoidingView

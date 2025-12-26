@@ -18,6 +18,10 @@ export function useRecipeForm(config: {
   handleChange: (updates: Partial<RecipeMetadata>) => void;
   handleSubmit: () => void;
   isDirty: boolean;
+  updateFromExtraction: (
+    title?: string,
+    suggestedTags?: Array<`#${string}`>
+  ) => void;
 } {
   const { t } = useTranslation();
   const initialValues = config.initialValues ?? emptyMetadata;
@@ -63,12 +67,39 @@ export function useRecipeForm(config: {
     config.onSubmit(trimmedValues);
   }, [values, config, t]);
 
+  const updateFromExtraction = useCallback(
+    (title?: string, suggestedTags?: Array<`#${string}`>) => {
+      setValues((prev) => {
+        const updates: Partial<RecipeMetadata> = {};
+
+        // Only update title if field is empty and we have an extracted title
+        if (!prev.title && title) {
+          updates.title = title;
+        }
+
+        // Add suggested tags (avoid duplicates)
+        if (suggestedTags && suggestedTags.length > 0) {
+          const newTags = suggestedTags.filter(
+            (tag) => !prev.tags.includes(tag)
+          );
+          if (newTags.length > 0) {
+            updates.tags = [...prev.tags, ...newTags];
+          }
+        }
+
+        return { ...prev, ...updates };
+      });
+    },
+    []
+  );
+
   return {
     values,
     errors,
     handleChange,
     handleSubmit,
     isDirty,
+    updateFromExtraction,
   };
 }
 

@@ -7,6 +7,8 @@
  * Season labels with descriptions for semantic similarity
  */
 export const SEASON_LABELS = {
+  whole_year:
+    "all-season, year-round, everyday cooking, weeknight meals, pantry staples, comfort food, quick meals, meal prep, leftovers, one-pot, bread, flatbread, pasta, pizza, rice, soup, salad, stew, casserole, sandwich, breakfast, brunch, lunch, dinner, snack, appetizer, side dish, main course, dessert, beverage, baked, pastry, stir-fry, grill, roast, preserves, pickled, fermented",
   spring:
     "fresh vegetables, asparagus, peas, ramps, radishes, rhubarb, fava beans, artichokes, spring onions, baby greens, herbs, lemon, light salads",
   summer:
@@ -40,18 +42,8 @@ export const CUISINE_LABELS = {
   // Eastern Europe
   polish:
     "pierogi, kielbasa, bigos, cabbage, sour cream, beets, rye bread, żurek, gołąbki, pickles, dill, mushrooms, poppy seed, horseradish",
-  russian:
-    "borscht, pelmeni, blini, sour cream, caviar, beets, dill, buckwheat, vodka, beef stroganoff, pickles, rye bread, cabbage, kvass",
   ukrainian:
     "borscht, varenyky, salo, cabbage, beets, sour cream, garlic, dill, buckwheat, sunflower oil, rye bread, pickled vegetables, mushrooms",
-  hungarian:
-    "goulash, paprika, sour cream, lard, onions, cabbage, dumplings, langos, chimney cake, tokaji wine, pork, peppers, caraway",
-  romanian:
-    "sarmale, mămăligă, mici, cabbage, sour cream, garlic, polenta, paprika, plum brandy, pickles, pork, dill, sunflower oil",
-  czech:
-    "svíčková, knedlíky, goulash, beer, dumplings, sauerkraut, pork, beef, caraway, horseradish, paprika, cream sauce",
-  slovak:
-    "bryndzové halušky, kapustnica, sheep cheese, cabbage, potato, sauerkraut, bacon, paprika, dumplings, pork",
   eastern_european:
     "cabbage, sour cream, beets, dill, rye bread, pickles, dumplings, pork, mushrooms, buckwheat, potatoes, paprika, kvass, fermented foods",
   balkan:
@@ -72,31 +64,11 @@ export const CUISINE_LABELS = {
   thai: "coconut milk, curry, pad thai, lemongrass, fish sauce, chili, basil, galangal, lime, kaffir lime, palm sugar, tamarind, cilantro, peanuts, rice noodles",
   vietnamese:
     "pho, rice noodles, fish sauce, herbs, spring rolls, lemongrass, mint, cilantro, lime, chili, star anise, nuoc mam, bahn mi, basil",
-  indonesian:
-    "satay, rice, peanut sauce, coconut, sambal, nasi goreng, tempeh, turmeric, galangal, kecap manis, lemongrass, shrimp paste, rendang, tamarind",
-  filipino:
-    "adobo, lumpia, pancit, vinegar, soy sauce, garlic, bay leaves, fish sauce, coconut, lechon, calamansi, banana leaves, bagoong",
-  malaysian:
-    "nasi lemak, rendang, laksa, coconut milk, sambal, pandan, curry, tamarind, belacan, lemongrass, chili, turmeric, palm sugar",
-  singaporean:
-    "hainanese chicken rice, laksa, chili crab, kaya, coconut, sambal, curry, fish sauce, soy sauce, pandan, belacan, satay",
-  cambodian:
-    "amok, prahok, lemongrass, galangal, fish sauce, coconut milk, turmeric, lime, palm sugar, rice, kroeung, tamarind, kaffir lime",
-  laotian:
-    "larb, sticky rice, fish sauce, lemongrass, galangal, chili, lime, herbs, padaek, papaya salad, tamarind, mint, cilantro",
-  burmese:
-    "mohinga, curry, fish sauce, shrimp paste, turmeric, lemongrass, chickpea flour, noodles, tamarind, fermented tea leaves, peanuts",
   southeast_asian:
     "rice, coconut milk, fish sauce, lemongrass, chili, lime, curry, garlic, ginger, galangal, tamarind, palm sugar, shrimp paste, peanuts, herbs",
   // South Asia
   indian:
     "curry, rice, naan, spices, turmeric, cumin, coriander, lentils, chickpeas, garam masala, ghee, cardamom, ginger, garlic, tamarind, paneer, chutney, basmati",
-  pakistani:
-    "biryani, nihari, karahi, naan, cumin, coriander, turmeric, garam masala, ghee, yogurt, chili, ginger, garlic, lentils, basmati rice",
-  bangladeshi:
-    "hilsa fish, mustard oil, panch phoron, curry, rice, lentils, coconut, turmeric, chili, ginger, yogurt, mustard seeds, nigella",
-  sri_lankan:
-    "curry, rice, coconut, cinnamon, cardamom, curry leaves, turmeric, chili, tamarind, hoppers, kottu, sambol, jaggery, cashews",
   nepalese:
     "dal bhat, momo, curry, rice, lentils, cumin, coriander, turmeric, ginger, garlic, cardamom, timur, ghee, mustard oil",
   // Middle East
@@ -108,10 +80,6 @@ export const CUISINE_LABELS = {
     "rice, saffron, kebab, yogurt, pomegranate, herbs, tahdig, sumac, barberries, rosewater, pistachios, walnuts, lamb, dried limes, tahini",
   israeli:
     "hummus, falafel, tahini, pita, shakshuka, za'atar, halva, couscous, eggplant, chickpeas, sesame, lemon, olive oil, dates",
-  syrian:
-    "kibbeh, fattoush, shawarma, tahini, pomegranate molasses, sumac, bulgur, lamb, yogurt, olive oil, parsley, mint, chickpeas",
-  iraqi:
-    "masgouf, kubba, rice, dates, pomegranate molasses, sumac, cardamom, saffron, lamb, tahini, chickpeas, flatbread, tamarind",
   middle_eastern:
     "hummus, tahini, olive oil, chickpeas, lemon, garlic, cumin, coriander, sumac, za'atar, pomegranate, lamb, yogurt, flatbread, eggplant, parsley, mint",
   central_asian:
@@ -137,10 +105,6 @@ export const CUISINE_LABELS = {
     "ceviche, aji amarillo, quinoa, potatoes, corn, cilantro, lime, purple corn, pisco, anticuchos, causa, rocoto, lucuma, yuca",
   argentinian:
     "asado, chimichurri, beef, empanadas, dulce de leche, yerba mate, chorizo, provolone, oregano, parsley, garlic, red wine",
-  colombian:
-    "arepas, bandeja paisa, plantain, corn, beans, avocado, cilantro, aji, panela, coffee, yuca, coconut, hogao, cheese",
-  chilean:
-    "empanadas, pastel de choclo, seafood, corn, beef, avocado, merkén, cilantro, wine, pebre, potatoes, beans, dulce de leche",
   brazilian:
     "beans, rice, meat, farofa, churrasco, cassava, coconut, dendê oil, lime, cilantro, guaraná, açaí, passion fruit, cachaça, hearts of palm",
   latin_american:
@@ -158,21 +122,33 @@ export const CUISINE_LABELS = {
  * Food category labels with descriptions for semantic similarity
  */
 export const CATEGORY_LABELS = {
-  appetizer: "starter, small bites, finger food, hors d'oeuvres, snacks",
-  soup: "broth, liquid, warm, bowl, vegetables, stock",
-  salad: "fresh, greens, vegetables, dressing, cold, lettuce",
-  pasta: "noodles, spaghetti, penne, linguine, Italian, sauce",
-  pizza: "dough, cheese, tomato sauce, toppings, Italian, oven-baked",
-  rice: "grains, pilaf, risotto, fried rice, steamed, side dish",
-  stew: "slow-cooked, thick, hearty, meat, vegetables, braised",
-  roast: "oven-baked, meat, poultry, vegetables, whole, tender",
-  grill: "barbecue, char, meat, vegetables, smoky, outdoor cooking",
-  "stir-fry": "wok, quick-cooked, vegetables, Asian, high heat",
-  baked: "oven, casserole, dish, cheese, golden, crispy",
-  pastry: "dough, butter, flaky, sweet, croissant, tart, pie crust",
-  dessert: "sweet, cake, cookies, pudding, chocolate, fruit, ice cream, sugar",
-  beverage: "drink, liquid, coffee, tea, juice, smoothie, cocktail",
-  preserves: "jam, pickle, fermented, canned, preserved, stored",
+  appetizer:
+    "starter, small bites, finger food, hors d'oeuvres, snacks, tapas, canapés, bruschetta, crostini, dip, spread, mezze, bite-size, party food",
+  soup: "broth, liquid, warm, bowl, vegetables, stock, ramen, chowder, bisque, consommé, creamy soup, noodle soup, lentil soup, miso",
+  salad:
+    "fresh, greens, vegetables, dressing, cold, lettuce, vinaigrette, chopped salad, caesar, coleslaw, pasta salad, grain salad, cucumber salad, slaw",
+  pasta:
+    "noodles, spaghetti, penne, linguine, Italian, sauce, fettuccine, rigatoni, macaroni, ravioli, gnocchi, al dente, pesto, bolognese",
+  pizza:
+    "dough, cheese, tomato sauce, toppings, Italian, oven-baked, crust, mozzarella, pepperoni, slice, margherita, wood-fired, calzone, flatbread",
+  rice: "grains, pilaf, risotto, fried rice, steamed, side dish, basmati, jasmine, rice bowl, paella, biryani, sushi rice, sticky rice, congee",
+  stew: "slow-cooked, thick, hearty, meat, vegetables, braised, simmered, one-pot, goulash, chili, ragout, casserole, comfort food",
+  roast:
+    "oven-baked, meat, poultry, vegetables, whole, tender, roast chicken, pot roast, brisket, sunday roast, gravy, roasting, carved",
+  grill:
+    "barbecue, char, meat, vegetables, smoky, outdoor cooking, grilled, chargrilled, skewers, kebab, flame-grilled, BBQ sauce, grill marks",
+  "stir-fry":
+    "wok, quick-cooked, vegetables, Asian, high heat, soy sauce, garlic, ginger, sesame oil, wok hei, noodles, beef stir-fry, chicken stir-fry",
+  baked:
+    "oven, casserole, dish, cheese, golden, crispy, gratin, traybake, baked chicken, sheet pan, bubbling, crusty",
+  pastry:
+    "dough, butter, flaky, sweet, croissant, tart, pie crust, puff pastry, filo, danish, shortcrust, choux, laminated dough, turnover",
+  dessert:
+    "sweet, cake, cookies, pudding, chocolate, fruit, ice cream, sugar, brownie, cheesecake, pie, tart, custard, mousse, caramel",
+  beverage:
+    "drink, liquid, coffee, tea, juice, smoothie, cocktail, mocktail, soda, lemonade, latte, cocoa, shake, sparkling water",
+  preserves:
+    "jam, jelly, marmalade, pickle, pickled, fermented, canned, preserved, stored, chutney, relish, compote, confit, brine, cured",
 } as const;
 
 /**

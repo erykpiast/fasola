@@ -4,8 +4,32 @@
  */
 
 import type { DataUrl } from "@/lib/types/primitives";
+import { Paths } from "expo-file-system";
+import { writeAsStringAsync } from "expo-file-system/legacy";
 import { extractTextFromImage, isSupported } from "expo-text-extractor";
 import type { OcrResult } from "./types";
+
+/**
+ * Dump image to disk for debugging purposes
+ */
+async function dumpImageToDisk(imageUri: DataUrl): Promise<void> {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `ocr-input-${timestamp}.jpg`;
+    const fileUri = `${Paths.document?.uri}/${filename}`;
+
+    // Convert base64 data URL to base64 string
+    const base64Data = imageUri.split(",")[1] || imageUri;
+
+    await writeAsStringAsync(fileUri, base64Data, {
+      encoding: "base64",
+    });
+
+    console.log(`[OCR Bridge] Image dumped to: ${fileUri}`);
+  } catch (error) {
+    console.error("[OCR Bridge] Failed to dump image:", error);
+  }
+}
 
 /**
  * Extract text from an image using platform-native OCR
@@ -15,6 +39,9 @@ import type { OcrResult } from "./types";
 export async function extractText(imageUri: DataUrl): Promise<OcrResult> {
   try {
     console.log("[OCR Bridge] Starting text extraction (native)");
+
+    // Dump image to disk for debugging
+    await dumpImageToDisk(imageUri);
 
     if (!isSupported) {
       console.warn("[OCR Bridge] OCR not supported on this device");

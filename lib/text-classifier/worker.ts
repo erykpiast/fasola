@@ -4,6 +4,7 @@
  */
 
 import { pipeline } from "@huggingface/transformers";
+import { classifyWithEmbeddings, type LabelEmbedding } from "./embeddings";
 import type { ClassificationCategory } from "./index.d";
 import {
   ALL_CATEGORY_KEYS,
@@ -13,10 +14,6 @@ import {
   CUISINE_LABELS,
   SEASON_LABELS,
 } from "./labels";
-import {
-  classifyWithEmbeddings,
-  type LabelEmbedding,
-} from "./embeddings";
 
 interface ClassificationRequest {
   type: "classify";
@@ -244,4 +241,3 @@ self.addEventListener("message", (event: MessageEvent) => {
 
 // Worker is ready
 console.log("[Classification Worker] Worker initialized and ready");
-

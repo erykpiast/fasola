@@ -1,12 +1,15 @@
+import { SourceSelector } from "@/features/source-selector";
 import { FormInput } from "@/lib/components/atoms/FormInput";
 import { TagInput } from "@/lib/components/atoms/TagInput";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { type Theme, useTheme } from "@/platform/theme/useTheme";
 import { type JSX, useCallback, useRef } from "react";
 import {
   Platform,
   type ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   View,
   type ViewStyle,
@@ -32,11 +35,11 @@ export function MetadataFormFields({
 }): JSX.Element {
   const { t } = useTranslation();
   const titleRef = useRef<TextInput>(null);
-  const sourceRef = useRef<TextInput>(null);
   const tagsRef = useRef<TextInput>(null);
   const titleContainerRef = useRef<View>(null);
-  const sourceContainerRef = useRef<View>(null);
   const tagsContainerRef = useRef<View>(null);
+
+  const theme = useTheme();
 
   const scrollToInput = useCallback(
     (containerRef: React.RefObject<View | null>) => {
@@ -85,23 +88,19 @@ export function MetadataFormFields({
           onChangeText={(text) => onChange({ title: text || undefined })}
           placeholder={t("recipeForm.title.placeholder")}
           returnKeyType="next"
-          onSubmitEditing={() => sourceRef.current?.focus()}
+          onSubmitEditing={() => tagsRef.current?.focus()}
           blurOnSubmit={true}
           onFocus={() => scrollToInput(titleContainerRef)}
         />
       </View>
 
-      <View ref={sourceContainerRef}>
-        <FormInput
-          ref={sourceRef}
-          label={t("recipeForm.source.label")}
+      <View style={styles.sourceContainer}>
+        <Text style={[styles.label, getLabelColor(theme)]}>
+          {t("recipeForm.source.label")}
+        </Text>
+        <SourceSelector
           value={value.source ?? ""}
-          onChangeText={(text) => onChange({ source: text || undefined })}
-          placeholder={t("recipeForm.source.placeholder")}
-          returnKeyType="next"
-          onSubmitEditing={() => tagsRef.current?.focus()}
-          blurOnSubmit={true}
-          onFocus={() => scrollToInput(sourceContainerRef)}
+          onValueChange={(source) => onChange({ source: source || undefined })}
         />
       </View>
 
@@ -119,8 +118,22 @@ export function MetadataFormFields({
   );
 }
 
+function getLabelColor(theme: Theme) {
+  const isDark = theme === "dark";
+  return {
+    color: isDark ? "#E5E5E5" : "#1F1F1F",
+  };
+}
+
 const styles = StyleSheet.create({
   container: {
     gap: 24,
+  },
+  sourceContainer: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

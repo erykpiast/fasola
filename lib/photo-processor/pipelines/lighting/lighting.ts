@@ -46,12 +46,13 @@ async function loadOpenCV(): Promise<CV> {
 export async function applyLightingCorrection(
   imageDataUrl: DataUrl,
   config: Partial<PhotoAdjustmentConfig["lighting"]>
-): Promise<DataUrl> {
+): Promise<{ coloredUri: DataUrl; grayscaleUri: DataUrl }> {
   const cv = await loadOpenCV();
 
-  return processLighting(cv, imageDataUrl, {
+  const result = await processLighting(cv, imageDataUrl, {
     whiteBalance: config.whiteBalance ?? "gray-world",
     claheClipLimit: config.claheClipLimit ?? 2.5,
     claheTileSize: config.claheTileSize ?? 8,
   });
+  return result;
 }

@@ -64,13 +64,13 @@ export async function processLighting(
     console.log("[OpenCV Bridge] Starting lighting correction (web/opencv)");
 
     // Apply lighting correction using browser-compatible OpenCV
-    const processedUri = await applyLightingCorrection(imageUri, config);
-
+    const result = await applyLightingCorrection(imageUri, config);
     console.log("[OpenCV Bridge] Lighting correction complete (web)");
 
     return {
       success: true,
-      processedUri,
+      processedUri: result.coloredUri,
+      grayscaleUri: result.grayscaleUri,
     };
   } catch (error) {
     console.error("[OpenCV Bridge] Lighting correction failed:", error);

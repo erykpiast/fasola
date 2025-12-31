@@ -52,10 +52,27 @@ class NativeStorage implements Storage {
   async savePhoto(id: PhotoId, uri: PhotoUri, timestamp: number): Promise<PhotoId> {
     await this.ensurePhotosDirectory();
     const filename = `${id}.jpg`;
-
-    const sourceFile = new File(uri);
     const destinationFile = new File(this.photosDirectory.uri, filename);
-    sourceFile.copy(destinationFile);
+
+    if (uri.startsWith('data:')) {
+      const base64Match = uri.match(/^data:[^;]+;base64,(.+)$/);
+      if (!base64Match) {
+        throw new Error('Invalid data URL format');
+      }
+      const base64Data = base64Match[1];
+      if (destinationFile.exists) {
+        destinationFile.delete();
+      }
+      await destinationFile.write(base64Data, { encoding: 'base64' });
+    } else {
+      const sourceFile = new File(uri);
+      if (sourceFile.uri !== destinationFile.uri) {
+        if (destinationFile.exists) {
+          destinationFile.delete();
+        }
+        sourceFile.copy(destinationFile);
+      }
+    }
 
     const metadata = await this.getMetadata();
     metadata[id] = { id, timestamp };

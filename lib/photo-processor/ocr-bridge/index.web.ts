@@ -22,8 +22,24 @@ export async function extractText(imageUri: DataUrl): Promise<OcrResult> {
     // Lazy initialization: create worker on first use
     if (!worker) {
       console.log("[OCR Bridge] Initializing Tesseract worker");
-      worker = await createWorker("eng");
-      console.log("[OCR Bridge] Tesseract worker ready");
+      try {
+        worker = await createWorker("eng", 1, {
+          errorHandler: (err) =>
+            console.error("[OCR Bridge] Worker error:", err),
+        });
+        console.log("[OCR Bridge] Tesseract worker ready");
+      } catch (workerError) {
+        console.error(
+          "[OCR Bridge] Failed to create Tesseract worker:",
+          workerError
+        );
+        return {
+          success: false,
+          error: `Worker initialization failed: ${
+            workerError instanceof Error ? workerError.message : "Unknown error"
+          }`,
+        };
+      }
     }
 
     // Perform OCR recognition

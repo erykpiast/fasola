@@ -1,3 +1,4 @@
+import { BackgroundProcessingProvider } from "@/features/background-processing";
 import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext";
 import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
@@ -20,8 +21,10 @@ export default function RootLayout(): JSX.Element {
     <Suspense fallback={<View style={styles.suspenseFallback} />}>
       <DebugProvider>
         <RecipesProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-          <WebViewSetup />
+          <BackgroundProcessingProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+            <WebViewSetup />
+          </BackgroundProcessingProvider>
         </RecipesProvider>
       </DebugProvider>
     </Suspense>

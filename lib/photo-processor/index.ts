@@ -57,10 +57,10 @@ export async function processPhoto(
     }
 
     // Phase 2: Lighting correction
+    let grayscaleImageDataUrl: DataUrl | undefined;
     if (config.lighting.enabled) {
       console.log("[Photo Processor] Running lighting correction");
       const result = await processLighting(imageDataUrl, config.lighting);
-
       if (!result.success) {
         console.warn(
           "[Photo Processor] Lighting correction failed, continuing with current image:",
@@ -69,12 +69,15 @@ export async function processPhoto(
         // Continue with current image (graceful degradation)
       } else {
         imageDataUrl = result.processedUri!;
+        grayscaleImageDataUrl = result.grayscaleUri;
       }
     }
 
     // Phase 3: Clarity enhancement
     if (config.clarity.enabled) {
-      console.log("[Photo Processor] Running clarity enhancement");
+      console.log(
+        "[Photo Processor] Running clarity enhancement on colored image"
+      );
       const result = await processClarity(imageDataUrl, config.clarity);
 
       if (!result.success) {
@@ -86,13 +89,35 @@ export async function processPhoto(
       } else {
         imageDataUrl = result.processedUri!;
       }
+
+      if (grayscaleImageDataUrl) {
+        console.log(
+          "[Photo Processor] Running clarity enhancement on grayscale image"
+        );
+        const grayscaleResult = await processClarity(
+          grayscaleImageDataUrl,
+          config.clarity
+        );
+
+        if (!grayscaleResult.success) {
+          console.warn(
+            "[Photo Processor] Grayscale clarity enhancement failed, using original grayscale:",
+            grayscaleResult.error
+          );
+          // Continue with original grayscale (graceful degradation)
+        } else {
+          grayscaleImageDataUrl = grayscaleResult.processedUri!;
+        }
+      }
     }
 
     // Phase 4: Text Recognition
     let ocrResult: OcrResult | undefined;
     if (config.ocr.enabled) {
       console.log("[Photo Processor] Running text recognition");
-      const result = await processTextRecognition(imageDataUrl);
+      // Use grayscale version for OCR if available, otherwise use colored version
+      const ocrImageDataUrl = grayscaleImageDataUrl || imageDataUrl;
+      const result = await processTextRecognition(ocrImageDataUrl);
 
       if (!result.success) {
         console.warn(

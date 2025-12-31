@@ -1,6 +1,6 @@
 import { storage } from "../storage";
+import type { PhotoUri, RecipeId, StorageKey } from "../types/primitives";
 import type { Recipe } from "../types/recipe";
-import type { StorageKey, PhotoUri, RecipeId } from "../types/primitives";
 
 const LEGACY_PHOTOS_KEY: StorageKey = "@photos";
 
@@ -23,8 +23,29 @@ export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
       photoUri: photo.uri,
       timestamp: photo.timestamp,
       metadata: { tags: [] },
+      status: "ready" as const,
     }));
     await storage.setItem(newKey, JSON.stringify(newRecipes));
     await storage.removeItem(LEGACY_PHOTOS_KEY);
+  }
+
+  if (recipes) {
+    const existingRecipes = JSON.parse(recipes) as Array<Recipe>;
+    let needsUpdate = false;
+
+    const updatedRecipes = existingRecipes.map((recipe) => {
+      if (!recipe.status) {
+        needsUpdate = true;
+        return {
+          ...recipe,
+          status: "ready" as const,
+        };
+      }
+      return recipe;
+    });
+
+    if (needsUpdate) {
+      await storage.setItem(newKey, JSON.stringify(updatedRecipes));
+    }
   }
 }

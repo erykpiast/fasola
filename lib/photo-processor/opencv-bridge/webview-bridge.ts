@@ -87,7 +87,7 @@ declare global {
         try {
           console.log("OpenCV runtime initialized");
 
-          if (!cv.Mat) {
+          if (!cv || !cv.Mat) {
             throw new Error("OpenCV Mat not available");
           }
 
@@ -177,7 +177,7 @@ declare global {
   async function processLightingRequest(
     id: string,
     imageDataUrl: DataUrl,
-    config: LightingConfig
+    config: Partial<LightingConfig>
   ): Promise<void> {
     try {
       if (!isReady || !cv) {
@@ -186,15 +186,22 @@ declare global {
 
       console.log("Processing image (lighting)");
 
-      const result = await processLighting(cv, imageDataUrl, config);
+      const fullConfig: LightingConfig = {
+        whiteBalance: config.whiteBalance || "gray-world",
+        claheClipLimit: config.claheClipLimit || 2.5,
+        claheTileSize: config.claheTileSize || 8,
+      };
 
-      // Send result back to React Native
+      const result = await processLighting(cv, imageDataUrl, fullConfig);
+
+      // Send both colored and grayscale results back to React Native
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage(
           JSON.stringify({
             type: "result",
             id: id,
-            result: result,
+            result: result.coloredUri,
+            grayscaleResult: result.grayscaleUri,
           })
         );
       }
@@ -219,7 +226,7 @@ declare global {
   async function processClarityRequest(
     id: string,
     imageDataUrl: DataUrl,
-    config: ClarityConfig
+    config: Partial<ClarityConfig>
   ): Promise<void> {
     try {
       if (!isReady || !cv) {
@@ -228,7 +235,14 @@ declare global {
 
       console.log("Processing image (clarity)");
 
-      const result = await processClarity(cv, imageDataUrl, config);
+      const fullConfig: ClarityConfig = {
+        denoiseStrength: config.denoiseStrength || 5,
+        sharpenRadius: config.sharpenRadius || 1.5,
+        sharpenAmount: config.sharpenAmount || 1.1,
+        sharpenThreshold: config.sharpenThreshold || 3,
+      };
+
+      const result = await processClarity(cv, imageDataUrl, fullConfig);
 
       // Send result back to React Native
       if (window.ReactNativeWebView) {

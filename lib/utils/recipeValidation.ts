@@ -6,6 +6,9 @@
  * Validates that a tag string starts with # and contains no spaces
  */
 export function isValidTag(tag: string): boolean {
+  if (typeof tag !== "string") {
+    return false;
+  }
   return tag.startsWith("#") && !tag.includes(" ");
 }
 
@@ -16,6 +19,8 @@ export function isValidTag(tag: string): boolean {
  * - Returning null if the result contains spaces (invalid)
  */
 export function normalizeTag(input: string): string | null {
+  if (typeof input !== "string") return null;
+
   const trimmed = input.trim();
   if (!trimmed) return null;
 
@@ -47,7 +52,7 @@ export function parseTags(input: string): Array<`#${string}`> {
 /**
  * Validates that all tags in array start with # and contain no spaces
  */
-export function validateTags(tags: string[]): boolean {
+export function validateTags(tags: Array<string>): boolean {
   return tags.every(isValidTag);
 }
 

@@ -1,6 +1,6 @@
-import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
-import type { PhotoUri } from "@/lib/types/primitives";
 import { recipeRepository } from "@/lib/repositories/recipes";
+import type { PhotoUri, RecipeId } from "@/lib/types/primitives";
+import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import {
   createContext,
   use,
@@ -18,7 +18,18 @@ type RecipesContextValue = {
     metadata: RecipeMetadata,
     recognizedText?: string
   ) => Promise<void>;
+  savePending: (
+    photoUri: PhotoUri,
+    source?: string
+  ) => Promise<Recipe>;
   updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
+  updateProcessing: (id: RecipeId) => Promise<void>;
+  updateComplete: (
+    id: RecipeId,
+    processedPhotoUri: string,
+    recognizedText?: string,
+    classifiedMetadata?: Partial<RecipeMetadata>
+  ) => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextValue | null>(null);
@@ -56,6 +67,18 @@ export function RecipesProvider({
     []
   );
 
+  const savePending = useCallback(
+    async (
+      photoUri: PhotoUri,
+      source?: string
+    ): Promise<Recipe> => {
+      const newRecipe = await recipeRepository.savePending(photoUri, source);
+      setRecipes((prev) => [newRecipe, ...prev]);
+      return newRecipe;
+    },
+    []
+  );
+
   const updateRecipe = useCallback(
     async (id: string, metadata: RecipeMetadata) => {
       const updatedRecipe = await recipeRepository.update(id, metadata);
@@ -66,8 +89,39 @@ export function RecipesProvider({
     []
   );
 
+  const updateProcessing = useCallback(async (id: RecipeId) => {
+    await recipeRepository.updateProcessing(id);
+    setRecipes((prev) =>
+      prev.map((recipe) =>
+        recipe.id === id ? { ...recipe, status: "processing" as const } : recipe
+      )
+    );
+  }, []);
+
+  const updateComplete = useCallback(
+    async (
+      id: RecipeId,
+      processedPhotoUri: string,
+      recognizedText?: string,
+      classifiedMetadata?: Partial<RecipeMetadata>
+    ) => {
+      const updatedRecipe = await recipeRepository.updateComplete(
+        id,
+        processedPhotoUri,
+        recognizedText,
+        classifiedMetadata
+      );
+      setRecipes((prev) =>
+        prev.map((recipe) => (recipe.id === id ? updatedRecipe : recipe))
+      );
+    },
+    []
+  );
+
   return (
-    <RecipesContext.Provider value={{ recipes, addRecipe, updateRecipe }}>
+    <RecipesContext.Provider
+      value={{ recipes, addRecipe, savePending, updateRecipe, updateProcessing, updateComplete }}
+    >
       {children}
     </RecipesContext.Provider>
   );

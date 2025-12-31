@@ -72,8 +72,6 @@ export function usePhotoImport(): {
     async (uri: PhotoUri): Promise<void> => {
       setIsImporting(true);
       try {
-        // Navigate immediately with original photo
-        // Processing will happen on the add recipe screen
         router.push({
           pathname: "/recipe/add",
           params: { uri },

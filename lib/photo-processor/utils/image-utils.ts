@@ -81,5 +81,8 @@ export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
  * Validate that a string is a valid data URL
  */
 export function isDataUrl(str: string): str is DataUrl {
+  if (typeof str !== "string") {
+    return false;
+  }
   return str.startsWith("data:");
 }

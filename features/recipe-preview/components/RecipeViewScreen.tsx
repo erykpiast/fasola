@@ -1,19 +1,25 @@
-import { EditButton } from "@/lib/components/atoms/EditButton";
-import { RecipeHeader } from "@/lib/components/molecules/RecipeHeader";
-import { RecipeMetadataDisplay } from "@/lib/components/molecules/RecipeMetadataDisplay";
-import type { RecipeId } from "@/lib/types/primitives";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
-import { useRouter } from "expo-router";
-import { type JSX, useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { useRecipeById } from "../hooks/useRecipeById";
 import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
+import {
+  ConfirmButton,
+  type ConfirmButtonRef,
+} from "@/features/recipe-import/components/ConfirmButton";
+import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
+import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
+import { EditButton } from "@/lib/components/atoms/EditButton";
+import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import type { RecipeId } from "@/lib/types/primitives";
+import { useRouter } from "expo-router";
+import { type JSX, useCallback, useEffect, useRef } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useRecipeById } from "../hooks/useRecipeById";
+import { MetadataOverlay } from "./MetadataOverlay";
 
 export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
   const recipe = useRecipeById(id);
   const router = useRouter();
-  const theme = useTheme();
   const { setDebugData } = useDebugContext();
+  const { updateRecipe, updateComplete } = useRecipes();
+  const confirmButtonRef = useRef<ConfirmButtonRef>(null);
 
   useEffect(() => {
     return () => {
@@ -21,41 +27,110 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
     };
   }, [setDebugData]);
 
+  const handleSourceChange = useCallback(
+    async (source: string, isAutomatic?: boolean) => {
+      if (!recipe) return;
+
+      await updateRecipe(id, {
+        ...recipe.metadata,
+        source,
+      });
+
+      if (isAutomatic) {
+        confirmButtonRef.current?.reset();
+      } else {
+        confirmButtonRef.current?.stop();
+      }
+    },
+    [recipe, id, updateRecipe]
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!recipe || recipe.status === "ready") return;
+
+    await updateComplete(id, recipe.photoUri, recipe.recognizedText, {
+      title: recipe.metadata.title,
+      source: recipe.metadata.source,
+      tags: recipe.metadata.tags,
+    });
+  }, [recipe, id, updateComplete]);
+
+  const handleEdit = useCallback((): void => {
+    router.push(`/recipe/${id}/edit`);
+  }, [router, id]);
+
   if (!recipe) {
     return null;
   }
 
-  const handleEdit = (): void => {
-    router.push(`/recipe/${id}/edit`);
-  };
+  const isProcessing =
+    recipe.status === "pending" || recipe.status === "processing";
+  const isReady = recipe.status === "ready";
 
   return (
-    <ScrollView style={[styles.container, getThemeColors(theme).container]}>
-      <View>
-        <RecipeHeader
-          photoUri={recipe.photoUri}
-          title={recipe.metadata.title}
-        />
-        <EditButton onPress={handleEdit} />
-      </View>
-      <RecipeMetadataDisplay metadata={recipe.metadata} />
-    </ScrollView>
+    <View style={styles.container}>
+      <RecipeImageDisplay uri={recipe.photoUri} style={styles.image} />
+
+      {isProcessing && (
+        <>
+          <ActivityIndicator
+            size="large"
+            color="white"
+            style={styles.activityIndicator}
+          />
+          <View style={styles.bottomBar}>
+            <SourceSelector
+              value={recipe.metadata.source || ""}
+              onValueChange={handleSourceChange}
+              hideLabel
+            />
+            <View style={styles.buttonSpacer} />
+            <ConfirmButton
+              ref={confirmButtonRef}
+              onConfirm={handleConfirm}
+              disabled={!recipe.metadata.source}
+            />
+          </View>
+        </>
+      )}
+
+      {isReady && (
+        <>
+          <MetadataOverlay metadata={recipe.metadata} />
+          <EditButton onPress={handleEdit} />
+        </>
+      )}
+    </View>
   );
-}
-
-function getThemeColors(theme: Theme) {
-  const isDark = theme === "dark";
-
-  return {
-    container: {
-      backgroundColor: isDark ? "#000000" : "#FFFFFF",
-    },
-  };
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 2,
+    backgroundColor: "#000000",
+  },
+  image: {
+    flex: 1,
+  },
+  activityIndicator: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -18,
+    marginTop: -18,
+  },
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  buttonSpacer: {
+    width: 4,
   },
 });

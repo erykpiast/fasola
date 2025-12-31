@@ -23,6 +23,7 @@ export interface LightingProcessingMessage {
   imageData?: DataUrl;
   config?: Partial<PhotoAdjustmentConfig["lighting"]>;
   result?: DataUrl;
+  grayscaleResult?: DataUrl;
   error?: string;
   message?: string;
 }
@@ -63,6 +64,7 @@ export interface GeometryProcessingResult {
 export interface LightingProcessingResult {
   success: boolean;
   processedUri?: DataUrl;
+  grayscaleUri?: DataUrl;
   error?: string;
 }
 

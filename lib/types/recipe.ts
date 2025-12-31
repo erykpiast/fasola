@@ -3,9 +3,11 @@ import type { PhotoUri, RecipeId } from "./primitives";
 export interface Recipe {
   id: RecipeId;
   photoUri: PhotoUri;
+  originalPhotoUri?: PhotoUri;
   timestamp: number;
   metadata: RecipeMetadata;
   recognizedText?: string;
+  status: "pending" | "processing" | "ready";
 }
 
 export interface RecipeMetadata {

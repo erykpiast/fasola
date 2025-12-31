@@ -16,7 +16,7 @@ todos:
     status: pending
   - id: photo-pipeline
     content: Modify lighting pipeline to preserve colors and create separate grayscale for OCR
-    status: pending
+    status: completed
   - id: recipe-preview
     content: Redesign preview with full-screen image and title/tags overlay at top
     status: pending
@@ -224,7 +224,7 @@ Redesign preview screen with full-screen image and overlay metadata.
 
 - Absolute positioned container at top
 - LinearGradient background (rgba(0,0,0,0.6) → transparent)
-- Title and source with text shadow for legibility
+- Title and source **with** text shadow for legibility
 - Horizontal tag list with smaller font
 
 **Changes to [`lib/components/atoms/EditButton.tsx`](lib/components/atoms/EditButton.tsx):**

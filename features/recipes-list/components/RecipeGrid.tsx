@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     width: ITEM_SIZE,
     height: ITEM_SIZE,
     backgroundColor: "rgba(128, 128, 128, 0.1)",
+    position: "relative",
   },
   image: {
     width: ITEM_SIZE,

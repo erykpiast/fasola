@@ -21,7 +21,7 @@
       "label": "Tags",
       "placeholder": "Add tags..."
     },
-    "submit": "Add recipe",
+    "submit": "Set source",
     "submitEdit": "Save changes",
     "discardChanges": {
       "title": "Discard changes?",
@@ -46,5 +46,15 @@
     "saveFailed": "Failed to save recipe",
     "loadFailed": "Failed to load recipe",
     "invalidTags": "Tags must start with # and contain no spaces"
+  },
+  "sourceSelector": {
+    "label": "Source",
+    "placeholder": "Select source",
+    "addNew": "Add new source",
+    "addNewTitle": "New Source",
+    "addNewPlaceholder": "Enter source name or URL"
+  },
+  "import": {
+    "confirmHint": "Confirming in {seconds}s..."
   }
 }

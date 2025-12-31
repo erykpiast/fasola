@@ -41,6 +41,3 @@ export function classifyText(
   text: string,
   method?: ClassificationMethod
 ): Promise<ClassificationResult>;
-
-
-

@@ -48,5 +48,3 @@ module.exports.transform = function ({ src, filename, options }) {
   // Use default transformer for all other files
   return upstreamTransformer.transform({ src, filename, options });
 };
-
-

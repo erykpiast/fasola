@@ -1,9 +1,12 @@
-import { type JSX } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
+import { type JSX } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const isUrl = (str: string): boolean => {
+  if (typeof str !== "string") {
+    return false;
+  }
   return str.startsWith("http://") || str.startsWith("https://");
 };
 
@@ -52,7 +55,10 @@ export function SourceDisplay({
 
   if (isUrlSource) {
     return (
-      <Pressable onPress={handlePress} style={({ pressed }) => pressed && styles.pressed}>
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => pressed && styles.pressed}
+      >
         {content}
       </Pressable>
     );

@@ -1,75 +1,53 @@
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
+import { useBackgroundProcessing } from "@/features/background-processing";
 import { AddRecipeForm } from "@/features/recipe-form/components/AddRecipeForm";
+import { type ConfirmButtonRef } from "@/features/recipe-import/components/ConfirmButton";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
-import {
-  TextRecognitionProvider,
-  useTextRecognition,
-} from "@/features/text-recognition/context/TextRecognitionContext";
-import { useTextClassification } from "@/features/text-recognition/hooks/useTextClassification";
-import { Alert } from "@/lib/alert";
+import { sourceHistoryRepository } from "@/lib/repositories/sourceHistory";
 import type { PhotoUri } from "@/lib/types/primitives";
-import type { RecipeMetadata } from "@/lib/types/recipe";
-import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState, type JSX } from "react";
+import { useCallback, useRef, useState, type JSX } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function AddRecipeScreenContent(): JSX.Element {
-  const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
-  const { addRecipe } = useRecipes();
+export default function AddRecipeScreen(): JSX.Element {
   const theme = useTheme();
-  const { t } = useTranslation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { processPhoto, isProcessing } = usePhotoAdjustment();
-  const [displayUri, setDisplayUri] = useState<PhotoUri>(uri);
-  const [recognizedText, setRecognizedText] = useState<string | undefined>();
-  const { setOcrText } = useTextRecognition();
+  const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
+  const [source, setSource] = useState("");
+  const confirmButtonRef = useRef<ConfirmButtonRef>(null);
+  const hasInteractedWithSelector = useRef(false);
+  const { savePending } = useRecipes();
+  const { addToQueue } = useBackgroundProcessing();
 
-  // Trigger classification automatically
-  useTextClassification();
+  const handleSelectorInteraction = useCallback(() => {
+    hasInteractedWithSelector.current = true;
+    confirmButtonRef.current?.stop();
+  }, []);
 
-  useEffect(() => {
-    if (!uri) return;
-
-    const processImage = async (): Promise<void> => {
-      const result = await processPhoto(uri);
-      if (result.success && result.processedUri) {
-        setDisplayUri(result.processedUri as PhotoUri);
-      }
-
-      if (result.ocrResult?.success && result.ocrResult.text) {
-        console.log("[AddRecipe] OCR extracted text:", result.ocrResult.text);
-        setRecognizedText(result.ocrResult.text);
-        // Update context with OCR text to trigger classification
-        setOcrText(result.ocrResult.text);
-      }
-    };
-
-    processImage();
-  }, [uri, processPhoto, setOcrText]);
-
-  const handleSubmit = useCallback(
-    async (metadata: RecipeMetadata) => {
-      if (!displayUri || isSubmitting) return;
-
-      setIsSubmitting(true);
-      try {
-        await addRecipe(displayUri, metadata, recognizedText);
-        router.back();
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        Alert.alert(t("errors.saveFailed"), errorMessage);
-      } finally {
-        setIsSubmitting(false);
+  const handleSourceChange = useCallback(
+    (newSource: string, isAutomatic?: boolean) => {
+      setSource(newSource);
+      if (isAutomatic && !hasInteractedWithSelector.current) {
+        confirmButtonRef.current?.reset();
+      } else {
+        confirmButtonRef.current?.stop();
       }
     },
-    [displayUri, addRecipe, isSubmitting, recognizedText, t]
+    []
   );
 
-  if (!uri || !displayUri) {
+  const handleConfirm = useCallback(async () => {
+    if (!uri || !source) {
+      return;
+    }
+
+    const recipe = await savePending(uri, source);
+    await sourceHistoryRepository.addSource(source);
+    addToQueue(recipe.id);
+    router.replace("/");
+  }, [uri, source, savePending, addToQueue]);
+
+  if (!uri) {
     return (
       <SafeAreaView
         style={[styles.container, getThemeColors(theme).container]}
@@ -80,19 +58,14 @@ function AddRecipeScreenContent(): JSX.Element {
   return (
     <SafeAreaView style={[styles.container, getThemeColors(theme).container]}>
       <AddRecipeForm
-        photoUri={displayUri}
-        isProcessing={isProcessing}
-        onSubmit={handleSubmit}
+        photoUri={uri}
+        source={source}
+        onSourceChange={handleSourceChange}
+        onSelectorInteraction={handleSelectorInteraction}
+        confirmButtonRef={confirmButtonRef as React.RefObject<ConfirmButtonRef>}
+        onConfirm={handleConfirm}
       />
     </SafeAreaView>
-  );
-}
-
-export default function AddRecipeScreen(): JSX.Element {
-  return (
-    <TextRecognitionProvider>
-      <AddRecipeScreenContent />
-    </TextRecognitionProvider>
   );
 }
 

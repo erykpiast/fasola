@@ -82,7 +82,6 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
             <SourceSelector
               value={recipe.metadata.source || ""}
               onValueChange={handleSourceChange}
-              hideLabel
             />
             <View style={styles.buttonSpacer} />
             <ConfirmButton

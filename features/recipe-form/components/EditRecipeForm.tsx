@@ -3,7 +3,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   KeyboardAvoidingView,
   Platform,
@@ -12,12 +11,14 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
-import { CloseButton } from "@/lib/components/atoms/CloseButton";
 import { MetadataFormFields } from "./MetadataFormFields";
 import { useRecipeForm } from "../hooks/useRecipeForm";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
+import { useTheme } from "@/platform/theme/useTheme";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { Alert } from "@/lib/alert";
+import { GlassView } from "expo-glass-effect";
+import { getColors } from "@/platform/theme/glassStyles";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 
 export function EditRecipeForm({
   recipe,
@@ -27,6 +28,7 @@ export function EditRecipeForm({
   onSubmit: (metadata: RecipeMetadata) => void;
 }): JSX.Element {
   const theme = useTheme();
+  const colors = getColors(theme);
   const { t } = useTranslation();
   const scrollViewRef = useRef<ScrollView>(null);
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
@@ -70,7 +72,7 @@ export function EditRecipeForm({
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, getThemeColors(theme).container]}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
@@ -81,7 +83,6 @@ export function EditRecipeForm({
       >
         <View style={styles.imageContainer}>
           <RecipeImageDisplay uri={recipe.photoUri} />
-          <CloseButton onPress={handleClose} />
         </View>
 
         <View style={styles.formContainer}>
@@ -93,41 +94,33 @@ export function EditRecipeForm({
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, getThemeColors(theme).footer]}>
+      <View style={styles.bottomBar}>
+        <Pressable
+          onPress={handleClose}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityLabel={t("accessibility.close")}
+          accessibilityRole="button"
+        >
+          <GlassView style={styles.buttonContent}>
+            <MaterialIcons name="close" size={24} color={colors.text} />
+          </GlassView>
+        </Pressable>
+
+        <View style={{ flex: 1 }} />
+
         <Pressable
           onPress={handleFormSubmit}
-          style={[styles.submitButton, getThemeColors(theme).submitButton]}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityLabel={t("recipeForm.submitEdit")}
           accessibilityRole="button"
         >
-          <Text
-            style={[styles.submitButtonText, getThemeColors(theme).buttonText]}
-          >
-            {t("recipeForm.submitEdit")}
-          </Text>
+          <GlassView style={styles.buttonContent}>
+            <Ionicons name="checkmark" size={28} color={colors.text} />
+          </GlassView>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
-}
-
-function getThemeColors(theme: Theme) {
-  const isDark = theme === "dark";
-
-  return {
-    container: {
-      backgroundColor: isDark ? "#000000" : "#FFFFFF",
-    },
-    footer: {
-      backgroundColor: isDark ? "#000000" : "#FFFFFF",
-    },
-    submitButton: {
-      backgroundColor: isDark ? "#FFFFFF" : "#000000",
-    },
-    buttonText: {
-      color: isDark ? "#000000" : "#FFFFFF",
-    },
-  };
 }
 
 const styles = StyleSheet.create({
@@ -144,22 +137,22 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 24,
   },
-  footer: {
+  bottomBar: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  submitButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  submitButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
+  buttonContent: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
 });

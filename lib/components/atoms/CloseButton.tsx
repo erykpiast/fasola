@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { type JSX } from "react";
 import { Pressable, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 
@@ -11,11 +12,16 @@ export function CloseButton({
 }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.button, getThemeColors(theme).button]}
+      style={[
+        styles.button,
+        getThemeColors(theme).button,
+        { top: insets.top + 16 },
+      ]}
       accessibilityLabel={t("accessibility.close")}
       accessibilityRole="button"
     >
@@ -46,7 +52,6 @@ function getThemeColors(theme: Theme) {
 const styles = StyleSheet.create({
   button: {
     position: "absolute",
-    top: 16,
     right: 16,
     width: 40,
     height: 40,

@@ -71,7 +71,6 @@ export function AddRecipeForm({
             value={source}
             onValueChange={onSourceChange}
             onInteraction={onSelectorInteraction}
-            hideLabel
           />
           <ConfirmButton
             ref={confirmButtonRef}

@@ -98,14 +98,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   input: {
+    height: 48,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 28,
     paddingHorizontal: 16,
-    paddingVertical: 12,
     fontSize: 16,
   },
   multiline: {
+    height: undefined,
     minHeight: 80,
+    paddingVertical: 12,
     textAlignVertical: "top",
   },
 });

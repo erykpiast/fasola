@@ -20,12 +20,10 @@ export function SourceSelector({
   value,
   onValueChange,
   onInteraction,
-  hideLabel = false,
 }: {
   value: string;
   onValueChange: (source: string, isAutomatic?: boolean) => void;
   onInteraction?: () => void;
-  hideLabel?: boolean;
 }): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -102,13 +100,7 @@ export function SourceSelector({
 
   return (
     <>
-      <View style={hideLabel ? styles.containerNoLabel : styles.container}>
-        {!hideLabel && (
-          <Text style={[styles.label, themeColors.label]}>
-            {t("sourceSelector.label")}
-          </Text>
-        )}
-
+      <View style={styles.container}>
         {isWeb ? (
           <Picker
             selectedValue={value || ""}
@@ -334,14 +326,7 @@ function getThemeColors(theme: Theme) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
-  },
-  containerNoLabel: {
     flex: 1,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
   },
   triggerButton: {
     height: 48,
@@ -413,10 +398,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalInput: {
+    height: 48,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 28,
     paddingHorizontal: 16,
-    paddingVertical: 12,
     fontSize: 16,
     marginBottom: 24,
   },

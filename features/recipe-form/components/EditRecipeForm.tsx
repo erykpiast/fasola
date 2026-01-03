@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useRecipeForm } from "../hooks/useRecipeForm";
@@ -30,6 +31,7 @@ export function EditRecipeForm({
   const colors = getColors(theme);
   const { t } = useTranslation();
   const scrollViewRef = useRef<ScrollView>(null);
+  const { width } = useWindowDimensions();
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
     initialValues: recipe.metadata,
     onSubmit,
@@ -83,7 +85,10 @@ export function EditRecipeForm({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.imageContainer}>
-          <RecipeImageDisplay uri={recipe.photoUri} />
+          <RecipeImageDisplay
+            uri={recipe.photoUri}
+            style={{ width, height: width }}
+          />
         </View>
 
         <View style={styles.formContainer}>

@@ -50,13 +50,17 @@ export default function AddRecipeScreen(): JSX.Element {
   if (!uri) {
     return (
       <SafeAreaView
+        edges={["top", "left", "right"]}
         style={[styles.container, getThemeColors(theme).container]}
       />
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, getThemeColors(theme).container]}>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={[styles.container, getThemeColors(theme).container]}
+    >
       <AddRecipeForm
         photoUri={uri}
         source={source}

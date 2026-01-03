@@ -6,7 +6,7 @@
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
-    "ios": "expo run:ios",
+    "ios": "./scripts/ios-dev-build.sh",
     "web": "expo start --web",
     "lint": "expo lint",
     "test-classifier": "npx tsx lib/text-classifier/cli.ts"

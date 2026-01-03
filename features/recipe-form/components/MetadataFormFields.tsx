@@ -1,8 +1,9 @@
 import { SourceSelector } from "@/features/source-selector";
-import { FormInput } from "@/lib/components/atoms/FormInput";
-import { TagInput } from "@/lib/components/atoms/TagInput";
+import { GlassInput } from "@/lib/components/atoms/GlassInput";
+import { GlassTagInput } from "@/lib/components/atoms/GlassTagInput";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { getGlassInputColors } from "@/platform/theme/glassStyles";
 import { type Theme, useTheme } from "@/platform/theme/useTheme";
 import { type JSX, useCallback, useRef } from "react";
 import {
@@ -81,7 +82,7 @@ export function MetadataFormFields({
   return (
     <View style={[styles.container, style]}>
       <View ref={titleContainerRef}>
-        <FormInput
+        <GlassInput
           ref={titleRef}
           label={t("recipeForm.title.label")}
           value={value.title ?? ""}
@@ -105,7 +106,7 @@ export function MetadataFormFields({
       </View>
 
       <View ref={tagsContainerRef}>
-        <TagInput
+        <GlassTagInput
           ref={tagsRef}
           tags={value.tags}
           onChange={(tags) => onChange({ tags: tags as Array<`#${string}`> })}
@@ -119,10 +120,7 @@ export function MetadataFormFields({
 }
 
 function getLabelColor(theme: Theme) {
-  const isDark = theme === "dark";
-  return {
-    color: isDark ? "#E5E5E5" : "#1F1F1F",
-  };
+  return getGlassInputColors(theme).label;
 }
 
 const styles = StyleSheet.create({

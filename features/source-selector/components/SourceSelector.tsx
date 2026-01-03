@@ -1,9 +1,8 @@
+import { GlassSelect } from "@/lib/components/atoms/GlassSelect";
 import { useTranslation } from "@/platform/i18n/useTranslation";
-import { getColors } from "@/platform/theme/glassStyles";
+import { getGlassInputColors } from "@/platform/theme/glassStyles";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
-import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { GlassView } from "expo-glass-effect";
 import { useCallback, useEffect, useState, type JSX } from "react";
 import {
   Modal,
@@ -14,20 +13,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
 import { useSourceHistory } from "../hooks/useSourceHistory";
 
 const ADD_NEW_VALUE = "__ADD_NEW__";
-
-const SPRING_CONFIG = {
-  damping: 15,
-  stiffness: 150,
-  mass: 0.5,
-};
 
 export function SourceSelector({
   value,
@@ -40,29 +28,12 @@ export function SourceSelector({
 }): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
-  const colors = getColors(theme);
   const { sources, lastUsed, addSource } = useSourceHistory();
 
   const [addNewModalVisible, setAddNewModalVisible] = useState(false);
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [newSourceText, setNewSourceText] = useState("");
   const [tempValue, setTempValue] = useState(value);
-
-  const pressed = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: withSpring(1 + pressed.value * 0.02, SPRING_CONFIG) },
-      ],
-    };
-  });
-
-  const overlayStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withSpring(pressed.value, SPRING_CONFIG),
-    };
-  });
 
   useEffect(() => {
     if (!value && lastUsed) {
@@ -157,52 +128,12 @@ export function SourceSelector({
             />
           </Picker>
         ) : (
-          <Animated.View
-            style={[styles.glassContainer, animatedStyle]}
-            onTouchStart={() => {
-              pressed.value = 1;
-            }}
-            onTouchEnd={() => {
-              pressed.value = 0;
-            }}
-            onTouchCancel={() => {
-              pressed.value = 0;
-            }}
-          >
-            <GlassView style={styles.glassInner}>
-              <Pressable style={styles.triggerButton} onPress={openPickerModal}>
-                <Text
-                  style={[
-                    styles.triggerText,
-                    {
-                      color: value
-                        ? themeColors.text.color
-                        : themeColors.placeholder.color,
-                    },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {value || t("sourceSelector.placeholder")}
-                </Text>
-                <Ionicons
-                  name="chevron-down"
-                  size={20}
-                  color={themeColors.text.color}
-                />
-              </Pressable>
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    backgroundColor: colors.glassPressedOverlay,
-                    borderRadius: 28,
-                  },
-                  overlayStyle,
-                ]}
-                pointerEvents="none"
-              />
-            </GlassView>
-          </Animated.View>
+          <GlassSelect
+            value={value}
+            placeholder={t("sourceSelector.placeholder")}
+            onPress={openPickerModal}
+            style={styles.glassSelect}
+          />
         )}
       </View>
 
@@ -351,14 +282,11 @@ export function SourceSelector({
 
 function getThemeColors(theme: Theme) {
   const isDark = theme === "dark";
+  const inputColors = getGlassInputColors(theme);
 
   return {
-    label: {
-      color: isDark ? "#E5E5E5" : "#1F1F1F",
-    },
-    text: {
-      color: isDark ? "#FFFFFF" : "#000000",
-    },
+    label: inputColors.label,
+    text: inputColors.text,
     input: {
       backgroundColor: "transparent",
       borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
@@ -374,9 +302,7 @@ function getThemeColors(theme: Theme) {
       color: isDark ? "#FFFFFF" : "#000000",
       fontSize: 20,
     },
-    placeholder: {
-      color: isDark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.5)",
-    },
+    placeholder: inputColors.placeholder,
   };
 }
 
@@ -384,13 +310,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  glassContainer: {
+  glassSelect: {
     flex: 1,
-  },
-  glassInner: {
-    height: 48,
-    borderRadius: 28,
-    overflow: "hidden",
   },
   triggerButton: {
     height: 48,
@@ -398,10 +319,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  triggerText: {
-    fontSize: 16,
-    flex: 1,
   },
   pickerModalOverlay: {
     flex: 1,

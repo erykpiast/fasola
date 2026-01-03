@@ -11,9 +11,20 @@ import {
   useState,
   type JSX,
 } from "react";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
+import Reanimated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 const ANIMATION_DURATION = 5000;
+
+const SPRING_CONFIG = {
+  damping: 15,
+  stiffness: 150,
+  mass: 0.5,
+};
 
 export interface ConfirmButtonRef {
   reset: () => void;
@@ -34,6 +45,7 @@ export const ConfirmButton = forwardRef<
   const [isAnimating, setIsAnimating] = useState(false);
   const disabledRef = useRef(disabled);
   const onConfirmRef = useRef(onConfirm);
+  const pressed = useSharedValue(0);
 
   useEffect(() => {
     disabledRef.current = disabled;
@@ -116,44 +128,80 @@ export const ConfirmButton = forwardRef<
     outputRange: [0, 0, 28, 28],
   });
 
+  const scaleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withSpring(1 + pressed.value * 0.08, SPRING_CONFIG) },
+      ],
+    };
+  });
+
+  const overlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withSpring(pressed.value, SPRING_CONFIG),
+    };
+  });
+
   return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled}
-      style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+    <Reanimated.View
+      onTouchStart={() => {
+        pressed.value = 1;
+      }}
+      onTouchEnd={() => {
+        pressed.value = 0;
+      }}
+      onTouchCancel={() => {
+        pressed.value = 0;
+      }}
     >
-      <GlassView style={styles.container}>
-        <View style={styles.buttonContent}>
-          {isAnimating && (
-            <Animated.View
-              style={[
-                styles.fillAnimation,
-                {
-                  width: fillWidth,
-                  backgroundColor: colors.text,
-                },
-              ]}
-            />
-          )}
-          <View style={styles.iconWrapper}>
-            <Ionicons name="checkmark" size={28} color={colors.text} />
+      <Reanimated.View style={scaleStyle}>
+        <GlassView style={styles.container}>
+          <View
+            style={styles.buttonContent}
+            onTouchEnd={disabled ? undefined : handlePress}
+          >
             {isAnimating && (
               <Animated.View
-                style={[styles.iconClipContainer, { width: iconClipWidth }]}
-              >
-                <View style={styles.contrastIconInner}>
-                  <Ionicons
-                    name="checkmark"
-                    size={28}
-                    color={colors.background}
-                  />
-                </View>
-              </Animated.View>
+                style={[
+                  styles.fillAnimation,
+                  {
+                    width: fillWidth,
+                    backgroundColor: colors.text,
+                  },
+                ]}
+              />
             )}
+            <View style={styles.iconWrapper}>
+              <Ionicons name="checkmark" size={28} color={colors.text} />
+              {isAnimating && (
+                <Animated.View
+                  style={[styles.iconClipContainer, { width: iconClipWidth }]}
+                >
+                  <View style={styles.contrastIconInner}>
+                    <Ionicons
+                      name="checkmark"
+                      size={28}
+                      color={colors.background}
+                    />
+                  </View>
+                </Animated.View>
+              )}
+            </View>
+            <Reanimated.View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: colors.glassPressedOverlay,
+                  borderRadius: 24,
+                },
+                overlayStyle,
+              ]}
+              pointerEvents="none"
+            />
           </View>
-        </View>
-      </GlassView>
-    </Pressable>
+        </GlassView>
+      </Reanimated.View>
+    </Reanimated.View>
   );
 });
 

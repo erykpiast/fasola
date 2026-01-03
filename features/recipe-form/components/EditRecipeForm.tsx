@@ -1,24 +1,23 @@
+import { Alert } from "@/lib/alert";
+import { GlassButton } from "@/lib/components/atoms/GlassButton";
+import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
+import { useTranslation } from "@/platform/i18n/useTranslation";
+import { getColors } from "@/platform/theme/glassStyles";
+import { useTheme } from "@/platform/theme/useTheme";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import { type JSX, useCallback, useRef } from "react";
 import {
-  Pressable,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
-import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
-import { MetadataFormFields } from "./MetadataFormFields";
 import { useRecipeForm } from "../hooks/useRecipeForm";
-import { useTheme } from "@/platform/theme/useTheme";
-import { useTranslation } from "@/platform/i18n/useTranslation";
-import { Alert } from "@/lib/alert";
-import { GlassView } from "expo-glass-effect";
-import { getColors } from "@/platform/theme/glassStyles";
-import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { MetadataFormFields } from "./MetadataFormFields";
 
 export function EditRecipeForm({
   recipe,
@@ -51,12 +50,14 @@ export function EditRecipeForm({
             style: "destructive",
             onPress: () => {
               if (Platform.OS !== "web") {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Warning
+                );
               }
               router.back();
             },
           },
-        ],
+        ]
       );
     } else {
       router.back();
@@ -95,29 +96,21 @@ export function EditRecipeForm({
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <Pressable
+        <GlassButton
           onPress={handleClose}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityLabel={t("accessibility.close")}
-          accessibilityRole="button"
         >
-          <GlassView style={styles.buttonContent}>
-            <MaterialIcons name="close" size={24} color={colors.text} />
-          </GlassView>
-        </Pressable>
+          <MaterialIcons name="close" size={24} color={colors.text} />
+        </GlassButton>
 
         <View style={{ flex: 1 }} />
 
-        <Pressable
+        <GlassButton
           onPress={handleFormSubmit}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityLabel={t("recipeForm.submitEdit")}
-          accessibilityRole="button"
         >
-          <GlassView style={styles.buttonContent}>
-            <Ionicons name="checkmark" size={28} color={colors.text} />
-          </GlassView>
-        </Pressable>
+          <Ionicons name="checkmark" size={28} color={colors.text} />
+        </GlassButton>
       </View>
     </KeyboardAvoidingView>
   );
@@ -146,13 +139,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingBottom: 16,
-  },
-  buttonContent: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
   },
 });

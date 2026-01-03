@@ -1,6 +1,6 @@
 import { parseTags } from "@/lib/utils/recipeValidation";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import {
   Pressable,

@@ -1,15 +1,11 @@
+import { useTranslation } from "@/platform/i18n/useTranslation";
+import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { type JSX } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, type Theme } from "@/platform/theme/useTheme";
-import { useTranslation } from "@/platform/i18n/useTranslation";
 
-export function CloseButton({
-  onPress,
-}: {
-  onPress: () => void;
-}): JSX.Element {
+export function CloseButton({ onPress }: { onPress: () => void }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();

@@ -6,12 +6,14 @@ export const colors = {
     text: "#6262a5",
     glassBackground: "rgba(255, 255, 255, 0.7)",
     glassBorder: "rgba(255, 255, 255, 0.3)",
+    glassPressedOverlay: "rgba(0, 0, 0, 0.05)",
   },
   dark: {
     background: "#000000",
     text: "#FFFFFF",
     glassBackground: "rgba(0, 0, 0, 0.7)",
     glassBorder: "rgba(255, 255, 255, 0.1)",
+    glassPressedOverlay: "rgba(255, 255, 255, 0.15)",
   },
 };
 

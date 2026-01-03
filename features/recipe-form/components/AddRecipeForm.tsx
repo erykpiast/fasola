@@ -63,7 +63,7 @@ export function AddRecipeForm({
         <Image
           source={{ uri: photoUri }}
           style={styles.processingImage}
-          contentFit="contain"
+          contentFit="cover"
         />
         <CloseButton onPress={handleClose} />
         <View style={styles.processingBottomBar}>

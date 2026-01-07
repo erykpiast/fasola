@@ -15,9 +15,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { GlassContainer } from "./GlassContainer";
+import { GlassLikeContainer } from "./GlassLikeContainer";
 
-export function GlassTagInput({
+export function GlassLikeTagInput({
   ref,
   tags,
   onChange,
@@ -95,7 +95,7 @@ export function GlassTagInput({
   return (
     <View style={[styles.container, style]}>
       <Text style={[styles.label, colors.label]}>{label}</Text>
-      <GlassContainer height={undefined} borderRadius={GLASS_BORDER_RADIUS}>
+      <GlassLikeContainer height={undefined} borderRadius={GLASS_BORDER_RADIUS}>
         <View style={styles.inlineContainer}>
           <TextInput
             accessibilityLabel={label}
@@ -124,7 +124,7 @@ export function GlassTagInput({
             </Pressable>
           ))}
         </View>
-      </GlassContainer>
+      </GlassLikeContainer>
     </View>
   );
 }

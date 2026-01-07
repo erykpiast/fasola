@@ -1,6 +1,6 @@
 import { SourceSelector } from "@/features/source-selector";
-import { GlassInput } from "@/lib/components/atoms/GlassInput";
-import { GlassTagInput } from "@/lib/components/atoms/GlassTagInput";
+import { LiquidGlassInput } from "@/modules/liquid-glass";
+import { GlassLikeTagInput } from "@/lib/components/atoms/GlassLikeTagInput";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getGlassInputColors } from "@/platform/theme/glassStyles";
@@ -35,7 +35,6 @@ export function MetadataFormFields({
   scrollViewRef: React.RefObject<ScrollView | null>;
 }): JSX.Element {
   const { t } = useTranslation();
-  const titleRef = useRef<TextInput>(null);
   const tagsRef = useRef<TextInput>(null);
   const titleContainerRef = useRef<View>(null);
   const tagsContainerRef = useRef<View>(null);
@@ -82,8 +81,7 @@ export function MetadataFormFields({
   return (
     <View style={[styles.container, style]}>
       <View ref={titleContainerRef}>
-        <GlassInput
-          ref={titleRef}
+        <LiquidGlassInput
           label={t("recipeForm.title.label")}
           value={value.title ?? ""}
           onChangeText={(text) => onChange({ title: text || undefined })}
@@ -106,7 +104,7 @@ export function MetadataFormFields({
       </View>
 
       <View ref={tagsContainerRef}>
-        <GlassTagInput
+        <GlassLikeTagInput
           ref={tagsRef}
           tags={value.tags}
           onChange={(tags) => onChange({ tags: tags as Array<`#${string}`> })}

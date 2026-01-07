@@ -5,7 +5,7 @@ const expoConfig = require("eslint-config-expo/flat");
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", "modules/**/build/*"],
   },
   {
     rules: {
@@ -17,6 +17,12 @@ module.exports = defineConfig([
           argsIgnorePattern: "^_",
           destructuredArrayIgnorePattern: "^_",
           caughtErrors: "all",
+        },
+      ],
+      "import/no-unresolved": [
+        "error",
+        {
+          ignore: ["^liquid-glass$"],
         },
       ],
     },

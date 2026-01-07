@@ -1,13 +1,97 @@
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { parseTags, validateTags } from "@/lib/utils/recipeValidation";
 import { useTranslation } from "@/platform/i18n/useTranslation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useReducer, useState } from "react";
 
 const emptyMetadata: RecipeMetadata = {
   title: undefined,
   source: undefined,
   tags: [],
 };
+
+type FormState = {
+  values: RecipeMetadata;
+  errors: Record<string, string>;
+  isDirty: boolean;
+};
+
+type FormAction =
+  | { type: "UPDATE_VALUES"; updates: Partial<RecipeMetadata> }
+  | { type: "SET_ERRORS"; errors: Record<string, string> }
+  | {
+      type: "UPDATE_FROM_EXTRACTION";
+      title?: string;
+      suggestedTags?: Array<`#${string}`>;
+    };
+
+function detectChanges(
+  current: RecipeMetadata,
+  updates: Partial<RecipeMetadata>
+): boolean {
+  return Object.entries(updates).some(([key, newValue]) => {
+    const currentValue = current[key as keyof RecipeMetadata];
+
+    if (Array.isArray(newValue) && Array.isArray(currentValue)) {
+      return (
+        newValue.length !== currentValue.length ||
+        newValue.some((item, index) => item !== currentValue[index])
+      );
+    }
+
+    return newValue !== currentValue;
+  });
+}
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case "UPDATE_VALUES": {
+      const hasChanges = detectChanges(state.values, action.updates);
+      const nextErrors = { ...state.errors };
+
+      Object.keys(action.updates).forEach((key) => {
+        delete nextErrors[key];
+      });
+
+      return {
+        values: { ...state.values, ...action.updates },
+        errors: nextErrors,
+        isDirty: hasChanges,
+      };
+    }
+
+    case "SET_ERRORS": {
+      return {
+        ...state,
+        errors: action.errors,
+      };
+    }
+
+    case "UPDATE_FROM_EXTRACTION": {
+      const updates: Partial<RecipeMetadata> = {};
+
+      if (!state.values.title && action.title) {
+        updates.title = action.title;
+      }
+
+      if (action.suggestedTags && action.suggestedTags.length > 0) {
+        const newTags = action.suggestedTags.filter(
+          (tag) => !state.values.tags.includes(tag)
+        );
+        if (newTags.length > 0) {
+          updates.tags = [...state.values.tags, ...newTags];
+        }
+      }
+
+      return {
+        ...state,
+        values: { ...state.values, ...updates },
+      };
+    }
+
+    default:
+      return state;
+  }
+}
 
 export function useRecipeForm(config: {
   initialValues?: RecipeMetadata;
@@ -26,79 +110,50 @@ export function useRecipeForm(config: {
   const { t } = useTranslation();
   const initialValues = config.initialValues ?? emptyMetadata;
 
-  const [values, setValues] = useState<RecipeMetadata>(initialValues);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isDirty, setIsDirty] = useState(false);
+  const [state, dispatch] = useReducer(formReducer, {
+    values: initialValues,
+    errors: {},
+    isDirty: false,
+  });
 
   const handleChange = useCallback((updates: Partial<RecipeMetadata>) => {
-    setValues((prev) => ({ ...prev, ...updates }));
-    setIsDirty(true);
-    // Clear errors for updated fields
-    setErrors((prev) => {
-      const next = { ...prev };
-      Object.keys(updates).forEach((key) => {
-        delete next[key];
-      });
-      return next;
-    });
+    dispatch({ type: "UPDATE_VALUES", updates });
   }, []);
 
   const handleSubmit = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
-    // Trim string fields before validation
     const trimmedValues: RecipeMetadata = {
-      title: values.title?.trim() || undefined,
-      source: values.source?.trim() || undefined,
-      tags: values.tags,
+      title: state.values.title?.trim() || undefined,
+      source: state.values.source?.trim() || undefined,
+      tags: state.values.tags,
     };
 
-    // Validate tags
     if (trimmedValues.tags.length > 0 && !validateTags(trimmedValues.tags)) {
       newErrors.tags = t("errors.invalidTags");
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      dispatch({ type: "SET_ERRORS", errors: newErrors });
       return;
     }
 
-    // Submit validated and trimmed metadata
     config.onSubmit(trimmedValues);
-  }, [values, config, t]);
+  }, [state.values, config, t]);
 
   const updateFromExtraction = useCallback(
     (title?: string, suggestedTags?: Array<`#${string}`>) => {
-      setValues((prev) => {
-        const updates: Partial<RecipeMetadata> = {};
-
-        // Only update title if field is empty and we have an extracted title
-        if (!prev.title && title) {
-          updates.title = title;
-        }
-
-        // Add suggested tags (avoid duplicates)
-        if (suggestedTags && suggestedTags.length > 0) {
-          const newTags = suggestedTags.filter(
-            (tag) => !prev.tags.includes(tag)
-          );
-          if (newTags.length > 0) {
-            updates.tags = [...prev.tags, ...newTags];
-          }
-        }
-
-        return { ...prev, ...updates };
-      });
+      dispatch({ type: "UPDATE_FROM_EXTRACTION", title, suggestedTags });
     },
     []
   );
 
   return {
-    values,
-    errors,
+    values: state.values,
+    errors: state.errors,
     handleChange,
     handleSubmit,
-    isDirty,
+    isDirty: state.isDirty,
     updateFromExtraction,
   };
 }

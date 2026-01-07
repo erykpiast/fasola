@@ -14,7 +14,6 @@ import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeBut
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
 import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
-import { CancelSearchButton } from "../features/search/components/CancelSearchButton";
 import { SearchBar } from "../features/search/components/SearchBar";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import type { RecipeId } from "../lib/types/primitives";
@@ -34,9 +33,10 @@ function Content(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { recipes } = useRecipes();
-  const { filteredRecipes, searchTerm, setSearchTerm, clearSearch } =
+  const { filteredRecipes, searchTerm, setSearchTerm } =
     useRecipeFilter(recipes);
-  const { isFocused, handleFocus, handleBlur, handleCancel } = useSearchFocus();
+  const { handleFocus, handleBlur, key } =
+    useSearchFocus();
   const { setDebugData } = useDebugContext();
 
   useEffect(() => {
@@ -48,11 +48,6 @@ function Content(): JSX.Element {
   const handleRecipeTap = useCallback((id: RecipeId): void => {
     router.push(`/recipe/${id}`);
   }, []);
-
-  const handleCancelPress = useCallback(() => {
-    handleCancel();
-    clearSearch();
-  }, [handleCancel, clearSearch]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -67,17 +62,13 @@ function Content(): JSX.Element {
       >
         <View style={styles.bottomBar}>
           <SearchBar
+            key={key}
             value={searchTerm}
             onChangeText={setSearchTerm}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            isFocused={isFocused}
           />
-          {isFocused ? (
-            <CancelSearchButton onPress={handleCancelPress} />
-          ) : (
-            <AddRecipeButton />
-          )}
+          <AddRecipeButton />
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -107,8 +98,9 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: "row",
     gap: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    // NOTE: The same effective space from the screen to button edges for the `Add note` button in the Apple Notes app
+    paddingHorizontal: 28,
+    paddingBottom: 28,
   },
   suspenseFallback: {
     flex: 1,

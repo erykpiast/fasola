@@ -1,4 +1,4 @@
-import { GlassSelect } from "@/lib/components/atoms/GlassSelect";
+import { LiquidGlassSelect } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getGlassInputColors } from "@/platform/theme/glassStyles";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
@@ -128,7 +128,7 @@ export function SourceSelector({
             />
           </Picker>
         ) : (
-          <GlassSelect
+          <LiquidGlassSelect
             value={value}
             placeholder={t("sourceSelector.placeholder")}
             onPress={openPickerModal}
@@ -308,10 +308,11 @@ function getThemeColors(theme: Theme) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
   },
   glassSelect: {
-    flex: 1,
+    height: 48,
   },
   triggerButton: {
     height: 48,

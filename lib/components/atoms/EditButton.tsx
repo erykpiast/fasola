@@ -1,26 +1,23 @@
-import { getColors } from "@/platform/theme/glassStyles";
-import { useTheme } from "@/platform/theme/useTheme";
-import { MaterialIcons } from "@expo/vector-icons";
+import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { type JSX } from "react";
 import { StyleSheet } from "react-native";
-import { GlassButton } from "./GlassButton";
 
 export function EditButton({ onPress }: { onPress: () => void }): JSX.Element {
-  const theme = useTheme();
-  const colors = getColors(theme);
-
   return (
-    <GlassButton onPress={onPress} style={styles.button}>
-      <MaterialIcons name="edit" size={24} color={colors.text} />
-    </GlassButton>
+    <LiquidGlassButton
+      onPress={onPress}
+      systemImage="pencil"
+      style={styles.button}
+      accessibilityLabel="Edit"
+    />
   );
 }
 
 const styles = StyleSheet.create({
   button: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
+    bottom: 28,
+    right: 28,
     zIndex: 10,
   },
 });

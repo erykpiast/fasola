@@ -38,7 +38,8 @@
   },
   "accessibility": {
     "close": "Close",
-    "removeTag": "Remove tag"
+    "removeTag": "Remove tag",
+    "back": "Go back"
   },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",

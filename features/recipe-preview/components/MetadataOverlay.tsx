@@ -18,8 +18,8 @@ export function MetadataOverlay({
 
   return (
     <LinearGradient
-      colors={["rgba(0,0,0,0.6)", "transparent"]}
-      locations={[0, 1]}
+      colors={["rgba(0,0,0, 1)", "rgba(0,0,0,0.6)", "transparent"]}
+      locations={[0, 0.6, 1]}
       style={styles.gradient}
     >
       {hasTitle && (
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: 80,
     paddingBottom: 80,
   },
   title: {

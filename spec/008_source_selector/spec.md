@@ -1,0 +1,1 @@
+The Photo Library / Camera button should be a glass menu that appears instead of the ( + ) button once it's clicked. The plus button should smoothly transition to the menu. The search field should disappear (zoom in).

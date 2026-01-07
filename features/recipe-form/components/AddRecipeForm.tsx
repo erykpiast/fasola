@@ -4,8 +4,8 @@ import {
 } from "@/features/recipe-import/components/ConfirmButton";
 import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
 import { Alert } from "@/lib/alert";
-import { LiquidGlassButton } from "@/modules/liquid-glass";
 import type { PhotoUri } from "@/lib/types/primitives";
+import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import * as Haptics from "expo-haptics";
@@ -33,6 +33,7 @@ export function AddRecipeForm({
   const { t } = useTranslation();
 
   const handleClose = useCallback(() => {
+    confirmButtonRef.current?.stop();
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -55,7 +56,7 @@ export function AddRecipeForm({
         },
       ]
     );
-  }, [t]);
+  }, [confirmButtonRef, t]);
 
   return (
     <View style={[styles.container, getThemeColors(theme).container]}>
@@ -65,8 +66,12 @@ export function AddRecipeForm({
           style={styles.processingImage}
           contentFit="cover"
         />
-        <LiquidGlassButton onPress={handleClose} systemImage="xmark" />
         <View style={styles.processingBottomBar}>
+          <LiquidGlassButton
+            onPress={handleClose}
+            accessibilityLabel={t("accessibility.close")}
+            systemImage="xmark"
+          />
           <SourceSelector
             value={source}
             onValueChange={onSourceChange}

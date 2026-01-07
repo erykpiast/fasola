@@ -7,6 +7,8 @@ export function LiquidGlassButton({
   onPress,
   systemImage,
   size = 48,
+  imageScale = 1.0,
+  tintColor,
   style,
   accessibilityLabel,
   accessibilityRole = "button",
@@ -19,6 +21,8 @@ export function LiquidGlassButton({
       systemImage={systemImage}
       buttonSize={size}
       containerSize={containerSize}
+      imageScale={imageScale}
+      tintColor={tintColor}
       onButtonPress={onPress}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}

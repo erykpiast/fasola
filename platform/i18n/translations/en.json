@@ -39,7 +39,14 @@
   "accessibility": {
     "close": "Close",
     "removeTag": "Remove tag",
-    "back": "Go back"
+    "back": "Go back",
+    "delete": "Delete recipe"
+  },
+  "deleteRecipe": {
+    "title": "Delete Recipe?",
+    "message": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
   },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",

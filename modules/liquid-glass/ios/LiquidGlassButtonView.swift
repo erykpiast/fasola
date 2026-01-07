@@ -1,6 +1,31 @@
 import SwiftUI
 import ExpoModulesCore
 
+extension UIColor {
+  convenience init?(hexString: String) {
+    let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+    var int: UInt64 = 0
+    Scanner(string: hex).scanHexInt64(&int)
+    let a, r, g, b: UInt64
+    switch hex.count {
+    case 3:
+      (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+    case 6:
+      (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+    case 8:
+      (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+    default:
+      return nil
+    }
+    self.init(
+      red: CGFloat(r) / 255,
+      green: CGFloat(g) / 255,
+      blue: CGFloat(b) / 255,
+      alpha: CGFloat(a) / 255
+    )
+  }
+}
+
 public final class LiquidGlassButtonView: ExpoView {
   private let hostingController: UIHostingController<LiquidGlassButtonContent>
   private let glassPaddingRatio: CGFloat = 1.4
@@ -8,6 +33,8 @@ public final class LiquidGlassButtonView: ExpoView {
   private var systemImage: String = "plus"
   private var buttonSize: CGFloat = 48
   private var containerSize: CGFloat = 96
+  private var imageScale: CGFloat = 1.0
+  private var imageTintColor: UIColor?
   
   let onButtonPress = EventDispatcher()
   
@@ -17,8 +44,10 @@ public final class LiquidGlassButtonView: ExpoView {
     let content = LiquidGlassButtonContent(
       systemImage: systemImage,
       imageSize: imageSize,
+      imageScale: 1.0,
       fontSize: fontSize,
       containerSize: containerSize,
+      tintColor: nil,
       onPress: { }
     )
     
@@ -95,14 +124,30 @@ public final class LiquidGlassButtonView: ExpoView {
     updateContent()
   }
   
+  func setImageScale(_ scale: CGFloat) {
+    imageScale = scale
+    updateContent()
+  }
+  
+  func setTintColor(_ colorString: String?) {
+    if let colorString = colorString {
+      imageTintColor = UIColor(hexString: colorString)
+    } else {
+      imageTintColor = nil
+    }
+    updateContent()
+  }
+  
   private func updateContent() {
-    let imageSize = buttonSize / glassPaddingRatio
-    let fontSize = imageSize / glassPaddingRatio
+    let baseImageSize = buttonSize / glassPaddingRatio
+    let fontSize = baseImageSize / glassPaddingRatio
     let content = LiquidGlassButtonContent(
       systemImage: systemImage,
-      imageSize: imageSize,
+      imageSize: baseImageSize,
+      imageScale: imageScale,
       fontSize: fontSize,
       containerSize: containerSize,
+      tintColor: imageTintColor,
       onPress: { [weak self] in
         self?.onButtonPress()
       }
@@ -114,8 +159,10 @@ public final class LiquidGlassButtonView: ExpoView {
 struct LiquidGlassButtonContent: View {
   var systemImage: String
   var imageSize: CGFloat
+  var imageScale: CGFloat
   var fontSize: CGFloat
   var containerSize: CGFloat
+  var tintColor: UIColor?
   var onPress: () -> Void
   
   var body: some View {
@@ -123,8 +170,8 @@ struct LiquidGlassButtonContent: View {
       if #available(iOS 26.0, *) {
         Button(action: onPress) {
           Image(systemName: systemImage)
-            .font(.system(size: fontSize))
-            .foregroundStyle(.primary)
+            .font(.system(size: fontSize * imageScale))
+            .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
             .frame(width: imageSize, height: imageSize)
         }
         .buttonBorderShape(.circle)
@@ -133,8 +180,8 @@ struct LiquidGlassButtonContent: View {
       } else {
         Button(action: onPress) {
           Image(systemName: systemImage)
-            .font(.system(size: fontSize))
-            .foregroundStyle(.primary)
+            .font(.system(size: fontSize * imageScale))
+            .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
             .frame(width: imageSize, height: imageSize)
         }
         .background {

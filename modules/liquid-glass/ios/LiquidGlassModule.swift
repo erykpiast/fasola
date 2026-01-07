@@ -18,6 +18,14 @@ public final class LiquidGlassModule: Module {
         view.setContainerSize(size)
       }
       
+      Prop("imageScale") { (view, scale: CGFloat) in
+        view.setImageScale(scale)
+      }
+      
+      Prop("tintColor") { (view, color: String?) in
+        view.setTintColor(color)
+      }
+      
       Events("onButtonPress")
     }
     

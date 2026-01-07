@@ -5,10 +5,13 @@ import {
 } from "@/features/recipe-import/components/ConfirmButton";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
+import { Alert } from "@/lib/alert";
 import { BackButton } from "@/lib/components/atoms/BackButton";
+import { DeleteButton } from "@/lib/components/atoms/DeleteButton";
 import { EditButton } from "@/lib/components/atoms/EditButton";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import type { RecipeId } from "@/lib/types/primitives";
+import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useRouter } from "expo-router";
 import { type JSX, useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
@@ -18,8 +21,9 @@ import { MetadataOverlay } from "./MetadataOverlay";
 export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
   const recipe = useRecipeById(id);
   const router = useRouter();
+  const { t } = useTranslation();
   const { setDebugData } = useDebugContext();
-  const { updateRecipe, updateComplete } = useRecipes();
+  const { updateRecipe, updateComplete, deleteRecipe } = useRecipes();
   const confirmButtonRef = useRef<ConfirmButtonRef>(null);
 
   useEffect(() => {
@@ -64,6 +68,23 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
     router.back();
   }, [router]);
 
+  const handleDelete = useCallback((): void => {
+    Alert.alert(t("deleteRecipe.title"), t("deleteRecipe.message"), [
+      {
+        text: t("deleteRecipe.cancel"),
+        style: "cancel",
+      },
+      {
+        text: t("deleteRecipe.confirm"),
+        style: "destructive",
+        onPress: async () => {
+          await deleteRecipe(id);
+          router.replace("/");
+        },
+      },
+    ]);
+  }, [t, deleteRecipe, id, router]);
+
   if (!recipe) {
     return null;
   }
@@ -102,6 +123,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         <>
           <MetadataOverlay metadata={recipe.metadata} />
           <BackButton onPress={handleBack} />
+          <DeleteButton onPress={handleDelete} />
           <EditButton onPress={handleEdit} />
         </>
       )}

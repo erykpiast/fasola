@@ -18,10 +18,7 @@ type RecipesContextValue = {
     metadata: RecipeMetadata,
     recognizedText?: string
   ) => Promise<void>;
-  savePending: (
-    photoUri: PhotoUri,
-    source?: string
-  ) => Promise<Recipe>;
+  savePending: (photoUri: PhotoUri, source?: string) => Promise<Recipe>;
   updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
   updateProcessing: (id: RecipeId) => Promise<void>;
   updateComplete: (
@@ -30,6 +27,7 @@ type RecipesContextValue = {
     recognizedText?: string,
     classifiedMetadata?: Partial<RecipeMetadata>
   ) => Promise<void>;
+  deleteRecipe: (id: RecipeId) => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextValue | null>(null);
@@ -68,10 +66,7 @@ export function RecipesProvider({
   );
 
   const savePending = useCallback(
-    async (
-      photoUri: PhotoUri,
-      source?: string
-    ): Promise<Recipe> => {
+    async (photoUri: PhotoUri, source?: string): Promise<Recipe> => {
       const newRecipe = await recipeRepository.savePending(photoUri, source);
       setRecipes((prev) => [newRecipe, ...prev]);
       return newRecipe;
@@ -118,9 +113,22 @@ export function RecipesProvider({
     []
   );
 
+  const deleteRecipe = useCallback(async (id: RecipeId) => {
+    await recipeRepository.delete(id);
+    setRecipes((prev) => prev.filter((recipe) => recipe.id !== id));
+  }, []);
+
   return (
     <RecipesContext.Provider
-      value={{ recipes, addRecipe, savePending, updateRecipe, updateProcessing, updateComplete }}
+      value={{
+        recipes,
+        addRecipe,
+        savePending,
+        updateRecipe,
+        updateProcessing,
+        updateComplete,
+        deleteRecipe,
+      }}
     >
       {children}
     </RecipesContext.Provider>

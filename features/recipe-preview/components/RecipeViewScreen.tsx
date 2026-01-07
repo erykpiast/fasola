@@ -5,6 +5,7 @@ import {
 } from "@/features/recipe-import/components/ConfirmButton";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
+import { BackButton } from "@/lib/components/atoms/BackButton";
 import { EditButton } from "@/lib/components/atoms/EditButton";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import type { RecipeId } from "@/lib/types/primitives";
@@ -59,6 +60,10 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
     router.push(`/recipe/${id}/edit`);
   }, [router, id]);
 
+  const handleBack = useCallback((): void => {
+    router.back();
+  }, [router]);
+
   if (!recipe) {
     return null;
   }
@@ -96,6 +101,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
       {isReady && (
         <>
           <MetadataOverlay metadata={recipe.metadata} />
+          <BackButton onPress={handleBack} />
           <EditButton onPress={handleEdit} />
         </>
       )}

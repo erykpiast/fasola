@@ -13,12 +13,12 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-export function GlassContainer({
+export function GlassLikeContainer({
   children,
   style,
   height,
   borderRadius = GLASS_BORDER_RADIUS,
-  scaleIntensity = 0.02,
+  scaleIntensity = 0.05,
   onTouchStart,
   onTouchEnd,
   onTouchCancel,

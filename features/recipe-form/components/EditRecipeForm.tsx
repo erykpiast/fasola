@@ -1,11 +1,10 @@
 import { Alert } from "@/lib/alert";
-import { GlassButton } from "@/lib/components/atoms/GlassButton";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
+import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getColors } from "@/platform/theme/glassStyles";
 import { useTheme } from "@/platform/theme/useTheme";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { type JSX, useCallback, useRef } from "react";
@@ -37,34 +36,37 @@ export function EditRecipeForm({
     onSubmit,
   });
 
-  const handleClose = useCallback(() => {
+  const handleBack = useCallback(() => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    if (isDirty) {
-      Alert.alert(
-        t("recipeForm.discardChanges.title"),
-        t("recipeForm.discardChanges.message"),
-        [
-          { text: t("recipeForm.discardChanges.cancel"), style: "cancel" },
-          {
-            text: t("recipeForm.discardChanges.discard"),
-            style: "destructive",
-            onPress: () => {
-              if (Platform.OS !== "web") {
-                Haptics.notificationAsync(
-                  Haptics.NotificationFeedbackType.Warning
-                );
-              }
-              router.back();
-            },
-          },
-        ]
-      );
-    } else {
-      router.back();
+    router.back();
+  }, []);
+
+  const handleDiscard = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  }, [isDirty, t]);
+    Alert.alert(
+      t("recipeForm.discardChanges.title"),
+      t("recipeForm.discardChanges.message"),
+      [
+        { text: t("recipeForm.discardChanges.cancel"), style: "cancel" },
+        {
+          text: t("recipeForm.discardChanges.discard"),
+          style: "destructive",
+          onPress: () => {
+            if (Platform.OS !== "web") {
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Warning
+              );
+            }
+            router.back();
+          },
+        },
+      ]
+    );
+  }, [t]);
 
   const handleFormSubmit = useCallback(() => {
     if (Platform.OS !== "web") {
@@ -101,21 +103,27 @@ export function EditRecipeForm({
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <GlassButton
-          onPress={handleClose}
-          accessibilityLabel={t("accessibility.close")}
-        >
-          <MaterialIcons name="close" size={24} color={colors.text} />
-        </GlassButton>
+        {isDirty ? (
+          <LiquidGlassButton
+            onPress={handleDiscard}
+            accessibilityLabel={t("accessibility.close")}
+            systemImage="xmark"
+          />
+        ) : (
+          <LiquidGlassButton
+            onPress={handleBack}
+            accessibilityLabel={t("accessibility.back")}
+            systemImage="chevron.left"
+          />
+        )}
 
         <View style={{ flex: 1 }} />
 
-        <GlassButton
+        <LiquidGlassButton
           onPress={handleFormSubmit}
           accessibilityLabel={t("recipeForm.submitEdit")}
-        >
-          <Ionicons name="checkmark" size={28} color={colors.text} />
-        </GlassButton>
+          systemImage="checkmark"
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -142,7 +150,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: 28,
+    paddingBottom: 28,
   },
 });

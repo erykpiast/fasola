@@ -4,7 +4,7 @@ import {
 } from "@/features/recipe-import/components/ConfirmButton";
 import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
 import { Alert } from "@/lib/alert";
-import { CloseButton } from "@/lib/components/atoms/CloseButton";
+import { LiquidGlassButton } from "@/modules/liquid-glass";
 import type { PhotoUri } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
@@ -65,7 +65,7 @@ export function AddRecipeForm({
           style={styles.processingImage}
           contentFit="cover"
         />
-        <CloseButton onPress={handleClose} />
+        <LiquidGlassButton onPress={handleClose} systemImage="xmark" />
         <View style={styles.processingBottomBar}>
           <SourceSelector
             value={source}

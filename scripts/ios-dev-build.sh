@@ -5,8 +5,10 @@ echo "Starting iOS device build..."
 
 cd $(dirname $0)/..
 
+DEVICE_NAME="koci telefon"
+
 # First attempt with expo
-if npx expo run:ios --device 2>&1 | tee /tmp/expo-ios-build.log; then
+if npx expo run:ios --device "$DEVICE_NAME" 2>&1 | tee /tmp/expo-ios-build.log; then
     exit 0
 fi
 
@@ -30,7 +32,7 @@ if grep -q "No profiles for" /tmp/expo-ios-build.log; then
 fi
 
 # Second attempt
-if npx expo run:ios --device 2>&1 | tee /tmp/expo-ios-build.log; then
+if npx expo run:ios --device "$DEVICE_NAME" 2>&1 | tee /tmp/expo-ios-build.log; then
     exit 0
 fi
 
@@ -54,5 +56,5 @@ if grep -qi "untrusted" /tmp/expo-ios-build.log || grep -qi "Verify the Develope
     
     echo ""
     echo "Retrying build..."
-    npx expo run:ios --device
+    npx expo run:ios --device "$DEVICE_NAME"
 fi

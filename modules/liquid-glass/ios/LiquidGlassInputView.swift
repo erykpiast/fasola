@@ -33,6 +33,14 @@ public final class LiquidGlassInputView: ExpoView {
     hostingController = UIHostingController(rootView: content)
     hostingController.view.backgroundColor = .clear
     
+    // Disable safe area and layout margin handling to prevent content offset
+    if #available(iOS 16.4, *) {
+      hostingController.safeAreaRegions = []
+    }
+    hostingController.view.insetsLayoutMarginsFromSafeArea = false
+    hostingController.view.layoutMargins = .zero
+    hostingController.view.directionalLayoutMargins = .zero
+    
     super.init(appContext: appContext)
     
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
@@ -100,6 +108,30 @@ public final class LiquidGlassInputView: ExpoView {
       }
     )
     hostingController.rootView = content
+  }
+
+  public override func didMoveToWindow() {
+    super.didMoveToWindow()
+    if window != nil {
+      if let parentVC = findViewController() {
+        parentVC.addChild(hostingController)
+        hostingController.didMove(toParent: parentVC)
+      }
+    } else {
+      hostingController.willMove(toParent: nil)
+      hostingController.removeFromParent()
+    }
+  }
+
+  private func findViewController() -> UIViewController? {
+    var responder: UIResponder? = self
+    while let nextResponder = responder?.next {
+      if let viewController = nextResponder as? UIViewController {
+        return viewController
+      }
+      responder = nextResponder
+    }
+    return nil
   }
 }
 

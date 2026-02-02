@@ -78,5 +78,18 @@ public final class LiquidGlassModule: Module {
       
       Events("onSelectPress")
     }
+    
+    // LiquidGlassPopover view
+    View(LiquidGlassPopoverView.self) {
+      Prop("visible") { (view, visible: Bool) in
+        view.setVisible(visible)
+      }
+      
+      Prop("options") { (view, options: [[String: Any]]) in
+        view.setOptions(options)
+      }
+      
+      Events("onOptionSelect", "onDismiss")
+    }
   }
 }

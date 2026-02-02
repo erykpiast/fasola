@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { LiquidGlassPopover } from "liquid-glass";
 import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
@@ -10,6 +11,10 @@ import {
 } from "react-native";
 import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
+import {
+  usePhotoImport,
+  type ImportOption,
+} from "../features/photos/hooks/usePhotoImport";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
@@ -17,6 +22,7 @@ import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter"
 import { SearchBar } from "../features/search/components/SearchBar";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import type { RecipeId } from "../lib/types/primitives";
+import { useTranslation } from "../platform/i18n/useTranslation";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
 
@@ -32,12 +38,14 @@ function ErrorFallback({ error }: { error?: Error }): JSX.Element {
 function Content(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
+  const { t } = useTranslation();
   const { recipes } = useRecipes();
   const { filteredRecipes, searchTerm, setSearchTerm } =
     useRecipeFilter(recipes);
-  const { handleFocus, handleBlur, key } =
-    useSearchFocus();
+  const { handleFocus, handleBlur, key } = useSearchFocus();
   const { setDebugData } = useDebugContext();
+  const { showPopover, handleOptionSelect, popoverVisible, dismissPopover } =
+    usePhotoImport();
 
   useEffect(() => {
     return () => {
@@ -49,6 +57,22 @@ function Content(): JSX.Element {
     router.push(`/recipe/${id}`);
   }, []);
 
+  const handleImportOptionSelect = useCallback(
+    (id: string) => {
+      handleOptionSelect(id as ImportOption);
+    },
+    [handleOptionSelect],
+  );
+
+  const importOptions = [
+    { id: "camera", label: t("addPhoto.camera"), systemImage: "camera" },
+    {
+      id: "library",
+      label: t("addPhoto.library"),
+      systemImage: "photo.on.rectangle",
+    },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {recipes.length === 0 ? (
@@ -56,21 +80,31 @@ function Content(): JSX.Element {
       ) : (
         <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} />
       )}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoid}
-      >
-        <View style={styles.bottomBar}>
-          <SearchBar
-            key={key}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-          />
-          <AddRecipeButton />
-        </View>
-      </KeyboardAvoidingView>
+      {!popoverVisible && (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoid}
+        >
+          <View style={styles.bottomBar}>
+            <SearchBar
+              key={key}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+            />
+            <AddRecipeButton onPress={showPopover} />
+          </View>
+        </KeyboardAvoidingView>
+      )}
+      {popoverVisible && (
+        <LiquidGlassPopover
+          visible={true}
+          options={importOptions}
+          onSelect={handleImportOptionSelect}
+          onDismiss={dismissPopover}
+        />
+      )}
     </View>
   );
 }

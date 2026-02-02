@@ -1,18 +1,20 @@
-import { Alert } from "@/lib/alert";
 import type { PhotoUri } from "@/lib/types/primitives";
-import { useTranslation } from "@/platform/i18n/useTranslation";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { ActionSheetIOS, Platform } from "react-native";
+
+export type ImportOption = "camera" | "library";
 
 export function usePhotoImport(): {
-  startImport: () => Promise<void>;
+  handleOptionSelect: (option: ImportOption) => Promise<void>;
+  showPopover: () => void;
   isImporting: boolean;
+  popoverVisible: boolean;
+  dismissPopover: () => void;
 } {
   const [isImporting, setIsImporting] = useState(false);
-  const { t } = useTranslation();
+  const [popoverVisible, setPopoverVisible] = useState(false);
 
   const importFromCamera = useCallback(async (): Promise<PhotoUri | null> => {
     setIsImporting(true);
@@ -82,54 +84,51 @@ export function usePhotoImport(): {
         setIsImporting(false);
       }
     },
-    []
+    [],
   );
 
-  const startImport = useCallback(async () => {
+  const showPopover = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setPopoverVisible(true);
+  }, []);
 
-    const handleCamera = async (): Promise<void> => {
-      const uri = await importFromCamera();
-      if (uri) {
-        await handlePhotoImport(uri);
-      }
-    };
+  const dismissPopover = useCallback(() => {
+    setPopoverVisible(false);
+  }, []);
 
-    const handleLibrary = async (): Promise<void> => {
-      const uri = await importFromLibrary();
-      if (uri) {
-        await handlePhotoImport(uri);
-      }
-    };
+  const handleOptionSelect = useCallback(
+    async (option: ImportOption): Promise<void> => {
+      setPopoverVisible(false);
 
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [t("addPhoto.camera"), t("addPhoto.library"), "Cancel"],
-          cancelButtonIndex: 2,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) {
-            handleCamera();
-          } else if (buttonIndex === 1) {
-            handleLibrary();
-          }
+      if (option === "camera") {
+        const uri = await importFromCamera();
+        if (uri) {
+          await handlePhotoImport(uri);
         }
-      );
-    } else {
-      Alert.alert(t("addPhoto.button"), "", [
-        { text: t("addPhoto.camera"), onPress: handleCamera },
-        { text: t("addPhoto.library"), onPress: handleLibrary },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
-  }, [importFromCamera, importFromLibrary, handlePhotoImport, t]);
+      } else if (option === "library") {
+        const uri = await importFromLibrary();
+        if (uri) {
+          await handlePhotoImport(uri);
+        }
+      }
+    },
+    [importFromCamera, importFromLibrary, handlePhotoImport],
+  );
 
   return useMemo(
     () => ({
-      startImport,
+      handleOptionSelect,
+      showPopover,
       isImporting,
+      popoverVisible,
+      dismissPopover,
     }),
-    [startImport, isImporting]
+    [
+      handleOptionSelect,
+      showPopover,
+      isImporting,
+      popoverVisible,
+      dismissPopover,
+    ],
   );
 }

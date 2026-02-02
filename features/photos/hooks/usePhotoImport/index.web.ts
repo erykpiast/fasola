@@ -2,13 +2,18 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 
+export type ImportOption = "camera" | "library";
+
 export function usePhotoImport(): {
-  startImport: () => Promise<void>;
+  handleOptionSelect: (option: ImportOption) => Promise<void>;
+  showPopover: () => void;
   isImporting: boolean;
+  popoverVisible: boolean;
+  dismissPopover: () => void;
 } {
   const [isImporting, setIsImporting] = useState(false);
 
-  const startImport = useCallback(async () => {
+  const importFromLibrary = useCallback(async () => {
     setIsImporting(true);
     try {
       const permission =
@@ -26,9 +31,6 @@ export function usePhotoImport(): {
 
       if (!result.canceled && result.assets[0]) {
         const uri = result.assets[0].uri;
-
-        // Navigate immediately with original photo
-        // Processing will happen on the add recipe screen
         router.push({
           pathname: "/recipe/add",
           params: { uri },
@@ -41,11 +43,31 @@ export function usePhotoImport(): {
     }
   }, []);
 
+  const handleOptionSelect = useCallback(
+    async (option: ImportOption): Promise<void> => {
+      if (option === "library") {
+        await importFromLibrary();
+      }
+    },
+    [importFromLibrary],
+  );
+
+  const showPopover = useCallback(() => {
+    importFromLibrary();
+  }, [importFromLibrary]);
+
+  const dismissPopover = useCallback(() => {
+    // No-op on web since there's no popover
+  }, []);
+
   return useMemo(
     () => ({
-      startImport,
+      handleOptionSelect,
+      showPopover,
       isImporting,
+      popoverVisible: false,
+      dismissPopover,
     }),
-    [startImport, isImporting]
+    [handleOptionSelect, showPopover, isImporting, dismissPopover],
   );
 }

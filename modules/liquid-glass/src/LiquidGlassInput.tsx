@@ -1,6 +1,5 @@
-import { type JSX, useCallback } from "react";
-import { StyleSheet } from "react-native";
-import NativeLiquidGlassInputView from "./LiquidGlassInput.ios";
+import { type JSX } from "react";
+import { StyleSheet, TextInput, Text, View } from "react-native";
 import type { LiquidGlassInputProps } from "./LiquidGlassInput.types";
 
 export function LiquidGlassInput({
@@ -8,54 +7,52 @@ export function LiquidGlassInput({
   onChangeText,
   placeholder = "",
   label,
-  leadingSystemImage,
-  showClearButton = false,
-  onClear,
   onFocus,
   onBlur,
   variant = "form",
   style,
+  autoFocus,
+  returnKeyType,
+  onSubmitEditing,
+  blurOnSubmit,
+  multiline,
 }: LiquidGlassInputProps): JSX.Element {
-  const handleChangeText = useCallback(
-    (event: { nativeEvent: { text: string } }) => {
-      onChangeText(event.nativeEvent.text);
-    },
-    [onChangeText]
-  );
-
-  const handleClear = useCallback(() => {
-    onClear?.();
-  }, [onClear]);
-
-  const handleFocus = useCallback(() => {
-    onFocus?.();
-  }, [onFocus]);
-
-  const handleBlur = useCallback(() => {
-    onBlur?.();
-  }, [onBlur]);
-
   const height = variant === "search" ? 48 : label ? 76 : 56;
 
   return (
-    <NativeLiquidGlassInputView
-      value={value}
-      label={label}
-      placeholder={placeholder}
-      leadingSystemImage={leadingSystemImage}
-      showClearButton={showClearButton}
-      variant={variant}
-      onChangeText={handleChangeText}
-      onClear={handleClear}
-      onInputFocus={handleFocus}
-      onInputBlur={handleBlur}
-      style={[styles.container, { height }, style]}
-    />
+    <View style={[styles.container, { height }, style]}>
+      {label && <Text style={styles.label}>{label}</Text>}
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        autoFocus={autoFocus}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
+        blurOnSubmit={blurOnSubmit}
+        multiline={multiline}
+        style={styles.input}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // overflow: "visible",
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    justifyContent: "center",
+  },
+  label: {
+    fontSize: 13,
+    color: "rgba(0, 0, 0, 0.5)",
+    marginBottom: 2,
+  },
+  input: {
+    fontSize: 17,
   },
 });

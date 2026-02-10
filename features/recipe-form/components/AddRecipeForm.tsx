@@ -2,7 +2,10 @@ import {
   ConfirmButton,
   type ConfirmButtonRef,
 } from "@/features/recipe-import/components/ConfirmButton";
-import { SourceSelector } from "@/features/source-selector/components/SourceSelector";
+import {
+  SourceSelector,
+  type SourceSelectorRef,
+} from "@/features/source-selector/components/SourceSelector";
 import { Alert } from "@/lib/alert";
 import type { PhotoUri } from "@/lib/types/primitives";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
@@ -11,29 +14,39 @@ import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useCallback, type JSX } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 
 export function AddRecipeForm({
   photoUri,
   source,
   onSourceChange,
-  onSelectorInteraction,
-  confirmButtonRef,
   onConfirm,
 }: {
   photoUri: PhotoUri;
   source: string;
   onSourceChange: (source: string, isAutomatic?: boolean) => void;
-  onSelectorInteraction?: () => void;
-  confirmButtonRef: React.RefObject<ConfirmButtonRef>;
   onConfirm: () => void;
 }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
+  const sourceSelectorRef = useRef<SourceSelectorRef>(null);
+  const confirmRef = useRef<ConfirmButtonRef>(null);
+  const [isEditingSource, setIsEditingSource] = useState(false);
+
+  const handleEditingChange = useCallback((editing: boolean) => {
+    setIsEditingSource(editing);
+  }, []);
+
+  const handleSourceInteraction = useCallback(() => {
+    confirmRef.current?.stop();
+  }, []);
 
   const handleClose = useCallback(() => {
-    confirmButtonRef.current?.stop();
+    if (isEditingSource) {
+      sourceSelectorRef.current?.cancelEdit();
+      return;
+    }
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -56,10 +69,30 @@ export function AddRecipeForm({
         },
       ]
     );
-  }, [confirmButtonRef, t]);
+  }, [isEditingSource, t]);
+
+  const handleConfirm = useCallback(() => {
+    if (isEditingSource) {
+      sourceSelectorRef.current?.confirmNewSource();
+      return;
+    }
+    if (!source) return;
+    onConfirm();
+  }, [isEditingSource, source, onConfirm]);
+
+  useEffect(() => {
+    if (isEditingSource) {
+      confirmRef.current?.stop();
+    } else {
+      confirmRef.current?.reset();
+    }
+  }, [isEditingSource]);
 
   return (
-    <View style={[styles.container, getThemeColors(theme).container]}>
+    <KeyboardAvoidingView
+      style={[styles.container, getThemeColors(theme).container]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <View style={styles.processingContainer}>
         <Image
           source={{ uri: photoUri }}
@@ -73,18 +106,20 @@ export function AddRecipeForm({
             systemImage="xmark"
           />
           <SourceSelector
+            ref={sourceSelectorRef}
             value={source}
             onValueChange={onSourceChange}
-            onInteraction={onSelectorInteraction}
+            onInteraction={handleSourceInteraction}
+            onEditingChange={handleEditingChange}
           />
           <ConfirmButton
-            ref={confirmButtonRef}
-            onConfirm={onConfirm}
-            disabled={!source}
+            ref={confirmRef}
+            onConfirm={handleConfirm}
+            disabled={!isEditingSource && !source}
           />
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -119,6 +154,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 27,
   },
 });

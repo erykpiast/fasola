@@ -26,12 +26,21 @@ public final class LiquidGlassPopoverView: ExpoView {
     
     hostingController = UIHostingController(rootView: content)
     hostingController.view.backgroundColor = .clear
-    
+
+    // Disable safe area and layout margin handling to prevent content offset
+    if #available(iOS 16.4, *) {
+      hostingController.safeAreaRegions = []
+    }
+    hostingController.view.insetsLayoutMarginsFromSafeArea = false
+    hostingController.view.layoutMargins = .zero
+    hostingController.view.directionalLayoutMargins = .zero
+
     super.init(appContext: appContext)
     
     addSubview(hostingController.view)
     clipsToBounds = false
     hostingController.view.clipsToBounds = false
+    hostingController.view.preservesSuperviewLayoutMargins = false
     
     updateContent()
   }

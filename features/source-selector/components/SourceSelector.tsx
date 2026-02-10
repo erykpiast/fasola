@@ -1,36 +1,50 @@
-import { LiquidGlassSelect } from "@/modules/liquid-glass";
+import { LiquidGlassInput, LiquidGlassSelect } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getGlassInputColors } from "@/platform/theme/glassStyles";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { Picker } from "@react-native-picker/picker";
-import { useCallback, useEffect, useState, type JSX } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  type JSX,
+} from "react";
 import {
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSourceHistory } from "../hooks/useSourceHistory";
 
 const ADD_NEW_VALUE = "__ADD_NEW__";
 
-export function SourceSelector({
-  value,
-  onValueChange,
-  onInteraction,
-}: {
-  value: string;
-  onValueChange: (source: string, isAutomatic?: boolean) => void;
-  onInteraction?: () => void;
-}): JSX.Element {
+export interface SourceSelectorRef {
+  confirmNewSource: () => void;
+  cancelEdit: () => void;
+}
+
+export const SourceSelector = forwardRef<
+  SourceSelectorRef,
+  {
+    value: string;
+    onValueChange: (source: string, isAutomatic?: boolean) => void;
+    onInteraction?: () => void;
+    onEditingChange?: (editing: boolean) => void;
+  }
+>(function SourceSelector(
+  { value, onValueChange, onInteraction, onEditingChange },
+  ref
+): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const { sources, lastUsed, addSource } = useSourceHistory();
 
-  const [addNewModalVisible, setAddNewModalVisible] = useState(false);
+  const [isEditingNewSource, setIsEditingNewSource] = useState(false);
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [newSourceText, setNewSourceText] = useState("");
   const [tempValue, setTempValue] = useState(value);
@@ -55,7 +69,7 @@ export function SourceSelector({
   const handlePickerDone = useCallback(() => {
     setPickerModalVisible(false);
     if (tempValue === ADD_NEW_VALUE) {
-      setAddNewModalVisible(true);
+      setIsEditingNewSource(true);
     } else if (tempValue) {
       onValueChange(tempValue, false);
     }
@@ -66,7 +80,7 @@ export function SourceSelector({
     setTempValue(value);
   }, [value]);
 
-  const handleAddNewSource = useCallback(async () => {
+  const handleConfirmNewSource = useCallback(async () => {
     const trimmedSource = newSourceText.trim();
     if (!trimmedSource) {
       return;
@@ -74,19 +88,32 @@ export function SourceSelector({
 
     await addSource(trimmedSource);
     onValueChange(trimmedSource, false);
-    setAddNewModalVisible(false);
+    setIsEditingNewSource(false);
     setNewSourceText("");
   }, [newSourceText, addSource, onValueChange]);
 
-  const handleCancelAddNew = useCallback(() => {
-    setAddNewModalVisible(false);
+  const handleCancelEdit = useCallback(() => {
+    setIsEditingNewSource(false);
     setNewSourceText("");
   }, []);
+
+  useEffect(() => {
+    onEditingChange?.(isEditingNewSource);
+  }, [isEditingNewSource, onEditingChange]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      confirmNewSource: handleConfirmNewSource,
+      cancelEdit: handleCancelEdit,
+    }),
+    [handleConfirmNewSource, handleCancelEdit]
+  );
 
   const handleWebPickerChange = useCallback(
     (itemValue: string) => {
       if (itemValue === ADD_NEW_VALUE) {
-        setAddNewModalVisible(true);
+        setIsEditingNewSource(true);
         onInteraction?.();
       } else if (itemValue) {
         onValueChange(itemValue, false);
@@ -127,6 +154,17 @@ export function SourceSelector({
               value={ADD_NEW_VALUE}
             />
           </Picker>
+        ) : isEditingNewSource ? (
+          <LiquidGlassInput
+            value={newSourceText}
+            onChangeText={setNewSourceText}
+            placeholder={t("sourceSelector.addNewPlaceholder")}
+            variant="form"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleConfirmNewSource}
+            style={styles.glassSelect}
+          />
         ) : (
           <LiquidGlassSelect
             value={value}
@@ -198,87 +236,9 @@ export function SourceSelector({
           </View>
         </View>
       </Modal>
-
-      {/* Add New Source Modal */}
-      <Modal
-        visible={addNewModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCancelAddNew}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={handleCancelAddNew}
-          accessible={false}
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View
-              style={[
-                styles.modalCard,
-                {
-                  backgroundColor:
-                    theme === "dark"
-                      ? "rgba(28, 28, 30, 0.95)"
-                      : "rgba(255, 255, 255, 0.95)",
-                },
-              ]}
-            >
-              <Text style={[styles.modalTitle, themeColors.label]}>
-                {t("sourceSelector.addNewTitle")}
-              </Text>
-
-              <TextInput
-                value={newSourceText}
-                onChangeText={setNewSourceText}
-                placeholder={t("sourceSelector.addNewPlaceholder")}
-                placeholderTextColor={themeColors.placeholder.color}
-                style={[styles.modalInput, themeColors.input]}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleAddNewSource}
-              />
-
-              <View style={styles.modalButtons}>
-                <Pressable
-                  onPress={handleCancelAddNew}
-                  style={({ pressed }) => [
-                    styles.modalButton,
-                    { opacity: pressed ? 0.6 : 1 },
-                  ]}
-                >
-                  <Text style={[styles.modalButtonText, themeColors.label]}>
-                    {t("recipeForm.discardChanges.cancel")}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleAddNewSource}
-                  style={({ pressed }) => [
-                    styles.modalButton,
-                    styles.modalButtonPrimary,
-                    { opacity: pressed ? 0.6 : 1 },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.modalButtonText,
-                      styles.modalButtonTextPrimary,
-                    ]}
-                  >
-                    {t("recipeForm.submit")}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </>
   );
-}
+});
 
 function getThemeColors(theme: Theme) {
   const isDark = theme === "dark";
@@ -352,57 +312,5 @@ const styles = StyleSheet.create({
   },
   pickerWheel: {
     height: 216,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: "80%",
-    maxWidth: 400,
-  },
-  modalCard: {
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  modalInput: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 28,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  modalButtonPrimary: {
-    backgroundColor: "#007AFF",
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  modalButtonTextPrimary: {
-    color: "#FFFFFF",
   },
 });

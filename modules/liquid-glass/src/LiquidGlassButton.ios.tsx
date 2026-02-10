@@ -17,6 +17,8 @@ export function LiquidGlassButton({
   style,
   accessibilityLabel,
   accessibilityRole = "button",
+  fillProgress,
+  fillColor,
 }: LiquidGlassButtonProps): JSX.Element {
   const TAP_EXPANSION_RATIO = 2;
   const containerSize = size * TAP_EXPANSION_RATIO;
@@ -28,6 +30,8 @@ export function LiquidGlassButton({
       containerSize={containerSize}
       imageScale={imageScale}
       tintColor={tintColor}
+      fillColor={fillColor}
+      fillProgress={fillProgress}
       onButtonPress={onPress}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}

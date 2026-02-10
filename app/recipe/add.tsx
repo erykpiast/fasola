@@ -1,12 +1,11 @@
 import { useBackgroundProcessing } from "@/features/background-processing";
 import { AddRecipeForm } from "@/features/recipe-form/components/AddRecipeForm";
-import { type ConfirmButtonRef } from "@/features/recipe-import/components/ConfirmButton";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { sourceHistoryRepository } from "@/lib/repositories/sourceHistory";
 import type { PhotoUri } from "@/lib/types/primitives";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useRef, useState, type JSX } from "react";
+import { useCallback, useState, type JSX } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,24 +13,12 @@ export default function AddRecipeScreen(): JSX.Element {
   const theme = useTheme();
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
   const [source, setSource] = useState("");
-  const confirmButtonRef = useRef<ConfirmButtonRef>(null);
-  const hasInteractedWithSelector = useRef(false);
   const { savePending } = useRecipes();
   const { addToQueue } = useBackgroundProcessing();
 
-  const handleSelectorInteraction = useCallback(() => {
-    hasInteractedWithSelector.current = true;
-    confirmButtonRef.current?.stop();
-  }, []);
-
   const handleSourceChange = useCallback(
-    (newSource: string, isAutomatic?: boolean) => {
+    (newSource: string) => {
       setSource(newSource);
-      if (isAutomatic && !hasInteractedWithSelector.current) {
-        confirmButtonRef.current?.reset();
-      } else {
-        confirmButtonRef.current?.stop();
-      }
     },
     []
   );
@@ -65,8 +52,6 @@ export default function AddRecipeScreen(): JSX.Element {
         photoUri={uri}
         source={source}
         onSourceChange={handleSourceChange}
-        onSelectorInteraction={handleSelectorInteraction}
-        confirmButtonRef={confirmButtonRef as React.RefObject<ConfirmButtonRef>}
         onConfirm={handleConfirm}
       />
     </SafeAreaView>

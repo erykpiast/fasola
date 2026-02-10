@@ -29,15 +29,17 @@ extension UIColor {
 public final class LiquidGlassButtonView: ExpoView {
   private let hostingController: UIHostingController<LiquidGlassButtonContent>
   private let glassPaddingRatio: CGFloat = 1.4
-  
+
   private var systemImage: String = "plus"
   private var buttonSize: CGFloat = 48
   private var containerSize: CGFloat = 96
   private var imageScale: CGFloat = 1.0
   private var imageTintColor: UIColor?
-  
+  private var fillColor: UIColor?
+  private var fillProgress: CGFloat = 0
+
   let onButtonPress = EventDispatcher()
-  
+
   public required init(appContext: AppContext? = nil) {
     let imageSize = buttonSize / glassPaddingRatio
     let fontSize = imageSize / glassPaddingRatio
@@ -48,41 +50,41 @@ public final class LiquidGlassButtonView: ExpoView {
       fontSize: fontSize,
       containerSize: containerSize,
       tintColor: nil,
+      fillColor: nil,
+      fillProgress: 0,
       onPress: { }
     )
-    
+
     hostingController = UIHostingController(rootView: content)
     hostingController.view.backgroundColor = .clear
-    
-    // Disable safe area and layout margin handling to prevent content offset
+
     if #available(iOS 16.4, *) {
       hostingController.safeAreaRegions = []
     }
     hostingController.view.insetsLayoutMarginsFromSafeArea = false
     hostingController.view.layoutMargins = .zero
     hostingController.view.directionalLayoutMargins = .zero
-    
+
     super.init(appContext: appContext)
-    
+
     addSubview(hostingController.view)
     clipsToBounds = false
     hostingController.view.clipsToBounds = false
     hostingController.view.preservesSuperviewLayoutMargins = false
-    
+
     updateContent()
   }
-  
+
   public override func layoutSubviews() {
     super.layoutSubviews()
-    
-    // Center the hosting view in the wrapper, allowing overflow
+
     let hostingSize = CGSize(width: containerSize, height: containerSize)
     let originX = (bounds.width - containerSize) / 2
     let originY = (bounds.height - containerSize) / 2
-    
+
     hostingController.view.frame = CGRect(origin: CGPoint(x: originX, y: originY), size: hostingSize)
   }
-  
+
   public override func didMoveToWindow() {
     super.didMoveToWindow()
     if window != nil {
@@ -95,7 +97,7 @@ public final class LiquidGlassButtonView: ExpoView {
       hostingController.removeFromParent()
     }
   }
-  
+
   private func findViewController() -> UIViewController? {
     var responder: UIResponder? = self
     while let nextResponder = responder?.next {
@@ -106,29 +108,29 @@ public final class LiquidGlassButtonView: ExpoView {
     }
     return nil
   }
-  
+
   func setSystemImage(_ image: String) {
     systemImage = image
     updateContent()
   }
-  
+
   func setButtonSize(_ size: CGFloat) {
     buttonSize = size
     setNeedsLayout()
     updateContent()
   }
-  
+
   func setContainerSize(_ size: CGFloat) {
     containerSize = size
     setNeedsLayout()
     updateContent()
   }
-  
+
   func setImageScale(_ scale: CGFloat) {
     imageScale = scale
     updateContent()
   }
-  
+
   func setTintColor(_ colorString: String?) {
     if let colorString = colorString {
       imageTintColor = UIColor(hexString: colorString)
@@ -137,7 +139,21 @@ public final class LiquidGlassButtonView: ExpoView {
     }
     updateContent()
   }
-  
+
+  func setFillColor(_ colorString: String?) {
+    if let colorString = colorString {
+      fillColor = UIColor(hexString: colorString)
+    } else {
+      fillColor = nil
+    }
+    updateContent()
+  }
+
+  func setFillProgress(_ progress: CGFloat) {
+    fillProgress = progress
+    updateContent()
+  }
+
   private func updateContent() {
     let baseImageSize = buttonSize / glassPaddingRatio
     let fontSize = baseImageSize / glassPaddingRatio
@@ -148,6 +164,8 @@ public final class LiquidGlassButtonView: ExpoView {
       fontSize: fontSize,
       containerSize: containerSize,
       tintColor: imageTintColor,
+      fillColor: fillColor,
+      fillProgress: fillProgress,
       onPress: { [weak self] in
         self?.onButtonPress()
       }
@@ -163,26 +181,60 @@ struct LiquidGlassButtonContent: View {
   var fontSize: CGFloat
   var containerSize: CGFloat
   var tintColor: UIColor?
+  var fillColor: UIColor?
+  var fillProgress: CGFloat
   var onPress: () -> Void
-  
+
+  private var resolvedFillColor: Color {
+    if let fillColor = fillColor {
+      return Color(fillColor)
+    }
+    if let tintColor = tintColor {
+      return Color(tintColor)
+    }
+    return Color.blue
+  }
+
+  private func fillOverlay(diameter: CGFloat) -> some View {
+    GeometryReader { geo in
+      Rectangle()
+        .fill(resolvedFillColor.opacity(0.3))
+        .frame(width: geo.size.width * fillProgress)
+        .frame(maxHeight: .infinity, alignment: .leading)
+    }
+    .frame(width: diameter, height: diameter)
+    .clipShape(Circle())
+    .allowsHitTesting(false)
+  }
+
   var body: some View {
     GeometryReader { geometry in
       if #available(iOS 26.0, *) {
         Button(action: onPress) {
-          Image(systemName: systemImage)
-            .font(.system(size: fontSize * imageScale))
-            .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
-            .frame(width: imageSize, height: imageSize)
+          ZStack {
+            if fillProgress > 0 {
+              fillOverlay(diameter: imageSize)
+            }
+            Image(systemName: systemImage)
+              .font(.system(size: fontSize * imageScale))
+              .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
+              .frame(width: imageSize, height: imageSize)
+          }
         }
         .buttonBorderShape(.circle)
         .buttonStyle(.glass)
         .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
       } else {
         Button(action: onPress) {
-          Image(systemName: systemImage)
-            .font(.system(size: fontSize * imageScale))
-            .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
-            .frame(width: imageSize, height: imageSize)
+          ZStack {
+            if fillProgress > 0 {
+              fillOverlay(diameter: imageSize)
+            }
+            Image(systemName: systemImage)
+              .font(.system(size: fontSize * imageScale))
+              .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
+              .frame(width: imageSize, height: imageSize)
+          }
         }
         .background {
           Circle()

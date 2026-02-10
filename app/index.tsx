@@ -3,6 +3,7 @@ import { LiquidGlassPopover } from "liquid-glass";
 import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -63,6 +64,13 @@ function Content(): JSX.Element {
     },
     [handleOptionSelect],
   );
+
+  // Dismiss keyboard when popover becomes visible
+  useEffect(() => {
+    if (popoverVisible) {
+      Keyboard.dismiss();
+    }
+  }, [popoverVisible]);
 
   const importOptions = [
     { id: "camera", label: t("addPhoto.camera"), systemImage: "camera" },

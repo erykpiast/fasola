@@ -40,7 +40,8 @@
     "close": "Close",
     "removeTag": "Remove tag",
     "back": "Go back",
-    "delete": "Delete recipe"
+    "delete": "Delete recipe",
+    "confirm": "Confirm"
   },
   "deleteRecipe": {
     "title": "Delete Recipe?",

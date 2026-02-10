@@ -25,7 +25,15 @@ public final class LiquidGlassModule: Module {
       Prop("tintColor") { (view, color: String?) in
         view.setTintColor(color)
       }
-      
+
+      Prop("fillColor") { (view, color: String?) in
+        view.setFillColor(color)
+      }
+
+      Prop("fillProgress") { (view, progress: CGFloat) in
+        view.setFillProgress(progress)
+      }
+
       Events("onButtonPress")
     }
     

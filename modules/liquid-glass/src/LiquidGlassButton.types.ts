@@ -9,4 +9,6 @@ export type LiquidGlassButtonProps = {
   style?: ViewStyle;
   accessibilityLabel?: string;
   accessibilityRole?: "button" | "link";
+  fillProgress?: number;
+  fillColor?: string;
 };

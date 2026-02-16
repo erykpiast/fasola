@@ -6,6 +6,7 @@ import {
   use,
   useCallback,
   useContext,
+  useMemo,
   useState,
   type JSX,
   type ReactNode,
@@ -28,6 +29,7 @@ type RecipesContextValue = {
     classifiedMetadata?: Partial<RecipeMetadata>
   ) => Promise<void>;
   deleteRecipe: (id: RecipeId) => Promise<void>;
+  refreshFromStorage: () => Promise<void>;
 };
 
 const RecipesContext = createContext<RecipesContextValue | null>(null);
@@ -119,17 +121,28 @@ export function RecipesProvider({
     setRecipes((prev) => prev.filter((recipe) => recipe.id !== id));
   }, []);
 
+  const refreshFromStorage = useCallback(async () => {
+    const freshRecipes = await recipeRepository.getAll();
+    setRecipes(freshRecipes);
+  }, []);
+
+  const value = useMemo(
+    (): RecipesContextValue => ({
+      recipes,
+      addRecipe,
+      savePending,
+      updateRecipe,
+      updateProcessing,
+      updateComplete,
+      deleteRecipe,
+      refreshFromStorage,
+    }),
+    [recipes, addRecipe, savePending, updateRecipe, updateProcessing, updateComplete, deleteRecipe, refreshFromStorage]
+  );
+
   return (
     <RecipesContext.Provider
-      value={{
-        recipes,
-        addRecipe,
-        savePending,
-        updateRecipe,
-        updateProcessing,
-        updateComplete,
-        deleteRecipe,
-      }}
+      value={value}
     >
       {children}
     </RecipesContext.Provider>

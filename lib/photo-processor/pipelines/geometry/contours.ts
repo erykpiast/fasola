@@ -1,4 +1,4 @@
-import type { CV, CVMat, CVRect } from "../../types/opencv";
+import type { CV, CVMat, CVMatVector, CVRect } from "../../types/opencv";
 import { Config } from "./config";
 
 export interface ContourInfo {
@@ -192,7 +192,7 @@ export function getLastContourStats(): unknown {
   return lastContourStats;
 }
 
-function findRawContours(cv: CV, mask: CVMat): ReturnType<CV["MatVector"]> {
+function findRawContours(cv: CV, mask: CVMat): CVMatVector {
   const contoursVec = new cv.MatVector();
   const hierarchy = new cv.Mat();
 

@@ -57,14 +57,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "bold",
-    textShadow: "0px 1px 3px rgba(0, 0, 0, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
     marginBottom: 4,
   },
   source: {
     color: "white",
     fontSize: 14,
     fontStyle: "italic",
-    textShadow: "0px 1px 3px rgba(0, 0, 0, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
     marginBottom: 8,
   },
   tagsContainer: {
@@ -73,6 +77,8 @@ const styles = StyleSheet.create({
   tags: {
     color: "white",
     fontSize: 14,
-    textShadow: "0px 1px 3px rgba(0, 0, 0, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

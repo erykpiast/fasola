@@ -24,7 +24,7 @@ export const ConfirmButton = forwardRef<
   }
 >(function ConfirmButton({ onConfirm, disabled = false }, ref): JSX.Element {
   const [fillProgress, setFillProgress] = useState(0);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number>(0);
   const startTimeRef = useRef(0);
   const activeRef = useRef(false);
   const onConfirmRef = useRef(onConfirm);

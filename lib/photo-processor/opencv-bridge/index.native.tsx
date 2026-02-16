@@ -84,7 +84,7 @@ export function handleOpenCVMessage(message: ProcessingMessage): void {
       lightingPending.resolve({
         success: true,
         processedUri: message.result as DataUrl,
-        grayscaleUri: message.grayscaleResult as DataUrl,
+        grayscaleUri: (message as { grayscaleResult?: DataUrl }).grayscaleResult,
       });
       pendingLightingRequests.delete(message.id);
       return;

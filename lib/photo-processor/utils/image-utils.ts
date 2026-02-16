@@ -62,7 +62,7 @@ export function imageDataToDataUrl(
  */
 export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
   // For web, we can use fetch + FileReader
-  if (typeof window !== "undefined" && window.fetch) {
+  if (typeof window !== "undefined") {
     const response = await fetch(uri);
     const blob = await response.blob();
 
@@ -81,8 +81,5 @@ export async function loadImageAsDataUrl(uri: string): Promise<DataUrl> {
  * Validate that a string is a valid data URL
  */
 export function isDataUrl(str: string): str is DataUrl {
-  if (typeof str !== "string") {
-    return false;
-  }
   return str.startsWith("data:");
 }

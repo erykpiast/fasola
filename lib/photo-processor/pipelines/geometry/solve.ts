@@ -1,9 +1,6 @@
+import type { CV } from "../../types/opencv";
 import { Config } from "./config";
 import { solvePnP } from "./solvepnp/index";
-
-interface CV {
-  Mat: new () => unknown;
-}
 
 /**
  * Computes initial camera pose and builds the parameter vector for optimization.

@@ -1,9 +1,6 @@
+import type { CV } from "../../types/opencv";
 import { Config } from "./config";
 import { makeKeypointIndex, projectKeypoints } from "./keypoints";
-
-interface CV {
-  Mat: new () => unknown;
-}
 
 function bracketMinimum(
   f: (x: number) => number,

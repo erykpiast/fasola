@@ -76,6 +76,52 @@ export const DEFAULT_CONFIG: PhotoAdjustmentConfig = {
   },
 };
 
+// Debug data from the dewarping pipeline
+export interface DewarpDebugData {
+  mathValidation?: {
+    polynomialTest: boolean;
+    projectionTest: boolean;
+  };
+  imageWidth: number;
+  imageHeight: number;
+  binaryText?: string;
+  erodedText?: string;
+  edgeMap?: string;
+  detectedLines?: string;
+  fittedLines?: string;
+  pageBoundary?: string;
+  spanEstimates?: string;
+  detectedSpans?: string;
+  keypointCloud?: string;
+  preprocessingStats: {
+    contoursFound: number;
+    linesDetected: number;
+    pageBounds: { width: number; height: number };
+  };
+  optimizationMetrics: {
+    spanIterations: number;
+    spanError: number;
+    modelIterations: number;
+    modelError: number;
+    parameters: Array<number>;
+  };
+  meshGrid?: string;
+  surfaceMesh?: string;
+  beforeAfter?: string;
+  remapStats: {
+    resolution: { width: number; height: number };
+    interpolation: string;
+  };
+  processingTime: number;
+  progressLog?: Array<{
+    phase: string;
+    timestamp: number;
+    message: string;
+  }>;
+}
+
+export type DebugVisualizationData = DewarpDebugData;
+
 // Message types for WebView bridge communication (native only)
 export interface DewarpMessage {
   type: "dewarp" | "ready" | "result" | "error" | "log";

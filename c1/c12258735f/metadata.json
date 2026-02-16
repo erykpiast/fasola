@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "c1c12258735f",
+  "strategy": "manual-commit",
+  "branch": "feat/ocr",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "app.json",
+    "app/_layout.tsx",
+    "eslint.config.js",
+    "features/icloud-sync/context/ICloudSyncContext.tsx",
+    "features/icloud-sync/index.ts",
+    "features/recipes-list/context/RecipesContext.tsx",
+    "lib/storage/index.native.ts",
+    "modules/icloud-sync/app.plugin.js",
+    "modules/icloud-sync/expo-module.config.json",
+    "modules/icloud-sync/index.ts",
+    "modules/icloud-sync/ios/ICloudSync.podspec",
+    "modules/icloud-sync/ios/ICloudSyncModule.swift",
+    "modules/icloud-sync/package.json",
+    "modules/icloud-sync/plugin/src/index.ts",
+    "modules/icloud-sync/plugin/src/withICloudEntitlements.ts",
+    "modules/icloud-sync/src/ICloudSyncModule.native.ts",
+    "modules/icloud-sync/src/ICloudSyncModule.ts",
+    "modules/icloud-sync/src/types.ts",
+    "modules/icloud-sync/tsconfig.json",
+    "tsconfig.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c1/c12258735f/0/metadata.json",
+      "transcript": "/c1/c12258735f/0/full.jsonl",
+      "context": "/c1/c12258735f/0/context.md",
+      "content_hash": "/c1/c12258735f/0/content_hash.txt",
+      "prompt": "/c1/c12258735f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 105,
+    "cache_creation_tokens": 260782,
+    "cache_read_tokens": 6108518,
+    "output_tokens": 11923,
+    "api_call_count": 77
+  }
+}

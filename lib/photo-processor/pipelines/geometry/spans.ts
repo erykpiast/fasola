@@ -1,3 +1,4 @@
+import type { CVMat } from "../../types/opencv";
 import { Config } from "./config";
 import { type ContourInfo } from "./contours";
 import { pix2norm } from "./utils";
@@ -138,7 +139,7 @@ function extractSpans(
   const listCopy = [...cinfoList];
 
   while (listCopy.length > 0) {
-    let cinfo = listCopy[0];
+    let cinfo: ContourInfo | null = listCopy[0];
     while (cinfo.pred) cinfo = cinfo.pred;
 
     const curSpan: Array<ContourInfo> = [];
@@ -240,8 +241,6 @@ function sampleContourPoints(
 
   return points;
 }
-
-import type { CVMat } from "../../types/opencv";
 
 /**
  * Extracts evenly-spaced sample points along each span's center line.

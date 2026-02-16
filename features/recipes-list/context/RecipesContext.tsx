@@ -59,6 +59,7 @@ export function RecipesProvider({
         photoUri,
         metadata,
         recognizedText,
+        status: "ready",
       });
       setRecipes((prev) => [newRecipe, ...prev]);
     },

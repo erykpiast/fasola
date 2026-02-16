@@ -1,0 +1,99 @@
+Please review the @spec/010_icloud_sync/plan.md. Find inconsistencies and consider simpler alternative approaches that match the @spec/010_icloud_sync/spec.md
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run typecheck-project]: Running project-wide TypeScript validation...
+████ TypeScript Validation Failed ████
+
+TypeScript compilation errors must be fixed:
+
+  features/photo-adjustment/components/DebugVisualization.tsx(2,15): error TS2305: Module '"@/lib/photo-processor/types"' has no exported member 'DewarpDebugData'.
+  features/photo-adjustment/components/DebugVisualization.tsx(337,42): error TS7006: Parameter 'log' implicitly has an 'any' type.
+  features/photo-adjustment/components/DebugVisualization.tsx(337,47): error TS7006: Parameter 'index' implicitly has an 'any' type.
+  features/photo-adjustment/context/DebugContext.tsx(1,15): error TS2305: Module '"@/lib/photo-processor/types"' has no exported member 'DebugVisualizationData'.
+  features/recipe-import/components/ConfirmButton.tsx(27,18): error TS2554: Expected 1 arguments, but got 0.
+  features/recipe-preview/components/MetadataOverlay.tsx(60,5): error TS2345: Argument of type '{ gradient: { position: "absolute"; top: number; left: number; right: number; paddingHorizontal: number; paddingTop: number; paddingBottom: number; }; title: { color: string; fontSize: number; fontWeight: "bold"; textShadow: string; marginBottom: number; }; source: { ...; }; tagsContainer: { ...; }; tags: { ...; }; }' is not assignable to parameter of type '{ gradient: { position: "absolute"; top: number; left: number; right: number; paddingHorizontal: number; paddingTop: number; paddingBottom: number; }; title: { color: string; fontSize: number; fontWeight: "bold"; textShadow: string; marginBottom: number; }; source: { ...; }; tagsContainer: { ...; }; tags: { ...; }; ...'.
+    Property 'title' is incompatible with index signature.
+      Object literal may only specify known properties, and 'textShadow' does not exist in type 'ViewStyle | TextStyle | ImageStyle'.
+  features/recipes-list/context/RecipesContext.tsx(58,53): error TS2345: Argument of type '{ photoUri: string; metadata: RecipeMetadata; recognizedText: string | undefined; }' is not assignable to parameter of type 'Omit<Recipe, "id" | "timestamp">'.
+    Property 'status' is missing in type '{ photoUri: string; metadata: RecipeMetadata; recognizedText: string | undefined; }' but required in type 'Omit<Recipe, "id" | "timestamp">'.
+  lib/photo-processor/opencv-bridge/index.native.tsx(87,31): error TS2339: Property 'grayscaleResult' does not exist on type 'ProcessingMessage'.
+    Property 'grayscaleResult' does not exist on type 'GeometryProcessingMessage'.
+  lib/photo-processor/pipelines/geometry/contours.ts(195,59): error TS2344: Type 'new () => CVMatVector' does not satisfy the constraint '(...args: any) => any'.
+    Type 'new () => CVMatVector' provides no match for the signature '(...args: any): any'.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(55,21): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(56,39): error TS2307: Cannot find module '../config' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(57,42): error TS2307: Cannot find module '../opencv' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(59,38): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/optimise.ts(317,35): error TS2345: Argument of type 'CV' is not assignable to parameter of type 'import("/Users/eryk.napierala/Development/fasola/lib/photo-processor/types/opencv").CV'.
+    Type 'CV' is missing the following properties from type 'CV': MatVector, Size, Point, Scalar, and 62 more.
+  lib/photo-processor/pipelines/geometry/page-dewarp-remap.ts(34,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/contour-detection.ts(5,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/debug-visualization.ts(7,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/image-processing.ts(5,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/index.ts(35,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/span-estimation.ts(7,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/solve.ts(46,5): error TS2345: Argument of type 'CV' is not assignable to parameter of type 'import("/Users/eryk.napierala/Development/fasola/lib/photo-processor/types/opencv").CV'.
+    Type 'CV' is missing the following properties from type 'CV': MatVector, Size, Point, Scalar, and 62 more.
+  lib/photo-processor/pipelines/geometry/spans.ts(153,7): error TS2322: Type 'ContourInfo | null' is not assignable to type 'ContourInfo'.
+    Type 'null' is not assignable to type 'ContourInfo'.
+  lib/photo-processor/utils/image-utils.ts(65,40): error TS2774: This condition will always return true since this function is always defined. Did you mean to call it instead?
+  
+
+REQUIRED ACTIONS:
+1. Fix all TypeScript errors shown above
+2. Run 'npx tsc --noEmit' to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+Update the plan to use the simpler documents approach. Ignore TypeScript errors for now.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run typecheck-project]: Running project-wide TypeScript validation...
+████ TypeScript Validation Failed ████
+
+TypeScript compilation errors must be fixed:
+
+  features/photo-adjustment/components/DebugVisualization.tsx(2,15): error TS2305: Module '"@/lib/photo-processor/types"' has no exported member 'DewarpDebugData'.
+  features/photo-adjustment/components/DebugVisualization.tsx(337,42): error TS7006: Parameter 'log' implicitly has an 'any' type.
+  features/photo-adjustment/components/DebugVisualization.tsx(337,47): error TS7006: Parameter 'index' implicitly has an 'any' type.
+  features/photo-adjustment/context/DebugContext.tsx(1,15): error TS2305: Module '"@/lib/photo-processor/types"' has no exported member 'DebugVisualizationData'.
+  features/recipe-import/components/ConfirmButton.tsx(27,18): error TS2554: Expected 1 arguments, but got 0.
+  features/recipe-preview/components/MetadataOverlay.tsx(60,5): error TS2345: Argument of type '{ gradient: { position: "absolute"; top: number; left: number; right: number; paddingHorizontal: number; paddingTop: number; paddingBottom: number; }; title: { color: string; fontSize: number; fontWeight: "bold"; textShadow: string; marginBottom: number; }; source: { ...; }; tagsContainer: { ...; }; tags: { ...; }; }' is not assignable to parameter of type '{ gradient: { position: "absolute"; top: number; left: number; right: number; paddingHorizontal: number; paddingTop: number; paddingBottom: number; }; title: { color: string; fontSize: number; fontWeight: "bold"; textShadow: string; marginBottom: number; }; source: { ...; }; tagsContainer: { ...; }; tags: { ...; }; ...'.
+    Property 'title' is incompatible with index signature.
+      Object literal may only specify known properties, and 'textShadow' does not exist in type 'ViewStyle | TextStyle | ImageStyle'.
+  features/recipes-list/context/RecipesContext.tsx(58,53): error TS2345: Argument of type '{ photoUri: string; metadata: RecipeMetadata; recognizedText: string | undefined; }' is not assignable to parameter of type 'Omit<Recipe, "id" | "timestamp">'.
+    Property 'status' is missing in type '{ photoUri: string; metadata: RecipeMetadata; recognizedText: string | undefined; }' but required in type 'Omit<Recipe, "id" | "timestamp">'.
+  lib/photo-processor/opencv-bridge/index.native.tsx(87,31): error TS2339: Property 'grayscaleResult' does not exist on type 'ProcessingMessage'.
+    Property 'grayscaleResult' does not exist on type 'GeometryProcessingMessage'.
+  lib/photo-processor/pipelines/geometry/contours.ts(195,59): error TS2344: Type 'new () => CVMatVector' does not satisfy the constraint '(...args: any) => any'.
+    Type 'new () => CVMatVector' provides no match for the signature '(...args: any): any'.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(55,21): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(56,39): error TS2307: Cannot find module '../config' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(57,42): error TS2307: Cannot find module '../opencv' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/opencv-core.ts(59,38): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/optimise.ts(317,35): error TS2345: Argument of type 'CV' is not assignable to parameter of type 'import("/Users/eryk.napierala/Development/fasola/lib/photo-processor/types/opencv").CV'.
+    Type 'CV' is missing the following properties from type 'CV': MatVector, Size, Point, Scalar, and 62 more.
+  lib/photo-processor/pipelines/geometry/page-dewarp-remap.ts(34,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/contour-detection.ts(5,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/debug-visualization.ts(7,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/image-processing.ts(5,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/index.ts(35,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/preprocessing/span-estimation.ts(7,26): error TS2307: Cannot find module '@techstark/opencv-js' or its corresponding type declarations.
+  lib/photo-processor/pipelines/geometry/solve.ts(46,5): error TS2345: Argument of type 'CV' is not assignable to parameter of type 'import("/Users/eryk.napierala/Development/fasola/lib/photo-processor/types/opencv").CV'.
+    Type 'CV' is missing the following properties from type 'CV': MatVector, Size, Point, Scalar, and 62 more.
+  lib/photo-processor/pipelines/geometry/spans.ts(153,7): error TS2322: Type 'ContourInfo | null' is not assignable to type 'ContourInfo'.
+    Type 'null' is not assignable to type 'ContourInfo'.
+  lib/photo-processor/utils/image-utils.ts(65,40): error TS2774: This condition will always return true since this function is always defined. Did you mean to call it instead?
+  
+
+REQUIRED ACTIONS:
+1. Fix all TypeScript errors shown above
+2. Run 'npx tsc --noEmit' to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically

@@ -44,7 +44,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "./modules/icloud-sync/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true,

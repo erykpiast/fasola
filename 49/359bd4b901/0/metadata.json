@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "49359bd4b901",
+  "session_id": "f24254bd-71e7-4b29-aec0-205713cbe1a9",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T23:01:18.618599Z",
+  "branch": "feat/ocr",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "features/recipe-import/components/ConfirmButton.tsx",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipes-list/context/RecipesContext.tsx",
+    "lib/photo-processor/opencv-bridge/index.native.tsx",
+    "lib/photo-processor/pipelines/geometry/contours.ts",
+    "lib/photo-processor/pipelines/geometry/opencv-core.ts",
+    "lib/photo-processor/pipelines/geometry/optimise.ts",
+    "lib/photo-processor/pipelines/geometry/solve.ts",
+    "lib/photo-processor/pipelines/geometry/spans.ts",
+    "lib/photo-processor/techstark-opencv-js.d.ts",
+    "lib/photo-processor/types.ts",
+    "lib/photo-processor/utils/image-utils.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "9c2512c6-6b82-43f6-8efe-f045acb68007",
+  "token_usage": {
+    "input_tokens": 454,
+    "cache_creation_tokens": 116310,
+    "cache_read_tokens": 2422607,
+    "output_tokens": 3614,
+    "api_call_count": 27
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T23:01:18.572539Z",
+    "agent_lines": 87,
+    "human_added": 21,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 108,
+    "agent_percentage": 80.55555555555556
+  }
+}

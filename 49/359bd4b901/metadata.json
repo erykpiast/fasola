@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "49359bd4b901",
+  "strategy": "manual-commit",
+  "branch": "feat/ocr",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "features/recipe-import/components/ConfirmButton.tsx",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipes-list/context/RecipesContext.tsx",
+    "lib/photo-processor/opencv-bridge/index.native.tsx",
+    "lib/photo-processor/pipelines/geometry/contours.ts",
+    "lib/photo-processor/pipelines/geometry/opencv-core.ts",
+    "lib/photo-processor/pipelines/geometry/optimise.ts",
+    "lib/photo-processor/pipelines/geometry/solve.ts",
+    "lib/photo-processor/pipelines/geometry/spans.ts",
+    "lib/photo-processor/techstark-opencv-js.d.ts",
+    "lib/photo-processor/types.ts",
+    "lib/photo-processor/utils/image-utils.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/49/359bd4b901/0/metadata.json",
+      "transcript": "/49/359bd4b901/0/full.jsonl",
+      "context": "/49/359bd4b901/0/context.md",
+      "content_hash": "/49/359bd4b901/0/content_hash.txt",
+      "prompt": "/49/359bd4b901/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 454,
+    "cache_creation_tokens": 116310,
+    "cache_read_tokens": 2422607,
+    "output_tokens": 3614,
+    "api_call_count": 27
+  }
+}

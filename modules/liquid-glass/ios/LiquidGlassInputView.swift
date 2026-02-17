@@ -10,7 +10,8 @@ public final class LiquidGlassInputView: ExpoView {
   private var leadingSystemImage: String? = nil
   private var showClearButtonFlag: Bool = false
   private var variant: String = "form"
-  
+  private var autoFocusFlag: Bool = false
+
   let onChangeText = EventDispatcher()
   let onClear = EventDispatcher()
   let onInputFocus = EventDispatcher()
@@ -24,6 +25,7 @@ public final class LiquidGlassInputView: ExpoView {
       leadingSystemImage: leadingSystemImage,
       showClearButton: showClearButtonFlag,
       variant: variant,
+      autoFocus: autoFocusFlag,
       onChangeText: { _ in },
       onClear: { },
       onFocus: { },
@@ -85,6 +87,11 @@ public final class LiquidGlassInputView: ExpoView {
     variant = newVariant
     updateContent()
   }
+
+  func setAutoFocus(_ autoFocus: Bool) {
+    autoFocusFlag = autoFocus
+    updateContent()
+  }
   
   private func updateContent() {
     let content = LiquidGlassInputContent(
@@ -94,6 +101,7 @@ public final class LiquidGlassInputView: ExpoView {
       leadingSystemImage: leadingSystemImage,
       showClearButton: showClearButtonFlag,
       variant: variant,
+      autoFocus: autoFocusFlag,
       onChangeText: { [weak self] text in
         self?.onChangeText(["text": text])
       },
@@ -142,6 +150,7 @@ struct LiquidGlassInputContent: View {
   var leadingSystemImage: String?
   var showClearButton: Bool
   var variant: String
+  var autoFocus: Bool
   var onChangeText: (String) -> Void
   var onClear: () -> Void
   var onFocus: () -> Void
@@ -250,6 +259,9 @@ struct LiquidGlassInputContent: View {
     }
     .onAppear {
       text = value
+      if autoFocus {
+        isFocused = true
+      }
     }
     .onChange(of: value) { _, newValue in
       if text != newValue {

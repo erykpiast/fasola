@@ -62,7 +62,11 @@ public final class LiquidGlassModule: Module {
       Prop("variant") { (view, variant: String) in
         view.setVariant(variant)
       }
-      
+
+      Prop("autoFocus") { (view, autoFocus: Bool) in
+        view.setAutoFocus(autoFocus)
+      }
+
       Events("onChangeText", "onClear", "onInputFocus", "onInputBlur")
     }
     

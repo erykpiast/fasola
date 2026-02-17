@@ -23,7 +23,7 @@ export function AddRecipeForm({
   photoUri: PhotoUri;
   source: string;
   onSourceChange: (source: string, isAutomatic?: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: (sourceOverride?: string) => void;
 }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -63,9 +63,11 @@ export function AddRecipeForm({
     );
   }, [isEditingSource, t]);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (isEditingSource) {
-      sourceSelectorRef.current?.confirmNewSource();
+      const confirmed = await sourceSelectorRef.current?.confirmNewSource();
+      if (!confirmed) return;
+      onConfirm(confirmed);
       return;
     }
     if (!source) return;

@@ -23,16 +23,20 @@ export default function AddRecipeScreen(): JSX.Element {
     []
   );
 
-  const handleConfirm = useCallback(async () => {
-    if (!uri || !source) {
-      return;
-    }
+  const handleConfirm = useCallback(
+    async (sourceOverride?: string) => {
+      const effectiveSource = sourceOverride ?? source;
+      if (!uri || !effectiveSource) {
+        return;
+      }
 
-    const recipe = await savePending(uri, source);
-    await sourceHistoryRepository.addSource(source);
-    addToQueue(recipe.id);
-    router.replace("/");
-  }, [uri, source, savePending, addToQueue]);
+      const recipe = await savePending(uri, effectiveSource);
+      await sourceHistoryRepository.addSource(effectiveSource);
+      addToQueue(recipe.id);
+      router.replace("/");
+    },
+    [uri, source, savePending, addToQueue]
+  );
 
   if (!uri) {
     return (

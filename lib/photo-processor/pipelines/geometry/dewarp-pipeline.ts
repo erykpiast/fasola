@@ -138,40 +138,36 @@ function buildRemapMaps(
   return { mapX, mapY, mapXSmall, mapYSmall };
 }
 
-function applyRemapAndThreshold(
+function applyRemap(
   cv: CV,
   img: CVMat,
   mapX: CVMat,
-  mapY: CVMat,
-  noBinary: boolean
+  mapY: CVMat
+): CVMat {
+  const remapped = new cv.Mat();
+  cv.remap(img, remapped, mapX, mapY, cv.INTER_CUBIC, cv.BORDER_REPLICATE);
+  return remapped;
+}
+
+function applyThreshold(
+  cv: CV,
+  img: CVMat
 ): CVMat {
   const imgGray = new cv.Mat();
   cv.cvtColor(img, imgGray, cv.COLOR_RGB2GRAY);
 
-  const remapped = new cv.Mat();
-  cv.remap(imgGray, remapped, mapX, mapY, cv.INTER_CUBIC, cv.BORDER_REPLICATE);
-
+  const thresh = new cv.Mat();
+  cv.adaptiveThreshold(
+    imgGray,
+    thresh,
+    255,
+    cv.ADAPTIVE_THRESH_MEAN_C,
+    cv.THRESH_BINARY,
+    Config.ADAPTIVE_WINSZ,
+    25
+  );
   imgGray.delete();
-
-  let result: CVMat;
-  if (noBinary) {
-    result = remapped;
-  } else {
-    const thresh = new cv.Mat();
-    cv.adaptiveThreshold(
-      remapped,
-      thresh,
-      255,
-      cv.ADAPTIVE_THRESH_MEAN_C,
-      cv.THRESH_BINARY,
-      Config.ADAPTIVE_WINSZ,
-      25
-    );
-    result = thresh;
-    remapped.delete();
-  }
-
-  return result;
+  return thresh;
 }
 
 /**
@@ -420,7 +416,7 @@ async function threshold(
   outputZoom: number,
   noBinary: boolean
 ): Promise<DataUrl> {
-  const { width: _width, height: _height, widthSmall, heightSmall } = computeOutputDimensions(
+  const { widthSmall, heightSmall } = computeOutputDimensions(
     pageDims,
     img.rows,
     outputZoom
@@ -435,13 +431,14 @@ async function threshold(
     img
   );
 
-  const result = applyRemapAndThreshold(
-    cv,
-    img,
-    mapX,
-    mapY,
-    noBinary
-  );
+  const remapped = applyRemap(cv, img, mapX, mapY);
+  let result: CVMat;
+  if (noBinary) {
+    result = remapped;
+  } else {
+    result = applyThreshold(cv, remapped);
+    remapped.delete();
+  }
 
   const dataUrl = matToDataUrl(cv, result);
 

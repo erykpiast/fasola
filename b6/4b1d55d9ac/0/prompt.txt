@@ -1,0 +1,116 @@
+Implement the following plan:
+
+# Fix: Make processing transparent — show edit/remove buttons immediately
+
+## Context
+
+When a user imports a photo and opens it before background processing completes, `RecipeViewScreen` shows a redundant source selector + confirm button (the source was already set during import). The user is stuck with no back button and a confusing repeated workflow. Processing should be transparent: always show the normal recipe view (back, delete, edit) with edit disabled during processing, and display fun rotating status messages over the photo.
+
+## Changes
+
+### 1. `features/recipe-preview/components/RecipeViewScreen.tsx`
+
+Remove the split `isProcessing` / `isReady` branches. Unify into a single view that always shows:
+- `RecipeImageDisplay`
+- `MetadataOverlay` (will show source, and title/tags once processing completes)
+- `BackButton`
+- `DeleteButton`
+- `EditButton` with `disabled={!isReady}`
+- When `isProcessing`: a centered `ProcessingIndicator` component (spinner + rotating message)
+
+Remove: `SourceSelector`, `ConfirmButton`, `ConfirmButtonRef` imports and all related logic (`handleSourceChange`, `handleConfirm`, `confirmButtonRef`). These are no longer needed in this screen.
+
+### 2. `lib/components/atoms/EditButton.tsx`
+
+Add optional `disabled` prop. When true: set `opacity: 0.4` and `pointerEvents: 'none'` on the container style. No native module changes needed.
+
+```tsx
+export function EditButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }): JSX.Element {
+  return (
+    <LiquidGlassButton
+      onPress={onPress}
+      systemImage="pencil"
+      style={[styles.button, disabled && styles.disabled]}
+      accessibilityLabel="Edit"
+    />
+  );
+}
+// styles.disabled = { opacity: 0.4, pointerEvents: 'none' }
+```
+
+### 3. New: `features/recipe-preview/components/ProcessingIndicator.tsx`
+
+Component showing `ActivityIndicator` + rotating `Text` message centered on screen. Uses a `useEffect` interval (2s) to cycle through messages.
+
+Logic:
+- Define a `FIRST_MESSAGE` key (always shown first)
+- Define array of ~10 `ROTATING_MESSAGES` keys
+- On mount, shuffle the rotating messages array (Fisher-Yates)
+- Start with `FIRST_MESSAGE`, then cycle through shuffled array every 2s
+- After exhausting shuffled array, loop back to start of shuffled array (skip first message on subsequent loops so the user discovers new ones)
+- Fade transition between messages using `Animated.Text` opacity
+
+Messages — culinary/recipe-book themed, lighthearted:
+
+| Key | Text |
+|-----|------|
+| first | Squinting at the page... |
+| m1 | Deciphering grandma's handwriting... |
+| m2 | Reading between the lines... |
+| m3 | Spotting the secret ingredient... |
+| m4 | Counting pinches of salt... |
+| m5 | Translating chef's shorthand... |
+| m6 | Separating the wheat from the chaff... |
+| m7 | Sifting through the flour of words... |
+| m8 | Tasting the letters... |
+| m9 | Letting the words simmer... |
+| m10 | Fishing for the recipe name... |
+
+### 4. `platform/i18n/translations/en.json`
+
+Add `processing.messages` section with the keys above.
+
+## Files summary
+
+| File | Action |
+|------|--------|
+| `features/recipe-preview/components/RecipeViewScreen.tsx` | Edit — unify UI, add ProcessingIndicator |
+| `lib/components/atoms/EditButton.tsx` | Edit — add disabled prop |
+| `features/recipe-preview/components/ProcessingIndicator.tsx` | Create — spinner + rotating messages |
+| `platform/i18n/translations/en.json` | Edit — add processing messages |
+
+## Verification
+
+1. Import a photo, set source, confirm
+2. Tap the recipe immediately → should see photo + back + delete + edit (grayed out) + spinner with "Squinting at the page..."
+3. Wait and observe messages rotating every 2s in random order
+4. Re-open the screen → first message same, subsequent order differs
+5. Wait for processing to complete → spinner disappears, edit button becomes active, metadata overlay updates with title/tags
+6. Delete and back buttons work during processing
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

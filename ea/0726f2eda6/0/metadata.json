@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "ea0726f2eda6",
+  "session_id": "684ffbcb-e955-46b4-82da-ab770d379b6e",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T22:54:46.036438Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/agents/expo/expo-expert.md",
+    ".claude/agents/react-native/react-native-expert.md"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 5032,
+    "cache_creation_tokens": 128391,
+    "cache_read_tokens": 1038990,
+    "output_tokens": 672,
+    "api_call_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T22:54:45.863534Z",
+    "agent_lines": 1067,
+    "human_added": 2667,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3734,
+    "agent_percentage": 28.575254418853774
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/684ffbcb-e955-46b4-82da-ab770d379b6e.jsonl"
+}

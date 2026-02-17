@@ -1,7 +1,4 @@
-import {
-  ConfirmButton,
-  type ConfirmButtonRef,
-} from "@/features/recipe-import/components/ConfirmButton";
+import { ConfirmButton } from "@/features/recipe-import/components/ConfirmButton";
 import {
   SourceSelector,
   type SourceSelectorRef,
@@ -14,7 +11,7 @@ import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import { useCallback, useRef, useState, type JSX } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 
 export function AddRecipeForm({
@@ -31,16 +28,10 @@ export function AddRecipeForm({
   const theme = useTheme();
   const { t } = useTranslation();
   const sourceSelectorRef = useRef<SourceSelectorRef>(null);
-  const confirmRef = useRef<ConfirmButtonRef>(null);
   const [isEditingSource, setIsEditingSource] = useState(false);
-  const [hasNoSources, setHasNoSources] = useState(false);
 
   const handleEditingChange = useCallback((editing: boolean) => {
     setIsEditingSource(editing);
-  }, []);
-
-  const handleSourceInteraction = useCallback(() => {
-    confirmRef.current?.stop();
   }, []);
 
   const handleClose = useCallback(() => {
@@ -81,14 +72,6 @@ export function AddRecipeForm({
     onConfirm();
   }, [isEditingSource, source, onConfirm]);
 
-  useEffect(() => {
-    if (isEditingSource || hasNoSources) {
-      confirmRef.current?.stop();
-    } else {
-      confirmRef.current?.reset();
-    }
-  }, [isEditingSource, hasNoSources]);
-
   return (
     <KeyboardAvoidingView
       style={[styles.container, getThemeColors(theme).container]}
@@ -110,12 +93,9 @@ export function AddRecipeForm({
             ref={sourceSelectorRef}
             value={source}
             onValueChange={onSourceChange}
-            onInteraction={handleSourceInteraction}
             onEditingChange={handleEditingChange}
-            onHasNoSourcesChange={setHasNoSources}
           />
           <ConfirmButton
-            ref={confirmRef}
             onConfirm={handleConfirm}
             disabled={!isEditingSource && !source}
           />

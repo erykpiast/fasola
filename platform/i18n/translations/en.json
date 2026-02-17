@@ -21,7 +21,7 @@
       "label": "Tags",
       "placeholder": "Add tags..."
     },
-    "submit": "Set source",
+    "submit": "Select Book",
     "submitEdit": "Save changes",
     "discardChanges": {
       "title": "Discard changes?",
@@ -57,11 +57,11 @@
     "invalidTags": "Tags must start with # and contain no spaces"
   },
   "sourceSelector": {
-    "label": "Source",
-    "placeholder": "Select source",
-    "addNew": "Add new source",
-    "addNewTitle": "New Source",
-    "addNewPlaceholder": "Enter source name or URL"
+    "label": "Source Book",
+    "placeholder": "Select Book",
+    "addNew": "Add Book",
+    "addNewTitle": "New Book",
+    "addNewPlaceholder": "Enter book title"
   },
   "import": {
     "confirmHint": "Confirming in {seconds}s..."

@@ -1,0 +1,2966 @@
+Please create Swift and iOS development expert similar to @.claude/agents/expo/expo-expert.md. Focus on native module development and native UI frameworks such as Liquid Glass. Search available information online. You can start from https://skills.sh/?q=ios and search the skills repository there.
+
+---
+
+<task-notification>
+<task-id>a92961d</task-id>
+<status>completed</status>
+<summary>Agent "Fetch AvdLee reference files" completed</summary>
+<result>Here is the complete raw content of all 10 files:
+
+---
+
+## 1. view-structure.md
+
+```markdown
+# SwiftUI View Structure Reference
+
+## View Structure Principles
+
+SwiftUI's diffing algorithm compares view hierarchies to determine what needs updating. Proper view composition directly impacts performance.
+
+## Prefer Modifiers Over Conditional Views
+
+**Prefer "no-effect" modifiers over conditionally including views.** When you introduce a branch, consider whether you're representing multiple views or two states of the same view.
+
+### Use Opacity Instead of Conditional Inclusion
+
+```swift
+// Good - same view, different states
+SomeView()
+    .opacity(isVisible ? 1 : 0)
+
+// Avoid - creates/destroys view identity
+if isVisible {
+    SomeView()
+}
+```
+
+**Why**: Conditional view inclusion can cause loss of state, poor animation performance, and breaks view identity. Using modifiers maintains view identity across state changes.
+
+### When Conditionals Are Appropriate
+
+Use conditionals when you truly have **different views**, not different states:
+
+```swift
+// Correct - fundamentally different views
+if isLoggedIn {
+    DashboardView()
+} else {
+    LoginView()
+}
+
+// Correct - optional content
+if let user {
+    UserProfileView(user: user)
+}
+```
+
+## Extract Subviews, Not Computed Properties
+
+### The Problem with @ViewBuilder Functions
+
+When you use `@ViewBuilder` functions or computed properties for complex views, the entire function re-executes on every parent state change:
+
+```swift
+// BAD - re-executes complexSection() on every tap
+struct ParentView: View {
+    @State private var count = 0
+
+    var body: some View {
+        VStack {
+            Button("Tap: \(count)") { count += 1 }
+            complexSection()  // Re-executes every tap!
+        }
+    }
+
+    @ViewBuilder
+    func complexSection() -> some View {
+        // Complex views that re-execute unnecessarily
+        ForEach(0..<100) { i in
+            HStack {
+                Image(systemName: "star")
+                Text("Item \(i)")
+                Spacer()
+                Text("Detail")
+            }
+        }
+    }
+}
+```
+
+### The Solution: Separate Structs
+
+Extract to separate `struct` views. SwiftUI can skip their `body` when inputs don't change:
+
+```swift
+// GOOD - ComplexSection body SKIPPED when its inputs don't change
+struct ParentView: View {
+    @State private var count = 0
+
+    var body: some View {
+        VStack {
+            Button("Tap: \(count)") { count += 1 }
+            ComplexSection()  // Body skipped during re-evaluation
+        }
+    }
+}
+
+struct ComplexSection: View {
+    var body: some View {
+        ForEach(0..<100) { i in
+            HStack {
+                Image(systemName: "star")
+                Text("Item \(i)")
+                Spacer()
+                Text("Detail")
+            }
+        }
+    }
+}
+```
+
+### Why This Works
+
+1. SwiftUI compares the `ComplexSection` struct (which has no properties)
+2. Since nothing changed, SwiftUI skips calling `ComplexSection.body`
+3. The complex view code never executes unnecessarily
+
+## When @ViewBuilder Functions Are Acceptable
+
+Use for small, simple sections that don't affect performance:
+
+```swift
+struct SimpleView: View {
+    @State private var showDetails = false
+
+    var body: some View {
+        VStack {
+            headerSection()  // OK - simple, few views
+            if showDetails {
+                detailsSection()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func headerSection() -> some View {
+        HStack {
+            Text("Title")
+            Spacer()
+            Button("Toggle") { showDetails.toggle() }
+        }
+    }
+
+    @ViewBuilder
+    private func detailsSection() -> some View {
+        Text("Some details here")
+            .font(.caption)
+    }
+}
+```
+
+## When to Extract Subviews
+
+Extract complex views into separate subviews when:
+- The view has multiple logical sections or responsibilities
+- The view contains reusable components
+- The view body becomes difficult to read or understand
+- You need to isolate state changes for performance
+- The view is becoming large (keep views small for better performance)
+
+## Container View Pattern
+
+### Avoid Closure-Based Content
+
+Closures can't be compared, causing unnecessary re-renders:
+
+```swift
+// BAD - closure prevents SwiftUI from skipping updates
+struct MyContainer<Content: View>: View {
+    let content: () -> Content
+
+    var body: some View {
+        VStack {
+            Text("Header")
+            content()  // Always called, can't compare closures
+        }
+    }
+}
+
+// Usage forces re-render on every parent update
+MyContainer {
+    ExpensiveView()
+}
+```
+
+### Use @ViewBuilder Property Instead
+
+```swift
+// GOOD - view can be compared
+struct MyContainer<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack {
+            Text("Header")
+            content  // SwiftUI can compare and skip if unchanged
+        }
+    }
+}
+
+// Usage - SwiftUI can diff ExpensiveView
+MyContainer {
+    ExpensiveView()
+}
+```
+
+## ZStack vs overlay/background
+
+Use `ZStack` to **compose multiple peer views** that should be layered together and jointly define layout.
+
+Prefer `overlay` / `background` when you're **decorating a primary view**.  
+Not primarily because they don't affect layout size, but because they **express intent and improve readability**: the view being modified remains the clear layout anchor.
+
+A key difference is **size proposal behavior**:
+- In `overlay` / `background`, the child view implicitly adopts the size proposed to the parent when it doesn't define its own size, making decorative attachments feel natural and predictable.
+- In `ZStack`, each child participates independently in layout, and no implicit size inheritance exists. This makes it better suited for peer composition, but less intuitive for simple decoration.
+
+Use `ZStack` (or another container) when the "decoration" **must explicitly participate in layout sizing**—for example, when reserving space, extending tappable/visible bounds, or preventing overlap with neighboring views.
+
+### Examples: Choosing Between overlay/background and ZStack
+
+```swift
+// GOOD - correct usage
+// Decoration that should not change layout sizing belongs in overlay/background
+Button("Continue") {
+    // action
+}
+.overlay(alignment: .trailing) {
+    Image(systemName: "lock.fill")
+        .padding(.trailing, 8)
+}
+
+// BAD - incorrect usage
+// Using ZStack when overlay/background is enough and layout sizing should remain anchored to the button
+ZStack(alignment: .trailing) {
+    Button("Continue") {
+        // action
+    }
+    Image(systemName: "lock.fill")
+        .padding(.trailing, 8)
+}
+
+// GOOD - correct usage
+// Capsule is taking a parent size for rendering
+HStack(spacing: 12) {
+    HStack {
+        Image(systemName: "tray")
+        Text("Inbox")
+    }
+    Text("Next")
+}
+.background {
+    Capsule()
+        .strokeBorder(.blue, lineWidth: 2)
+}
+
+// BAD - incorrect usage
+// overlay does not contribute to measured size, so the Capsule is taking all available space if no explicit size is set
+ZStack(alignment: .topTrailing) {
+    HStack(spacing: 12) {
+        HStack {
+            Image(systemName: "tray")
+            Text("Inbox")
+        }
+        Text("Next")
+    }
+
+    Capsule()
+        .strokeBorder(.blue, lineWidth: 2)
+}
+```
+
+## Summary Checklist
+
+- [ ] Prefer modifiers over conditional views for state changes
+- [ ] Complex views extracted to separate subviews
+- [ ] Views kept small for better performance
+- [ ] `@ViewBuilder` functions only for simple sections
+- [ ] Container views use `@ViewBuilder let content: Content`
+- [ ] Extract views when they have multiple responsibilities or become hard to read
+```
+
+---
+
+## 2. animation-basics.md
+
+```markdown
+# SwiftUI Animation Basics
+
+Core animation concepts, implicit vs explicit animations, timing curves, and performance patterns.
+
+## Table of Contents
+- [Core Concepts](#core-concepts)
+- [Implicit Animations](#implicit-animations)
+- [Explicit Animations](#explicit-animations)
+- [Animation Placement](#animation-placement)
+- [Selective Animation](#selective-animation)
+- [Timing Curves](#timing-curves)
+- [Animation Performance](#animation-performance)
+- [Disabling Animations](#disabling-animations)
+- [Debugging](#debugging)
+
+---
+
+## Core Concepts
+
+State changes trigger view updates. SwiftUI provides mechanisms to animate these changes.
+
+**Animation Process:**
+1. State change triggers view tree re-evaluation
+2. SwiftUI compares new tree to current render tree
+3. Animatable properties are identified and interpolated (~60 fps)
+
+**Key Characteristics:**
+- Animations are additive and cancelable
+- Always start from current render tree state
+- Blend smoothly when interrupted
+
+---
+
+## Implicit Animations
+
+Use `.animation(_:value:)` to animate when a specific value changes.
+
+```swift
+// GOOD - uses value parameter
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .animation(.spring, value: isExpanded)
+    .onTapGesture { isExpanded.toggle() }
+
+// BAD - deprecated, animates all changes unexpectedly
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .animation(.spring)  // Deprecated!
+```
+
+---
+
+## Explicit Animations
+
+Use `withAnimation` for event-driven state changes.
+
+```swift
+// GOOD - explicit animation
+Button("Toggle") {
+    withAnimation(.spring) {
+        isExpanded.toggle()
+    }
+}
+
+// BAD - no animation context
+Button("Toggle") {
+    isExpanded.toggle()  // Abrupt change
+}
+```
+
+**When to use which:**
+- **Implicit**: Animations tied to specific value changes, precise view tree scope
+- **Explicit**: Event-driven animations (button taps, gestures)
+
+---
+
+## Animation Placement
+
+Place animation modifiers after the properties they should animate.
+
+```swift
+// GOOD - animation after properties
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .foregroundStyle(isExpanded ? .blue : .red)
+    .animation(.default, value: isExpanded)  // Animates both
+
+// BAD - animation before properties
+Rectangle()
+    .animation(.default, value: isExpanded)  // Too early!
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+```
+
+---
+
+## Selective Animation
+
+Animate only specific properties using multiple animation modifiers or scoped animations.
+
+```swift
+// GOOD - selective animation
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .animation(.spring, value: isExpanded)  // Animate size
+    .foregroundStyle(isExpanded ? .blue : .red)
+    .animation(nil, value: isExpanded)  // Don't animate color
+
+// iOS 17+ scoped animation
+Rectangle()
+    .foregroundStyle(isExpanded ? .blue : .red)  // Not animated
+    .animation(.spring) {
+        $0.frame(width: isExpanded ? 200 : 100, height: 50)  // Animated
+    }
+```
+
+---
+
+## Timing Curves
+
+### Built-in Curves
+
+| Curve | Use Case |
+|-------|----------|
+| `.spring` | Interactive elements, most UI |
+| `.easeInOut` | Appearance changes |
+| `.bouncy` | Playful feedback (iOS 17+) |
+| `.linear` | Progress indicators only |
+
+### Modifiers
+
+```swift
+.animation(.default.speed(2.0), value: flag)  // 2x faster
+.animation(.default.delay(0.5), value: flag)  // Delayed start
+.animation(.default.repeatCount(3, autoreverses: true), value: flag)
+```
+
+### Good vs Bad Timing
+
+```swift
+// GOOD - appropriate timing for interaction type
+Button("Tap") {
+    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        isActive.toggle()
+    }
+}
+.scaleEffect(isActive ? 0.95 : 1.0)
+
+// BAD - too slow for button feedback
+Button("Tap") {
+    withAnimation(.easeInOut(duration: 1.0)) {  // Way too slow!
+        isActive.toggle()
+    }
+}
+
+// BAD - linear feels robotic
+Rectangle()
+    .animation(.linear(duration: 0.5), value: isActive)  // Mechanical
+```
+
+---
+
+## Animation Performance
+
+### Prefer Transforms Over Layout
+
+```swift
+// GOOD - GPU accelerated transforms
+Rectangle()
+    .frame(width: 100, height: 100)
+    .scaleEffect(isActive ? 1.5 : 1.0)  // Fast
+    .offset(x: isActive ? 50 : 0)        // Fast
+    .rotationEffect(.degrees(isActive ? 45 : 0))  // Fast
+    .animation(.spring, value: isActive)
+
+// BAD - layout changes are expensive
+Rectangle()
+    .frame(width: isActive ? 150 : 100, height: isActive ? 150 : 100)  // Expensive
+    .padding(isActive ? 50 : 0)  // Expensive
+```
+
+### Narrow Animation Scope
+
+```swift
+// GOOD - animation scoped to specific subview
+VStack {
+    HeaderView()  // Not affected
+    ExpandableContent(isExpanded: isExpanded)
+        .animation(.spring, value: isExpanded)  // Only this
+    FooterView()  // Not affected
+}
+
+// BAD - animation at root
+VStack {
+    HeaderView()
+    ExpandableContent(isExpanded: isExpanded)
+    FooterView()
+}
+.animation(.spring, value: isExpanded)  // Animates everything
+```
+
+### Avoid Animation in Hot Paths
+
+```swift
+// GOOD - gate by threshold
+.onPreferenceChange(ScrollOffsetKey.self) { offset in
+    let shouldShow = offset.y < -50
+    if shouldShow != showTitle {  // Only when crossing threshold
+        withAnimation(.easeOut(duration: 0.2)) {
+            showTitle = shouldShow
+        }
+    }
+}
+
+// BAD - animating every scroll change
+.onPreferenceChange(ScrollOffsetKey.self) { offset in
+    withAnimation {  // Fires constantly!
+        self.offset = offset.y
+    }
+}
+```
+
+---
+
+## Disabling Animations
+
+```swift
+// GOOD - disable with transaction
+Text("Count: \(count)")
+    .transaction { $0.animation = nil }
+
+// GOOD - disable from parent context
+DataView()
+    .transaction { $0.disablesAnimations = true }
+
+// BAD - hacky zero duration
+Text("Count: \(count)")
+    .animation(.linear(duration: 0), value: count)  // Hacky
+```
+
+---
+
+## Debugging
+
+```swift
+// Slow down for inspection
+#if DEBUG
+.animation(.linear(duration: 3.0).speed(0.2), value: isExpanded)
+#else
+.animation(.spring, value: isExpanded)
+#endif
+
+// Debug modifier to log values
+struct AnimationDebugModifier: ViewModifier, Animatable {
+    var value: Double
+    var animatableData: Double {
+        get { value }
+        set {
+            value = newValue
+            print("Animation: \(newValue)")
+        }
+    }
+    func body(content: Content) -> some View {
+        content.opacity(value)
+    }
+}
+```
+
+---
+
+## Quick Reference
+
+### Do
+- Use `.animation(_:value:)` with value parameter
+- Use `withAnimation` for event-driven animations
+- Prefer transforms over layout changes
+- Scope animations narrowly
+- Choose appropriate timing curves
+
+### Don't
+- Use deprecated `.animation(_:)` without value
+- Animate layout properties in hot paths
+- Apply broad animations at root level
+- Use linear timing for UI (feels robotic)
+- Animate on every frame in scroll handlers
+```
+
+---
+
+## 3. animation-transitions.md
+
+```markdown
+# SwiftUI Transitions
+
+Transitions for view insertion/removal, custom transitions, and the Animatable protocol.
+
+## Table of Contents
+- [Property Animations vs Transitions](#property-animations-vs-transitions)
+- [Basic Transitions](#basic-transitions)
+- [Asymmetric Transitions](#asymmetric-transitions)
+- [Custom Transitions](#custom-transitions)
+- [Identity and Transitions](#identity-and-transitions)
+- [The Animatable Protocol](#the-animatable-protocol)
+
+---
+
+## Property Animations vs Transitions
+
+**Property animations**: Interpolate values on views that exist before AND after state change.
+
+**Transitions**: Animate views being inserted or removed from the render tree.
+
+```swift
+// Property animation - same view, different properties
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .animation(.spring, value: isExpanded)
+
+// Transition - view inserted/removed
+if showDetail {
+    DetailView()
+        .transition(.scale)
+}
+```
+
+---
+
+## Basic Transitions
+
+### Critical: Transitions Require Animation Context
+
+```swift
+// GOOD - animation outside conditional
+VStack {
+    Button("Toggle") { showDetail.toggle() }
+    if showDetail {
+        DetailView()
+            .transition(.slide)
+    }
+}
+.animation(.spring, value: showDetail)
+
+// GOOD - explicit animation
+Button("Toggle") {
+    withAnimation(.spring) {
+        showDetail.toggle()
+    }
+}
+if showDetail {
+    DetailView()
+        .transition(.scale.combined(with: .opacity))
+}
+
+// BAD - animation inside conditional (removed with view!)
+if showDetail {
+    DetailView()
+        .transition(.slide)
+        .animation(.spring, value: showDetail)  // Won't work on removal!
+}
+
+// BAD - no animation context
+Button("Toggle") {
+    showDetail.toggle()  // No animation
+}
+if showDetail {
+    DetailView()
+        .transition(.slide)  // Ignored - just appears/disappears
+}
+```
+
+### Built-in Transitions
+
+| Transition | Effect |
+|------------|--------|
+| `.opacity` | Fade in/out (default) |
+| `.scale` | Scale up/down |
+| `.slide` | Slide from leading edge |
+| `.move(edge:)` | Move from specific edge |
+| `.offset(x:y:)` | Move by offset amount |
+
+### Combining Transitions
+
+```swift
+// Parallel - both simultaneously
+.transition(.slide.combined(with: .opacity))
+
+// Chained
+.transition(.scale.combined(with: .opacity).combined(with: .offset(y: 20)))
+```
+
+---
+
+## Asymmetric Transitions
+
+Different animations for insertion vs removal.
+
+```swift
+// GOOD - different animations for insert/remove
+if showCard {
+    CardView()
+        .transition(
+            .asymmetric(
+                insertion: .scale.combined(with: .opacity),
+                removal: .move(edge: .bottom).combined(with: .opacity)
+            )
+        )
+}
+
+// BAD - same transition when different behaviors needed
+if showCard {
+    CardView()
+        .transition(.slide)  // Same both ways - may feel awkward
+}
+```
+
+---
+
+## Custom Transitions
+
+### Pre-iOS 17
+
+```swift
+struct BlurModifier: ViewModifier {
+    var radius: CGFloat
+    func body(content: Content) -> some View {
+        content.blur(radius: radius)
+    }
+}
+
+extension AnyTransition {
+    static func blur(radius: CGFloat) -> AnyTransition {
+        .modifier(
+            active: BlurModifier(radius: radius),
+            identity: BlurModifier(radius: 0)
+        )
+    }
+}
+
+// Usage
+.transition(.blur(radius: 10))
+```
+
+### iOS 17+ (Transition Protocol)
+
+```swift
+struct BlurTransition: Transition {
+    var radius: CGFloat
+
+    func body(content: Content, phase: TransitionPhase) -> some View {
+        content
+            .blur(radius: phase.isIdentity ? 0 : radius)
+            .opacity(phase.isIdentity ? 1 : 0)
+    }
+}
+
+// Usage
+.transition(BlurTransition(radius: 10))
+```
+
+### Good vs Bad Custom Transitions
+
+```swift
+// GOOD - reusable transition
+if showContent {
+    ContentView()
+        .transition(BlurTransition(radius: 10))
+}
+
+// BAD - inline logic (won't animate on removal!)
+if showContent {
+    ContentView()
+        .blur(radius: showContent ? 0 : 10)  // Not a transition
+        .opacity(showContent ? 1 : 0)
+}
+```
+
+---
+
+## Identity and Transitions
+
+View identity changes trigger transitions, not property animations.
+
+```swift
+// Triggers transition - different branches have different identities
+if isExpanded {
+    Rectangle().frame(width: 200, height: 50)
+} else {
+    Rectangle().frame(width: 100, height: 50)
+}
+
+// Triggers transition - .id() changes identity
+Rectangle()
+    .id(flag)  // Different identity when flag changes
+    .transition(.scale)
+
+// Property animation - same view, same identity
+Rectangle()
+    .frame(width: isExpanded ? 200 : 100, height: 50)
+    .animation(.spring, value: isExpanded)
+```
+
+---
+
+## The Animatable Protocol
+
+Enables custom property interpolation during animations.
+
+### Protocol Definition
+
+```swift
+protocol Animatable {
+    associatedtype AnimatableData: VectorArithmetic
+    var animatableData: AnimatableData { get set }
+}
+```
+
+### Basic Implementation
+
+```swift
+// GOOD - explicit animatableData
+struct ShakeModifier: ViewModifier, Animatable {
+    var shakeCount: Double
+
+    var animatableData: Double {
+        get { shakeCount }
+        set { shakeCount = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content.offset(x: sin(shakeCount * .pi * 2) * 10)
+    }
+}
+
+extension View {
+    func shake(count: Int) -> some View {
+        modifier(ShakeModifier(shakeCount: Double(count)))
+    }
+}
+
+// Usage
+Button("Shake") { shakeCount += 3 }
+    .shake(count: shakeCount)
+    .animation(.default, value: shakeCount)
+
+// BAD - missing animatableData (silent failure!)
+struct BadShakeModifier: ViewModifier {
+    var shakeCount: Double
+    // Missing animatableData! Uses EmptyAnimatableData
+
+    func body(content: Content) -> some View {
+        content.offset(x: sin(shakeCount * .pi * 2) * 10)
+    }
+}
+// Animation jumps to final value instead of interpolating
+```
+
+### Multiple Properties with AnimatablePair
+
+```swift
+// GOOD - AnimatablePair for two properties
+struct ComplexModifier: ViewModifier, Animatable {
+    var scale: CGFloat
+    var rotation: Double
+
+    var animatableData: AnimatablePair<CGFloat, Double> {
+        get { AnimatablePair(scale, rotation) }
+        set {
+            scale = newValue.first
+            rotation = newValue.second
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(scale)
+            .rotationEffect(.degrees(rotation))
+    }
+}
+
+// GOOD - nested AnimatablePair for 3+ properties
+struct ThreePropertyModifier: ViewModifier, Animatable {
+    var x: CGFloat
+    var y: CGFloat
+    var rotation: Double
+
+    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, Double> {
+        get { AnimatablePair(AnimatablePair(x, y), rotation) }
+        set {
+            x = newValue.first.first
+            y = newValue.first.second
+            rotation = newValue.second
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: x, y: y)
+            .rotationEffect(.degrees(rotation))
+    }
+}
+```
+
+---
+
+## Quick Reference
+
+### Do
+- Place transitions outside conditional structures
+- Use `withAnimation` or `.animation` outside the `if`
+- Implement `animatableData` explicitly for custom Animatable
+- Use `AnimatablePair` for multiple animated properties
+- Use asymmetric transitions when insert/remove need different effects
+
+### Don't
+- Put animation modifiers inside conditionals for transitions
+- Forget `animatableData` implementation (silent failure)
+- Use inline blur/opacity instead of proper transitions
+- Expect property animation when view identity changes
+```
+
+---
+
+## 4. animation-advanced.md
+
+```markdown
+# SwiftUI Advanced Animations
+
+Transactions, phase animations (iOS 17+), keyframe animations (iOS 17+), and completion handlers (iOS 17+).
+
+## Table of Contents
+- [Transactions](#transactions)
+- [Phase Animations (iOS 17+)](#phase-animations-ios-17)
+- [Keyframe Animations (iOS 17+)](#keyframe-animations-ios-17)
+- [Animation Completion Handlers (iOS 17+)](#animation-completion-handlers-ios-17)
+
+---
+
+## Transactions
+
+The underlying mechanism for all animations in SwiftUI.
+
+### Basic Usage
+
+```swift
+// withAnimation is shorthand for withTransaction
+withAnimation(.default) { flag.toggle() }
+
+// Equivalent explicit transaction
+var transaction = Transaction(animation: .default)
+withTransaction(transaction) { flag.toggle() }
+```
+
+### The .transaction Modifier
+
+```swift
+Rectangle()
+    .frame(width: flag ? 100 : 50, height: 50)
+    .transaction { t in
+        t.animation = .default
+    }
+```
+
+**Note:** This behaves like the deprecated `.animation(_:)` without value parameter - it animates on every state change.
+
+### Animation Precedence
+
+**Implicit animations override explicit animations** (later in view tree wins).
+
+```swift
+Button("Tap") {
+    withAnimation(.linear) { flag.toggle() }
+}
+.animation(.bouncy, value: flag)  // .bouncy wins!
+```
+
+### Disabling Animations
+
+```swift
+// Prevent implicit animations from overriding
+.transaction { t in
+    t.disablesAnimations = true
+}
+
+// Remove animation entirely
+.transaction { $0.animation = nil }
+```
+
+### Custom Transaction Keys (iOS 17+)
+
+Pass metadata through transactions.
+
+```swift
+struct ChangeSourceKey: TransactionKey {
+    static let defaultValue: String = "unknown"
+}
+
+extension Transaction {
+    var changeSource: String {
+        get { self[ChangeSourceKey.self] }
+        set { self[ChangeSourceKey.self] = newValue }
+    }
+}
+
+// Set source
+var transaction = Transaction(animation: .default)
+transaction.changeSource = "server"
+withTransaction(transaction) { flag.toggle() }
+
+// Read in view tree
+.transaction { t in
+    if t.changeSource == "server" {
+        t.animation = .smooth
+    } else {
+        t.animation = .bouncy
+    }
+}
+```
+
+---
+
+## Phase Animations (iOS 17+)
+
+Cycle through discrete phases automatically. Each phase change is a separate animation.
+
+### Basic Usage
+
+```swift
+// GOOD - triggered phase animation
+Button("Shake") { trigger += 1 }
+    .phaseAnimator(
+        [0.0, -10.0, 10.0, -5.0, 5.0, 0.0],
+        trigger: trigger
+    ) { content, offset in
+        content.offset(x: offset)
+    }
+
+// Infinite loop (no trigger)
+Circle()
+    .phaseAnimator([1.0, 1.2, 1.0]) { content, scale in
+        content.scaleEffect(scale)
+    }
+```
+
+### Enum Phases (Recommended for Clarity)
+
+```swift
+// GOOD - enum phases are self-documenting
+enum BouncePhase: CaseIterable {
+    case initial, up, down, settle
+
+    var scale: CGFloat {
+        switch self {
+        case .initial: 1.0
+        case .up: 1.2
+        case .down: 0.9
+        case .settle: 1.0
+        }
+    }
+}
+
+Circle()
+    .phaseAnimator(BouncePhase.allCases, trigger: trigger) { content, phase in
+        content.scaleEffect(phase.scale)
+    }
+```
+
+### Custom Timing Per Phase
+
+```swift
+.phaseAnimator([0, -20, 20], trigger: trigger) { content, offset in
+    content.offset(x: offset)
+} animation: { phase in
+    switch phase {
+    case -20: .bouncy
+    case 20: .linear
+    default: .smooth
+    }
+}
+```
+
+### Good vs Bad
+
+```swift
+// GOOD - use phaseAnimator for multi-step sequences
+.phaseAnimator([0, -10, 10, 0], trigger: trigger) { content, offset in
+    content.offset(x: offset)
+}
+
+// BAD - manual DispatchQueue sequencing
+Button("Animate") {
+    withAnimation(.easeOut(duration: 0.1)) { offset = -10 }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        withAnimation { offset = 10 }
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        withAnimation { offset = 0 }
+    }
+}
+```
+
+---
+
+## Keyframe Animations (iOS 17+)
+
+Precise timing control with exact values at specific times.
+
+### Basic Usage
+
+```swift
+Button("Bounce") { trigger += 1 }
+    .keyframeAnimator(
+        initialValue: AnimationValues(),
+        trigger: trigger
+    ) { content, value in
+        content
+            .scaleEffect(value.scale)
+            .offset(y: value.verticalOffset)
+    } keyframes: { _ in
+        KeyframeTrack(\.scale) {
+            SpringKeyframe(1.2, duration: 0.15)
+            SpringKeyframe(0.9, duration: 0.1)
+            SpringKeyframe(1.0, duration: 0.15)
+        }
+        KeyframeTrack(\.verticalOffset) {
+            LinearKeyframe(-20, duration: 0.15)
+            LinearKeyframe(0, duration: 0.25)
+        }
+    }
+
+struct AnimationValues {
+    var scale: CGFloat = 1.0
+    var verticalOffset: CGFloat = 0
+}
+```
+
+### Keyframe Types
+
+| Type | Behavior |
+|------|----------|
+| `CubicKeyframe` | Smooth interpolation |
+| `LinearKeyframe` | Straight-line interpolation |
+| `SpringKeyframe` | Spring physics |
+| `MoveKeyframe` | Instant jump (no interpolation) |
+
+### Multiple Synchronized Tracks
+
+Tracks run **in parallel**, each animating one property.
+
+```swift
+// GOOD - bell shake with synchronized rotation and scale
+struct BellAnimation {
+    var rotation: Double = 0
+    var scale: CGFloat = 1.0
+}
+
+Image(systemName: "bell.fill")
+    .keyframeAnimator(
+        initialValue: BellAnimation(),
+        trigger: trigger
+    ) { content, value in
+        content
+            .rotationEffect(.degrees(value.rotation))
+            .scaleEffect(value.scale)
+    } keyframes: { _ in
+        KeyframeTrack(\.rotation) {
+            CubicKeyframe(15, duration: 0.1)
+            CubicKeyframe(-15, duration: 0.1)
+            CubicKeyframe(10, duration: 0.1)
+            CubicKeyframe(-10, duration: 0.1)
+            CubicKeyframe(0, duration: 0.1)
+        }
+        KeyframeTrack(\.scale) {
+            CubicKeyframe(1.1, duration: 0.25)
+            CubicKeyframe(1.0, duration: 0.25)
+        }
+    }
+
+// BAD - manual timer-based animation
+Image(systemName: "bell.fill")
+    .onTapGesture {
+        withAnimation(.easeOut(duration: 0.1)) { rotation = 15 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation { rotation = -15 }
+        }
+        // ... more manual timing - error prone
+    }
+```
+
+### KeyframeTimeline (iOS 17+)
+
+Query animation values directly for testing or non-SwiftUI use.
+
+```swift
+let timeline = KeyframeTimeline(initialValue: AnimationValues()) {
+    KeyframeTrack(\.scale) {
+        CubicKeyframe(1.2, duration: 0.25)
+        CubicKeyframe(1.0, duration: 0.25)
+    }
+}
+
+let midpoint = timeline.value(time: 0.25)
+print(midpoint.scale)  // Value at 0.25 seconds
+```
+
+---
+
+## Animation Completion Handlers (iOS 17+)
+
+Execute code when animations finish.
+
+### With withAnimation
+
+```swift
+// GOOD - completion with withAnimation
+Button("Animate") {
+    withAnimation(.spring) {
+        isExpanded.toggle()
+    } completion: {
+        showNextStep = true
+    }
+}
+```
+
+### With Transaction (For Reexecution)
+
+```swift
+// GOOD - completion fires on every trigger change
+Circle()
+    .scaleEffect(bounceCount % 2 == 0 ? 1.0 : 1.2)
+    .transaction(value: bounceCount) { transaction in
+        transaction.animation = .spring
+        transaction.addAnimationCompletion {
+            message = "Bounce \(bounceCount) complete"
+        }
+    }
+
+// BAD - completion only fires ONCE (no value parameter)
+Circle()
+    .scaleEffect(bounceCount % 2 == 0 ? 1.0 : 1.2)
+    .animation(.spring, value: bounceCount)
+    .transaction { transaction in  // No value!
+        transaction.addAnimationCompletion {
+            completionCount += 1  // Only fires once, ever
+        }
+    }
+```
+
+---
+
+## Quick Reference
+
+### Transactions (All iOS versions)
+- `withTransaction` is the explicit form of `withAnimation`
+- Implicit animations override explicit (later in view tree wins)
+- Use `disablesAnimations` to prevent override
+- Use `.transaction { $0.animation = nil }` to remove animation
+
+### Custom Transaction Keys (iOS 17+)
+- Pass metadata through animation system via `TransactionKey`
+
+### Phase Animations (iOS 17+)
+- Use for multi-step sequences returning to start
+- Prefer enum phases for clarity
+- Each phase change is a separate animation
+- Use `trigger` parameter for one-shot animations
+
+### Keyframe Animations (iOS 17+)
+- Use for precise timing control
+- Tracks run in parallel
+- Use `KeyframeTimeline` for testing/advanced use
+- Prefer over manual DispatchQueue timing
+
+### Completion Handlers (iOS 17+)
+- Use `withAnimation(.animation) { } completion: { }` for one-shot completion handlers
+- Use `.transaction(value:)` for handlers that should refire on every value change
+- Without `value:` parameter, completion only fires once
+```
+
+---
+
+## 5. list-patterns.md
+
+```markdown
+# SwiftUI List Patterns Reference
+
+## ForEach Identity and Stability
+
+**Always provide stable identity for `ForEach`.** Never use `.indices` for dynamic content.
+
+```swift
+// Good - stable identity via Identifiable
+extension User: Identifiable {
+    var id: String { userId }
+}
+
+ForEach(users) { user in
+    UserRow(user: user)
+}
+
+// Good - stable identity via keypath
+ForEach(users, id: \.userId) { user in
+    UserRow(user: user)
+}
+
+// Wrong - indices create static content
+ForEach(users.indices, id: \.self) { index in
+    UserRow(user: users[index])  // Can crash on removal!
+}
+
+// Wrong - unstable identity
+ForEach(users, id: \.self) { user in
+    UserRow(user: user)  // Only works if User is Hashable and stable
+}
+```
+
+**Critical**: Ensure **constant number of views per element** in `ForEach`:
+
+```swift
+// Good - consistent view count
+ForEach(items) { item in
+    ItemRow(item: item)
+}
+
+// Bad - variable view count breaks identity
+ForEach(items) { item in
+    if item.isSpecial {
+        SpecialRow(item: item)
+        DetailRow(item: item)
+    } else {
+        RegularRow(item: item)
+    }
+}
+```
+
+**Avoid inline filtering:**
+
+```swift
+// Bad - unstable identity, changes on every update
+ForEach(items.filter { $0.isEnabled }) { item in
+    ItemRow(item: item)
+}
+
+// Good - prefilter and cache
+@State private var enabledItems: [Item] = []
+
+var body: some View {
+    ForEach(enabledItems) { item in
+        ItemRow(item: item)
+    }
+    .onChange(of: items) { _, newItems in
+        enabledItems = newItems.filter { $0.isEnabled }
+    }
+}
+```
+
+**Avoid `AnyView` in list rows:**
+
+```swift
+// Bad - hides identity, increases cost
+ForEach(items) { item in
+    AnyView(item.isSpecial ? SpecialRow(item: item) : RegularRow(item: item))
+}
+
+// Good - Create a unified row view
+ForEach(items) { item in
+    ItemRow(item: item)
+}
+
+struct ItemRow: View {
+    let item: Item
+
+    var body: some View {
+        if item.isSpecial {
+            SpecialRow(item: item)
+        } else {
+            RegularRow(item: item)
+        }
+    }
+}
+```
+
+**Why**: Stable identity is critical for performance and animations. Unstable identity causes excessive diffing, broken animations, and potential crashes.
+
+## Enumerated Sequences
+
+**Always convert enumerated sequences to arrays. To be able to use them in a ForEach.**
+
+```swift
+let items = ["A", "B", "C"]
+
+// Correct
+ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+    Text("\(index): \(item)")
+}
+
+// Wrong - Doesn't compile, enumerated() isn't an array
+ForEach(items.enumerated(), id: \.offset) { index, item in
+    Text("\(index): \(item)")
+}
+```
+
+## List with Custom Styling
+
+```swift
+// Remove default background and separators
+List(items) { item in
+    ItemRow(item: item)
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        .listRowSeparator(.hidden)
+}
+.listStyle(.plain)
+.scrollContentBackground(.hidden)
+.background(Color.customBackground)
+.environment(\.defaultMinListRowHeight, 1)  // Allows custom row heights
+```
+
+## List with Pull-to-Refresh
+
+```swift
+List(items) { item in
+    ItemRow(item: item)
+}
+.refreshable {
+    await loadItems()
+}
+```
+
+## Summary Checklist
+
+- [ ] ForEach uses stable identity (never `.indices` for dynamic content)
+- [ ] Constant number of views per ForEach element
+- [ ] No inline filtering in ForEach (prefilter and cache instead)
+- [ ] No `AnyView` in list rows
+- [ ] Don't convert enumerated sequences to arrays
+- [ ] Use `.refreshable` for pull-to-refresh
+- [ ] Custom list styling uses appropriate modifiers
+```
+
+---
+
+## 6. layout-best-practices.md
+
+```markdown
+# SwiftUI Layout Best Practices Reference
+
+## Relative Layout Over Constants
+
+**Use dynamic layout calculations instead of hard-coded values.**
+
+```swift
+// Good - relative to actual layout
+GeometryReader { geometry in
+    VStack {
+        HeaderView()
+            .frame(height: geometry.size.height * 0.2)
+        ContentView()
+    }
+}
+
+// Avoid - magic numbers that don't adapt
+VStack {
+    HeaderView()
+        .frame(height: 150)  // Doesn't adapt to different screens
+    ContentView()
+}
+```
+
+**Why**: "Hard-coded values don't account for different screen sizes, orientations, or dynamic content"
+
+## Context-Agnostic Views
+
+**Views should work in any context.** Never assume presentation style or screen size.
+
+```swift
+// Good - adapts to given space
+struct ProfileCard: View {
+    let user: User
+    
+    var body: some View {
+        VStack {
+            Image(user.avatar)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+            Text(user.name)
+            Spacer()
+        }
+        .padding()
+    }
+}
+
+// Avoid - assumes full screen
+struct ProfileCard: View {
+    let user: User
+    
+    var body: some View {
+        VStack {
+            Image(user.avatar)
+                .frame(width: UIScreen.main.bounds.width)  // Wrong!
+            Text(user.name)
+        }
+    }
+}
+```
+
+**Why**: "Views should work as full screens, modals, sheets, popovers, or embedded content."
+
+## Own Your Container
+
+**Custom views should own static containers but not lazy/repeatable ones.**
+
+```swift
+// Good - owns static container
+struct HeaderView: View {
+    var body: some View {
+        HStack {
+            Image(systemName: "star")
+            Text("Title")
+            Spacer()
+        }
+    }
+}
+
+// Avoid - missing container
+struct HeaderView: View {
+    var body: some View {
+        Image(systemName: "star")
+        Text("Title")
+        // Caller must wrap in HStack
+    }
+}
+
+// Good - caller owns lazy container
+struct FeedView: View {
+    let items: [Item]
+    
+    var body: some View {
+        LazyVStack {
+            ForEach(items) { item in
+                ItemRow(item: item)
+            }
+        }
+    }
+}
+```
+
+## Layout Performance
+
+### Avoid Layout Thrash
+
+**Minimize deep view hierarchies and excessive layout dependencies.**
+
+```swift
+// Bad - deep nesting, excessive layout passes
+VStack {
+    HStack {
+        VStack {
+            HStack {
+                VStack {
+                    Text("Deep")
+                }
+            }
+        }
+    }
+}
+
+// Good - flatter hierarchy
+VStack {
+    Text("Shallow")
+    Text("Structure")
+}
+```
+
+**Avoid excessive `GeometryReader` and preference chains:**
+
+```swift
+// Bad - multiple geometry readers cause layout thrash
+GeometryReader { outerGeometry in
+    VStack {
+        GeometryReader { innerGeometry in
+            // Layout recalculates multiple times
+        }
+    }
+}
+
+// Good - single geometry reader or use alternatives (iOS 17+)
+containerRelativeFrame(.horizontal) { width, _ in
+    width * 0.8
+}
+```
+
+**Gate frequent geometry updates:**
+
+```swift
+// Bad - updates on every pixel change
+.onPreferenceChange(ViewSizeKey.self) { size in
+    currentSize = size
+}
+
+// Good - gate by threshold
+.onPreferenceChange(ViewSizeKey.self) { size in
+    let difference = abs(size.width - currentSize.width)
+    if difference > 10 {  // Only update if significant change
+        currentSize = size
+    }
+}
+```
+
+## View Logic and Testability
+
+### Separate View Logic from Views
+
+**Place view logic into view models or similar, so it can be tested.**
+
+> **iOS 17+**: Use `@Observable` macro with `@State` for view models.
+
+```swift
+// Good - logic in testable model (iOS 17+)
+@Observable
+@MainActor
+final class LoginViewModel {
+    var email = ""
+    var password = ""
+    var isValid: Bool {
+        !email.isEmpty && password.count >= 8
+    }
+
+    func login() async throws {
+        // Business logic here
+    }
+}
+
+struct LoginView: View {
+    @State private var viewModel = LoginViewModel()
+
+    var body: some View {
+        Form {
+            TextField("Email", text: $viewModel.email)
+            SecureField("Password", text: $viewModel.password)
+            Button("Login") {
+                Task {
+                    try? await viewModel.login()
+                }
+            }
+            .disabled(!viewModel.isValid)
+        }
+    }
+}
+```
+
+> **iOS 16 and earlier**: Use `ObservableObject` protocol with `@StateObject`.
+
+```swift
+// Good - logic in testable model (iOS 16 and earlier)
+@MainActor
+final class LoginViewModel: ObservableObject {
+    @Published var email = ""
+    @Published var password = ""
+    var isValid: Bool {
+        !email.isEmpty && password.count >= 8
+    }
+
+    func login() async throws {
+        // Business logic here
+    }
+}
+
+struct LoginView: View {
+    @StateObject private var viewModel = LoginViewModel()
+
+    var body: some View {
+        Form {
+            TextField("Email", text: $viewModel.email)
+            SecureField("Password", text: $viewModel.password)
+            Button("Login") {
+                Task {
+                    try? await viewModel.login()
+                }
+            }
+            .disabled(!viewModel.isValid)
+        }
+    }
+}
+```
+
+```swift
+// Bad - logic embedded in view
+struct LoginView: View {
+    @State private var email = ""
+    @State private var password = ""
+    
+    var body: some View {
+        Form {
+            TextField("Email", text: $email)
+            SecureField("Password", text: $password)
+            Button("Login") {
+                // Business logic directly in view - hard to test
+                Task {
+                    if !email.isEmpty && password.count >= 8 {
+                        // Login logic...
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+**Note**: This is about separating business logic for testability, not about enforcing specific architectures like MVVM. The goal is to make logic testable while keeping views simple.
+
+## Action Handlers
+
+**Separate layout from logic.** View body should reference action methods, not contain logic.
+
+```swift
+// Good - action references method
+struct PublishView: View {
+    @State private var viewModel = PublishViewModel()
+    
+    var body: some View {
+        Button("Publish Project", action: viewModel.handlePublish)
+    }
+}
+
+// Avoid - logic in closure
+struct PublishView: View {
+    @State private var isLoading = false
+    @State private var showError = false
+    
+    var body: some View {
+        Button("Publish Project") {
+            isLoading = true
+            apiService.publish(project) { result in
+                if case .error = result {
+                    showError = true
+                }
+                isLoading = false
+            }
+        }
+    }
+}
+```
+
+**Why**: "Separating logic from layout improves readability, testability, and maintainability."
+
+## Summary Checklist
+
+- [ ] Use relative layout over hard-coded constants
+- [ ] Views work in any context (don't assume screen size)
+- [ ] Custom views own static containers
+- [ ] Avoid deep view hierarchies (layout thrash)
+- [ ] Gate frequent geometry updates by thresholds
+- [ ] View logic separated into testable models/classes
+- [ ] Action handlers reference methods, not inline logic
+- [ ] Avoid excessive `GeometryReader` usage
+- [ ] Use `containerRelativeFrame()` when appropriate
+```
+
+---
+
+## 7. scroll-patterns.md
+
+```markdown
+# SwiftUI ScrollView Patterns Reference
+
+## ScrollView Modifiers
+
+### Hiding Scroll Indicators
+
+**Use `.scrollIndicators(.hidden)` modifier instead of initializer parameter.**
+
+```swift
+// Modern (Correct)
+ScrollView {
+    content
+}
+.scrollIndicators(.hidden)
+
+// Legacy (Avoid)
+ScrollView(showsIndicators: false) {
+    content
+}
+```
+
+## ScrollViewReader for Programmatic Scrolling
+
+**Use `ScrollViewReader` for scroll-to-top, scroll-to-bottom, and anchor-based jumps.**
+
+```swift
+struct ChatView: View {
+    @State private var messages: [Message] = []
+    private let bottomID = "bottom"
+    
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack {
+                    ForEach(messages) { message in
+                        MessageRow(message: message)
+                            .id(message.id)
+                    }
+                    Color.clear
+                        .frame(height: 1)
+                        .id(bottomID)
+                }
+            }
+            .onChange(of: messages.count) { _, _ in
+                withAnimation {
+                    proxy.scrollTo(bottomID, anchor: .bottom)
+                }
+            }
+            .onAppear {
+                proxy.scrollTo(bottomID, anchor: .bottom)
+            }
+        }
+    }
+}
+```
+
+### Scroll-to-Top Pattern
+
+```swift
+struct FeedView: View {
+    @State private var items: [Item] = []
+    @State private var scrollToTop = false
+    private let topID = "top"
+    
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack {
+                    Color.clear
+                        .frame(height: 1)
+                        .id(topID)
+                    
+                    ForEach(items) { item in
+                        ItemRow(item: item)
+                    }
+                }
+            }
+            .onChange(of: scrollToTop) { _, shouldScroll in
+                if shouldScroll {
+                    withAnimation {
+                        proxy.scrollTo(topID, anchor: .top)
+                    }
+                    scrollToTop = false
+                }
+            }
+        }
+    }
+}
+```
+
+**Why**: "ScrollViewReader provides programmatic scroll control with stable anchors. Always use stable IDs and explicit animations."
+
+## Scroll Position Tracking
+
+### Basic Scroll Position
+
+**Avoid** - Storing scroll position directly triggers view updates on every scroll frame:
+
+```swift
+// Bad Practice - causes unnecessary re-renders
+struct ContentView: View {
+    @State private var scrollPosition: CGFloat = 0
+
+    var body: some View {
+        ScrollView {
+            content
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(
+                                key: ScrollOffsetPreferenceKey.self,
+                                value: geometry.frame(in: .named("scroll")).minY
+                            )
+                    }
+                )
+        }
+        .coordinateSpace(name: "scroll")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            scrollPosition = value
+        }
+    }
+}
+```
+
+**Preferred** - Check scroll position and update a flag based on thresholds for smoother, more efficient scrolling:
+
+```swift
+// Good Practice - only updates state when crossing threshold
+struct ContentView: View {
+    @State private var startAnimation: Bool = false
+
+    var body: some View {
+        ScrollView {
+            content
+                .background(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(
+                                key: ScrollOffsetPreferenceKey.self,
+                                value: geometry.frame(in: .named("scroll")).minY
+                            )
+                    }
+                )
+        }
+        .coordinateSpace(name: "scroll")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            if value < -100 {
+                startAnimation = true
+            } else {
+                startAnimation = false
+            }
+        }
+    }
+}
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+```
+
+### Scroll-Based Header Visibility
+
+```swift
+struct ContentView: View {
+    @State private var showHeader = true
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            if showHeader {
+                HeaderView()
+                    .transition(.move(edge: .top))
+            }
+            
+            ScrollView {
+                content
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear
+                                .preference(
+                                    key: ScrollOffsetPreferenceKey.self,
+                                    value: geometry.frame(in: .named("scroll")).minY
+                                )
+                        }
+                    )
+            }
+            .coordinateSpace(name: "scroll")
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                if offset < -50 { // Scrolling down
+                   withAnimation { showHeader = false }
+                } else if offset > 50 { // Scrolling up
+                  withAnimation { showHeader = true }
+                }
+            }
+        }
+    }
+}
+```
+
+## Scroll Transitions and Effects
+
+> **iOS 17+**: All APIs in this section require iOS 17 or later.
+
+### Scroll-Based Opacity
+
+```swift
+struct ParallaxView: View {
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 20) {
+                ForEach(items) { item in
+                    ItemCard(item: item)
+                        .visualEffect { content, geometry in
+                            let frame = geometry.frame(in: .scrollView)
+                            let distance = min(0, frame.minY)
+                            return content
+                                .opacity(1 + distance / 200)
+                        }
+                }
+            }
+        }
+    }
+}
+```
+
+### Parallax Effect
+
+```swift
+struct ParallaxHeader: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                Image("hero")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 300)
+                    .visualEffect { content, geometry in
+                        let offset = geometry.frame(in: .scrollView).minY
+                        return content
+                            .offset(y: offset > 0 ? -offset * 0.5 : 0)
+                    }
+                    .clipped()
+                
+                ContentView()
+            }
+        }
+    }
+}
+```
+
+## Scroll Target Behavior
+
+> **iOS 17+**: All APIs in this section require iOS 17 or later.
+
+### Paging ScrollView
+
+```swift
+struct PagingView: View {
+    var body: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 0) {
+                ForEach(pages) { page in
+                    PageView(page: page)
+                        .containerRelativeFrame(.horizontal)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.paging)
+    }
+}
+```
+
+### Snap to Items
+
+```swift
+struct SnapScrollView: View {
+    var body: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 16) {
+                ForEach(items) { item in
+                    ItemCard(item: item)
+                        .frame(width: 280)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .contentMargins(.horizontal, 20)
+    }
+}
+```
+
+## Summary Checklist
+
+- [ ] Use `.scrollIndicators(.hidden)` instead of initializer parameter
+- [ ] Use `ScrollViewReader` with stable IDs for programmatic scrolling
+- [ ] Always use explicit animations with `scrollTo()`
+- [ ] Use `.visualEffect` for scroll-based visual changes
+- [ ] Use `.scrollTargetBehavior(.paging)` for paging behavior
+- [ ] Use `.scrollTargetBehavior(.viewAligned)` for snap-to-item behavior
+- [ ] Gate frequent scroll position updates by thresholds
+- [ ] Use preference keys for custom scroll position tracking
+```
+
+---
+
+## 8. sheet-navigation-patterns.md
+
+```markdown
+# SwiftUI Sheet and Navigation Patterns Reference
+
+## Sheet Patterns
+
+### Item-Driven Sheets (Preferred)
+
+**Use `.sheet(item:)` instead of `.sheet(isPresented:)` when presenting model-based content.**
+
+```swift
+// Good - item-driven
+@State private var selectedItem: Item?
+
+var body: some View {
+    List(items) { item in
+        Button(item.name) {
+            selectedItem = item
+        }
+    }
+    .sheet(item: $selectedItem) { item in
+        ItemDetailSheet(item: item)
+    }
+}
+
+// Avoid - boolean flag requires separate state
+@State private var showSheet = false
+@State private var selectedItem: Item?
+
+var body: some View {
+    List(items) { item in
+        Button(item.name) {
+            selectedItem = item
+            showSheet = true
+        }
+    }
+    .sheet(isPresented: $showSheet) {
+        if let selectedItem {
+            ItemDetailSheet(item: selectedItem)
+        }
+    }
+}
+```
+
+**Why**: ".sheet(item:) automatically handles presentation state and avoids optional unwrapping in the sheet body."
+
+### Sheets Own Their Actions
+
+**Sheets should handle their own dismiss and actions internally.**
+
+```swift
+// Good - sheet owns its actions
+struct EditItemSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(DataStore.self) private var store
+    
+    let item: Item
+    @State private var name: String
+    @State private var isSaving = false
+    
+    init(item: Item) {
+        self.item = item
+        _name = State(initialValue: item.name)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Name", text: $name)
+            }
+            .navigationTitle("Edit Item")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isSaving ? "Saving..." : "Save") {
+                        Task { await save() }
+                    }
+                    .disabled(isSaving || name.isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func save() async {
+        isSaving = true
+        await store.updateItem(item, name: name)
+        dismiss()
+    }
+}
+
+// Avoid - parent manages sheet actions via closures
+struct ParentView: View {
+    @State private var selectedItem: Item?
+    
+    var body: some View {
+        List(items) { item in
+            Button(item.name) {
+                selectedItem = item
+            }
+        }
+        .sheet(item: $selectedItem) { item in
+            EditItemSheet(
+                item: item,
+                onSave: { newName in
+                    // Parent handles save
+                },
+                onCancel: {
+                    selectedItem = nil
+                }
+            )
+        }
+    }
+}
+```
+
+**Why**: "Sheets that own their actions are more reusable and don't require callback prop-drilling."
+
+## Navigation Patterns
+
+### Type-Safe Navigation with NavigationStack
+
+```swift
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                NavigationLink("Profile", value: Route.profile)
+                NavigationLink("Settings", value: Route.settings)
+            }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .profile:
+                    ProfileView()
+                case .settings:
+                    SettingsView()
+                }
+            }
+        }
+    }
+}
+
+enum Route: Hashable {
+    case profile
+    case settings
+}
+```
+
+### Programmatic Navigation
+
+```swift
+struct ContentView: View {
+    @State private var navigationPath = NavigationPath()
+    
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            List {
+                Button("Go to Detail") {
+                    navigationPath.append(DetailRoute.item(id: 1))
+                }
+            }
+            .navigationDestination(for: DetailRoute.self) { route in
+                switch route {
+                case .item(let id):
+                    ItemDetailView(id: id)
+                }
+            }
+        }
+    }
+}
+
+enum DetailRoute: Hashable {
+    case item(id: Int)
+}
+```
+
+### Navigation with State Restoration
+
+```swift
+struct ContentView: View {
+    @State private var navigationPath = NavigationPath()
+    
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            RootView()
+                .navigationDestination(for: Route.self) { route in
+                    destinationView(for: route)
+                }
+        }
+    }
+    
+    @ViewBuilder
+    private func destinationView(for route: Route) -> some View {
+        switch route {
+        case .profile:
+            ProfileView()
+        case .settings:
+            SettingsView()
+        }
+    }
+}
+```
+
+## Presentation Modifiers
+
+### Full Screen Cover
+
+```swift
+struct ContentView: View {
+    @State private var showFullScreen = false
+    
+    var body: some View {
+        Button("Show Full Screen") {
+            showFullScreen = true
+        }
+        .fullScreenCover(isPresented: $showFullScreen) {
+            FullScreenView()
+        }
+    }
+}
+```
+
+### Popover
+
+```swift
+struct ContentView: View {
+    @State private var showPopover = false
+    
+    var body: some View {
+        Button("Show Popover") {
+            showPopover = true
+        }
+        .popover(isPresented: $showPopover) {
+            PopoverContentView()
+                .presentationCompactAdaptation(.popover)  // Don't adapt to sheet on iPhone
+        }
+    }
+}
+```
+
+### Alert with Actions
+
+```swift
+struct ContentView: View {
+    @State private var showAlert = false
+    
+    var body: some View {
+        Button("Show Alert") {
+            showAlert = true
+        }
+        .alert("Delete Item?", isPresented: $showAlert) {
+            Button("Delete", role: .destructive) {
+                deleteItem()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+    }
+}
+```
+
+### Confirmation Dialog
+
+```swift
+struct ContentView: View {
+    @State private var showDialog = false
+    
+    var body: some View {
+        Button("Show Options") {
+            showDialog = true
+        }
+        .confirmationDialog("Choose an option", isPresented: $showDialog) {
+            Button("Option 1") { handleOption1() }
+            Button("Option 2") { handleOption2() }
+            Button("Cancel", role: .cancel) { }
+        }
+    }
+}
+```
+
+## Summary Checklist
+
+- [ ] Use `.sheet(item:)` for model-based sheets
+- [ ] Sheets own their actions and dismiss internally
+- [ ] Use `NavigationStack` with `navigationDestination(for:)` for type-safe navigation
+- [ ] Use `NavigationPath` for programmatic navigation
+- [ ] Use appropriate presentation modifiers (sheet, fullScreenCover, popover)
+- [ ] Alerts and confirmation dialogs use modern API with actions
+- [ ] Avoid passing dismiss/save callbacks to sheets
+- [ ] Navigation state can be saved/restored when needed
+```
+
+---
+
+## 9. text-formatting.md
+
+```markdown
+# SwiftUI Text Formatting Reference
+
+## Modern Text Formatting
+
+**Never use C-style `String(format:)` with Text. Always use format parameters.**
+
+## Number Formatting
+
+### Basic Number Formatting
+
+```swift
+let value = 42.12345
+
+// Modern (Correct)
+Text(value, format: .number.precision(.fractionLength(2)))
+// Output: "42.12"
+
+Text(abs(value), format: .number.precision(.fractionLength(2)))
+// Output: "42.12" (absolute value)
+
+// Legacy (Avoid)
+Text(String(format: "%.2f", abs(value)))
+```
+
+### Integer Formatting
+
+```swift
+let count = 1234567
+
+// With grouping separator
+Text(count, format: .number)
+// Output: "1,234,567" (locale-dependent)
+
+// Without grouping
+Text(count, format: .number.grouping(.never))
+// Output: "1234567"
+```
+
+### Decimal Precision
+
+```swift
+let price = 19.99
+
+// Fixed decimal places
+Text(price, format: .number.precision(.fractionLength(2)))
+// Output: "19.99"
+
+// Significant digits
+Text(price, format: .number.precision(.significantDigits(3)))
+// Output: "20.0"
+
+// Integer-only
+Text(price, format: .number.precision(.integerLength(1...)))
+// Output: "19"
+```
+
+## Currency Formatting
+
+```swift
+let price = 19.99
+
+// Correct - with currency code
+Text(price, format: .currency(code: "USD"))
+// Output: "$19.99"
+
+// With locale
+Text(price, format: .currency(code: "EUR").locale(Locale(identifier: "de_DE")))
+// Output: "19,99 €"
+
+// Avoid - manual formatting
+Text(String(format: "$%.2f", price))
+```
+
+## Percentage Formatting
+
+```swift
+let percentage = 0.856
+
+// Correct - with precision
+Text(percentage, format: .percent.precision(.fractionLength(1)))
+// Output: "85.6%"
+
+// Without decimal places
+Text(percentage, format: .percent.precision(.fractionLength(0)))
+// Output: "86%"
+
+// Avoid - manual calculation
+Text(String(format: "%.1f%%", percentage * 100))
+```
+
+## Date and Time Formatting
+
+### Date Formatting
+
+```swift
+let date = Date()
+
+// Date only
+Text(date, format: .dateTime.day().month().year())
+// Output: "Jan 23, 2026"
+
+// Full date
+Text(date, format: .dateTime.day().month(.wide).year())
+// Output: "January 23, 2026"
+
+// Short date
+Text(date, style: .date)
+// Output: "1/23/26"
+```
+
+### Time Formatting
+
+```swift
+let date = Date()
+
+// Time only
+Text(date, format: .dateTime.hour().minute())
+// Output: "2:30 PM"
+
+// With seconds
+Text(date, format: .dateTime.hour().minute().second())
+// Output: "2:30:45 PM"
+
+// 24-hour format
+Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)).minute())
+// Output: "14:30"
+```
+
+### Relative Date Formatting
+
+```swift
+let futureDate = Date().addingTimeInterval(3600)
+
+// Relative formatting
+Text(futureDate, style: .relative)
+// Output: "in 1 hour"
+
+Text(futureDate, style: .timer)
+// Output: "59:59" (counts down)
+```
+
+## String Searching and Comparison
+
+### Localized String Comparison
+
+**Use `localizedStandardContains()` for user-input filtering, not `contains()`.**
+
+```swift
+let searchText = "café"
+let items = ["Café Latte", "Coffee", "Tea"]
+
+// Correct - handles diacritics and case
+let filtered = items.filter { $0.localizedStandardContains(searchText) }
+// Matches "Café Latte"
+
+// Wrong - exact match only
+let filtered = items.filter { $0.contains(searchText) }
+// Might not match "Café Latte" depending on normalization
+```
+
+**Why**: `localizedStandardContains()` handles case-insensitive, diacritic-insensitive matching appropriate for user-facing search.
+
+### Case-Insensitive Comparison
+
+```swift
+let text = "Hello World"
+let search = "hello"
+
+// Correct - case-insensitive
+if text.localizedCaseInsensitiveContains(search) {
+    // Match found
+}
+
+// Also correct - for exact comparison
+if text.lowercased() == search.lowercased() {
+    // Equal
+}
+```
+
+### Localized Sorting
+
+```swift
+let names = ["Zoë", "Zara", "Åsa"]
+
+// Correct - locale-aware sorting
+let sorted = names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+// Output: ["Åsa", "Zara", "Zoë"]
+
+// Wrong - byte-wise sorting
+let sorted = names.sorted()
+// Output may not be correct for all locales
+```
+
+## Attributed Strings
+
+### Basic Attributed Text
+
+```swift
+// Using Text concatenation
+Text("Hello ")
+    .foregroundStyle(.primary)
++ Text("World")
+    .foregroundStyle(.blue)
+    .bold()
+
+// Using AttributedString
+var attributedString = AttributedString("Hello World")
+attributedString.foregroundColor = .primary
+if let range = attributedString.range(of: "World") {
+    attributedString[range].foregroundColor = .blue
+    attributedString[range].font = .body.bold()
+}
+Text(attributedString)
+```
+
+### Markdown in Text
+
+```swift
+// Simple markdown
+Text("This is **bold** and this is *italic*")
+
+// With links
+Text("Visit [Apple](https://apple.com) for more info")
+
+// Multiline markdown
+Text("""
+# Title
+This is a paragraph with **bold** text.
+- Item 1
+- Item 2
+""")
+```
+
+## Text Measurement
+
+### Measuring Text Height
+
+```swift
+// Wrong (Legacy) - GeometryReader trick
+struct MeasuredText: View {
+    let text: String
+    @State private var textHeight: CGFloat = 0
+    
+    var body: some View {
+        Text(text)
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .onAppear {
+                            textWidth = geometry.size.height
+                        }
+                }
+            )
+    }
+}
+
+// Modern (correct)
+struct MeasuredText: View {
+    let text: String
+    @State private var textHeight: CGFloat = 0
+    
+    var body: some View {
+        Text(text)
+            .onGeometryChange(for: CGFloat.self) { geometry in
+                geometry.size.height
+            } action: { newValue in
+                textHeight = newValue
+            }
+    }
+}
+```
+
+## Summary Checklist
+
+- [ ] Use `.format` parameters with Text instead of `String(format:)`
+- [ ] Use `.currency(code:)` for currency formatting
+- [ ] Use `.percent` for percentage formatting
+- [ ] Use `.dateTime` for date/time formatting
+- [ ] Use `localizedStandardContains()` for user-input search
+- [ ] Use `localizedStandardCompare()` for locale-aware sorting
+- [ ] Use Text concatenation or AttributedString for styled text
+- [ ] Use markdown syntax for simple text formatting
+- [ ] All formatting respects user's locale and preferences
+
+**Why**: Modern format parameters are type-safe, localization-aware, and integrate better with SwiftUI's text rendering.
+```
+
+---
+
+## 10. image-optimization.md
+
+```markdown
+# SwiftUI Image Optimization Reference
+
+## AsyncImage Best Practices
+
+### Basic AsyncImage with Phase Handling
+
+```swift
+// Good - handles loading and error states
+AsyncImage(url: imageURL) { phase in
+    switch phase {
+    case .empty:
+        ProgressView()
+    case .success(let image):
+        image
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+    case .failure:
+        Image(systemName: "photo")
+            .foregroundStyle(.secondary)
+    @unknown default:
+        EmptyView()
+    }
+}
+.frame(width: 200, height: 200)
+```
+
+### AsyncImage with Custom Placeholder
+
+```swift
+struct ImageView: View {
+    let url: URL?
+    
+    var body: some View {
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case .empty:
+                ZStack {
+                    Color.gray.opacity(0.2)
+                    ProgressView()
+                }
+            case .success(let image):
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            case .failure:
+                ZStack {
+                    Color.gray.opacity(0.2)
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.secondary)
+                }
+            @unknown default:
+                EmptyView()
+            }
+        }
+        .clipShape(.rect(cornerRadius: 12))
+    }
+}
+```
+
+### AsyncImage with Transition
+
+```swift
+AsyncImage(url: imageURL) { phase in
+    switch phase {
+    case .empty:
+        ProgressView()
+    case .success(let image):
+        image
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .transition(.opacity)
+    case .failure:
+        Image(systemName: "photo")
+    @unknown default:
+        EmptyView()
+    }
+}
+.animation(.easeInOut, value: imageURL)
+```
+
+## Image Decoding and Downsampling (Optional Optimization)
+
+**When you encounter `UIImage(data:)` usage, consider suggesting image downsampling as a potential performance improvement**, especially for large images in lists or grids.
+
+### Current Pattern That Could Be Optimized
+
+```swift
+// Current pattern - decodes full image on main thread
+// Unsafe - force unwrap can crash if imageData is invalid
+Image(uiImage: UIImage(data: imageData)!)
+    .resizable()
+    .aspectRatio(contentMode: .fit)
+    .frame(width: 200, height: 200)
+```
+
+### Suggested Optimization Pattern
+
+```swift
+// Suggested optimization - decode and downsample off main thread
+struct OptimizedImageView: View {
+    let imageData: Data
+    let targetSize: CGSize
+    @State private var processedImage: UIImage?
+    
+    var body: some View {
+        Group {
+            if let processedImage {
+                Image(uiImage: processedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            processedImage = await decodeAndDownsample(imageData, targetSize: targetSize)
+        }
+    }
+    
+    private func decodeAndDownsample(_ data: Data, targetSize: CGSize) async -> UIImage? {
+        await Task.detached {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+                return nil
+            }
+            
+            let options: [CFString: Any] = [
+                kCGImageSourceThumbnailMaxPixelSize: max(targetSize.width, targetSize.height),
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true
+            ]
+            
+            guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+                return nil
+            }
+            
+            return UIImage(cgImage: cgImage)
+        }.value
+    }
+}
+
+// Usage
+OptimizedImageView(
+    imageData: imageData,
+    targetSize: CGSize(width: 200, height: 200)
+)
+```
+
+### Reusable Image Downsampling Helper
+
+```swift
+actor ImageProcessor {
+    func downsample(data: Data, to targetSize: CGSize) -> UIImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            return nil
+        }
+        
+        let maxDimension = max(targetSize.width, targetSize.height) * UIScreen.main.scale
+        
+        let options: [CFString: Any] = [
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false
+        ]
+        
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: cgImage)
+    }
+}
+
+// Usage in view
+struct ImageView: View {
+    let imageData: Data
+    let targetSize: CGSize
+    @State private var image: UIImage?
+    
+    private let processor = ImageProcessor()
+    
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            image = await processor.downsample(data: imageData, to: targetSize)
+        }
+    }
+}
+```
+
+### When to Suggest This Optimization
+
+Mention this optimization when you see `UIImage(data:)` usage, particularly in:
+- Scrollable content (List, ScrollView with LazyVStack/LazyHStack)
+- Grid layouts with many images
+- Image galleries or carousels
+- Any scenario where large images are displayed at smaller sizes
+
+**Don't automatically apply it**—present it as an optional improvement for performance-sensitive scenarios.
+
+## SF Symbols
+
+### Using SF Symbols
+
+```swift
+// Basic symbol
+Image(systemName: "star.fill")
+    .foregroundStyle(.yellow)
+
+// With rendering mode
+Image(systemName: "heart.fill")
+    .symbolRenderingMode(.multicolor)
+
+// With variable color
+Image(systemName: "speaker.wave.3.fill")
+    .symbolRenderingMode(.hierarchical)
+    .foregroundStyle(.blue)
+
+// Animated symbols (iOS 17+)
+Image(systemName: "antenna.radiowaves.left.and.right")
+    .symbolEffect(.variableColor)
+```
+
+### SF Symbol Variants
+
+```swift
+// Circle variant
+Image(systemName: "star.circle.fill")
+
+// Square variant
+Image(systemName: "star.square.fill")
+
+// With badge
+Image(systemName: "folder.badge.plus")
+```
+
+## Image Rendering
+
+### ImageRenderer for Snapshots
+
+```swift
+// Render SwiftUI view to UIImage
+let renderer = ImageRenderer(content: myView)
+renderer.scale = UIScreen.main.scale
+
+if let uiImage = renderer.uiImage {
+    // Use the image (save, share, etc.)
+}
+
+// Render to CGImage
+if let cgImage = renderer.cgImage {
+    // Use CGImage
+}
+```
+
+### Rendering with Custom Size
+
+```swift
+let renderer = ImageRenderer(content: myView)
+renderer.proposedSize = ProposedViewSize(width: 400, height: 300)
+
+if let uiImage = renderer.uiImage {
+    // Image rendered at 400x300 points
+}
+```
+
+## Summary Checklist
+
+- [ ] Use `AsyncImage` with proper phase handling
+- [ ] Handle empty, success, and failure states
+- [ ] Consider downsampling for `UIImage(data:)` in performance-sensitive scenarios
+- [ ] Decode and downsample images off the main thread
+- [ ] Use appropriate target sizes for downsampling
+- [ ] Consider image caching for frequently accessed images
+- [ ] Use SF Symbols with appropriate rendering modes
+- [ ] Use `ImageRenderer` for rendering SwiftUI views to images
+
+**Performance Note**: Image downsampling is an optional optimization. Only suggest it when you encounter `UIImage(data:)` usage in performance-sensitive contexts like scrollable lists or grids.
+```
+
+Sources:
+- [view-structure.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/view-structure.md)
+- [animation-basics.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/animation-basics.md)
+- [animation-transitions.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/animation-transitions.md)
+- [animation-advanced.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/animation-advanced.md)
+- [list-patterns.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/list-patterns.md)
+- [layout-best-practices.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/layout-best-practices.md)
+- [scroll-patterns.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/scroll-patterns.md)
+- [sheet-navigation-patterns.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/sheet-navigation-patterns.md)
+- [text-formatting.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/text-formatting.md)
+- [image-optimization.md](https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/refs/heads/main/swiftui-expert-skill/references/image-optimization.md)</result>
+<usage>total_tokens: 49543
+tool_uses: 10
+duration_ms: 306481</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-504/-Users-eryk-napierala-Development-fasola/tasks/a92961d.output

@@ -1,9 +1,11 @@
 {
   "cli_version": "0.4.4",
   "checkpoint_id": "ea0726f2eda6",
+  "session_id": "8e48a703-6a9a-4274-84f0-2883d81c647e",
   "strategy": "manual-commit",
+  "created_at": "2026-02-17T22:54:46.768379Z",
   "branch": "feat/image_zoom",
-  "checkpoints_count": 3,
+  "checkpoints_count": 2,
   "files_touched": [
     ".claude/agents/expo/expo-expert.md",
     ".claude/agents/react-native/react-native-expert.md",
@@ -19,27 +21,23 @@
     ".claude/agents/swift-ios/swift-ios-expert.md",
     "docs/ios_swift_agent_research.md"
   ],
-  "sessions": [
-    {
-      "metadata": "/ea/0726f2eda6/0/metadata.json",
-      "transcript": "/ea/0726f2eda6/0/full.jsonl",
-      "context": "/ea/0726f2eda6/0/context.md",
-      "content_hash": "/ea/0726f2eda6/0/content_hash.txt",
-      "prompt": "/ea/0726f2eda6/0/prompt.txt"
-    },
-    {
-      "metadata": "/ea/0726f2eda6/1/metadata.json",
-      "transcript": "/ea/0726f2eda6/1/full.jsonl",
-      "context": "/ea/0726f2eda6/1/context.md",
-      "content_hash": "/ea/0726f2eda6/1/content_hash.txt",
-      "prompt": "/ea/0726f2eda6/1/prompt.txt"
-    }
-  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "0388d3f9-131b-423a-839f-dc5b787de4ab",
   "token_usage": {
-    "input_tokens": 6173,
-    "cache_creation_tokens": 316127,
-    "cache_read_tokens": 2051123,
-    "output_tokens": 8732,
-    "api_call_count": 30
-  }
+    "input_tokens": 1141,
+    "cache_creation_tokens": 187736,
+    "cache_read_tokens": 1012133,
+    "output_tokens": 8060,
+    "api_call_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T22:54:46.182058Z",
+    "agent_lines": 3734,
+    "human_added": 0,
+    "human_modified": 41,
+    "human_removed": 1604,
+    "total_committed": 3775,
+    "agent_percentage": 98.91390728476821
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/8e48a703-6a9a-4274-84f0-2883d81c647e.jsonl"
 }

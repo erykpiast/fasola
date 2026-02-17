@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0401c2436162",
+  "session_id": "de59b7ce-ae49-4732-a744-5aac3f5b7a3d",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T00:17:26.891875Z",
+  "branch": "feat/ocr",
+  "checkpoints_count": 8,
+  "files_touched": [
+    "features/recipe-form/components/AddRecipeForm.tsx",
+    "features/source-selector/components/SourceSelector.tsx",
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/src/LiquidGlassInput.ios.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "de1ac793-732e-49d2-ba0b-19aa3064ad86",
+  "token_usage": {
+    "input_tokens": 82,
+    "cache_creation_tokens": 208309,
+    "cache_read_tokens": 2983598,
+    "output_tokens": 8142,
+    "api_call_count": 50
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T00:17:26.844656Z",
+    "agent_lines": 42,
+    "human_added": 84,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 126,
+    "agent_percentage": 33.33333333333333
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0401c2436162",
+  "strategy": "manual-commit",
+  "branch": "feat/ocr",
+  "checkpoints_count": 8,
+  "files_touched": [
+    "features/recipe-form/components/AddRecipeForm.tsx",
+    "features/source-selector/components/SourceSelector.tsx",
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/src/LiquidGlassInput.ios.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/04/01c2436162/0/metadata.json",
+      "transcript": "/04/01c2436162/0/full.jsonl",
+      "context": "/04/01c2436162/0/context.md",
+      "content_hash": "/04/01c2436162/0/content_hash.txt",
+      "prompt": "/04/01c2436162/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 82,
+    "cache_creation_tokens": 208309,
+    "cache_read_tokens": 2983598,
+    "output_tokens": 8142,
+    "api_call_count": 50
+  }
+}

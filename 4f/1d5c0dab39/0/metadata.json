@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "4f1d5c0dab39",
+  "session_id": "2cf44bf2-ebaa-4ab2-b0ce-f462939b7869",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T16:07:07.8481Z",
+  "branch": "feat/ocr",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/recipe/add.tsx",
+    "features/recipe-form/components/AddRecipeForm.tsx",
+    "features/source-selector/components/SourceSelector.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "02fd83a9-0eae-4cbd-884f-5a983ad76572",
+  "token_usage": {
+    "input_tokens": 17,
+    "cache_creation_tokens": 41130,
+    "cache_read_tokens": 447125,
+    "output_tokens": 2370,
+    "api_call_count": 13
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T16:07:07.750703Z",
+    "agent_lines": 24,
+    "human_added": 21,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 45,
+    "agent_percentage": 53.333333333333336
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/2cf44bf2-ebaa-4ab2-b0ce-f462939b7869.jsonl"
+}

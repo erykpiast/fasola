@@ -24,7 +24,7 @@ import { useSourceHistory } from "../hooks/useSourceHistory";
 const ADD_NEW_VALUE = "__ADD_NEW__";
 
 export interface SourceSelectorRef {
-  confirmNewSource: () => void;
+  confirmNewSource: () => Promise<string | undefined>;
   cancelEdit: () => void;
 }
 
@@ -87,16 +87,19 @@ export const SourceSelector = forwardRef<
     setTempValue(value);
   }, [value]);
 
-  const handleConfirmNewSource = useCallback(async () => {
+  const handleConfirmNewSource = useCallback(async (): Promise<
+    string | undefined
+  > => {
     const trimmedSource = newSourceText.trim();
     if (!trimmedSource) {
-      return;
+      return undefined;
     }
 
     await addSource(trimmedSource);
     onValueChange(trimmedSource, false);
     setIsEditingNewSource(false);
     setNewSourceText("");
+    return trimmedSource;
   }, [newSourceText, addSource, onValueChange]);
 
   const handleCancelEdit = useCallback(() => {

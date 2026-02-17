@@ -19,6 +19,7 @@ export function LiquidGlassInput({
   onFocus,
   onBlur,
   variant = "form",
+  autoFocus = false,
   style,
 }: LiquidGlassInputProps): JSX.Element {
   const handleChangeText = useCallback(
@@ -50,6 +51,7 @@ export function LiquidGlassInput({
       leadingSystemImage={leadingSystemImage}
       showClearButton={showClearButton}
       variant={variant}
+      autoFocus={autoFocus}
       onChangeText={handleChangeText}
       onClear={handleClear}
       onInputFocus={handleFocus}

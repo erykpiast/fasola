@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "07f2164b32c6",
+  "session_id": "cc472e73-52e2-4f4a-be7a-d48b25d00412",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T15:47:16.577079Z",
+  "branch": "feat/ocr",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "lib/photo-processor/pipelines/geometry/dewarp-pipeline.ts"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 16,
+    "cache_creation_tokens": 12641,
+    "cache_read_tokens": 278786,
+    "output_tokens": 320,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T15:47:16.519616Z",
+    "agent_lines": 31,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 31,
+    "agent_percentage": 100
+  }
+}

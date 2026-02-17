@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "07f2164b32c6",
+  "strategy": "manual-commit",
+  "branch": "feat/ocr",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "lib/photo-processor/pipelines/geometry/dewarp-pipeline.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/07/f2164b32c6/0/metadata.json",
+      "transcript": "/07/f2164b32c6/0/full.jsonl",
+      "context": "/07/f2164b32c6/0/context.md",
+      "content_hash": "/07/f2164b32c6/0/content_hash.txt",
+      "prompt": "/07/f2164b32c6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 16,
+    "cache_creation_tokens": 12641,
+    "cache_read_tokens": 278786,
+    "output_tokens": 320,
+    "api_call_count": 8
+  }
+}

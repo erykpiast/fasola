@@ -33,6 +33,7 @@ export function AddRecipeForm({
   const sourceSelectorRef = useRef<SourceSelectorRef>(null);
   const confirmRef = useRef<ConfirmButtonRef>(null);
   const [isEditingSource, setIsEditingSource] = useState(false);
+  const [hasNoSources, setHasNoSources] = useState(false);
 
   const handleEditingChange = useCallback((editing: boolean) => {
     setIsEditingSource(editing);
@@ -81,12 +82,12 @@ export function AddRecipeForm({
   }, [isEditingSource, source, onConfirm]);
 
   useEffect(() => {
-    if (isEditingSource) {
+    if (isEditingSource || hasNoSources) {
       confirmRef.current?.stop();
     } else {
       confirmRef.current?.reset();
     }
-  }, [isEditingSource]);
+  }, [isEditingSource, hasNoSources]);
 
   return (
     <KeyboardAvoidingView
@@ -111,6 +112,7 @@ export function AddRecipeForm({
             onValueChange={onSourceChange}
             onInteraction={handleSourceInteraction}
             onEditingChange={handleEditingChange}
+            onHasNoSourcesChange={setHasNoSources}
           />
           <ConfirmButton
             ref={confirmRef}

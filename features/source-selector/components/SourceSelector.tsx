@@ -35,19 +35,26 @@ export const SourceSelector = forwardRef<
     onValueChange: (source: string, isAutomatic?: boolean) => void;
     onInteraction?: () => void;
     onEditingChange?: (editing: boolean) => void;
+    onHasNoSourcesChange?: (hasNoSources: boolean) => void;
   }
 >(function SourceSelector(
-  { value, onValueChange, onInteraction, onEditingChange },
+  { value, onValueChange, onInteraction, onEditingChange, onHasNoSourcesChange },
   ref
 ): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { sources, lastUsed, addSource } = useSourceHistory();
+  const { sources, lastUsed, isLoading, addSource } = useSourceHistory();
 
   const [isEditingNewSource, setIsEditingNewSource] = useState(false);
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [newSourceText, setNewSourceText] = useState("");
   const [tempValue, setTempValue] = useState(value);
+
+  const hasNoSources = !isLoading && sources.length === 0;
+
+  useEffect(() => {
+    onHasNoSourcesChange?.(hasNoSources);
+  }, [hasNoSources, onHasNoSourcesChange]);
 
   useEffect(() => {
     if (!value && lastUsed) {
@@ -154,6 +161,15 @@ export const SourceSelector = forwardRef<
               value={ADD_NEW_VALUE}
             />
           </Picker>
+        ) : hasNoSources ? (
+          <LiquidGlassInput
+            value={value}
+            onChangeText={(text) => onValueChange(text, false)}
+            placeholder={t("sourceSelector.addNewPlaceholder")}
+            variant="form"
+            autoFocus
+            style={styles.glassSelect}
+          />
         ) : isEditingNewSource ? (
           <LiquidGlassInput
             value={newSourceText}

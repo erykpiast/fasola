@@ -1,23 +1,36 @@
 import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { type JSX } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-export function EditButton({ onPress }: { onPress: () => void }): JSX.Element {
+export function EditButton({
+  onPress,
+  disabled,
+}: {
+  onPress: () => void;
+  disabled?: boolean;
+}): JSX.Element {
   return (
-    <LiquidGlassButton
-      onPress={onPress}
-      systemImage="pencil"
-      style={styles.button}
-      accessibilityLabel="Edit"
-    />
+    <View
+      style={[styles.container, disabled && styles.disabled]}
+      pointerEvents={disabled ? "none" : "auto"}
+    >
+      <LiquidGlassButton
+        onPress={onPress}
+        systemImage="pencil"
+        accessibilityLabel="Edit"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  container: {
     position: "absolute",
     bottom: 28,
     right: 28,
     zIndex: 10,
+  },
+  disabled: {
+    opacity: 0.4,
   },
 });

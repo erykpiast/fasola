@@ -65,5 +65,20 @@
   },
   "import": {
     "confirmHint": "Confirming in {seconds}s..."
+  },
+  "processing": {
+    "messages": {
+      "first": "Analyzing the page...",
+      "m1": "Deciphering grandma's handwriting...",
+      "m2": "Reading between the lines...",
+      "m3": "Spotting the secret ingredient...",
+      "m4": "Counting pinches of salt...",
+      "m5": "Translating chef's shorthand...",
+      "m6": "Separating the wheat from the chaff...",
+      "m7": "Sifting through the flour of words...",
+      "m8": "Tasting the letters...",
+      "m9": "Letting the words simmer...",
+      "m10": "Fishing for the recipe name..."
+    }
   }
 }

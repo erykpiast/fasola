@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "ea0726f2eda6",
+  "session_id": "cb53d671-77a3-4705-a1a2-b0e2e1744990",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T22:54:46.947596Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/agents/react-native/react-native-expert.md"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 16854,
+    "cache_read_tokens": 167754,
+    "output_tokens": 27,
+    "api_call_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T22:54:46.892406Z",
+    "agent_lines": 417,
+    "human_added": 3317,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3734,
+    "agent_percentage": 11.167648634172469
+  }
+}

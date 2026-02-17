@@ -1,0 +1,56 @@
+Implement the following plan:
+
+# Plan: Create React Native Expert Agent
+
+## Context
+
+The project has a `.claude/agents/react-native/` directory with an empty `react-native-expert.md` placeholder. The React Expert agent at `.claude/agents/react/react-expert.md` serves as the structural template. Research across skills.sh (Vercel Labs 31.8K installs, Callstack 5.4K, wshobson, Expo), GitHub repositories, and official documentation informed the content.
+
+## Action
+
+Write a single file: `.claude/agents/react-native/react-native-expert.md`
+
+The file mirrors the React Expert structure exactly (same sections, same formatting conventions) with React Native / Expo specific content:
+
+### YAML Frontmatter
+- `name: react-native-expert`
+- `description`: Mobile-specific — RN crashes, slow lists, gestures, native bridge, Expo builds
+- `tools: Read, Grep, Glob, Bash, Edit, MultiEdit, Write`
+- `category: framework`, `color: blue`
+- `bundle: [react-expert, react-performance-expert]`
+- `displayName: React Native Expert`
+
+### Sections (matching react-expert.md structure)
+1. **Step 0: Recommend Specialist** — defers to react-expert (pure hooks), react-performance-expert, accessibility-expert, testing experts
+2. **Environment Detection** — RN version, Expo SDK, New Architecture, Hermes, navigation lib, animation libs, state management
+3. **8 Problem Playbooks** (each with Common Issues / Diagnosis / Prioritized Fixes / Validation / Resources):
+   - List Performance (ScrollView to FlatList to FlashList)
+   - Animations & Gestures (Reanimated worklets, Gesture Handler, UI thread)
+   - Navigation (Expo Router, deep links, react-native-screens)
+   - Native Module Integration (TurboModules, JSI, config plugins)
+   - Bundle & Startup Performance (barrel exports, tree shaking, Hermes profiling)
+   - Memory Management (effect cleanup, AbortController, image data in file system)
+   - Platform-Specific Issues (iOS/Android, safe area, keyboard, shadows)
+   - Image Handling (expo-image, caching, blurhash, contentFit)
+4. **Runtime Considerations** — Hermes, New Architecture, React Compiler, Metro, platform threads
+5. **Code Review Checklist** — 8 categories, ~40 checkboxes
+6. **Safety Guidelines** — 6 items
+7. **Anti-Patterns to Avoid** — 10 items
+
+### Sources Informing Content
+- Vercel Labs agent-skills (31.8K installs) — prioritized performance rules
+- Callstack agent-skills — Ultimate Guide to RN Optimization based
+- wshobson/agents — architecture and design patterns
+- Expo/skills building-native-ui — Expo-specific conventions
+- Official docs: reactnative.dev, docs.expo.dev, Software Mansion (Reanimated, Gesture Handler)
+
+## Files Modified
+- `.claude/agents/react-native/react-native-expert.md` — full rewrite (currently empty)
+
+## Verification
+1. Confirm file matches the structural pattern of `.claude/agents/react/react-expert.md` (same YAML fields, same section hierarchy)
+2. Confirm `bundle` references (`react-expert`, `react-performance-expert`) point to existing agent files
+3. Verify all bash diagnosis commands reference directories that exist in the project (`features/`, `app/`, `lib/`, `modules/`)
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl

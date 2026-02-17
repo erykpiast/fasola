@@ -3,7 +3,7 @@
   "checkpoint_id": "ea0726f2eda6",
   "strategy": "manual-commit",
   "branch": "feat/image_zoom",
-  "checkpoints_count": 3,
+  "checkpoints_count": 4,
   "files_touched": [
     ".claude/agents/expo/expo-expert.md",
     ".claude/agents/react-native/react-native-expert.md",
@@ -33,13 +33,20 @@
       "context": "/ea/0726f2eda6/1/context.md",
       "content_hash": "/ea/0726f2eda6/1/content_hash.txt",
       "prompt": "/ea/0726f2eda6/1/prompt.txt"
+    },
+    {
+      "metadata": "/ea/0726f2eda6/2/metadata.json",
+      "transcript": "/ea/0726f2eda6/2/full.jsonl",
+      "context": "/ea/0726f2eda6/2/context.md",
+      "content_hash": "/ea/0726f2eda6/2/content_hash.txt",
+      "prompt": "/ea/0726f2eda6/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 6173,
-    "cache_creation_tokens": 316127,
-    "cache_read_tokens": 2051123,
-    "output_tokens": 8732,
-    "api_call_count": 30
+    "input_tokens": 6180,
+    "cache_creation_tokens": 332981,
+    "cache_read_tokens": 2218877,
+    "output_tokens": 8759,
+    "api_call_count": 35
   }
 }

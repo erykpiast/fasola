@@ -1,5 +1,6 @@
 import { Alert } from "@/lib/alert";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
@@ -7,7 +8,7 @@ import { getColors } from "@/platform/theme/glassStyles";
 import { useTheme } from "@/platform/theme/useTheme";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { type JSX, useCallback, useRef } from "react";
+import { type JSX, useCallback, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -31,6 +32,7 @@ export function EditRecipeForm({
   const { t } = useTranslation();
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
+  const [isZoomed, setIsZoomed] = useState(false);
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
     initialValues: recipe.metadata,
     onSubmit,
@@ -85,12 +87,20 @@ export function EditRecipeForm({
         ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={!isZoomed}
       >
         <View style={styles.imageContainer}>
-          <RecipeImageDisplay
-            uri={recipe.photoUri}
+          <ZoomableImage
             style={{ width, height: width }}
-          />
+            onZoomChange={setIsZoomed}
+            maxScale={3}
+            doubleTapScale={2}
+          >
+            <RecipeImageDisplay
+              uri={recipe.photoUri}
+              style={{ width, height: width }}
+            />
+          </ZoomableImage>
         </View>
 
         <View style={styles.formContainer}>
@@ -139,6 +149,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: "relative",
+    overflow: "hidden",
   },
   formContainer: {
     padding: 24,

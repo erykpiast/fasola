@@ -5,11 +5,16 @@ import { BackButton } from "@/lib/components/atoms/BackButton";
 import { DeleteButton } from "@/lib/components/atoms/DeleteButton";
 import { EditButton } from "@/lib/components/atoms/EditButton";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
 import type { RecipeId } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useRouter } from "expo-router";
-import { type JSX, useCallback, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { type JSX, useCallback, useEffect, useState } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 import { useRecipeById } from "../hooks/useRecipeById";
 import { MetadataOverlay } from "./MetadataOverlay";
 import { ProcessingIndicator } from "./ProcessingIndicator";
@@ -52,6 +57,13 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
     ]);
   }, [t, deleteRecipe, id, router]);
 
+  const [isZoomed, setIsZoomed] = useState(false);
+  const { width, height } = useWindowDimensions();
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isZoomed ? 0 : 1, { duration: 200 }),
+  }));
+
   if (!recipe) {
     return null;
   }
@@ -62,12 +74,27 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
 
   return (
     <View style={styles.container}>
-      <RecipeImageDisplay uri={recipe.photoUri} style={styles.image} />
-      <MetadataOverlay metadata={recipe.metadata} />
-      {isProcessing && <ProcessingIndicator />}
-      <BackButton onPress={handleBack} />
-      <DeleteButton onPress={handleDelete} />
-      <EditButton onPress={handleEdit} disabled={!isReady} />
+      <ZoomableImage
+        style={{ width, height }}
+        onZoomChange={setIsZoomed}
+      >
+        <RecipeImageDisplay
+          uri={recipe.photoUri}
+          style={{ width, height }}
+        />
+      </ZoomableImage>
+      <Animated.View
+        style={[styles.overlay, overlayStyle]}
+        pointerEvents={isZoomed ? "none" : "box-none"}
+      >
+        <View pointerEvents="none">
+          <MetadataOverlay metadata={recipe.metadata} />
+          {isProcessing && <ProcessingIndicator />}
+        </View>
+        <BackButton onPress={handleBack} />
+        <DeleteButton onPress={handleDelete} />
+        <EditButton onPress={handleEdit} disabled={!isReady} />
+      </Animated.View>
     </View>
   );
 }
@@ -77,7 +104,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
-  image: {
-    flex: 1,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

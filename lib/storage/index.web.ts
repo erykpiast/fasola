@@ -71,6 +71,26 @@ class WebStorage implements Storage {
     await this.saveMetadata(metadata);
   }
 
+  async saveThumbnail(id: PhotoId, sourceUri: PhotoUri): Promise<void> {
+    const { generateThumbnail } = await import("../thumbnails/generate");
+    const thumbnailDataUrl = await generateThumbnail(sourceUri);
+    const response = await fetch(thumbnailDataUrl);
+    const blob = await response.blob();
+    await localforage.setItem(`${id}_thumb`, blob);
+  }
+
+  async getThumbnail(id: PhotoId): Promise<PhotoUri | null> {
+    const blob = await localforage.getItem<Blob>(`${id}_thumb`);
+    if (blob && blob instanceof Blob) {
+      return URL.createObjectURL(blob);
+    }
+    return null;
+  }
+
+  async deleteThumbnail(id: PhotoId): Promise<void> {
+    await localforage.removeItem(`${id}_thumb`);
+  }
+
   async getItem(key: StorageKey): Promise<string | null> {
     const value = await localforage.getItem<string>(key);
     return value ?? null;

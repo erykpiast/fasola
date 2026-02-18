@@ -7,6 +7,12 @@ import type { RecipeRepository } from "./types";
 
 const RECIPES_KEY: StorageKey = "@recipes";
 
+function stripRuntimeFields(recipe: Recipe): Recipe {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { thumbnailUri, ...persisted } = recipe;
+  return { ...persisted, photoUri: persisted.id };
+}
+
 class AsyncStorageRecipeRepository implements RecipeRepository {
   async getAll(): Promise<Array<Recipe>> {
     await migrateIfNeeded(RECIPES_KEY);
@@ -21,11 +27,13 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     const recipesWithUris = await Promise.all(
       recipes.map(async (recipe) => {
         const photoUri = await storage.getPhoto(recipe.id);
+        const thumbnailUri = await storage.getThumbnail(recipe.id);
         const finalPhotoUri = photoUri || recipe.photoUri || recipe.id;
 
         return {
           ...recipe,
           photoUri: finalPhotoUri,
+          thumbnailUri: thumbnailUri || finalPhotoUri,
         };
       })
     );
@@ -60,9 +68,17 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     await storage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 
     const photoUri = await storage.getPhoto(id);
+    const finalPhotoUri = photoUri || id;
+
+    try {
+      await storage.saveThumbnail(id, finalPhotoUri);
+    } catch {
+      // Thumbnail failure must not break save
+    }
+
     return {
       ...newRecipe,
-      photoUri: photoUri || id,
+      photoUri: finalPhotoUri,
     };
   }
 
@@ -79,16 +95,23 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
       metadata,
     };
 
-    await storage.setItem(RECIPES_KEY, JSON.stringify(recipes));
+    await storage.setItem(
+      RECIPES_KEY,
+      JSON.stringify(recipes.map(stripRuntimeFields))
+    );
     return recipes[index];
   }
 
   async delete(id: RecipeId): Promise<void> {
     await storage.deletePhoto(id);
+    await storage.deleteThumbnail(id);
 
     const recipes = await this.getAll();
     const filtered = recipes.filter((r) => r.id !== id);
-    await storage.setItem(RECIPES_KEY, JSON.stringify(filtered));
+    await storage.setItem(
+      RECIPES_KEY,
+      JSON.stringify(filtered.map(stripRuntimeFields))
+    );
   }
 
   async savePending(
@@ -118,9 +141,17 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     await storage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 
     const photoUri = await storage.getPhoto(id);
+    const finalPhotoUri = photoUri || id;
+
+    try {
+      await storage.saveThumbnail(id, finalPhotoUri);
+    } catch {
+      // Thumbnail failure must not break import
+    }
+
     return {
       ...newRecipe,
-      photoUri: photoUri || id,
+      photoUri: finalPhotoUri,
     };
   }
 
@@ -183,9 +214,17 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
     await storage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 
     const photoUri = await storage.getPhoto(id);
+    const finalPhotoUri = photoUri || id;
+
+    try {
+      await storage.saveThumbnail(id, finalPhotoUri);
+    } catch {
+      // Thumbnail failure must not break processing completion
+    }
+
     return {
       ...recipes[index],
-      photoUri: photoUri || id,
+      photoUri: finalPhotoUri,
     };
   }
 

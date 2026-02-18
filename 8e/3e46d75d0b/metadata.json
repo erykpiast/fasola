@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "8e3e46d75d0b",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "features/recipes-list/components/RecipeGrid.tsx",
+    "lib/repositories/recipes.ts",
+    "lib/storage/index.native.ts",
+    "lib/storage/index.web.ts",
+    "lib/storage/types.ts",
+    "lib/thumbnails/generate.ts",
+    "lib/types/recipe.ts",
+    "spec/012_thumbnails/plan.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/8e/3e46d75d0b/0/metadata.json",
+      "transcript": "/8e/3e46d75d0b/0/full.jsonl",
+      "context": "/8e/3e46d75d0b/0/context.md",
+      "content_hash": "/8e/3e46d75d0b/0/content_hash.txt",
+      "prompt": "/8e/3e46d75d0b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 3531,
+    "cache_creation_tokens": 227913,
+    "cache_read_tokens": 4225853,
+    "output_tokens": 12596,
+    "api_call_count": 59
+  }
+}

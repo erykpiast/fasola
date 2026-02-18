@@ -184,6 +184,41 @@ class NativeStorage implements Storage {
     await this.saveMetadata(metadata);
   }
 
+  async saveThumbnail(id: PhotoId, sourceUri: PhotoUri): Promise<void> {
+    await this.init();
+    const { generateThumbnail } = await import("../thumbnails/generate");
+    const thumbnailUri = await generateThumbnail(sourceUri);
+
+    const photosDir = this.getPhotosDirectory();
+    const destinationFile = new File(photosDir.uri, `${id}_thumb.jpg`);
+    const sourceFile = new File(thumbnailUri);
+
+    if (destinationFile.exists) {
+      destinationFile.delete();
+    }
+    sourceFile.copy(destinationFile);
+
+    if (sourceFile.exists) {
+      sourceFile.delete();
+    }
+  }
+
+  async getThumbnail(id: PhotoId): Promise<PhotoUri | null> {
+    await this.init();
+    const photosDir = this.getPhotosDirectory();
+    const file = new File(photosDir.uri, `${id}_thumb.jpg`);
+    return file.exists ? file.uri : null;
+  }
+
+  async deleteThumbnail(id: PhotoId): Promise<void> {
+    await this.init();
+    const photosDir = this.getPhotosDirectory();
+    const file = new File(photosDir.uri, `${id}_thumb.jpg`);
+    if (file.exists) {
+      file.delete();
+    }
+  }
+
   async getItem(key: StorageKey): Promise<string | null> {
     await this.init();
     const sanitized = sanitizeKey(key);

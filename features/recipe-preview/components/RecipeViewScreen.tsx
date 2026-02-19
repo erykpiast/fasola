@@ -1,10 +1,11 @@
+import { DebugVisualization } from "@/features/photo-adjustment/components/DebugVisualization";
 import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { Alert } from "@/lib/alert";
 import { BackButton } from "@/lib/components/atoms/BackButton";
 import { DeleteButton } from "@/lib/components/atoms/DeleteButton";
 import { EditButton } from "@/lib/components/atoms/EditButton";
-import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
+import { ProgressiveImage } from "@/lib/components/atoms/ProgressiveImage";
 import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
 import type { RecipeId } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
@@ -78,8 +79,9 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         style={{ width, height }}
         onZoomChange={setIsZoomed}
       >
-        <RecipeImageDisplay
+        <ProgressiveImage
           uri={recipe.photoUri}
+          thumbnailUri={recipe.thumbnailUri}
           style={{ width, height }}
         />
       </ZoomableImage>
@@ -90,6 +92,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         <View pointerEvents="none">
           <MetadataOverlay metadata={recipe.metadata} />
           {isProcessing && <ProcessingIndicator />}
+          <DebugVisualization />
         </View>
         <BackButton onPress={handleBack} />
         <DeleteButton onPress={handleDelete} />

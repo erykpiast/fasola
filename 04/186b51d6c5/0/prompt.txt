@@ -1,0 +1,68 @@
+How can I confirm that the iCloud sync works on my device? When I go to iCloud in the files app, shoud I see "fasola" directory there?
+
+---
+
+> f you want the directory to appear in Files, change NSUbiquitousContainerIsDocumentScopePublic to true in the config plugin. That exposes the Documents subfolder of the container to the user via Files app.
+  Useful for debugging but lets users manually tamper with app data.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Also add the Debug log — the getContainerUrl() call in lib/storage/index.native.ts:41 returns null when iCloud is unavailable. If the app is storing data and photos successfully, the container was resolved. You could
+  add a temporary console.log there to confirm the returned URL.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Can you confrim that it shold work even for Expo Dev Build?
+
+---
+
+iOS Bundled 53ms node_modules/expo-router/entry.js (1 module)
+ LOG  [Storage] iCloud container URL: null (unavailable)

@@ -22,7 +22,7 @@ function withICloudEntitlements(config) {
   config = withInfoPlist(config, (config) => {
     config.modResults.NSUbiquitousContainers = {
       [CONTAINER_ID]: {
-        NSUbiquitousContainerIsDocumentScopePublic: false,
+        NSUbiquitousContainerIsDocumentScopePublic: true,
         NSUbiquitousContainerSupportedFolderLevels: "Any",
         NSUbiquitousContainerName: "fasola",
       },

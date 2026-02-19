@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "ebc7843c7c3d",
+  "session_id": "6d23d9f5-4a03-4540-a03b-126aa7248a9a",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T22:11:57.618042Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "lib/photo-processor/index.ts",
+    "modules/icloud-sync/ios/ICloudSync.podspec",
+    "modules/liquid-glass/ios/LiquidGlass.podspec"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 351,
+    "cache_creation_tokens": 114774,
+    "cache_read_tokens": 2286004,
+    "output_tokens": 4257,
+    "api_call_count": 42
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T22:11:57.382872Z",
+    "agent_lines": 5,
+    "human_added": 28,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 35,
+    "agent_percentage": 14.285714285714285
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/6d23d9f5-4a03-4540-a03b-126aa7248a9a.jsonl"
+}

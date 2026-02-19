@@ -1,0 +1,78 @@
+Implement the following plan:
+
+# Remove Color Correction from Saved Images
+
+## Context
+
+The image processing pipeline applies geometry correction (dewarping), lighting correction (white balance + illumination + CLAHE), and clarity enhancement (denoise + sharpen) to recipe photos. The fully processed image — including color correction — is saved as the display asset and used for thumbnail generation. This color correction sometimes produces visually strange results, making the saved photos look worse than the originals.
+
+The fix: save only the geometry-corrected image for display/thumbnails, but keep the full pipeline (lighting + clarity) for the OCR input, where enhanced contrast and normalized lighting improve text recognition accuracy.
+
+## Changes
+
+### `lib/photo-processor/index.ts` — `processPhoto()`
+
+After geometry correction completes (line 56), capture the geometry-only image in a separate variable before proceeding with lighting/clarity. At the end, return the geometry-only image as `processedUri` instead of the fully-processed one.
+
+```
+Current flow:
+  imageDataUrl = geometry result
+  imageDataUrl = lighting result    ← overwrites
+  imageDataUrl = clarity result     ← overwrites
+  return { processedUri: imageDataUrl, ocrResult }
+
+New flow:
+  imageDataUrl = geometry result
+  geometryOnlyDataUrl = imageDataUrl   ← snapshot
+  imageDataUrl = lighting result
+  imageDataUrl = clarity result
+  ocrImageDataUrl = grayscale || imageDataUrl
+  [OCR runs on ocrImageDataUrl]
+  return { processedUri: geometryOnlyDataUrl, ocrResult }
+```
+
+Concrete edits:
+- Add `let geometryOnlyDataUrl = imageDataUrl` before the geometry block (covers the case where geometry is disabled — saves the original)
+- After line 56 (`imageDataUrl = result.processedUri!`), reassign: `geometryOnlyDataUrl = imageDataUrl`
+- At line 133 (`processedUri: imageDataUrl`), change to: `processedUri: geometryOnlyDataUrl`
+
+No other files change. The lighting/clarity pipelines still run to produce the grayscale OCR input. `BackgroundProcessingContext`, thumbnails, storage, and display all use `result.processedUri` which will now be geometry-only.
+
+## Verification
+
+1. Import a recipe photo on device/simulator
+2. Wait for background processing to complete
+3. Verify the displayed image shows natural colors (geometry correction only, no artificial enhancement)
+4. Verify OCR still extracts text (check recipe title/tags)
+5. Verify thumbnail matches the geometry-corrected image
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+After rebuilding the app, the native liquid glass components appear as not implemented

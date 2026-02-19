@@ -39,6 +39,7 @@ class NativeStorage implements Storage {
 
   private async performInit(): Promise<void> {
     const containerUrl = getContainerUrl();
+    console.log("[Storage] iCloud container URL:", containerUrl ?? "null (unavailable)");
 
     if (containerUrl) {
       this.basePath = containerUrl;

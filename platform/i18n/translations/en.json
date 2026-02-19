@@ -1,10 +1,10 @@
 {
   "emptyState": {
-    "title": "No photos yet",
-    "instruction": "Tap the button below to add your first photo"
+    "title": "No recipes yet",
+    "instruction": "Tap the button below to add your first recipe"
   },
-  "addPhoto": {
-    "button": "Add Photo",
+  "addRecipe": {
+    "button": "Add Recipe",
     "camera": "Take Photo",
     "library": "Choose from Library"
   },
@@ -51,7 +51,7 @@
   },
   "errors": {
     "permissionDenied": "Permission to access camera or photos was denied",
-    "importFailed": "Failed to import photo",
+    "importFailed": "Failed to import recipe",
     "saveFailed": "Failed to save recipe",
     "loadFailed": "Failed to load recipe",
     "invalidTags": "Tags must start with # and contain no spaces"

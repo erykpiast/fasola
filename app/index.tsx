@@ -73,10 +73,10 @@ function Content(): JSX.Element {
   }, [popoverVisible]);
 
   const importOptions = [
-    { id: "camera", label: t("addPhoto.camera"), systemImage: "camera" },
+    { id: "camera", label: t("addRecipe.camera"), systemImage: "camera" },
     {
       id: "library",
-      label: t("addPhoto.library"),
+      label: t("addRecipe.library"),
       systemImage: "photo.on.rectangle",
     },
   ];

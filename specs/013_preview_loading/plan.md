@@ -1,7 +1,7 @@
 # Task Breakdown: Progressive Image Loading for Recipe Preview
 
 Generated: 2026-02-19
-Source: spec/013_preview_loading/spec.md
+Source: specs/013_preview_loading/spec.md
 
 ## Overview
 

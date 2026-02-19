@@ -226,6 +226,6 @@ No external documentation changes required. The architecture doc does not catalo
 ## References
 
 - [expo-image API](https://docs.expo.dev/versions/latest/sdk/image/) — `blurRadius`, `onLoad`, `contentFit`
-- `spec/012_thumbnails/` — thumbnail generation and storage
-- `spec/011_image_zoom/` — `ZoomableImage` component
+- `specs/012_thumbnails/` — thumbnail generation and storage
+- `specs/011_image_zoom/` — `ZoomableImage` component
 - `features/recipe-preview/components/RecipeViewScreen.tsx` — current preview implementation

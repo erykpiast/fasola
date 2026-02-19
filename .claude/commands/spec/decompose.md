@@ -426,7 +426,7 @@ Before creating any STM tasks, confirm your understanding:
    ```
 
 6. **Save Task Breakdown**:
-   - Save the detailed task breakdown document to `specs/[spec-name]-tasks.md`
+   - Save the detailed task breakdown document to `specs/[spec-name]-plan.md`
    - Create tasks in STM or TodoWrite for immediate tracking
    - Generate a summary report showing:
      - Total number of tasks

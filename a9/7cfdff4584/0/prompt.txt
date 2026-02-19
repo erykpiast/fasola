@@ -1,0 +1,487 @@
+# Implement Specification
+
+Implement the specification at: 
+
+STM_STATUS: Not installed
+
+## Pre-Execution Checks
+
+1. **Check Task Management**:
+   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
+   - If STM shows "Available and initialized" → Use STM for tasks
+   - If STM shows "Not installed" → Use TodoWrite instead
+
+2. **Verify Specification**:
+   - Confirm spec file exists and is complete
+   - Check that required tools are available
+   - Stop if anything is missing or unclear
+
+## Implementation Process
+
+### 1. Analyze Specification
+
+Read the specification to understand:
+- What components need to be built
+- Dependencies between components
+- Testing requirements
+- Success criteria
+
+### 2. Load or Create Tasks
+
+**Using STM** (if available):
+```bash
+stm list --status pending -f json
+```
+
+**Using TodoWrite** (fallback):
+Create tasks for each component in the specification
+
+### 3. Implementation Workflow
+
+For each task, follow this cycle:
+
+**Available Agents:**
+- [0/1] Listing agents
+✔ Completed 1 steps in 17ms
+
+Agents:
+────────────────────────────────────────────────────────────────────────────────
+  build:
+    vite-expert                    [project]     6.2k tokens
+    webpack-expert                 [embedded]    6.0k tokens
+  linting:
+    linting-expert                 [project]     3.9k tokens
+  general:
+    code-review-expert             [project]     3.5k tokens
+    git-expert                     [project]     4.1k tokens
+    ios-simulator                  [project]      846 tokens
+    oracle                         [project]     2.2k tokens
+    refactoring-expert             [project]     3.0k tokens
+    research-expert                [project]     2.0k tokens
+    triage-expert                  [project]     3.7k tokens
+    code-reviewer                  [global]      2.3k tokens
+  tools:
+    code-search                    [project]     1.2k tokens
+    documentation-expert           [project]     3.6k tokens
+  database:
+    database-expert                [project]     2.9k tokens
+    postgres-expert                [project]     6.9k tokens
+    mongodb-expert                 [embedded]    6.2k tokens
+  framework:
+    expo-expert                    [project]     7.1k tokens
+    react-expert                   [project]     3.2k tokens
+    react-performance-expert       [project]     7.0k tokens
+    react-native-expert            [project]     5.5k tokens
+    swift-ios-expert               [project]     6.0k tokens
+    typescript-build-expert        [project]     4.3k tokens
+    typescript-expert              [project]     3.7k tokens
+    typescript-type-expert         [project]     5.7k tokens
+    nodejs-expert                  [global]      7.0k tokens
+    ai-sdk-expert                  [embedded]    4.9k tokens
+    nextjs-expert                  [embedded]    4.6k tokens
+    nestjs-expert                  [embedded]    5.3k tokens
+  frontend:
+    accessibility-expert           [project]     4.8k tokens
+    css-styling-expert             [embedded]    4.6k tokens
+  swift-ios:
+    animation-patterns             [project]     1.2k tokens
+    expo-native-modules            [project]     2.1k tokens
+    liquid-glass                   [project]     2.9k tokens
+    list-and-scroll-patterns       [project]      924 tokens
+    modern-apis                    [project]     1.6k tokens
+    performance-patterns           [project]     1.5k tokens
+    sheet-navigation-patterns      [project]      838 tokens
+    state-management               [project]     1.1k tokens
+    view-structure                 [project]     1.0k tokens
+  testing:
+    testing-expert                 [project]     4.7k tokens
+    vitest-testing-expert          [project]     3.2k tokens
+    playwright-expert              [embedded]    5.6k tokens
+    jest-testing-expert            [embedded]    6.5k tokens
+  devops:
+    cli-expert                     [global]      6.2k tokens
+    docker-expert                  [global]      3.5k tokens
+    github-actions-expert          [global]      3.8k tokens
+    devops-expert                  [embedded]    5.6k tokens
+
+#### Step 1: Implement
+
+Launch appropriate specialist agent:
+
+```
+Task tool:
+- description: "Implement [component name]"  
+- subagent_type: [choose specialist that matches the task]
+- prompt: |
+    First run: stm show [task-id]
+    This will give you the full task details and requirements.
+    
+    Then implement the component based on those requirements.
+    Follow project code style and add error handling.
+    Report back when complete.
+```
+
+#### Step 2: Write Tests
+
+Launch testing expert:
+
+```
+Task tool:
+- description: "Write tests for [component]"
+- subagent_type: testing-expert [or jest/vitest-testing-expert]
+- prompt: |
+    First run: stm show [task-id]
+    
+    Write comprehensive tests for the implemented component.
+    Cover edge cases and aim for >80% coverage.
+    Report back when complete.
+```
+
+Then run tests to verify they pass.
+
+#### Step 3: Code Review (Required)
+
+**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+
+Launch code review expert:
+
+```
+Task tool:
+- description: "Review [component]"
+- subagent_type: code-review-expert
+- prompt: |
+    First run: stm show [task-id]
+    
+    Review implementation for BOTH:
+    1. COMPLETENESS - Are all requirements from the task fully implemented?
+    2. QUALITY - Code quality, security, error handling, test coverage
+    
+    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
+    Report if implementation is COMPLETE or INCOMPLETE.
+    Report back with findings.
+```
+
+#### Step 4: Fix Issues & Complete Implementation
+
+If code review found the implementation INCOMPLETE or has CRITICAL issues:
+
+1. Launch specialist to complete/fix:
+   ```
+   Task tool:
+   - description: "Complete/fix [component]"
+   - subagent_type: [specialist matching the task]
+   - prompt: |
+       First run: stm show [task-id]
+       
+       Address these items from code review:
+       - Missing requirements: [list any incomplete items]
+       - Critical issues: [list any critical issues]
+       
+       Update tests if needed.
+       Report back when complete.
+   ```
+
+2. Re-run tests to verify fixes
+
+3. Re-review to confirm both COMPLETE and quality standards met
+
+4. Only when implementation is COMPLETE and all critical issues fixed:
+   - If using STM: `stm update [task-id] --status done`
+   - If using TodoWrite: Mark task as completed
+
+#### Step 5: Commit Changes
+
+Create atomic commit following project conventions:
+```bash
+git add [files]
+git commit -m "[follow project's commit convention]"
+```
+
+### 4. Track Progress
+
+Monitor implementation progress:
+
+**Using STM:**
+```bash
+stm list --pretty              # View all tasks
+stm list --status pending      # Pending tasks
+stm list --status in-progress  # Active tasks
+stm list --status done         # Completed tasks
+```
+
+**Using TodoWrite:**
+Track tasks in the session with status indicators.
+
+### 5. Complete Implementation
+
+Implementation is complete when:
+- All tasks are COMPLETE (all requirements implemented)
+- All tasks pass quality review (no critical issues)
+- All tests passing
+- Documentation updated
+
+## If Issues Arise
+
+If any agent encounters problems:
+1. Identify the specific issue
+2. Launch appropriate specialist to resolve
+3. Or request user assistance if blocked
+
+---
+
+[Request interrupted by user]
+
+---
+
+# Implement Specification
+
+Implement the specification at: @specs/014_status_bar_inset/plan.md
+
+STM_STATUS: Not installed
+
+## Pre-Execution Checks
+
+1. **Check Task Management**:
+   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
+   - If STM shows "Available and initialized" → Use STM for tasks
+   - If STM shows "Not installed" → Use TodoWrite instead
+
+2. **Verify Specification**:
+   - Confirm spec file exists and is complete
+   - Check that required tools are available
+   - Stop if anything is missing or unclear
+
+## Implementation Process
+
+### 1. Analyze Specification
+
+Read the specification to understand:
+- What components need to be built
+- Dependencies between components
+- Testing requirements
+- Success criteria
+
+### 2. Load or Create Tasks
+
+**Using STM** (if available):
+```bash
+stm list --status pending -f json
+```
+
+**Using TodoWrite** (fallback):
+Create tasks for each component in the specification
+
+### 3. Implementation Workflow
+
+For each task, follow this cycle:
+
+**Available Agents:**
+- [0/1] Listing agents
+✔ Completed 1 steps in 19ms
+
+Agents:
+────────────────────────────────────────────────────────────────────────────────
+  build:
+    vite-expert                    [project]     6.2k tokens
+    webpack-expert                 [embedded]    6.0k tokens
+  linting:
+    linting-expert                 [project]     3.9k tokens
+  general:
+    code-review-expert             [project]     3.5k tokens
+    git-expert                     [project]     4.1k tokens
+    ios-simulator                  [project]      846 tokens
+    oracle                         [project]     2.2k tokens
+    refactoring-expert             [project]     3.0k tokens
+    research-expert                [project]     2.0k tokens
+    triage-expert                  [project]     3.7k tokens
+    code-reviewer                  [global]      2.3k tokens
+  tools:
+    code-search                    [project]     1.2k tokens
+    documentation-expert           [project]     3.6k tokens
+  database:
+    database-expert                [project]     2.9k tokens
+    postgres-expert                [project]     6.9k tokens
+    mongodb-expert                 [embedded]    6.2k tokens
+  framework:
+    expo-expert                    [project]     7.1k tokens
+    react-expert                   [project]     3.2k tokens
+    react-performance-expert       [project]     7.0k tokens
+    react-native-expert            [project]     5.5k tokens
+    swift-ios-expert               [project]     6.0k tokens
+    typescript-build-expert        [project]     4.3k tokens
+    typescript-expert              [project]     3.7k tokens
+    typescript-type-expert         [project]     5.7k tokens
+    nodejs-expert                  [global]      7.0k tokens
+    ai-sdk-expert                  [embedded]    4.9k tokens
+    nextjs-expert                  [embedded]    4.6k tokens
+    nestjs-expert                  [embedded]    5.3k tokens
+  frontend:
+    accessibility-expert           [project]     4.8k tokens
+    css-styling-expert             [embedded]    4.6k tokens
+  swift-ios:
+    animation-patterns             [project]     1.2k tokens
+    expo-native-modules            [project]     2.1k tokens
+    liquid-glass                   [project]     2.9k tokens
+    list-and-scroll-patterns       [project]      924 tokens
+    modern-apis                    [project]     1.6k tokens
+    performance-patterns           [project]     1.5k tokens
+    sheet-navigation-patterns      [project]      838 tokens
+    state-management               [project]     1.1k tokens
+    view-structure                 [project]     1.0k tokens
+  testing:
+    testing-expert                 [project]     4.7k tokens
+    vitest-testing-expert          [project]     3.2k tokens
+    playwright-expert              [embedded]    5.6k tokens
+    jest-testing-expert            [embedded]    6.5k tokens
+  devops:
+    cli-expert                     [global]      6.2k tokens
+    docker-expert                  [global]      3.5k tokens
+    github-actions-expert          [global]      3.8k tokens
+    devops-expert                  [embedded]    5.6k tokens
+
+#### Step 1: Implement
+
+Launch appropriate specialist agent:
+
+```
+Task tool:
+- description: "Implement [component name]"  
+- subagent_type: [choose specialist that matches the task]
+- prompt: |
+    First run: stm show [task-id]
+    This will give you the full task details and requirements.
+    
+    Then implement the component based on those requirements.
+    Follow project code style and add error handling.
+    Report back when complete.
+```
+
+#### Step 2: Write Tests
+
+Launch testing expert:
+
+```
+Task tool:
+- description: "Write tests for [component]"
+- subagent_type: testing-expert [or jest/vitest-testing-expert]
+- prompt: |
+    First run: stm show [task-id]
+    
+    Write comprehensive tests for the implemented component.
+    Cover edge cases and aim for >80% coverage.
+    Report back when complete.
+```
+
+Then run tests to verify they pass.
+
+#### Step 3: Code Review (Required)
+
+**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+
+Launch code review expert:
+
+```
+Task tool:
+- description: "Review [component]"
+- subagent_type: code-review-expert
+- prompt: |
+    First run: stm show [task-id]
+    
+    Review implementation for BOTH:
+    1. COMPLETENESS - Are all requirements from the task fully implemented?
+    2. QUALITY - Code quality, security, error handling, test coverage
+    
+    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
+    Report if implementation is COMPLETE or INCOMPLETE.
+    Report back with findings.
+```
+
+#### Step 4: Fix Issues & Complete Implementation
+
+If code review found the implementation INCOMPLETE or has CRITICAL issues:
+
+1. Launch specialist to complete/fix:
+   ```
+   Task tool:
+   - description: "Complete/fix [component]"
+   - subagent_type: [specialist matching the task]
+   - prompt: |
+       First run: stm show [task-id]
+       
+       Address these items from code review:
+       - Missing requirements: [list any incomplete items]
+       - Critical issues: [list any critical issues]
+       
+       Update tests if needed.
+       Report back when complete.
+   ```
+
+2. Re-run tests to verify fixes
+
+3. Re-review to confirm both COMPLETE and quality standards met
+
+4. Only when implementation is COMPLETE and all critical issues fixed:
+   - If using STM: `stm update [task-id] --status done`
+   - If using TodoWrite: Mark task as completed
+
+#### Step 5: Commit Changes
+
+Create atomic commit following project conventions:
+```bash
+git add [files]
+git commit -m "[follow project's commit convention]"
+```
+
+### 4. Track Progress
+
+Monitor implementation progress:
+
+**Using STM:**
+```bash
+stm list --pretty              # View all tasks
+stm list --status pending      # Pending tasks
+stm list --status in-progress  # Active tasks
+stm list --status done         # Completed tasks
+```
+
+**Using TodoWrite:**
+Track tasks in the session with status indicators.
+
+### 5. Complete Implementation
+
+Implementation is complete when:
+- All tasks are COMPLETE (all requirements implemented)
+- All tasks pass quality review (no critical issues)
+- All tests passing
+- Documentation updated
+
+## If Issues Arise
+
+If any agent encounters problems:
+1. Identify the specific issue
+2. Launch appropriate specialist to resolve
+3. Or request user assistance if blocked
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

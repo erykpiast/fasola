@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "a97cfdff4584",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "features/recipes-list/components/RecipeGrid.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a9/7cfdff4584/0/metadata.json",
+      "transcript": "/a9/7cfdff4584/0/full.jsonl",
+      "context": "/a9/7cfdff4584/0/context.md",
+      "content_hash": "/a9/7cfdff4584/0/content_hash.txt",
+      "prompt": "/a9/7cfdff4584/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 31913,
+    "cache_read_tokens": 552517,
+    "output_tokens": 3623,
+    "api_call_count": 13
+  }
+}

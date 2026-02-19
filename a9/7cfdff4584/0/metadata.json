@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "a97cfdff4584",
+  "session_id": "a861d3db-739a-4c3b-af81-34856260f3d5",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T23:23:55.105622Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "features/recipes-list/components/RecipeGrid.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "2121fe77-6f38-47fd-ab01-395796b62378",
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 31913,
+    "cache_read_tokens": 552517,
+    "output_tokens": 3623,
+    "api_call_count": 13
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T23:23:55.034515Z",
+    "agent_lines": 10,
+    "human_added": 28,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 38,
+    "agent_percentage": 26.31578947368421
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/a861d3db-739a-4c3b-af81-34856260f3d5.jsonl"
+}

@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "180ea044636a",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/index.tsx",
+    "platform/i18n/translations/en.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/18/0ea044636a/0/metadata.json",
+      "transcript": "/18/0ea044636a/0/full.jsonl",
+      "context": "/18/0ea044636a/0/context.md",
+      "content_hash": "/18/0ea044636a/0/content_hash.txt",
+      "prompt": "/18/0ea044636a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 24,
+    "cache_creation_tokens": 14955,
+    "cache_read_tokens": 619511,
+    "output_tokens": 1651,
+    "api_call_count": 18
+  }
+}

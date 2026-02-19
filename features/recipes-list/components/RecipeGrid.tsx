@@ -2,9 +2,10 @@ import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import type { Recipe } from "@/lib/types/recipe";
 import type { RecipeId } from "@/lib/types/primitives";
 import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list";
-import { Suspense, useCallback, type JSX } from "react";
+import { Suspense, useCallback, useMemo, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 const COLUMNS = 3;
@@ -45,6 +46,13 @@ export function RecipeGrid({
   recipes: Array<Recipe>;
   onRecipeTap?: (id: RecipeId) => void;
 }): JSX.Element {
+  const insets = useSafeAreaInsets();
+
+  const contentContainerStyle = useMemo(
+    () => ({ ...styles.container, paddingTop: insets.top }),
+    [insets.top]
+  );
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Recipe>) => (
       <RecipeItem recipe={item} onTap={onRecipeTap} />
@@ -60,7 +68,7 @@ export function RecipeGrid({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       numColumns={COLUMNS}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={contentContainerStyle}
       showsVerticalScrollIndicator={false}
     />
   );

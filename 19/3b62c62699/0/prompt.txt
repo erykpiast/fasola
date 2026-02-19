@@ -1,0 +1,1434 @@
+## Context
+- Existing specs: No specs directory found
+
+## Optional: Enhanced Library Documentation Support
+
+Context7 MCP server provides up-to-date library documentation for better spec creation.
+
+Check if Context7 is available: /Users/eryk.napierala/Library/pnpm/context7-mcp
+
+If NOT_INSTALLED and the feature involves external libraries, offer to enable Context7:
+```
+████ Optional: Enable Context7 for Enhanced Documentation ████
+
+Context7 provides up-to-date library documentation to improve spec quality.
+This is optional but recommended when working with external libraries.
+
+Would you like me to install Context7 for you? I can:
+  1. Install globally: npm install -g @upstash/context7-mcp
+  2. Add to Claude Code: claude mcp add context7 context7-mcp
+
+Or you can install it manually later if you prefer.
+```
+
+If user agrees to installation:
+- Run: `npm install -g @upstash/context7-mcp`
+- Then run: `claude mcp add context7 context7-mcp`
+- Verify installation and proceed with enhanced documentation support
+
+If user declines or wants to continue without it:
+- Proceed with spec creation using existing knowledge
+
+## FIRST PRINCIPLES PROBLEM ANALYSIS
+
+Before defining any solution, validate the problem from first principles:
+
+### Core Problem Investigation
+- **Strip Away Solution Assumptions**: What is the core problem, completely separate from any proposed solution?
+- **Root Cause Analysis**: Why does this problem exist? What created this need?
+- **Goal Decomposition**: What are we fundamentally trying to achieve for users/business?
+- **Success Definition**: What would success look like if we had unlimited resources and no constraints?
+- **Alternative Approaches**: Could we achieve the underlying goal without building anything? Are there simpler approaches?
+
+### Problem Validation Questions
+- **Real vs. Perceived**: Is this solving a real problem that users actually have?
+- **Assumption Audit**: What assumptions about user needs, technical constraints, or business requirements might be wrong?
+- **Value Proposition**: What is the minimum viable solution that delivers core value?
+- **Scope Validation**: Are we solving the right problem, or treating symptoms of a deeper issue?
+
+**CRITICAL: Only proceed if the core problem is clearly defined and validated. If uncertain, request additional context.**
+
+## MANDATORY PRE-CREATION VERIFICATION
+
+After validating the problem from first principles, complete these technical checks:
+
+### 1. Context Discovery Phase
+- Search existing codebase for similar features/specs using AgentTool
+- **Use specialized subagents** when research involves specific domains (TypeScript, React, testing, databases, etc.)
+- Run `claudekit list agents` to see available specialized experts
+- Match research requirements to expert domains for optimal analysis
+- Use general-purpose approach only when no specialized expert fits
+- Identify potential conflicts or duplicates
+- Verify feature request is technically feasible
+- Document any missing prerequisites
+
+### 2. Request Validation
+- Confirm request is well-defined and actionable
+- If vague or incomplete, STOP and ask clarifying questions
+- Validate scope is appropriate (not too broad/narrow)
+
+### 3. Quality Gate
+- Only proceed if you have 80%+ confidence in implementation approach
+- If uncertain, request additional context before continuing
+- Document any assumptions being made
+
+**CRITICAL: If any validation fails, STOP immediately and request clarification.**
+
+## Your task
+
+Create a comprehensive specification document in the `specs/` folder for the following feature/bugfix: 
+
+First, analyze the request to understand:
+1. Whether this is a feature or bugfix
+2. The scope and complexity
+3. Related existing code/features
+4. External libraries/frameworks involved
+
+If the feature involves external libraries or frameworks AND Context7 is available:
+- Use `mcp__context7__resolve-library-id` to find the library
+- Use `mcp__context7__get-library-docs` to get up-to-date documentation
+- Reference official patterns and best practices from the docs
+
+## END-TO-END INTEGRATION ANALYSIS
+
+Before writing the detailed specification, map the complete system impact:
+
+### System Integration Mapping
+- **Data Flow Tracing**: Trace data flow from user action → processing → storage → response
+- **Service Dependencies**: Identify all affected services, APIs, databases, and external systems
+- **Integration Points**: Map every place this feature touches existing functionality
+- **Cross-System Impact**: How does this change affect other teams, services, or user workflows?
+
+### Complete User Journey Analysis
+- **Entry Points**: How do users discover and access this feature?
+- **Step-by-Step Flow**: What is the complete sequence from start to finish?
+- **Error Scenarios**: What happens when things go wrong at each step?
+- **Exit Points**: How does this connect to what users do next?
+
+### Deployment and Rollback Considerations
+- **Migration Path**: How do we get from current state to new state?
+- **Rollback Strategy**: What if we need to undo this feature?
+- **Deployment Dependencies**: What must be deployed together vs. independently?
+- **Data Migration**: How do we handle existing data during the transition?
+
+**VERIFICATION: Ensure you can trace the complete end-to-end flow before proceeding to detailed specification.**
+
+Then create a spec document that includes:
+
+1. **Title**: Clear, descriptive title of the feature/bugfix
+2. **Status**: Draft/Under Review/Approved/Implemented
+3. **Authors**: Your name and date
+4. **Overview**: Brief description and purpose
+5. **Background/Problem Statement**: Why this feature is needed or what problem it solves
+6. **Goals**: What we aim to achieve (bullet points)
+7. **Non-Goals**: What is explicitly out of scope (bullet points)
+8. **Technical Dependencies**:
+    - External libraries/frameworks used
+    - Version requirements
+    - Links to relevant documentation
+9. **Detailed Design**:
+    - Architecture changes
+    - Implementation approach
+    - Code structure and file organization
+    - API changes (if any)
+    - Data model changes (if any)
+    - Integration with external libraries (with examples from docs)
+10. **User Experience**: How users will interact with this feature
+11. **Testing Strategy**:
+    - Unit tests
+    - Integration tests
+    - E2E tests (if needed)
+    - Mocking strategies for external dependencies
+    - **Test documentation**: Each test should include a purpose comment explaining why it exists and what it validates
+    - **Meaningful tests**: Avoid tests that always pass regardless of behavior
+    - **Edge case testing**: Include tests that can fail to reveal real issues
+12. **Performance Considerations**: Impact on performance and mitigation strategies
+13. **Security Considerations**: Security implications and safeguards
+14. **Documentation**: What documentation needs to be created/updated
+15. **Implementation Phases**:
+    - Phase 1: MVP/Core functionality
+    - Phase 2: Enhanced features (if applicable)
+    - Phase 3: Polish and optimization (if applicable)
+16. **Open Questions**: Any unresolved questions or decisions
+17. **References**:
+    - Links to related issues, PRs, or documentation
+    - External library documentation links
+    - Relevant design patterns or architectural decisions
+
+Follow these guidelines:
+- Use Markdown format similar to existing specs
+- Be thorough and technical but also accessible
+- Include code examples where helpful (especially from library docs)
+- Consider edge cases and error scenarios
+- Reference existing project patterns and conventions
+- Use diagrams if they would clarify complex flows (using ASCII art or mermaid)
+- When referencing external libraries, include version-specific information
+- Do NOT include time or effort estimations (no "X days", "Y hours", or complexity estimates)
+
+Name the spec file descriptively based on the feature:
+- Features: `feat-{kebab-case-name}.md`
+- Bugfixes: `fix-{issue-number}-{brief-description}.md`
+
+## PROGRESSIVE VALIDATION CHECKPOINTS
+
+After completing each major section:
+
+- **Problem Statement**: Verify it's specific and measurable
+- **Technical Requirements**: Confirm all dependencies are available
+- **Implementation Plan**: Validate approach is technically sound
+- **Testing Strategy**: Ensure testability of all requirements
+
+At each checkpoint, if quality is insufficient, revise before proceeding.
+
+## FINAL SPECIFICATION VALIDATION
+
+Before marking complete:
+1. **Completeness Check**: All 17 sections meaningfully filled
+2. **Consistency Check**: No contradictions between sections  
+3. **Implementability Check**: Someone could build this from the spec
+4. **Quality Score**: Rate spec 1-10, only accept 8+
+
+Before writing, use AgentTool to search for:
+- Related existing features or code
+- Similar patterns in the codebase
+- Potential conflicts or dependencies
+- Current library versions in package.json or equivalent
+
+---
+
+Loading the recipe preview feels quite slow. We need to display a full-size 3000px image and it takes a visible split of a second to do, which isn't great UX.
+
+We've recently added thumbnails feature to speed up rendering of the list. That means every recipe now stores both the full photo and a low-res thumbnail. We can use the thumbnail to improve the perceived performance of loading the preview:
+
+1. We first render the thumbnail, stretched to the full size to pretend it's a full-size image. We add some subtle blur filter/mask to hide pixelation.
+2. At the same time, we load the full image in the background (behind the thumbnail).
+3. Once the full image is loaded, we fade the thumbnail and let the full image to appear - whith a subtle, short (like 500 ms) animation
+
+The thumbnail doesn't need to be zoomable - it'll be display only for a split of a second.
+
+---
+
+# Specification Completeness Check
+
+Analyze the specification at: 
+
+## Analysis Framework
+
+This command will analyze the provided specification document to determine if it contains sufficient detail for successful autonomous implementation, while also identifying overengineering and non-essential complexity that should be removed or deferred.
+
+### Domain Expert Consultation
+
+When analyzing specifications that involve specific technical domains:
+- **Use specialized subagents** when analysis involves specific domains (TypeScript, React, testing, databases, etc.)
+- Run `claudekit list agents` to see available specialized experts
+- Match specification domains to expert knowledge for thorough validation
+- Use general-purpose approach only when no specialized expert fits
+
+### What This Check Evaluates:
+
+The analysis evaluates three fundamental aspects, each with specific criteria:
+
+#### 1. **WHY - Intent and Purpose**
+- Background/Problem Statement clarity
+- Goals and Non-Goals definition
+- User value/benefit explanation
+- Justification vs alternatives
+- Success criteria
+
+#### 2. **WHAT - Scope and Requirements**
+- Features and functionality definition
+- Expected deliverables
+- API contracts and interfaces
+- Data models and structures
+- Integration requirements:
+  - External system interactions?
+  - Authentication mechanisms?
+  - Communication protocols?
+- Performance requirements
+- Security requirements
+
+#### 3. **HOW - Implementation Details**
+- Architecture and design patterns
+- Implementation phases/roadmap
+- Technical approach:
+  - Core logic and algorithms
+  - All functions and methods fully specified?
+  - Execution flow clearly defined?
+- Error handling:
+  - All failure modes identified?
+  - Recovery behavior specified?
+  - Edge cases documented?
+- Platform considerations:
+  - Cross-platform compatibility?
+  - Platform-specific implementations?
+  - Required dependencies per platform?
+- Resource management:
+  - Performance constraints defined?
+  - Resource limits specified?
+  - Cleanup procedures documented?
+- Testing strategy:
+  - Test purpose documentation (each test explains why it exists)
+  - Meaningful tests that can fail to reveal real issues
+  - Edge case coverage and failure scenarios
+  - Follows project testing philosophy: "When tests fail, fix the code, not the test"
+- Deployment considerations
+
+### Additional Quality Checks:
+
+**Completeness Assessment**
+- Missing critical sections
+- Unresolved decisions
+- Open questions
+
+**Clarity Assessment**  
+- Ambiguous statements
+- Assumed knowledge
+- Inconsistencies
+
+**Overengineering Assessment**
+- Features not aligned with core user needs
+- Premature optimizations
+- Unnecessary complexity patterns
+
+### Overengineering Detection:
+
+**Core Value Alignment Analysis**
+Evaluate whether features directly serve the core user need:
+- Does this feature solve a real, immediate problem?
+- Is it being used frequently enough to justify complexity?
+- Would a simpler solution work for 80% of use cases?
+
+**YAGNI Principle (You Aren't Gonna Need It)**
+Be aggressive about cutting features:
+- If unsure whether it's needed → Cut it
+- If it's for "future flexibility" → Cut it
+- If only 20% of users need it → Cut it
+- If it adds any complexity → Question it, probably cut it
+
+**Common Overengineering Patterns to Detect:**
+
+1. **Premature Optimization**
+   - Caching for rarely accessed data
+   - Performance optimizations without benchmarks
+   - Complex algorithms for small datasets
+   - Micro-optimizations before profiling
+
+2. **Feature Creep**
+   - "Nice to have" features (cut them)
+   - Edge case handling for unlikely scenarios (cut them)
+   - Multiple ways to do the same thing (keep only one)
+   - Features that "might be useful someday" (definitely cut)
+
+3. **Over-abstraction**
+   - Generic solutions for specific problems
+   - Too many configuration options
+   - Unnecessary plugin/extension systems
+   - Abstract classes with single implementations
+
+4. **Infrastructure Overhead**
+   - Complex build pipelines for simple tools
+   - Multiple deployment environments for internal tools
+   - Extensive monitoring for non-critical features
+   - Database clustering for low-traffic applications
+
+5. **Testing Extremism**
+   - 100% coverage requirements
+   - Testing implementation details
+   - Mocking everything
+   - Edge case tests for prototype features
+
+**Simplification Recommendations:**
+- Identify features to cut from the spec entirely
+- Suggest simpler alternatives
+- Highlight unnecessary complexity
+- Recommend aggressive scope reduction to core essentials
+
+### Output Format:
+
+The analysis will provide:
+- **Summary**: Overall readiness assessment (Ready/Not Ready)
+- **Critical Gaps**: Must-fix issues blocking implementation
+- **Missing Details**: Specific areas needing clarification
+- **Risk Areas**: Potential implementation challenges
+- **Overengineering Analysis**: 
+  - Non-core features that should be removed entirely
+  - Complexity that doesn't align with usage patterns
+  - Suggested simplifications or complete removal
+- **Features to Cut**: Specific items to remove from the spec
+- **Essential Scope**: Absolute minimum needed to solve the core problem
+- **Recommendations**: Next steps to improve the spec
+
+### Example Overengineering Detection:
+
+When analyzing a specification, the validator might identify patterns like:
+
+**Example 1: Unnecessary Caching**
+- Spec includes: "Cache user preferences with Redis"
+- Analysis: User preferences accessed once per session
+- Recommendation: Use in-memory storage or browser localStorage for MVP
+
+**Example 2: Premature Edge Cases**
+- Spec includes: "Handle 10,000+ concurrent connections"
+- Analysis: Expected usage is <100 concurrent users
+- Recommendation: Cut this entirely - let it fail at scale if needed
+
+**Example 3: Over-abstracted Architecture**
+- Spec includes: "Plugin system for custom validators"
+- Analysis: Only 3 validators needed, all known upfront
+- Recommendation: Implement validators directly, no plugin system needed
+
+**Example 4: Excessive Testing Requirements**
+- Spec includes: "100% code coverage with mutation testing"
+- Analysis: Tool used occasionally, not mission-critical
+- Recommendation: Focus on core functionality tests (70% coverage)
+
+**Example 5: Feature Creep**
+- Spec includes: "Support 5 export formats (JSON, CSV, XML, YAML, TOML)"
+- Analysis: 95% of users only need JSON
+- Recommendation: Cut all formats except JSON - YAGNI (You Aren't Gonna Need It)
+
+This comprehensive analysis helps ensure specifications are implementation-ready while keeping scope focused on core user needs, reducing both ambiguity and unnecessary complexity.
+
+---
+
+Please fix the load callback name
+
+---
+
+# Decompose Specification into Tasks
+
+Decompose the specification at: 
+
+## Process Overview
+
+This command takes a validated specification and breaks it down into:
+1. Clear, actionable tasks with dependencies
+2. Implementation phases and milestones
+3. Testing and validation requirements
+4. Documentation needs
+
+!which stm &> /dev/null && test -d .simple-task-master && echo "STM_STATUS: Available and initialized" || (which stm &> /dev/null && echo "STM_STATUS: Available but not initialized" || echo "STM_STATUS: Not installed")
+
+## ⚠️ CRITICAL: Content Preservation Requirements
+
+**THIS IS THE MOST IMPORTANT PART**: When creating STM tasks, you MUST copy ALL content from the task breakdown into the STM tasks. Do NOT summarize or reference the spec - include the ACTUAL CODE and details.
+
+## Pre-Flight Checklist
+
+Before creating any STM tasks, confirm your understanding:
+- [ ] I will NOT write summaries like "Create X as specified in spec"
+- [ ] I will COPY all code blocks from the task breakdown into STM --details
+- [ ] I will USE heredocs or temp files for multi-line content
+- [ ] I will INCLUDE complete implementations, not references
+- [ ] Each STM task will be self-contained with ALL details from the breakdown
+
+**If you find yourself typing phrases like "as specified", "from spec", or "see specification" - STOP and copy the actual content instead!**
+
+## Instructions for Claude:
+
+0. **Task Management System**:
+   - Check the STM_STATUS output above
+   - If status is "Available but not initialized", run: `stm init`
+   - If status is "Available and initialized", use STM for task management
+   - If status is "Not installed", fall back to TodoWrite
+
+1. **Read and Validate Specification**:
+   - Read the specified spec file
+   - Verify it's a valid specification (has expected sections)
+   - Extract implementation phases and technical details
+
+2. **Analyze Specification Components**:
+   - Identify major features and components
+   - Extract technical requirements
+   - Note dependencies between components
+   - Identify testing requirements
+   - Document success criteria
+
+3. **Create Task Breakdown**:
+   
+   Break down the specification into concrete, actionable tasks.
+   
+   Key principles:
+   - Each task should have a single, clear objective
+   - **PRESERVE ALL CONTENT**: Copy implementation details, code blocks, and examples verbatim from the spec
+   - Define clear acceptance criteria with specific test scenarios
+   - Include tests as part of each task
+   - Document dependencies between tasks
+     * Write meaningful tests that can fail to reveal real issues
+     * Follow project principle: "When tests fail, fix the code, not the test"
+   - Create foundation tasks first, then build features on top
+   - Each task should be self-contained with all necessary details
+   
+   **CRITICAL REQUIREMENT**: When creating tasks, you MUST preserve:
+   - Complete code examples (including full functions, not just snippets)
+   - All technical requirements and specifications
+   - Detailed implementation steps
+   - Configuration examples
+   - Error handling requirements
+   - All acceptance criteria and test scenarios
+   
+   Think of each task as a complete mini-specification that contains everything needed to implement it without referring back to the original spec.
+   
+   ## 📋 THE TWO-STEP PROCESS YOU MUST FOLLOW:
+   
+   **Step 1**: Create the task breakdown DOCUMENT with all details
+   **Step 2**: Copy those SAME details into STM tasks
+   
+   The task breakdown document is NOT just for reference - it's the SOURCE for your STM task content!
+   
+   Task structure:
+   - Foundation tasks: Core infrastructure (database, frameworks, testing setup)
+   - Feature tasks: Complete vertical slices including all layers
+   - Testing tasks: Unit, integration, and E2E tests
+   - Documentation tasks: API docs, user guides, code comments
+
+4. **Generate Task Document**:
+
+   Create a comprehensive task breakdown document:
+   
+   ```markdown
+   # Task Breakdown: [Specification Name]
+   Generated: [Date]
+   Source: [spec-file]
+   
+   ## Overview
+   [Brief summary of what's being built]
+   
+   ## Phase 1: Foundation
+   
+   ### Task 1.1: [Task Title]
+   **Description**: One-line summary of what needs to be done
+   **Size**: Small/Medium/Large
+   **Priority**: High/Medium/Low
+   **Dependencies**: None
+   **Can run parallel with**: Task 1.2, 1.3
+   
+   **Technical Requirements**:
+   - [All technical details from spec]
+   - [Specific library versions]
+   - [Code examples from spec]
+   
+   **Implementation Steps**:
+   1. [Detailed step from spec]
+   2. [Another step with specifics]
+   3. [Continue with all steps]
+   
+   **Acceptance Criteria**:
+   - [ ] [Specific criteria from spec]
+   - [ ] Tests written and passing
+   - [ ] [Additional criteria]
+   
+   ## Phase 2: Core Features
+   [Continue pattern...]
+   ```
+   
+   Example task breakdown:
+   ```markdown
+   ### Task 2.3: Implement file system operations with backup support
+   **Description**: Build filesystem.ts module with Unix-focused operations and backup support
+   **Size**: Large
+   **Priority**: High
+   **Dependencies**: Task 1.1 (TypeScript setup), Task 1.2 (Project structure)
+   **Can run parallel with**: Task 2.4 (Config module)
+   
+   **Source**: specs/feat-modernize-setup-installer.md
+   
+   **Technical Requirements**:
+   - Path validation: Basic checks for reasonable paths
+   - Permission checks: Verify write permissions before operations
+   - Backup creation: Simple backup before overwriting files
+   - Error handling: Graceful failure with helpful messages
+   - Unix path handling: Use path.join, os.homedir(), standard Unix permissions
+   
+   **Functions to implement**:
+   - validateProjectPath(input: string): boolean - Basic path validation
+   - ensureDirectoryExists(path: string): Promise<void>
+   - copyFileWithBackup(source: string, target: string, backup: boolean): Promise<void>
+   - setExecutablePermission(filePath: string): Promise<void> - chmod 755
+   - needsUpdate(source: string, target: string): Promise<boolean> - SHA-256 comparison
+   - getFileHash(filePath: string): Promise<string> - SHA-256 hash generation
+   
+   **Implementation example from spec**:
+   ```typescript
+   async function needsUpdate(source: string, target: string): Promise<boolean> {
+     if (!await fs.pathExists(target)) return true;
+     
+     const sourceHash = await getFileHash(source);
+     const targetHash = await getFileHash(target);
+     
+     return sourceHash !== targetHash;
+   }
+   ```
+   
+   **Acceptance Criteria**:
+   - [ ] All file operations handle Unix paths correctly
+   - [ ] SHA-256 based idempotency checking implemented
+   - [ ] Backup functionality creates timestamped backups
+   - [ ] Executable permissions set correctly for hooks (755)
+   - [ ] Path validation prevents directory traversal
+   - [ ] Tests: All operations work on macOS/Linux with proper error handling
+   ```
+   
+5. **Create Task Management Entries**:
+   
+   ## 🚨 STOP AND READ: Common Mistake vs Correct Approach
+   
+   ❌ **WRONG - What NOT to do**:
+   ```bash
+   stm add "[P1.3] Implement common hook utilities" \
+     --description "Create shared utilities module for all hooks" \
+     --details "Create cli/hooks/utils.ts with readStdin() with 1-second timeout, findProjectRoot() using git rev-parse, detectPackageManager() checking lock files" \
+     --validation "readStdin with timeout. Project root discovery. Package manager detection."
+   ```
+   
+   ✅ **CORRECT - What you MUST do**:
+   ```bash
+   # For each task in the breakdown, find the corresponding section and COPY ALL its content
+   # Use temporary files for large content to preserve formatting
+   
+   cat > /tmp/task-details.txt << 'EOF'
+   Create cli/hooks/utils.ts with the following implementations:
+   
+   ```typescript
+   import { exec } from 'child_process';
+   import { promisify } from 'util';
+   import * as fs from 'fs-extra';
+   import * as path from 'path';
+   
+   const execAsync = promisify(exec);
+   
+   // Standard input reader
+   export async function readStdin(): Promise<string> {
+     return new Promise((resolve) => {
+       let data = '';
+       process.stdin.on('data', chunk => data += chunk);
+       process.stdin.on('end', () => resolve(data));
+       setTimeout(() => resolve(''), 1000); // Timeout fallback
+     });
+   }
+   
+   // Project root discovery
+   export async function findProjectRoot(startDir: string = process.cwd()): Promise<string> {
+     try {
+       const { stdout } = await execAsync('git rev-parse --show-toplevel', { cwd: startDir });
+       return stdout.trim();
+     } catch {
+       return process.cwd();
+     }
+   }
+   
+   // [Include ALL other functions from the task breakdown...]
+   ```
+   
+   Technical Requirements:
+   - Standard input reader with timeout
+   - Project root discovery using git
+   - Package manager detection (npm/yarn/pnpm)
+   - Command execution wrapper
+   - Error formatting helper
+   - Tool availability checker
+   EOF
+   
+   stm add "[P1.3] Implement common hook utilities" \
+     --description "Create shared utilities module for all hooks with stdin reader, project root discovery, package manager detection, command execution wrapper, error formatting, and tool availability checking" \
+     --details "$(cat /tmp/task-details.txt)" \
+     --validation "readStdin with 1-second timeout. Project root discovery via git. Package manager detection for npm/yarn/pnpm. Command execution with timeout and output capture. Error formatting follows BLOCKED: pattern. Tool availability checker works." \
+     --tags "phase1,infrastructure,utilities"
+   
+   rm /tmp/task-details.txt
+   ```
+   
+   **Remember**: The task breakdown document you created has ALL the implementation details. Your job is to COPY those details into STM, not summarize them!
+   
+   ```bash
+   # Example: Creating a task with complete specification details
+   
+   # Method 1: Using heredocs for multi-line content
+   stm add "Implement auto-checkpoint hook logic" \
+     --description "Build the complete auto-checkpoint functionality with git integration to create timestamped git stashes on Stop events" \
+     --details "$(cat <<'EOF'
+   Technical Requirements:
+   - Check if current directory is git repository using git status
+   - Detect uncommitted changes using git status --porcelain
+   - Create timestamped stash with configurable prefix from config
+   - Apply stash to restore working directory after creation
+   - Handle exit codes properly (0 for success, 1 for errors)
+   
+   Implementation from specification:
+   ```typescript
+   const hookName = process.argv[2];
+   if (hookName !== 'auto-checkpoint') {
+     console.error(`Unknown hook: ${hookName}`);
+     process.exit(1);
+   }
+   
+   const hookConfig = config.hooks?.['auto-checkpoint'] || {};
+   const prefix = hookConfig.prefix || 'claude';
+   
+   const gitStatus = spawn('git', ['status', '--porcelain'], {
+     stdio: ['ignore', 'pipe', 'pipe']
+   });
+   
+   let stdout = '';
+   gitStatus.stdout.on('data', (data) => stdout += data);
+   
+   gitStatus.on('close', (code) => {
+     if (code !== 0) {
+       console.log('Not a git repository, skipping checkpoint');
+       process.exit(0);
+     }
+     
+     if (!stdout.trim()) {
+       console.log('No changes to checkpoint');
+       process.exit(0);
+     }
+     
+     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+     const message = `${prefix}-checkpoint-${timestamp}`;
+     
+     const stash = spawn('git', ['stash', 'push', '-m', message], {
+       stdio: ['ignore', 'pipe', 'pipe']
+     });
+     
+     stash.on('close', (stashCode) => {
+       if (stashCode !== 0) {
+         console.error('Failed to create checkpoint');
+         process.exit(1);
+       }
+       
+       spawn('git', ['stash', 'apply'], {
+         stdio: 'ignore'
+       }).on('close', () => {
+         console.log(`✅ Checkpoint created: ${message}`);
+         process.exit(0);
+       });
+     });
+   });
+   ```
+   
+   Key implementation notes:
+   - Use child_process.spawn for git commands
+   - Capture stdout to check for changes
+   - Generate ISO timestamp and sanitize for git message
+   - Chain git stash push and apply operations
+   EOF
+   )" \
+     --validation "$(cat <<'EOF'
+   - [ ] Correctly identifies git repositories
+   - [ ] Detects uncommitted changes using git status --porcelain
+   - [ ] Creates checkpoint with format: ${prefix}-checkpoint-${timestamp}
+   - [ ] Restores working directory after stash
+   - [ ] Exits with code 0 on success, 1 on error
+   - [ ] Respects configured prefix from .claudekit/config.json
+   - [ ] Handles missing config file gracefully
+   
+   Test scenarios:
+   1. Run in non-git directory - should exit 0
+   2. Run with no changes - should exit 0
+   3. Run with changes - should create checkpoint
+   4. Run with custom config - should use custom prefix
+   EOF
+   )" \
+     --tags "phase2,core,high-priority,large" \
+     --status pending \
+     --deps "35,36"
+   
+   # Method 2: Using temporary files for very large content
+   cat > /tmp/stm-details.txt << 'EOF'
+   [Full technical requirements and implementation details from spec...]
+   EOF
+   
+   cat > /tmp/stm-validation.txt << 'EOF'
+   [Complete acceptance criteria and test scenarios...]
+   EOF
+   
+   stm add "Task title" \
+     --description "Brief what and why" \
+     --details "$(cat /tmp/stm-details.txt)" \
+     --validation "$(cat /tmp/stm-validation.txt)" \
+     --tags "appropriate,tags" \
+     --status pending
+   
+   rm /tmp/stm-details.txt /tmp/stm-validation.txt
+   ```
+   
+   **Important STM field usage**:
+   - `--description`: Brief what & why (1-2 sentences max)
+   - `--details`: Complete technical implementation including:
+     - All technical requirements from spec
+     - Full code examples with proper formatting (COPY from breakdown, don't summarize!)
+     - Implementation steps and notes
+     - Architecture decisions
+     - **MUST be self-contained** - someone should be able to implement the task without seeing the original spec
+   - `--validation`: Complete acceptance criteria including:
+     - All test scenarios
+     - Success/failure conditions
+     - Edge cases to verify
+   
+   ## Content Size Guidelines
+   
+   - **Small tasks (< 20 lines)**: Can use heredocs directly in command
+   - **Medium tasks (20-200 lines)**: Use temporary files to preserve formatting
+   - **Large tasks (> 200 lines)**: Always use temporary files
+   - **Tasks with code blocks**: MUST use heredocs or files (never inline)
+   
+   Example for medium/large content:
+   ```bash
+   # Extract the full implementation from your task breakdown
+   cat > /tmp/stm-task-details.txt << 'EOF'
+   [PASTE THE ENTIRE "Technical Requirements" and "Implementation" sections from the task breakdown]
+   [Include ALL code blocks with proper formatting]
+   [Include ALL technical notes and comments]
+   EOF
+   
+   cat > /tmp/stm-task-validation.txt << 'EOF'
+   [PASTE THE ENTIRE "Acceptance Criteria" section]
+   [Include ALL test scenarios]
+   EOF
+   
+   stm add "[Task Title]" \
+     --description "[One line summary]" \
+     --details "$(cat /tmp/stm-task-details.txt)" \
+     --validation "$(cat /tmp/stm-task-validation.txt)" \
+     --tags "appropriate,tags" \
+     --deps "1,2,3"
+   
+   rm /tmp/stm-task-*.txt
+   ```
+   
+   If STM is not available, use TodoWrite:
+   ```javascript
+   [
+     {
+       id: "1",
+       content: "Phase 1: Set up TypeScript project structure",
+       status: "pending",
+       priority: "high"
+     },
+     {
+       id: "2",
+       content: "Phase 1: Configure build system with esbuild",
+       status: "pending",
+       priority: "high"
+     },
+     // ... additional tasks
+   ]
+   ```
+
+6. **Save Task Breakdown**:
+   - Save the detailed task breakdown document to `specs/[spec-name]-tasks.md`
+   - Create tasks in STM or TodoWrite for immediate tracking
+   - Generate a summary report showing:
+     - Total number of tasks
+     - Breakdown by phase
+     - Parallel execution opportunities
+     - Task management system used (STM or TodoWrite)
+
+## Output Format
+
+### Task Breakdown Document
+The generated markdown file includes:
+- Executive summary
+- Phase-by-phase task breakdown
+- Dependency graph
+- Risk assessment
+- Execution strategy
+
+### Task Management Integration
+Tasks are immediately available in STM (if installed) or TodoWrite for:
+- Progress tracking
+- Status updates
+- Blocking issue identification
+- Parallel work coordination
+- Dependency tracking (STM only)
+- Persistent storage across sessions (STM only)
+
+### Summary Report
+Displays:
+- Total tasks created
+- Tasks per phase
+- Critical path identification
+- Recommended execution order
+
+## Usage Examples
+
+```bash
+# Decompose a feature specification
+/spec:decompose specs/feat-user-authentication.md
+
+# Decompose a system enhancement spec
+/spec:decompose specs/feat-api-rate-limiting.md
+```
+
+## Success Criteria
+
+The decomposition is complete when:
+- ✅ Task breakdown document is saved to specs directory
+- ✅ All tasks are created in STM (if available) or TodoWrite for tracking
+- ✅ **Tasks preserve ALL implementation details from the spec including:**
+  - Complete code blocks and examples (not summarized)
+  - Full technical requirements and specifications
+  - Detailed step-by-step implementation instructions
+  - All configuration examples
+  - Complete acceptance criteria with test scenarios
+- ✅ Foundation tasks are identified and prioritized
+- ✅ Dependencies between tasks are clearly documented
+- ✅ All tasks include testing requirements
+- ✅ Parallel execution opportunities are identified
+- ✅ **STM tasks use all three fields properly:**
+  - `--description`: Brief what & why (1-2 sentences)
+  - `--details`: Complete technical implementation from spec (ACTUAL CODE, not references)
+  - `--validation`: Full acceptance criteria and test scenarios
+- ✅ **Quality check passed**: Running `stm show [any-task-id]` displays full code implementations
+- ✅ **No summary phrases**: Tasks don't contain "as specified", "from spec", or similar references
+
+## Post-Creation Validation
+
+After creating STM tasks, perform these checks:
+
+1. **Sample Task Review**:
+   ```bash
+   # Pick a random task and check it has full implementation
+   stm show [task-id] | grep -E "(as specified|from spec|see specification)"
+   # Should return NO matches - if it does, the task is incomplete
+   ```
+
+2. **Content Length Check**:
+   ```bash
+   # Implementation tasks should have substantial details
+   stm list --format json | jq '.[] | select(.details | length < 500) | {id, title}'
+   # Review any tasks with very short details - they likely need more content
+   ```
+
+3. **Code Block Verification**:
+   ```bash
+   # Check that tasks contain actual code blocks
+   stm grep "```" | wc -l
+   # Should show many matches for tasks with code implementations
+   ```
+
+## Integration with Other Commands
+
+- **Prerequisites**: Run `/spec:validate` first to ensure spec quality
+- **Next step**: Use `/spec:execute` to implement the decomposed tasks
+- **Progress tracking**: 
+  - With STM: `stm list --pretty` or `stm list --status pending`
+  - With TodoWrite: Monitor task completion in session
+- **Quality checks**: Run `/validate-and-fix` after implementation
+
+## Best Practices
+
+1. **Task Granularity**: Keep tasks focused on single objectives
+2. **Dependencies**: Clearly identify blocking vs parallel work
+3. **Testing**: Include test tasks for each component
+4. **Documentation**: Add documentation tasks alongside implementation
+5. **Phases**: Group related tasks into logical phases
+
+---
+
+# Implement Specification
+
+Implement the specification at: 
+
+STM_STATUS: Not installed
+
+## Pre-Execution Checks
+
+1. **Check Task Management**:
+   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
+   - If STM shows "Available and initialized" → Use STM for tasks
+   - If STM shows "Not installed" → Use TodoWrite instead
+
+2. **Verify Specification**:
+   - Confirm spec file exists and is complete
+   - Check that required tools are available
+   - Stop if anything is missing or unclear
+
+## Implementation Process
+
+### 1. Analyze Specification
+
+Read the specification to understand:
+- What components need to be built
+- Dependencies between components
+- Testing requirements
+- Success criteria
+
+### 2. Load or Create Tasks
+
+**Using STM** (if available):
+```bash
+stm list --status pending -f json
+```
+
+**Using TodoWrite** (fallback):
+Create tasks for each component in the specification
+
+### 3. Implementation Workflow
+
+For each task, follow this cycle:
+
+**Available Agents:**
+- [0/1] Listing agents
+✔ Completed 1 steps in 22ms
+
+Agents:
+────────────────────────────────────────────────────────────────────────────────
+  build:
+    vite-expert                    [project]     6.2k tokens
+    webpack-expert                 [embedded]    6.0k tokens
+  linting:
+    linting-expert                 [project]     3.9k tokens
+  general:
+    code-review-expert             [project]     3.5k tokens
+    git-expert                     [project]     4.1k tokens
+    ios-simulator                  [project]      846 tokens
+    oracle                         [project]     2.2k tokens
+    refactoring-expert             [project]     3.0k tokens
+    research-expert                [project]     2.0k tokens
+    triage-expert                  [project]     3.7k tokens
+    code-reviewer                  [global]      2.3k tokens
+  tools:
+    code-search                    [project]     1.2k tokens
+    documentation-expert           [project]     3.6k tokens
+  database:
+    database-expert                [project]     2.9k tokens
+    postgres-expert                [project]     6.9k tokens
+    mongodb-expert                 [embedded]    6.2k tokens
+  framework:
+    expo-expert                    [project]     7.1k tokens
+    react-expert                   [project]     3.2k tokens
+    react-performance-expert       [project]     7.0k tokens
+    react-native-expert            [project]     5.5k tokens
+    swift-ios-expert               [project]     6.0k tokens
+    typescript-build-expert        [project]     4.3k tokens
+    typescript-expert              [project]     3.7k tokens
+    typescript-type-expert         [project]     5.7k tokens
+    nodejs-expert                  [global]      7.0k tokens
+    ai-sdk-expert                  [embedded]    4.9k tokens
+    nextjs-expert                  [embedded]    4.6k tokens
+    nestjs-expert                  [embedded]    5.3k tokens
+  frontend:
+    accessibility-expert           [project]     4.8k tokens
+    css-styling-expert             [embedded]    4.6k tokens
+  swift-ios:
+    animation-patterns             [project]     1.2k tokens
+    expo-native-modules            [project]     2.1k tokens
+    liquid-glass                   [project]     2.9k tokens
+    list-and-scroll-patterns       [project]      924 tokens
+    modern-apis                    [project]     1.6k tokens
+    performance-patterns           [project]     1.5k tokens
+    sheet-navigation-patterns      [project]      838 tokens
+    state-management               [project]     1.1k tokens
+    view-structure                 [project]     1.0k tokens
+  testing:
+    testing-expert                 [project]     4.7k tokens
+    vitest-testing-expert          [project]     3.2k tokens
+    playwright-expert              [embedded]    5.6k tokens
+    jest-testing-expert            [embedded]    6.5k tokens
+  devops:
+    cli-expert                     [global]      6.2k tokens
+    docker-expert                  [global]      3.5k tokens
+    github-actions-expert          [global]      3.8k tokens
+    devops-expert                  [embedded]    5.6k tokens
+
+#### Step 1: Implement
+
+Launch appropriate specialist agent:
+
+```
+Task tool:
+- description: "Implement [component name]"  
+- subagent_type: [choose specialist that matches the task]
+- prompt: |
+    First run: stm show [task-id]
+    This will give you the full task details and requirements.
+    
+    Then implement the component based on those requirements.
+    Follow project code style and add error handling.
+    Report back when complete.
+```
+
+#### Step 2: Write Tests
+
+Launch testing expert:
+
+```
+Task tool:
+- description: "Write tests for [component]"
+- subagent_type: testing-expert [or jest/vitest-testing-expert]
+- prompt: |
+    First run: stm show [task-id]
+    
+    Write comprehensive tests for the implemented component.
+    Cover edge cases and aim for >80% coverage.
+    Report back when complete.
+```
+
+Then run tests to verify they pass.
+
+#### Step 3: Code Review (Required)
+
+**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+
+Launch code review expert:
+
+```
+Task tool:
+- description: "Review [component]"
+- subagent_type: code-review-expert
+- prompt: |
+    First run: stm show [task-id]
+    
+    Review implementation for BOTH:
+    1. COMPLETENESS - Are all requirements from the task fully implemented?
+    2. QUALITY - Code quality, security, error handling, test coverage
+    
+    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
+    Report if implementation is COMPLETE or INCOMPLETE.
+    Report back with findings.
+```
+
+#### Step 4: Fix Issues & Complete Implementation
+
+If code review found the implementation INCOMPLETE or has CRITICAL issues:
+
+1. Launch specialist to complete/fix:
+   ```
+   Task tool:
+   - description: "Complete/fix [component]"
+   - subagent_type: [specialist matching the task]
+   - prompt: |
+       First run: stm show [task-id]
+       
+       Address these items from code review:
+       - Missing requirements: [list any incomplete items]
+       - Critical issues: [list any critical issues]
+       
+       Update tests if needed.
+       Report back when complete.
+   ```
+
+2. Re-run tests to verify fixes
+
+3. Re-review to confirm both COMPLETE and quality standards met
+
+4. Only when implementation is COMPLETE and all critical issues fixed:
+   - If using STM: `stm update [task-id] --status done`
+   - If using TodoWrite: Mark task as completed
+
+#### Step 5: Commit Changes
+
+Create atomic commit following project conventions:
+```bash
+git add [files]
+git commit -m "[follow project's commit convention]"
+```
+
+### 4. Track Progress
+
+Monitor implementation progress:
+
+**Using STM:**
+```bash
+stm list --pretty              # View all tasks
+stm list --status pending      # Pending tasks
+stm list --status in-progress  # Active tasks
+stm list --status done         # Completed tasks
+```
+
+**Using TodoWrite:**
+Track tasks in the session with status indicators.
+
+### 5. Complete Implementation
+
+Implementation is complete when:
+- All tasks are COMPLETE (all requirements implemented)
+- All tasks pass quality review (no critical issues)
+- All tests passing
+- Documentation updated
+
+## If Issues Arise
+
+If any agent encounters problems:
+1. Identify the specific issue
+2. Launch appropriate specialist to resolve
+3. Or request user assistance if blocked
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+# Code Review
+
+## Current Repository State
+ M features/recipe-preview/components/RecipeViewScreen.tsx
+?? lib/components/atoms/ProgressiveImage.tsx
+?? spec/013_preview_loading/
+---
+ features/recipe-preview/components/RecipeViewScreen.tsx | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+---
+52645c8 feat: generate thumbnails Entire-Checkpoint: 8e3e46d75d0b
+85c6795 chore: add spec and plan for thumbnails Entire-Checkpoint: 8e3e46d75d0b
+9b27171 feat: allow to zoom the image on the preview and edit views Entire-Checkpoint: c1c12258735f
+3c10ca1 chore: add spec and plan for zoomable image Entire-Checkpoint: 2553978618cf
+c440c8e chore: add mobile development agents Entire-Checkpoint: ea0726f2eda6
+
+## Pre-Review Analysis: Think This Through End-to-End
+
+Before launching review agents, analyze the complete impact and context:
+
+### Impact Assessment
+- **System Impact**: What systems, services, or components could be affected by these changes?
+- **Deployment Context**: What's the risk level and timeline for these changes?
+- **Integration Points**: Are there external dependencies, APIs, or team workflows involved?
+- **Stakeholder Impact**: Who depends on the code being reviewed?
+
+### Review Strategy Coordination
+Based on impact assessment and ****, determine:
+- **Critical vs. Nice-to-Have**: Which review aspects are CRITICAL vs. optional for this change?
+- **Potential Conflicts**: Could findings from different review areas suggest competing solutions?
+- **Shared Context**: What context should all review agents be aware of?
+- **Appropriate Rigor**: What level of analysis matches the change scope and risk?
+
+## Review Strategy
+
+Based on **** and the impact assessment above, determine which review agents are needed:
+
+If reviewing "changes" or recent modifications:
+1. Analyze the file types that have been modified
+2. Launch only relevant review agents:
+   - **Documentation files only** (*.md, *.txt, README): Launch only Documentation & API Review agent
+   - **Test files only** (*test.*, *.spec.*, tests/): Launch Testing Quality Review and Code Quality Review agents
+   - **Config files only** (*.json, *.yaml, *.toml, .*rc): Launch Security & Dependencies Review and Architecture Review agents
+   - **Source code files** (*.ts, *.js, *.py, etc.): Launch all 6 review agents
+   - **Mixed changes**: Launch agents relevant to each file type present
+
+If reviewing a specific directory or broad scope:
+- Launch all 6 review agents for comprehensive coverage
+
+Use the Task tool to invoke the appropriate code-review-expert agents concurrently with enhanced thinking trigger instructions:
+
+## 1. Architecture & Design Review
+```
+Subagent: code-review-expert
+Description: Architecture review with end-to-end analysis
+Prompt: Review the architecture and design patterns in: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: module organization, separation of concerns, dependency management, abstraction levels, design pattern usage, and architectural consistency. Check available experts with claudekit for domain-specific patterns.
+
+THINK THIS THROUGH END-TO-END:
+- Trace architectural impacts: How does this change affect all dependent systems?
+- Map the complete data/control flow through the architecture
+- Identify what breaks when components fail or change
+- Consider the full deployment and integration pipeline
+- Analyze how this fits into the broader system architecture
+
+Check available experts with claudekit for domain-specific patterns.
+```
+
+## 2. Code Quality Review
+```
+Subagent: code-review-expert
+Description: Code quality review  
+Prompt: Review code quality and maintainability in: 
+Focus on: readability, naming conventions, code complexity, DRY principles, code smells, refactoring opportunities, and consistent coding patterns. Pull domain-specific quality metrics from available experts.
+```
+
+## 3. Security & Dependencies Review
+```
+Subagent: code-review-expert
+Description: Security and dependencies review with alternative hypothesis analysis
+Prompt: Perform security and dependency analysis of: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: input validation, injection vulnerabilities, authentication/authorization, secrets management, dependency vulnerabilities, license compliance, version pinning, and supply chain security. Use security insights from domain experts if available.
+
+CONSIDER ALTERNATIVE HYPOTHESES:
+- Beyond obvious vulnerabilities, what other attack vectors exist?
+- How else could these security controls be bypassed or exploited?
+- What assumptions about user behavior, data flow, or system boundaries could an attacker violate?
+- Are there alternative explanations for apparent security measures?
+- What if the current security model is fundamentally flawed?
+
+Use security insights from domain experts if available.
+```
+
+## 4. Performance & Scalability Review
+```
+Subagent: code-review-expert
+Description: Performance and scalability review
+Prompt: Analyze performance and scalability in: 
+Focus on: algorithm complexity, memory usage, database queries, caching strategies, async patterns, resource management, load handling, and horizontal scaling considerations. Get performance patterns from relevant experts.
+```
+
+## 5. Testing Quality Review
+```
+Subagent: code-review-expert
+Description: Testing quality review
+Prompt: Review test quality and effectiveness for: 
+Focus on: meaningful assertions, test isolation, edge case handling, failure scenario coverage, mock vs real dependencies balance, test maintainability, clear test names, and actual behavior verification (not just coverage metrics). Check for testing-expert insights if available.
+```
+
+## 6. Documentation & API Review
+```
+Subagent: code-review-expert
+Description: Documentation and API review
+Prompt: Review documentation and API design for: 
+
+Focus on: README completeness, API documentation, breaking changes, code comments, JSDoc/TypeDoc coverage, usage examples, migration guides, and developer experience. Evaluate API consistency and contract clarity.
+
+Documentation Review Guidelines:
+- Consider purpose and audience: Who needs this information and why?
+- Evaluate effectiveness: Does the documentation achieve its goals?
+- Focus on clarity: Can users understand and apply the information?
+- Identify real issues: Missing information, errors, contradictions, outdated content
+- Respect intentional variation: Multiple examples may show different valid approaches
+```
+
+## Post-Review Consolidation: Consider Alternative Hypotheses
+
+After all agents complete, apply alternative hypothesis thinking before consolidating:
+
+### Cross-Pattern Analysis
+- **Competing Solutions**: Do findings from different review areas suggest conflicting solutions or approaches?
+- **Alternative Explanations**: Are there alternative explanations for patterns seen across multiple review areas?
+- **Root Cause Investigation**: Could the same underlying issue be manifesting in multiple review aspects?
+- **Intentional Trade-offs**: What if apparent "problems" are actually intentional design decisions with valid reasoning?
+
+### Prioritization with Context
+- **Real vs. Theoretical Issues**: Which issues matter given the actual deployment context and timeline?
+- **Conflicting Recommendations**: How do we sequence fixes that might conflict with each other?
+- **Alternative Approaches**: If obvious fixes prove problematic, what are the alternative solutions?
+
+Then consolidate findings into this structured format:
+
+```
+🗂 Consolidated Code Review Report - [Target]
+
+📋 Review Scope
+Target: [directory/files reviewed] ([X files, Y lines])
+Focus: Architecture, Security, Performance, Testing, Documentation
+
+📊 Executive Summary
+Brief overview of code quality, key strengths, and critical issues requiring attention.
+
+🔴 CRITICAL Issues (Must Fix Immediately)
+1. 🔒 [Security/🏗️ Architecture/⚡ Performance/🧪 Testing/📝 Documentation/💥 Breaking] [Issue Name]
+   File: [path:line]
+   Impact: [description]
+   Solution:
+   ```[code example]```
+
+2. [Additional critical issues with type icons...]
+
+🟠 HIGH Priority Issues
+1. [Type icon] [Issue name]
+   File: [path:line]
+   Impact: [description]
+   Solution: [recommendation]
+
+2. [Additional high priority issues...]
+
+🟡 MEDIUM Priority Issues
+1. [Type icon] [Issue name] - [file:line]
+   Extract into: [suggested refactoring]
+
+2. [Additional medium priority issues...]
+
+✅ Quality Metrics
+Include only aspects that were actually reviewed based on the file types and agents launched:
+┌─────────────────┬───────┬────────────────────────────────────┐
+│ Aspect          │ Score │ Notes                              │
+├─────────────────┼───────┼────────────────────────────────────┤
+│ [Only include relevant aspects based on what was reviewed]      │
+│ Architecture    │ X/10  │ [Clean separation, coupling issues]│
+│ Code Quality    │ X/10  │ [Readability, consistency, patterns]│
+│ Security        │ X/10  │ [Critical vulnerabilities, if any] │
+│ Performance     │ X/10  │ [Bottlenecks, scalability concerns]│
+│ Testing         │ X/10  │ [Coverage percentage, test quality]│
+│ Documentation   │ X/10  │ [API docs, comments, examples]     │
+└─────────────────┴───────┴────────────────────────────────────┘
+
+For example:
+- Documentation-only review: Show only Documentation row
+- Test file review: Show Testing and Code Quality rows
+- Config file review: Show Security and Architecture rows
+- Full code review: Show all relevant aspects
+
+✨ Strengths to Preserve
+- [Key strength with evidence]
+- [Additional strengths...]
+
+🚀 Proactive Improvements
+1. [Pattern/Practice Name]
+   ```[code example]```
+
+2. [Additional improvements...]
+
+📊 Issue Distribution
+- Architecture: [X critical, Y high, Z medium]
+- Security: [X critical, Y high, Z medium]
+- Performance: [X critical, Y high, Z medium]
+- Testing: [X critical, Y high, Z medium]
+- Documentation: [X critical, Y high, Z medium]
+
+⚠️ Systemic Issues
+Repeated problems that need addressing:
+- [Problem pattern] (X occurrences)
+  → [Actionable fix/next step]
+- [Additional problems with solutions...]
+```
+
+After all agents complete, consolidate findings into this format. Focus on actionable feedback with specific file locations and code examples. Use type icons:
+🔒 Security | 🏗️ Architecture | ⚡ Performance | 🧪 Testing | 📝 Documentation | 💥 Breaking Change
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

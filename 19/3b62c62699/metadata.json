@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "193b62c62699",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ProgressiveImage.tsx",
+    "spec/013_preview_loading/plan.md",
+    "spec/013_preview_loading/spec.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/19/3b62c62699/0/metadata.json",
+      "transcript": "/19/3b62c62699/0/full.jsonl",
+      "context": "/19/3b62c62699/0/context.md",
+      "content_hash": "/19/3b62c62699/0/content_hash.txt",
+      "prompt": "/19/3b62c62699/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2756,
+    "cache_creation_tokens": 237413,
+    "cache_read_tokens": 3112061,
+    "output_tokens": 10622,
+    "api_call_count": 46
+  }
+}

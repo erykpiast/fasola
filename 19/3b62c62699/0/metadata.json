@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "193b62c62699",
+  "session_id": "d5150c9f-32bf-4bd3-94f2-f329f7da2625",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T09:35:06.341742Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ProgressiveImage.tsx",
+    "spec/013_preview_loading/plan.md",
+    "spec/013_preview_loading/spec.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "ca302949-d69c-4bfe-b997-9282b82fd4df",
+  "token_usage": {
+    "input_tokens": 2756,
+    "cache_creation_tokens": 237413,
+    "cache_read_tokens": 3112061,
+    "output_tokens": 10622,
+    "api_call_count": 46
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T09:35:05.990524Z",
+    "agent_lines": 379,
+    "human_added": 72,
+    "human_modified": 80,
+    "human_removed": 0,
+    "total_committed": 531,
+    "agent_percentage": 71.37476459510358
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/d5150c9f-32bf-4bd3-94f2-f329f7da2625.jsonl"
+}

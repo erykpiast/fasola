@@ -1,7 +1,7 @@
 # Task Breakdown: Fix Recipe Grid Status Bar Overlap
 
 Generated: 2026-02-20
-Source: spec/014_status_bar_inset/spec.md
+Source: specs/014_status_bar_inset/spec.md
 
 ## Overview
 

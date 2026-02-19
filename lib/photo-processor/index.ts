@@ -27,11 +27,13 @@ export async function processPhoto(
   try {
     // Convert photo URI to data URL if needed
     let imageDataUrl: DataUrl;
+    let geometryOnlyDataUrl: DataUrl;
     if (photoUri.startsWith("data:")) {
       imageDataUrl = photoUri as DataUrl;
     } else {
       imageDataUrl = await loadImageAsDataUrl(photoUri);
     }
+    geometryOnlyDataUrl = imageDataUrl;
 
     // Phase 1: Geometry correction (page dewarping)
     if (config.geometry.enabled) {
@@ -45,7 +47,7 @@ export async function processPhoto(
         );
         return {
           success: false,
-          processedUri: imageDataUrl,
+          processedUri: geometryOnlyDataUrl,
           error: {
             code: "DEWARP_FAILED",
             message: result.error || "Geometry correction failed",
@@ -54,6 +56,7 @@ export async function processPhoto(
       }
 
       imageDataUrl = result.processedUri!;
+      geometryOnlyDataUrl = imageDataUrl;
     }
 
     // Phase 2: Lighting correction
@@ -132,7 +135,7 @@ export async function processPhoto(
 
     return {
       success: true,
-      processedUri: imageDataUrl,
+      processedUri: geometryOnlyDataUrl,
       ocrResult,
     };
   } catch (error) {

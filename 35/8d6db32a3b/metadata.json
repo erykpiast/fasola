@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "358d6db32a3b",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app.json",
+    "modules/icloud-sync/app.plugin.js"
+  ],
+  "sessions": [
+    {
+      "metadata": "/35/8d6db32a3b/0/metadata.json",
+      "transcript": "/35/8d6db32a3b/0/full.jsonl",
+      "context": "/35/8d6db32a3b/0/context.md",
+      "content_hash": "/35/8d6db32a3b/0/content_hash.txt",
+      "prompt": "/35/8d6db32a3b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 79255,
+    "cache_read_tokens": 388284,
+    "output_tokens": 563,
+    "api_call_count": 6
+  }
+}

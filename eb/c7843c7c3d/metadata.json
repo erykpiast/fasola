@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "ebc7843c7c3d",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "app.json",
+    "ios/Podfile.properties.json",
+    "modules/icloud-sync/ios/ICloudSync.podspec",
+    "modules/liquid-glass/ios/LiquidGlass.podspec"
+  ],
+  "sessions": [
+    {
+      "metadata": "/eb/c7843c7c3d/0/metadata.json",
+      "transcript": "/eb/c7843c7c3d/0/full.jsonl",
+      "context": "/eb/c7843c7c3d/0/context.md",
+      "content_hash": "/eb/c7843c7c3d/0/content_hash.txt",
+      "prompt": "/eb/c7843c7c3d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 23,
+    "cache_creation_tokens": 118031,
+    "cache_read_tokens": 503527,
+    "output_tokens": 870,
+    "api_call_count": 17
+  }
+}

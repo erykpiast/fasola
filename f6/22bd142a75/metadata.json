@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "f622bd142a75",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "spec/014_status_bar_inset/spec.md",
+    "spec/014_status_bar_inset/tasks.md",
+    "specs/001-fix-recipe-grid-status-bar-overlap/spec.md",
+    "specs/fix-recipe-grid-status-bar-overlap.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f6/22bd142a75/0/metadata.json",
+      "transcript": "/f6/22bd142a75/0/full.jsonl",
+      "context": "/f6/22bd142a75/0/context.md",
+      "content_hash": "/f6/22bd142a75/0/content_hash.txt",
+      "prompt": "/f6/22bd142a75/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 5692,
+    "cache_creation_tokens": 74844,
+    "cache_read_tokens": 929741,
+    "output_tokens": 4322,
+    "api_call_count": 22
+  }
+}

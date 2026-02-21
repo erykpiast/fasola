@@ -3,7 +3,7 @@
   "checkpoint_id": "d0b87395ce30",
   "strategy": "manual-commit",
   "branch": "feat/image_zoom",
-  "checkpoints_count": 12,
+  "checkpoints_count": 14,
   "files_touched": [
     "app/index.tsx",
     "docs/native-modules.md",
@@ -29,13 +29,20 @@
       "context": "/d0/b87395ce30/1/context.md",
       "content_hash": "/d0/b87395ce30/1/content_hash.txt",
       "prompt": "/d0/b87395ce30/1/prompt.txt"
+    },
+    {
+      "metadata": "/d0/b87395ce30/2/metadata.json",
+      "transcript": "/d0/b87395ce30/2/full.jsonl",
+      "context": "/d0/b87395ce30/2/context.md",
+      "content_hash": "/d0/b87395ce30/2/content_hash.txt",
+      "prompt": "/d0/b87395ce30/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3135,
-    "cache_creation_tokens": 672259,
-    "cache_read_tokens": 10451748,
-    "output_tokens": 23771,
-    "api_call_count": 107
+    "input_tokens": 4422,
+    "cache_creation_tokens": 721588,
+    "cache_read_tokens": 10791326,
+    "output_tokens": 31079,
+    "api_call_count": 116
   }
 }

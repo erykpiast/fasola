@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "d0b87395ce30",
+  "session_id": "be4700a7-a50d-4e6f-980c-049333b09118",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T01:28:42.622554Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/index.tsx",
+    "features/photos/hooks/usePopoverTransition.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "e4dd360c-c2ef-44bf-8ba3-42b776278382",
+  "token_usage": {
+    "input_tokens": 1287,
+    "cache_creation_tokens": 49329,
+    "cache_read_tokens": 339578,
+    "output_tokens": 7308,
+    "api_call_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T01:28:42.491491Z",
+    "agent_lines": 0,
+    "human_added": 919,
+    "human_modified": 89,
+    "human_removed": 0,
+    "total_committed": 1008,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/be4700a7-a50d-4e6f-980c-049333b09118.jsonl"
+}

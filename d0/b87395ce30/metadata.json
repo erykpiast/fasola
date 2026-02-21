@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "d0b87395ce30",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/index.tsx",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/ios/LiquidGlassPopoverView.swift",
+    "modules/liquid-glass/src/LiquidGlassPopover.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassPopover.types.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d0/b87395ce30/0/metadata.json",
+      "transcript": "/d0/b87395ce30/0/full.jsonl",
+      "context": "/d0/b87395ce30/0/context.md",
+      "content_hash": "/d0/b87395ce30/0/content_hash.txt",
+      "prompt": "/d0/b87395ce30/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 42860,
+    "cache_read_tokens": 236420,
+    "output_tokens": 1726,
+    "api_call_count": 7
+  }
+}

@@ -1,0 +1,1715 @@
+## Context
+- Existing specs: total 24
+drwxr-xr-x@ 17 eryk.napierala  staff    544 Feb 20 00:03 .
+drwxr-xr-x@ 39 eryk.napierala  staff   1248 Feb 20 00:15 ..
+-rw-r--r--@  1 eryk.napierala  staff  10244 Dec 16 18:35 .DS_Store
+drwxr-xr-x@  4 eryk.napierala  staff    128 Oct 18 04:12 001_initial
+drwxr-xr-x@  4 eryk.napierala  staff    128 Oct 19 03:03 002_metadata
+drwxr-xr-x@  7 eryk.napierala  staff    224 Oct 25 22:32 003_search
+drwxr-xr-x@  4 eryk.napierala  staff    128 Dec 14 00:20 004_photo_ajdustment
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 17 19:55 005_text_recognition
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 17 19:55 006_background_processing
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 17 19:55 007_interactions
+drwxr-xr-x@  5 eryk.napierala  staff    160 Feb 17 19:55 008_source_selector
+drwxr-xr-x@  5 eryk.napierala  staff    160 Feb 17 19:55 009_glass_ui
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 17 19:55 010_icloud_sync
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 18 00:06 011_image_zoom
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 18 10:57 012_thumbnails
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 20 00:15 013_preview_loading
+drwxr-xr-x@  4 eryk.napierala  staff    128 Feb 20 00:15 014_status_bar_inset
+
+## Optional: Enhanced Library Documentation Support
+
+Context7 MCP server provides up-to-date library documentation for better spec creation.
+
+Check if Context7 is available: /Users/eryk.napierala/Library/pnpm/context7-mcp
+
+If NOT_INSTALLED and the feature involves external libraries, offer to enable Context7:
+```
+████ Optional: Enable Context7 for Enhanced Documentation ████
+
+Context7 provides up-to-date library documentation to improve spec quality.
+This is optional but recommended when working with external libraries.
+
+Would you like me to install Context7 for you? I can:
+  1. Install globally: npm install -g @upstash/context7-mcp
+  2. Add to Claude Code: claude mcp add context7 context7-mcp
+
+Or you can install it manually later if you prefer.
+```
+
+If user agrees to installation:
+- Run: `npm install -g @upstash/context7-mcp`
+- Then run: `claude mcp add context7 context7-mcp`
+- Verify installation and proceed with enhanced documentation support
+
+If user declines or wants to continue without it:
+- Proceed with spec creation using existing knowledge
+
+## FIRST PRINCIPLES PROBLEM ANALYSIS
+
+Before defining any solution, validate the problem from first principles:
+
+### Core Problem Investigation
+- **Strip Away Solution Assumptions**: What is the core problem, completely separate from any proposed solution?
+- **Root Cause Analysis**: Why does this problem exist? What created this need?
+- **Goal Decomposition**: What are we fundamentally trying to achieve for users/business?
+- **Success Definition**: What would success look like if we had unlimited resources and no constraints?
+- **Alternative Approaches**: Could we achieve the underlying goal without building anything? Are there simpler approaches?
+
+### Problem Validation Questions
+- **Real vs. Perceived**: Is this solving a real problem that users actually have?
+- **Assumption Audit**: What assumptions about user needs, technical constraints, or business requirements might be wrong?
+- **Value Proposition**: What is the minimum viable solution that delivers core value?
+- **Scope Validation**: Are we solving the right problem, or treating symptoms of a deeper issue?
+
+**CRITICAL: Only proceed if the core problem is clearly defined and validated. If uncertain, request additional context.**
+
+## MANDATORY PRE-CREATION VERIFICATION
+
+After validating the problem from first principles, complete these technical checks:
+
+### 1. Context Discovery Phase
+- Search existing codebase for similar features/specs using AgentTool
+- **Use specialized subagents** when research involves specific domains (TypeScript, React, testing, databases, etc.)
+- Run `claudekit list agents` to see available specialized experts
+- Match research requirements to expert domains for optimal analysis
+- Use general-purpose approach only when no specialized expert fits
+- Identify potential conflicts or duplicates
+- Verify feature request is technically feasible
+- Document any missing prerequisites
+
+### 2. Request Validation
+- Confirm request is well-defined and actionable
+- If vague or incomplete, STOP and ask clarifying questions
+- Validate scope is appropriate (not too broad/narrow)
+
+### 3. Quality Gate
+- Only proceed if you have 80%+ confidence in implementation approach
+- If uncertain, request additional context before continuing
+- Document any assumptions being made
+
+**CRITICAL: If any validation fails, STOP immediately and request clarification.**
+
+## Your task
+
+Create a comprehensive specification document in the `specs/` folder for the following feature/bugfix: 
+
+First, analyze the request to understand:
+1. Whether this is a feature or bugfix
+2. The scope and complexity
+3. Related existing code/features
+4. External libraries/frameworks involved
+
+If the feature involves external libraries or frameworks AND Context7 is available:
+- Use `mcp__context7__resolve-library-id` to find the library
+- Use `mcp__context7__get-library-docs` to get up-to-date documentation
+- Reference official patterns and best practices from the docs
+
+## END-TO-END INTEGRATION ANALYSIS
+
+Before writing the detailed specification, map the complete system impact:
+
+### System Integration Mapping
+- **Data Flow Tracing**: Trace data flow from user action → processing → storage → response
+- **Service Dependencies**: Identify all affected services, APIs, databases, and external systems
+- **Integration Points**: Map every place this feature touches existing functionality
+- **Cross-System Impact**: How does this change affect other teams, services, or user workflows?
+
+### Complete User Journey Analysis
+- **Entry Points**: How do users discover and access this feature?
+- **Step-by-Step Flow**: What is the complete sequence from start to finish?
+- **Error Scenarios**: What happens when things go wrong at each step?
+- **Exit Points**: How does this connect to what users do next?
+
+### Deployment and Rollback Considerations
+- **Migration Path**: How do we get from current state to new state?
+- **Rollback Strategy**: What if we need to undo this feature?
+- **Deployment Dependencies**: What must be deployed together vs. independently?
+- **Data Migration**: How do we handle existing data during the transition?
+
+**VERIFICATION: Ensure you can trace the complete end-to-end flow before proceeding to detailed specification.**
+
+Then create a spec document that includes:
+
+1. **Title**: Clear, descriptive title of the feature/bugfix
+2. **Status**: Draft/Under Review/Approved/Implemented
+3. **Authors**: Your name and date
+4. **Overview**: Brief description and purpose
+5. **Background/Problem Statement**: Why this feature is needed or what problem it solves
+6. **Goals**: What we aim to achieve (bullet points)
+7. **Non-Goals**: What is explicitly out of scope (bullet points)
+8. **Technical Dependencies**:
+    - External libraries/frameworks used
+    - Version requirements
+    - Links to relevant documentation
+9. **Detailed Design**:
+    - Architecture changes
+    - Implementation approach
+    - Code structure and file organization
+    - API changes (if any)
+    - Data model changes (if any)
+    - Integration with external libraries (with examples from docs)
+10. **User Experience**: How users will interact with this feature
+11. **Testing Strategy**:
+    - Unit tests
+    - Integration tests
+    - E2E tests (if needed)
+    - Mocking strategies for external dependencies
+    - **Test documentation**: Each test should include a purpose comment explaining why it exists and what it validates
+    - **Meaningful tests**: Avoid tests that always pass regardless of behavior
+    - **Edge case testing**: Include tests that can fail to reveal real issues
+12. **Performance Considerations**: Impact on performance and mitigation strategies
+13. **Security Considerations**: Security implications and safeguards
+14. **Documentation**: What documentation needs to be created/updated
+15. **Implementation Phases**:
+    - Phase 1: MVP/Core functionality
+    - Phase 2: Enhanced features (if applicable)
+    - Phase 3: Polish and optimization (if applicable)
+16. **Open Questions**: Any unresolved questions or decisions
+17. **References**:
+    - Links to related issues, PRs, or documentation
+    - External library documentation links
+    - Relevant design patterns or architectural decisions
+
+Follow these guidelines:
+- Use Markdown format similar to existing specs
+- Be thorough and technical but also accessible
+- Include code examples where helpful (especially from library docs)
+- Consider edge cases and error scenarios
+- Reference existing project patterns and conventions
+- Use diagrams if they would clarify complex flows (using ASCII art or mermaid)
+- When referencing external libraries, include version-specific information
+- Do NOT include time or effort estimations (no "X days", "Y hours", or complexity estimates)
+
+Name the spec file descriptively based on the feature:
+- Features: `feat-{kebab-case-name}.md`
+- Bugfixes: `fix-{issue-number}-{brief-description}.md`
+
+## PROGRESSIVE VALIDATION CHECKPOINTS
+
+After completing each major section:
+
+- **Problem Statement**: Verify it's specific and measurable
+- **Technical Requirements**: Confirm all dependencies are available
+- **Implementation Plan**: Validate approach is technically sound
+- **Testing Strategy**: Ensure testability of all requirements
+
+At each checkpoint, if quality is insufficient, revise before proceeding.
+
+## FINAL SPECIFICATION VALIDATION
+
+Before marking complete:
+1. **Completeness Check**: All 17 sections meaningfully filled
+2. **Consistency Check**: No contradictions between sections  
+3. **Implementability Check**: Someone could build this from the spec
+4. **Quality Score**: Rate spec 1-10, only accept 8+
+
+Before writing, use AgentTool to search for:
+- Related existing features or code
+- Similar patterns in the codebase
+- Potential conflicts or dependencies
+- Current library versions in package.json or equivalent
+
+---
+
+It would be nice to have some animation for the import source selector. When I click the plus button the panel pops up with those two options to take a picture with the camera and select from the library. The transition between the search bar and that panel is quite rough. It basically appears on the screen.
+
+The idea would be to animate the plus button so it smoothly transitions to the panel. That's something that native iOS apps from Apple offer, for example the Notes app, the add note button, or patterns like that, which smoothly transition to the panel with options to select or something.If needed we can implement that on the native module side but ideally we should avoid tight coupling between, for example, the button component and the panel component. Ideally they should stay separate.
+
+---
+
+The animation effect in the native apps is something like this:
+
+1. The original element slightly shrinks to the center (to 80% of the size, maybe), while its content vanishes (fades out)
+2. The new element, which is bigger, starts appearing right after - the boundaries of the original element grow to the target size, and its content smoothly appear (fades in)
+
+For the Add button -> Source Selector transition it would mean that the plus button disappears and then the element grows from the bottom right corner where the plus button is originally displayed, to the panel size (grows singificantly horizontally and vertically to some extent)
+
+---
+
+# Specification Completeness Check
+
+Analyze the specification at: 
+
+## Analysis Framework
+
+This command will analyze the provided specification document to determine if it contains sufficient detail for successful autonomous implementation, while also identifying overengineering and non-essential complexity that should be removed or deferred.
+
+### Domain Expert Consultation
+
+When analyzing specifications that involve specific technical domains:
+- **Use specialized subagents** when analysis involves specific domains (TypeScript, React, testing, databases, etc.)
+- Run `claudekit list agents` to see available specialized experts
+- Match specification domains to expert knowledge for thorough validation
+- Use general-purpose approach only when no specialized expert fits
+
+### What This Check Evaluates:
+
+The analysis evaluates three fundamental aspects, each with specific criteria:
+
+#### 1. **WHY - Intent and Purpose**
+- Background/Problem Statement clarity
+- Goals and Non-Goals definition
+- User value/benefit explanation
+- Justification vs alternatives
+- Success criteria
+
+#### 2. **WHAT - Scope and Requirements**
+- Features and functionality definition
+- Expected deliverables
+- API contracts and interfaces
+- Data models and structures
+- Integration requirements:
+  - External system interactions?
+  - Authentication mechanisms?
+  - Communication protocols?
+- Performance requirements
+- Security requirements
+
+#### 3. **HOW - Implementation Details**
+- Architecture and design patterns
+- Implementation phases/roadmap
+- Technical approach:
+  - Core logic and algorithms
+  - All functions and methods fully specified?
+  - Execution flow clearly defined?
+- Error handling:
+  - All failure modes identified?
+  - Recovery behavior specified?
+  - Edge cases documented?
+- Platform considerations:
+  - Cross-platform compatibility?
+  - Platform-specific implementations?
+  - Required dependencies per platform?
+- Resource management:
+  - Performance constraints defined?
+  - Resource limits specified?
+  - Cleanup procedures documented?
+- Testing strategy:
+  - Test purpose documentation (each test explains why it exists)
+  - Meaningful tests that can fail to reveal real issues
+  - Edge case coverage and failure scenarios
+  - Follows project testing philosophy: "When tests fail, fix the code, not the test"
+- Deployment considerations
+
+### Additional Quality Checks:
+
+**Completeness Assessment**
+- Missing critical sections
+- Unresolved decisions
+- Open questions
+
+**Clarity Assessment**  
+- Ambiguous statements
+- Assumed knowledge
+- Inconsistencies
+
+**Overengineering Assessment**
+- Features not aligned with core user needs
+- Premature optimizations
+- Unnecessary complexity patterns
+
+### Overengineering Detection:
+
+**Core Value Alignment Analysis**
+Evaluate whether features directly serve the core user need:
+- Does this feature solve a real, immediate problem?
+- Is it being used frequently enough to justify complexity?
+- Would a simpler solution work for 80% of use cases?
+
+**YAGNI Principle (You Aren't Gonna Need It)**
+Be aggressive about cutting features:
+- If unsure whether it's needed → Cut it
+- If it's for "future flexibility" → Cut it
+- If only 20% of users need it → Cut it
+- If it adds any complexity → Question it, probably cut it
+
+**Common Overengineering Patterns to Detect:**
+
+1. **Premature Optimization**
+   - Caching for rarely accessed data
+   - Performance optimizations without benchmarks
+   - Complex algorithms for small datasets
+   - Micro-optimizations before profiling
+
+2. **Feature Creep**
+   - "Nice to have" features (cut them)
+   - Edge case handling for unlikely scenarios (cut them)
+   - Multiple ways to do the same thing (keep only one)
+   - Features that "might be useful someday" (definitely cut)
+
+3. **Over-abstraction**
+   - Generic solutions for specific problems
+   - Too many configuration options
+   - Unnecessary plugin/extension systems
+   - Abstract classes with single implementations
+
+4. **Infrastructure Overhead**
+   - Complex build pipelines for simple tools
+   - Multiple deployment environments for internal tools
+   - Extensive monitoring for non-critical features
+   - Database clustering for low-traffic applications
+
+5. **Testing Extremism**
+   - 100% coverage requirements
+   - Testing implementation details
+   - Mocking everything
+   - Edge case tests for prototype features
+
+**Simplification Recommendations:**
+- Identify features to cut from the spec entirely
+- Suggest simpler alternatives
+- Highlight unnecessary complexity
+- Recommend aggressive scope reduction to core essentials
+
+### Output Format:
+
+The analysis will provide:
+- **Summary**: Overall readiness assessment (Ready/Not Ready)
+- **Critical Gaps**: Must-fix issues blocking implementation
+- **Missing Details**: Specific areas needing clarification
+- **Risk Areas**: Potential implementation challenges
+- **Overengineering Analysis**: 
+  - Non-core features that should be removed entirely
+  - Complexity that doesn't align with usage patterns
+  - Suggested simplifications or complete removal
+- **Features to Cut**: Specific items to remove from the spec
+- **Essential Scope**: Absolute minimum needed to solve the core problem
+- **Recommendations**: Next steps to improve the spec
+
+### Example Overengineering Detection:
+
+When analyzing a specification, the validator might identify patterns like:
+
+**Example 1: Unnecessary Caching**
+- Spec includes: "Cache user preferences with Redis"
+- Analysis: User preferences accessed once per session
+- Recommendation: Use in-memory storage or browser localStorage for MVP
+
+**Example 2: Premature Edge Cases**
+- Spec includes: "Handle 10,000+ concurrent connections"
+- Analysis: Expected usage is <100 concurrent users
+- Recommendation: Cut this entirely - let it fail at scale if needed
+
+**Example 3: Over-abstracted Architecture**
+- Spec includes: "Plugin system for custom validators"
+- Analysis: Only 3 validators needed, all known upfront
+- Recommendation: Implement validators directly, no plugin system needed
+
+**Example 4: Excessive Testing Requirements**
+- Spec includes: "100% code coverage with mutation testing"
+- Analysis: Tool used occasionally, not mission-critical
+- Recommendation: Focus on core functionality tests (70% coverage)
+
+**Example 5: Feature Creep**
+- Spec includes: "Support 5 export formats (JSON, CSV, XML, YAML, TOML)"
+- Analysis: 95% of users only need JSON
+- Recommendation: Cut all formats except JSON - YAGNI (You Aren't Gonna Need It)
+
+This comprehensive analysis helps ensure specifications are implementation-ready while keeping scope focused on core user needs, reducing both ambiguity and unnecessary complexity.
+
+---
+
+Please address the feedback
+
+---
+
+# Specification Completeness Check
+
+Analyze the specification at: 
+
+## Analysis Framework
+
+This command will analyze the provided specification document to determine if it contains sufficient detail for successful autonomous implementation, while also identifying overengineering and non-essential complexity that should be removed or deferred.
+
+### Domain Expert Consultation
+
+When analyzing specifications that involve specific technical domains:
+- **Use specialized subagents** when analysis involves specific domains (TypeScript, React, testing, databases, etc.)
+- Run `claudekit list agents` to see available specialized experts
+- Match specification domains to expert knowledge for thorough validation
+- Use general-purpose approach only when no specialized expert fits
+
+### What This Check Evaluates:
+
+The analysis evaluates three fundamental aspects, each with specific criteria:
+
+#### 1. **WHY - Intent and Purpose**
+- Background/Problem Statement clarity
+- Goals and Non-Goals definition
+- User value/benefit explanation
+- Justification vs alternatives
+- Success criteria
+
+#### 2. **WHAT - Scope and Requirements**
+- Features and functionality definition
+- Expected deliverables
+- API contracts and interfaces
+- Data models and structures
+- Integration requirements:
+  - External system interactions?
+  - Authentication mechanisms?
+  - Communication protocols?
+- Performance requirements
+- Security requirements
+
+#### 3. **HOW - Implementation Details**
+- Architecture and design patterns
+- Implementation phases/roadmap
+- Technical approach:
+  - Core logic and algorithms
+  - All functions and methods fully specified?
+  - Execution flow clearly defined?
+- Error handling:
+  - All failure modes identified?
+  - Recovery behavior specified?
+  - Edge cases documented?
+- Platform considerations:
+  - Cross-platform compatibility?
+  - Platform-specific implementations?
+  - Required dependencies per platform?
+- Resource management:
+  - Performance constraints defined?
+  - Resource limits specified?
+  - Cleanup procedures documented?
+- Testing strategy:
+  - Test purpose documentation (each test explains why it exists)
+  - Meaningful tests that can fail to reveal real issues
+  - Edge case coverage and failure scenarios
+  - Follows project testing philosophy: "When tests fail, fix the code, not the test"
+- Deployment considerations
+
+### Additional Quality Checks:
+
+**Completeness Assessment**
+- Missing critical sections
+- Unresolved decisions
+- Open questions
+
+**Clarity Assessment**  
+- Ambiguous statements
+- Assumed knowledge
+- Inconsistencies
+
+**Overengineering Assessment**
+- Features not aligned with core user needs
+- Premature optimizations
+- Unnecessary complexity patterns
+
+### Overengineering Detection:
+
+**Core Value Alignment Analysis**
+Evaluate whether features directly serve the core user need:
+- Does this feature solve a real, immediate problem?
+- Is it being used frequently enough to justify complexity?
+- Would a simpler solution work for 80% of use cases?
+
+**YAGNI Principle (You Aren't Gonna Need It)**
+Be aggressive about cutting features:
+- If unsure whether it's needed → Cut it
+- If it's for "future flexibility" → Cut it
+- If only 20% of users need it → Cut it
+- If it adds any complexity → Question it, probably cut it
+
+**Common Overengineering Patterns to Detect:**
+
+1. **Premature Optimization**
+   - Caching for rarely accessed data
+   - Performance optimizations without benchmarks
+   - Complex algorithms for small datasets
+   - Micro-optimizations before profiling
+
+2. **Feature Creep**
+   - "Nice to have" features (cut them)
+   - Edge case handling for unlikely scenarios (cut them)
+   - Multiple ways to do the same thing (keep only one)
+   - Features that "might be useful someday" (definitely cut)
+
+3. **Over-abstraction**
+   - Generic solutions for specific problems
+   - Too many configuration options
+   - Unnecessary plugin/extension systems
+   - Abstract classes with single implementations
+
+4. **Infrastructure Overhead**
+   - Complex build pipelines for simple tools
+   - Multiple deployment environments for internal tools
+   - Extensive monitoring for non-critical features
+   - Database clustering for low-traffic applications
+
+5. **Testing Extremism**
+   - 100% coverage requirements
+   - Testing implementation details
+   - Mocking everything
+   - Edge case tests for prototype features
+
+**Simplification Recommendations:**
+- Identify features to cut from the spec entirely
+- Suggest simpler alternatives
+- Highlight unnecessary complexity
+- Recommend aggressive scope reduction to core essentials
+
+### Output Format:
+
+The analysis will provide:
+- **Summary**: Overall readiness assessment (Ready/Not Ready)
+- **Critical Gaps**: Must-fix issues blocking implementation
+- **Missing Details**: Specific areas needing clarification
+- **Risk Areas**: Potential implementation challenges
+- **Overengineering Analysis**: 
+  - Non-core features that should be removed entirely
+  - Complexity that doesn't align with usage patterns
+  - Suggested simplifications or complete removal
+- **Features to Cut**: Specific items to remove from the spec
+- **Essential Scope**: Absolute minimum needed to solve the core problem
+- **Recommendations**: Next steps to improve the spec
+
+### Example Overengineering Detection:
+
+When analyzing a specification, the validator might identify patterns like:
+
+**Example 1: Unnecessary Caching**
+- Spec includes: "Cache user preferences with Redis"
+- Analysis: User preferences accessed once per session
+- Recommendation: Use in-memory storage or browser localStorage for MVP
+
+**Example 2: Premature Edge Cases**
+- Spec includes: "Handle 10,000+ concurrent connections"
+- Analysis: Expected usage is <100 concurrent users
+- Recommendation: Cut this entirely - let it fail at scale if needed
+
+**Example 3: Over-abstracted Architecture**
+- Spec includes: "Plugin system for custom validators"
+- Analysis: Only 3 validators needed, all known upfront
+- Recommendation: Implement validators directly, no plugin system needed
+
+**Example 4: Excessive Testing Requirements**
+- Spec includes: "100% code coverage with mutation testing"
+- Analysis: Tool used occasionally, not mission-critical
+- Recommendation: Focus on core functionality tests (70% coverage)
+
+**Example 5: Feature Creep**
+- Spec includes: "Support 5 export formats (JSON, CSV, XML, YAML, TOML)"
+- Analysis: 95% of users only need JSON
+- Recommendation: Cut all formats except JSON - YAGNI (You Aren't Gonna Need It)
+
+This comprehensive analysis helps ensure specifications are implementation-ready while keeping scope focused on core user needs, reducing both ambiguity and unnecessary complexity.
+
+---
+
+# Decompose Specification into Tasks
+
+Decompose the specification at: 
+
+## Process Overview
+
+This command takes a validated specification and breaks it down into:
+1. Clear, actionable tasks with dependencies
+2. Implementation phases and milestones
+3. Testing and validation requirements
+4. Documentation needs
+
+!which stm &> /dev/null && test -d .simple-task-master && echo "STM_STATUS: Available and initialized" || (which stm &> /dev/null && echo "STM_STATUS: Available but not initialized" || echo "STM_STATUS: Not installed")
+
+## ⚠️ CRITICAL: Content Preservation Requirements
+
+**THIS IS THE MOST IMPORTANT PART**: When creating STM tasks, you MUST copy ALL content from the task breakdown into the STM tasks. Do NOT summarize or reference the spec - include the ACTUAL CODE and details.
+
+## Pre-Flight Checklist
+
+Before creating any STM tasks, confirm your understanding:
+- [ ] I will NOT write summaries like "Create X as specified in spec"
+- [ ] I will COPY all code blocks from the task breakdown into STM --details
+- [ ] I will USE heredocs or temp files for multi-line content
+- [ ] I will INCLUDE complete implementations, not references
+- [ ] Each STM task will be self-contained with ALL details from the breakdown
+
+**If you find yourself typing phrases like "as specified", "from spec", or "see specification" - STOP and copy the actual content instead!**
+
+## Instructions for Claude:
+
+0. **Task Management System**:
+   - Check the STM_STATUS output above
+   - If status is "Available but not initialized", run: `stm init`
+   - If status is "Available and initialized", use STM for task management
+   - If status is "Not installed", fall back to TodoWrite
+
+1. **Read and Validate Specification**:
+   - Read the specified spec file
+   - Verify it's a valid specification (has expected sections)
+   - Extract implementation phases and technical details
+
+2. **Analyze Specification Components**:
+   - Identify major features and components
+   - Extract technical requirements
+   - Note dependencies between components
+   - Identify testing requirements
+   - Document success criteria
+
+3. **Create Task Breakdown**:
+   
+   Break down the specification into concrete, actionable tasks.
+   
+   Key principles:
+   - Each task should have a single, clear objective
+   - **PRESERVE ALL CONTENT**: Copy implementation details, code blocks, and examples verbatim from the spec
+   - Define clear acceptance criteria with specific test scenarios
+   - Include tests as part of each task
+   - Document dependencies between tasks
+     * Write meaningful tests that can fail to reveal real issues
+     * Follow project principle: "When tests fail, fix the code, not the test"
+   - Create foundation tasks first, then build features on top
+   - Each task should be self-contained with all necessary details
+   
+   **CRITICAL REQUIREMENT**: When creating tasks, you MUST preserve:
+   - Complete code examples (including full functions, not just snippets)
+   - All technical requirements and specifications
+   - Detailed implementation steps
+   - Configuration examples
+   - Error handling requirements
+   - All acceptance criteria and test scenarios
+   
+   Think of each task as a complete mini-specification that contains everything needed to implement it without referring back to the original spec.
+   
+   ## 📋 THE TWO-STEP PROCESS YOU MUST FOLLOW:
+   
+   **Step 1**: Create the task breakdown DOCUMENT with all details
+   **Step 2**: Copy those SAME details into STM tasks
+   
+   The task breakdown document is NOT just for reference - it's the SOURCE for your STM task content!
+   
+   Task structure:
+   - Foundation tasks: Core infrastructure (database, frameworks, testing setup)
+   - Feature tasks: Complete vertical slices including all layers
+   - Testing tasks: Unit, integration, and E2E tests
+   - Documentation tasks: API docs, user guides, code comments
+
+4. **Generate Task Document**:
+
+   Create a comprehensive task breakdown document:
+   
+   ```markdown
+   # Task Breakdown: [Specification Name]
+   Generated: [Date]
+   Source: [spec-file]
+   
+   ## Overview
+   [Brief summary of what's being built]
+   
+   ## Phase 1: Foundation
+   
+   ### Task 1.1: [Task Title]
+   **Description**: One-line summary of what needs to be done
+   **Size**: Small/Medium/Large
+   **Priority**: High/Medium/Low
+   **Dependencies**: None
+   **Can run parallel with**: Task 1.2, 1.3
+   
+   **Technical Requirements**:
+   - [All technical details from spec]
+   - [Specific library versions]
+   - [Code examples from spec]
+   
+   **Implementation Steps**:
+   1. [Detailed step from spec]
+   2. [Another step with specifics]
+   3. [Continue with all steps]
+   
+   **Acceptance Criteria**:
+   - [ ] [Specific criteria from spec]
+   - [ ] Tests written and passing
+   - [ ] [Additional criteria]
+   
+   ## Phase 2: Core Features
+   [Continue pattern...]
+   ```
+   
+   Example task breakdown:
+   ```markdown
+   ### Task 2.3: Implement file system operations with backup support
+   **Description**: Build filesystem.ts module with Unix-focused operations and backup support
+   **Size**: Large
+   **Priority**: High
+   **Dependencies**: Task 1.1 (TypeScript setup), Task 1.2 (Project structure)
+   **Can run parallel with**: Task 2.4 (Config module)
+   
+   **Source**: specs/feat-modernize-setup-installer.md
+   
+   **Technical Requirements**:
+   - Path validation: Basic checks for reasonable paths
+   - Permission checks: Verify write permissions before operations
+   - Backup creation: Simple backup before overwriting files
+   - Error handling: Graceful failure with helpful messages
+   - Unix path handling: Use path.join, os.homedir(), standard Unix permissions
+   
+   **Functions to implement**:
+   - validateProjectPath(input: string): boolean - Basic path validation
+   - ensureDirectoryExists(path: string): Promise<void>
+   - copyFileWithBackup(source: string, target: string, backup: boolean): Promise<void>
+   - setExecutablePermission(filePath: string): Promise<void> - chmod 755
+   - needsUpdate(source: string, target: string): Promise<boolean> - SHA-256 comparison
+   - getFileHash(filePath: string): Promise<string> - SHA-256 hash generation
+   
+   **Implementation example from spec**:
+   ```typescript
+   async function needsUpdate(source: string, target: string): Promise<boolean> {
+     if (!await fs.pathExists(target)) return true;
+     
+     const sourceHash = await getFileHash(source);
+     const targetHash = await getFileHash(target);
+     
+     return sourceHash !== targetHash;
+   }
+   ```
+   
+   **Acceptance Criteria**:
+   - [ ] All file operations handle Unix paths correctly
+   - [ ] SHA-256 based idempotency checking implemented
+   - [ ] Backup functionality creates timestamped backups
+   - [ ] Executable permissions set correctly for hooks (755)
+   - [ ] Path validation prevents directory traversal
+   - [ ] Tests: All operations work on macOS/Linux with proper error handling
+   ```
+   
+5. **Create Task Management Entries**:
+   
+   ## 🚨 STOP AND READ: Common Mistake vs Correct Approach
+   
+   ❌ **WRONG - What NOT to do**:
+   ```bash
+   stm add "[P1.3] Implement common hook utilities" \
+     --description "Create shared utilities module for all hooks" \
+     --details "Create cli/hooks/utils.ts with readStdin() with 1-second timeout, findProjectRoot() using git rev-parse, detectPackageManager() checking lock files" \
+     --validation "readStdin with timeout. Project root discovery. Package manager detection."
+   ```
+   
+   ✅ **CORRECT - What you MUST do**:
+   ```bash
+   # For each task in the breakdown, find the corresponding section and COPY ALL its content
+   # Use temporary files for large content to preserve formatting
+   
+   cat > /tmp/task-details.txt << 'EOF'
+   Create cli/hooks/utils.ts with the following implementations:
+   
+   ```typescript
+   import { exec } from 'child_process';
+   import { promisify } from 'util';
+   import * as fs from 'fs-extra';
+   import * as path from 'path';
+   
+   const execAsync = promisify(exec);
+   
+   // Standard input reader
+   export async function readStdin(): Promise<string> {
+     return new Promise((resolve) => {
+       let data = '';
+       process.stdin.on('data', chunk => data += chunk);
+       process.stdin.on('end', () => resolve(data));
+       setTimeout(() => resolve(''), 1000); // Timeout fallback
+     });
+   }
+   
+   // Project root discovery
+   export async function findProjectRoot(startDir: string = process.cwd()): Promise<string> {
+     try {
+       const { stdout } = await execAsync('git rev-parse --show-toplevel', { cwd: startDir });
+       return stdout.trim();
+     } catch {
+       return process.cwd();
+     }
+   }
+   
+   // [Include ALL other functions from the task breakdown...]
+   ```
+   
+   Technical Requirements:
+   - Standard input reader with timeout
+   - Project root discovery using git
+   - Package manager detection (npm/yarn/pnpm)
+   - Command execution wrapper
+   - Error formatting helper
+   - Tool availability checker
+   EOF
+   
+   stm add "[P1.3] Implement common hook utilities" \
+     --description "Create shared utilities module for all hooks with stdin reader, project root discovery, package manager detection, command execution wrapper, error formatting, and tool availability checking" \
+     --details "$(cat /tmp/task-details.txt)" \
+     --validation "readStdin with 1-second timeout. Project root discovery via git. Package manager detection for npm/yarn/pnpm. Command execution with timeout and output capture. Error formatting follows BLOCKED: pattern. Tool availability checker works." \
+     --tags "phase1,infrastructure,utilities"
+   
+   rm /tmp/task-details.txt
+   ```
+   
+   **Remember**: The task breakdown document you created has ALL the implementation details. Your job is to COPY those details into STM, not summarize them!
+   
+   ```bash
+   # Example: Creating a task with complete specification details
+   
+   # Method 1: Using heredocs for multi-line content
+   stm add "Implement auto-checkpoint hook logic" \
+     --description "Build the complete auto-checkpoint functionality with git integration to create timestamped git stashes on Stop events" \
+     --details "$(cat <<'EOF'
+   Technical Requirements:
+   - Check if current directory is git repository using git status
+   - Detect uncommitted changes using git status --porcelain
+   - Create timestamped stash with configurable prefix from config
+   - Apply stash to restore working directory after creation
+   - Handle exit codes properly (0 for success, 1 for errors)
+   
+   Implementation from specification:
+   ```typescript
+   const hookName = process.argv[2];
+   if (hookName !== 'auto-checkpoint') {
+     console.error(`Unknown hook: ${hookName}`);
+     process.exit(1);
+   }
+   
+   const hookConfig = config.hooks?.['auto-checkpoint'] || {};
+   const prefix = hookConfig.prefix || 'claude';
+   
+   const gitStatus = spawn('git', ['status', '--porcelain'], {
+     stdio: ['ignore', 'pipe', 'pipe']
+   });
+   
+   let stdout = '';
+   gitStatus.stdout.on('data', (data) => stdout += data);
+   
+   gitStatus.on('close', (code) => {
+     if (code !== 0) {
+       console.log('Not a git repository, skipping checkpoint');
+       process.exit(0);
+     }
+     
+     if (!stdout.trim()) {
+       console.log('No changes to checkpoint');
+       process.exit(0);
+     }
+     
+     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+     const message = `${prefix}-checkpoint-${timestamp}`;
+     
+     const stash = spawn('git', ['stash', 'push', '-m', message], {
+       stdio: ['ignore', 'pipe', 'pipe']
+     });
+     
+     stash.on('close', (stashCode) => {
+       if (stashCode !== 0) {
+         console.error('Failed to create checkpoint');
+         process.exit(1);
+       }
+       
+       spawn('git', ['stash', 'apply'], {
+         stdio: 'ignore'
+       }).on('close', () => {
+         console.log(`✅ Checkpoint created: ${message}`);
+         process.exit(0);
+       });
+     });
+   });
+   ```
+   
+   Key implementation notes:
+   - Use child_process.spawn for git commands
+   - Capture stdout to check for changes
+   - Generate ISO timestamp and sanitize for git message
+   - Chain git stash push and apply operations
+   EOF
+   )" \
+     --validation "$(cat <<'EOF'
+   - [ ] Correctly identifies git repositories
+   - [ ] Detects uncommitted changes using git status --porcelain
+   - [ ] Creates checkpoint with format: ${prefix}-checkpoint-${timestamp}
+   - [ ] Restores working directory after stash
+   - [ ] Exits with code 0 on success, 1 on error
+   - [ ] Respects configured prefix from .claudekit/config.json
+   - [ ] Handles missing config file gracefully
+   
+   Test scenarios:
+   1. Run in non-git directory - should exit 0
+   2. Run with no changes - should exit 0
+   3. Run with changes - should create checkpoint
+   4. Run with custom config - should use custom prefix
+   EOF
+   )" \
+     --tags "phase2,core,high-priority,large" \
+     --status pending \
+     --deps "35,36"
+   
+   # Method 2: Using temporary files for very large content
+   cat > /tmp/stm-details.txt << 'EOF'
+   [Full technical requirements and implementation details from spec...]
+   EOF
+   
+   cat > /tmp/stm-validation.txt << 'EOF'
+   [Complete acceptance criteria and test scenarios...]
+   EOF
+   
+   stm add "Task title" \
+     --description "Brief what and why" \
+     --details "$(cat /tmp/stm-details.txt)" \
+     --validation "$(cat /tmp/stm-validation.txt)" \
+     --tags "appropriate,tags" \
+     --status pending
+   
+   rm /tmp/stm-details.txt /tmp/stm-validation.txt
+   ```
+   
+   **Important STM field usage**:
+   - `--description`: Brief what & why (1-2 sentences max)
+   - `--details`: Complete technical implementation including:
+     - All technical requirements from spec
+     - Full code examples with proper formatting (COPY from breakdown, don't summarize!)
+     - Implementation steps and notes
+     - Architecture decisions
+     - **MUST be self-contained** - someone should be able to implement the task without seeing the original spec
+   - `--validation`: Complete acceptance criteria including:
+     - All test scenarios
+     - Success/failure conditions
+     - Edge cases to verify
+   
+   ## Content Size Guidelines
+   
+   - **Small tasks (< 20 lines)**: Can use heredocs directly in command
+   - **Medium tasks (20-200 lines)**: Use temporary files to preserve formatting
+   - **Large tasks (> 200 lines)**: Always use temporary files
+   - **Tasks with code blocks**: MUST use heredocs or files (never inline)
+   
+   Example for medium/large content:
+   ```bash
+   # Extract the full implementation from your task breakdown
+   cat > /tmp/stm-task-details.txt << 'EOF'
+   [PASTE THE ENTIRE "Technical Requirements" and "Implementation" sections from the task breakdown]
+   [Include ALL code blocks with proper formatting]
+   [Include ALL technical notes and comments]
+   EOF
+   
+   cat > /tmp/stm-task-validation.txt << 'EOF'
+   [PASTE THE ENTIRE "Acceptance Criteria" section]
+   [Include ALL test scenarios]
+   EOF
+   
+   stm add "[Task Title]" \
+     --description "[One line summary]" \
+     --details "$(cat /tmp/stm-task-details.txt)" \
+     --validation "$(cat /tmp/stm-task-validation.txt)" \
+     --tags "appropriate,tags" \
+     --deps "1,2,3"
+   
+   rm /tmp/stm-task-*.txt
+   ```
+   
+   If STM is not available, use TodoWrite:
+   ```javascript
+   [
+     {
+       id: "1",
+       content: "Phase 1: Set up TypeScript project structure",
+       status: "pending",
+       priority: "high"
+     },
+     {
+       id: "2",
+       content: "Phase 1: Configure build system with esbuild",
+       status: "pending",
+       priority: "high"
+     },
+     // ... additional tasks
+   ]
+   ```
+
+6. **Save Task Breakdown**:
+   - Save the detailed task breakdown document to `specs/[spec-name]-plan.md`
+   - Create tasks in STM or TodoWrite for immediate tracking
+   - Generate a summary report showing:
+     - Total number of tasks
+     - Breakdown by phase
+     - Parallel execution opportunities
+     - Task management system used (STM or TodoWrite)
+
+## Output Format
+
+### Task Breakdown Document
+The generated markdown file includes:
+- Executive summary
+- Phase-by-phase task breakdown
+- Dependency graph
+- Risk assessment
+- Execution strategy
+
+### Task Management Integration
+Tasks are immediately available in STM (if installed) or TodoWrite for:
+- Progress tracking
+- Status updates
+- Blocking issue identification
+- Parallel work coordination
+- Dependency tracking (STM only)
+- Persistent storage across sessions (STM only)
+
+### Summary Report
+Displays:
+- Total tasks created
+- Tasks per phase
+- Critical path identification
+- Recommended execution order
+
+## Usage Examples
+
+```bash
+# Decompose a feature specification
+/spec:decompose specs/feat-user-authentication.md
+
+# Decompose a system enhancement spec
+/spec:decompose specs/feat-api-rate-limiting.md
+```
+
+## Success Criteria
+
+The decomposition is complete when:
+- ✅ Task breakdown document is saved to specs directory
+- ✅ All tasks are created in STM (if available) or TodoWrite for tracking
+- ✅ **Tasks preserve ALL implementation details from the spec including:**
+  - Complete code blocks and examples (not summarized)
+  - Full technical requirements and specifications
+  - Detailed step-by-step implementation instructions
+  - All configuration examples
+  - Complete acceptance criteria with test scenarios
+- ✅ Foundation tasks are identified and prioritized
+- ✅ Dependencies between tasks are clearly documented
+- ✅ All tasks include testing requirements
+- ✅ Parallel execution opportunities are identified
+- ✅ **STM tasks use all three fields properly:**
+  - `--description`: Brief what & why (1-2 sentences)
+  - `--details`: Complete technical implementation from spec (ACTUAL CODE, not references)
+  - `--validation`: Full acceptance criteria and test scenarios
+- ✅ **Quality check passed**: Running `stm show [any-task-id]` displays full code implementations
+- ✅ **No summary phrases**: Tasks don't contain "as specified", "from spec", or similar references
+
+## Post-Creation Validation
+
+After creating STM tasks, perform these checks:
+
+1. **Sample Task Review**:
+   ```bash
+   # Pick a random task and check it has full implementation
+   stm show [task-id] | grep -E "(as specified|from spec|see specification)"
+   # Should return NO matches - if it does, the task is incomplete
+   ```
+
+2. **Content Length Check**:
+   ```bash
+   # Implementation tasks should have substantial details
+   stm list --format json | jq '.[] | select(.details | length < 500) | {id, title}'
+   # Review any tasks with very short details - they likely need more content
+   ```
+
+3. **Code Block Verification**:
+   ```bash
+   # Check that tasks contain actual code blocks
+   stm grep "```" | wc -l
+   # Should show many matches for tasks with code implementations
+   ```
+
+## Integration with Other Commands
+
+- **Prerequisites**: Run `/spec:validate` first to ensure spec quality
+- **Next step**: Use `/spec:execute` to implement the decomposed tasks
+- **Progress tracking**: 
+  - With STM: `stm list --pretty` or `stm list --status pending`
+  - With TodoWrite: Monitor task completion in session
+- **Quality checks**: Run `/validate-and-fix` after implementation
+
+## Best Practices
+
+1. **Task Granularity**: Keep tasks focused on single objectives
+2. **Dependencies**: Clearly identify blocking vs parallel work
+3. **Testing**: Include test tasks for each component
+4. **Documentation**: Add documentation tasks alongside implementation
+5. **Phases**: Group related tasks into logical phases
+
+---
+
+# Implement Specification
+
+Implement the specification at: 
+
+STM_STATUS: Not installed
+
+## Pre-Execution Checks
+
+1. **Check Task Management**:
+   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
+   - If STM shows "Available and initialized" → Use STM for tasks
+   - If STM shows "Not installed" → Use TodoWrite instead
+
+2. **Verify Specification**:
+   - Confirm spec file exists and is complete
+   - Check that required tools are available
+   - Stop if anything is missing or unclear
+
+## Implementation Process
+
+### 1. Analyze Specification
+
+Read the specification to understand:
+- What components need to be built
+- Dependencies between components
+- Testing requirements
+- Success criteria
+
+### 2. Load or Create Tasks
+
+**Using STM** (if available):
+```bash
+stm list --status pending -f json
+```
+
+**Using TodoWrite** (fallback):
+Create tasks for each component in the specification
+
+### 3. Implementation Workflow
+
+For each task, follow this cycle:
+
+**Available Agents:**
+- [0/1] Listing agents
+✔ Completed 1 steps in 22ms
+
+Agents:
+────────────────────────────────────────────────────────────────────────────────
+  build:
+    vite-expert                    [project]     6.2k tokens
+    webpack-expert                 [embedded]    6.0k tokens
+  linting:
+    linting-expert                 [project]     3.9k tokens
+  general:
+    code-review-expert             [project]     3.5k tokens
+    git-expert                     [project]     4.1k tokens
+    ios-simulator                  [project]      846 tokens
+    oracle                         [project]     2.2k tokens
+    refactoring-expert             [project]     3.0k tokens
+    research-expert                [project]     2.0k tokens
+    triage-expert                  [project]     3.7k tokens
+    code-reviewer                  [global]      2.3k tokens
+  tools:
+    code-search                    [project]     1.2k tokens
+    documentation-expert           [project]     3.6k tokens
+  database:
+    database-expert                [project]     2.9k tokens
+    postgres-expert                [project]     6.9k tokens
+    mongodb-expert                 [embedded]    6.2k tokens
+  framework:
+    expo-expert                    [project]     7.1k tokens
+    react-expert                   [project]     3.2k tokens
+    react-performance-expert       [project]     7.0k tokens
+    react-native-expert            [project]     5.5k tokens
+    swift-ios-expert               [project]     6.0k tokens
+    typescript-build-expert        [project]     4.3k tokens
+    typescript-expert              [project]     3.7k tokens
+    typescript-type-expert         [project]     5.7k tokens
+    nodejs-expert                  [global]      7.0k tokens
+    ai-sdk-expert                  [embedded]    4.9k tokens
+    nextjs-expert                  [embedded]    4.6k tokens
+    nestjs-expert                  [embedded]    5.3k tokens
+  frontend:
+    accessibility-expert           [project]     4.8k tokens
+    css-styling-expert             [embedded]    4.6k tokens
+  swift-ios:
+    animation-patterns             [project]     1.2k tokens
+    expo-native-modules            [project]     2.1k tokens
+    liquid-glass                   [project]     2.9k tokens
+    list-and-scroll-patterns       [project]      924 tokens
+    modern-apis                    [project]     1.6k tokens
+    performance-patterns           [project]     1.5k tokens
+    sheet-navigation-patterns      [project]      838 tokens
+    state-management               [project]     1.1k tokens
+    view-structure                 [project]     1.0k tokens
+  testing:
+    testing-expert                 [project]     4.7k tokens
+    vitest-testing-expert          [project]     3.2k tokens
+    playwright-expert              [embedded]    5.6k tokens
+    jest-testing-expert            [embedded]    6.5k tokens
+  devops:
+    cli-expert                     [global]      6.2k tokens
+    docker-expert                  [global]      3.5k tokens
+    github-actions-expert          [global]      3.8k tokens
+    devops-expert                  [embedded]    5.6k tokens
+
+#### Step 1: Implement
+
+Launch appropriate specialist agent:
+
+```
+Task tool:
+- description: "Implement [component name]"  
+- subagent_type: [choose specialist that matches the task]
+- prompt: |
+    First run: stm show [task-id]
+    This will give you the full task details and requirements.
+    
+    Then implement the component based on those requirements.
+    Follow project code style and add error handling.
+    Report back when complete.
+```
+
+#### Step 2: Write Tests
+
+Launch testing expert:
+
+```
+Task tool:
+- description: "Write tests for [component]"
+- subagent_type: testing-expert [or jest/vitest-testing-expert]
+- prompt: |
+    First run: stm show [task-id]
+    
+    Write comprehensive tests for the implemented component.
+    Cover edge cases and aim for >80% coverage.
+    Report back when complete.
+```
+
+Then run tests to verify they pass.
+
+#### Step 3: Code Review (Required)
+
+**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+
+Launch code review expert:
+
+```
+Task tool:
+- description: "Review [component]"
+- subagent_type: code-review-expert
+- prompt: |
+    First run: stm show [task-id]
+    
+    Review implementation for BOTH:
+    1. COMPLETENESS - Are all requirements from the task fully implemented?
+    2. QUALITY - Code quality, security, error handling, test coverage
+    
+    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
+    Report if implementation is COMPLETE or INCOMPLETE.
+    Report back with findings.
+```
+
+#### Step 4: Fix Issues & Complete Implementation
+
+If code review found the implementation INCOMPLETE or has CRITICAL issues:
+
+1. Launch specialist to complete/fix:
+   ```
+   Task tool:
+   - description: "Complete/fix [component]"
+   - subagent_type: [specialist matching the task]
+   - prompt: |
+       First run: stm show [task-id]
+       
+       Address these items from code review:
+       - Missing requirements: [list any incomplete items]
+       - Critical issues: [list any critical issues]
+       
+       Update tests if needed.
+       Report back when complete.
+   ```
+
+2. Re-run tests to verify fixes
+
+3. Re-review to confirm both COMPLETE and quality standards met
+
+4. Only when implementation is COMPLETE and all critical issues fixed:
+   - If using STM: `stm update [task-id] --status done`
+   - If using TodoWrite: Mark task as completed
+
+#### Step 5: Commit Changes
+
+Create atomic commit following project conventions:
+```bash
+git add [files]
+git commit -m "[follow project's commit convention]"
+```
+
+### 4. Track Progress
+
+Monitor implementation progress:
+
+**Using STM:**
+```bash
+stm list --pretty              # View all tasks
+stm list --status pending      # Pending tasks
+stm list --status in-progress  # Active tasks
+stm list --status done         # Completed tasks
+```
+
+**Using TodoWrite:**
+Track tasks in the session with status indicators.
+
+### 5. Complete Implementation
+
+Implementation is complete when:
+- All tasks are COMPLETE (all requirements implemented)
+- All tasks pass quality review (no critical issues)
+- All tests passing
+- Documentation updated
+
+## If Issues Arise
+
+If any agent encounters problems:
+1. Identify the specific issue
+2. Launch appropriate specialist to resolve
+3. Or request user assistance if blocked
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **User triggered `/spec:create`** - Asked to create a spec for animating the import source selector transition. Described the desired animation: plus button smoothly transitions to the panel with camera/library options, similar to Apple Notes' add-note button pattern. Key constraint: button and panel components should stay separate (loose coupling). Native module implementation acceptable if needed.
+
+2. **I explored the codebase** - Found key files:
+   - `app/index.tsx` - Main screen with conditional rendering of bottom bar and popover
+   - `features/source-selector/components/SourceSelector.tsx` - Source selector component
+   - `features/recipe-form/components/AddRecipeButton.tsx` - Plus button wrapping `LiquidGlassButton`
+   - `features/search/components/SearchBar.tsx` - Search bar wrapping `LiquidGlassInput`
+   - `modules/liquid-glass/ios/LiquidGlassPopoverView.swift` - Native SwiftUI popover
+   - `modules/liquid-glass/ios/LiquidGlassButtonView.swift` - Native SwiftUI button
+   - `modules/liquid-glass/ios/LiquidGlassModule.swift` - Expo module registration
+   - Various TypeScript wrappers and types
+   - `specs/008_source_selector/` - Original source selector spec
+
+3. **Created initial spec** (`specs/015_source_selector_animation/spec.md`) - First version proposed a Reanimated-based fade approach (cross-fade between bottom bar and popover).
+
+4. **User provided critical feedback** - Described the actual desired animation in detail:
+   - Phase 1: Original element shrinks to center (~80%), content fades out
+   - Phase 2: New element grows from the original's position to target size, content fades in
+   - For the plus button → source selector: button disappears, element grows from bottom-right corner horizontally and vertically
+   - This is a single continuous glass surface morph, NOT a cross-fade
+
+5. **Rewrote the spec** - Changed approach fundamentally: the popover owns the morph. Added `buttonSize` and `buttonSystemImage` props to the popover so it can render the collapsed circle state. SwiftUI handles the morph animation natively.
+
+6. **First `/spec:validate`** - Found 6 issues:
+   - CRITICAL: Touch interception (always-mounted full-screen view blocks taps)
+   - CRITICAL: Position alignment (34pt safe area gap)
+   - `.fixedSize()` vs `frame()` conflict
+   - Shrink-then-expand can't be single spring
+   - Glass effect shape animation unverified
+   - Content layout during morph
+
+7. **Addressed all 6 issues** in the spec:
+   - Added `pointerEvents` toggling
+   - Changed bottom padding from `safeAreaInsets.bottom + 28` to `28`
+   - Added hidden measurement view pattern with `onGeometryChange`
+   - Prescribed two-phase chained `withAnimation` + `asyncAfter`
+   - Primary approach uses `ultraThinMaterial` + `clipShape`, glass effect deferred
+   - Added `.fixedSize()` on inner options list
+
+8. **Second `/spec:validate`** - Verdict: Ready. All issues resolved.
+
+9. **`/spec:decompose`** - Created plan file and 8 tasks with dependencies:
+   - #1: Register native props (no blockers)
+   - #2: Rewrite SwiftUI popover (blocked by #1)
+   - #3: Update TS types and iOS wrapper (no blockers)
+   - #4: Refactor app/index.tsx (blocked by #2, #3)
+   - #5: Two-phase shrink animation (blocked by #4)
+   - #6: Glass effect test (blocked by #4)
+   - #7: Final tuning (blocked by #5, #6)
+   - #8: Update docs (blocked by #4)
+
+10. **`/spec:execute`** - Started implementation:
+    - Completed #1: Added `buttonSize`/`buttonSystemImage` state, setters, and module registration
+    - Completed #3: Updated types, removed `if (!visible) return null`, pass new props
+    - Completed #2: Rewrote `LiquidGlassPopoverContent` with morph animation
+    - Completed #4: Refactored `app/index.tsx` (hit lint error on unused imports, fixed by doing full refactor in one pass)
+    - Completed #5: Added `shrinkScale` state and two-phase animation
+    - Completed #8: Updated docs
+    - Completed #6: Added `#available(iOS 26.0, *)` branch for glass effect
+
+11. **Code review** found issues:
+    - CRITICAL: `asyncAfter` has no cancellation guard - rapid open/dismiss causes stuck popover
+    - IMPORTANT: `importOptions` recreated every render
+    - IMPORTANT: `shrinkScale` not reset on dismiss
+    - IMPORTANT: `@State` preservation fragility (noted, no fix needed)
+    - MINOR: Docs incomplete, return type inconsistency, magic number 48
+
+These critical/important issues from the code review have NOT been fixed yet.
+
+Now let me trace the exact file changes:
+
+**LiquidGlassPopoverView.swift** - Complete rewrite of `LiquidGlassPopoverContent`, added props/setters to `LiquidGlassPopoverView`
+**LiquidGlassModule.swift** - Added `buttonSize` and `buttonSystemImage` prop registrations
+**LiquidGlassPopover.types.ts** - Added `buttonSize?` and `buttonSystemImage?`
+**LiquidGlassPopover.ios.tsx** - Removed early return null, added new props, changed return type
+**app/index.tsx** - Full refactor: always-mounted popover, Reanimated animations, pointerEvents wrapper
+**docs/native-modules.md** - Added LiquidGlassPopover to components list
+
+Task #7 (final tuning) is still pending. Code review issues need fixing.
+
+Summary:
+1. Primary Request and Intent:
+   The user wants to animate the transition between the plus button and the import source selector panel in their Expo/React Native recipe photo app. The specific animation is a **continuous glass-surface morph**: the plus button's glass circle shrinks to ~80%, its icon fades out, then the glass surface expands from the bottom-right corner to the panel dimensions while the options (camera/library) fade in. The reverse plays on dismiss. The search bar independently fades/slides out via Reanimated. The user explicitly requires that the button and panel components remain separate (loose coupling). Native Swift implementation is acceptable. This was implemented via the `/spec:create` → `/spec:validate` → `/spec:decompose` → `/spec:execute` workflow.
+
+2. Key Technical Concepts:
+   - SwiftUI animatable `frame(width:height:)` and `clipShape(cornerRadius:)` for shape morphing
+   - Two-phase animation: chained `withAnimation` + `DispatchQueue.main.asyncAfter` for shrink→expand
+   - Hidden measurement view pattern with `.fixedSize().hidden().onGeometryChange()` to capture panel natural size
+   - `react-native-reanimated` shared values and `useAnimatedStyle` for search bar animation
+   - `pointerEvents` toggling to prevent touch interception by always-mounted native views
+   - Expo native modules via `ExpoModulesCore` (`requireNativeViewManager`, `EventDispatcher`, prop registration)
+   - `.ultraThinMaterial` + `.clipShape` as primary glass effect, `.glassEffect` with `#available(iOS 26.0, *)` branch
+   - Bottom padding alignment: removed `safeAreaInsets.bottom` from popover padding to match RN button position
+   - iOS deployment target: 17.0
+
+3. Files and Code Sections:
+
+   - **`specs/015_source_selector_animation/spec.md`** (created)
+     - Full specification for the morph animation feature. Went through 3 revisions addressing validation feedback.
+   
+   - **`specs/015_source_selector_animation/plan.md`** (created)
+     - Task breakdown with 8 tasks, dependency graph, and phased implementation plan.
+
+   - **`modules/liquid-glass/ios/LiquidGlassPopoverView.swift`** (heavily modified)
+     - Core file for the morph animation. Added new props, rewrote `LiquidGlassPopoverContent` entirely.
+     - Current full state of `LiquidGlassPopoverContent`:
+     ```swift
+     struct LiquidGlassPopoverContent: View {
+       var isVisible: Bool
+       var options: [PopoverOption]
+       var buttonSize: CGFloat
+       var buttonSystemImage: String
+       var onOptionSelect: (String) -> Void
+       var onDismiss: () -> Void
+
+       @State private var expanded = false
+       @State private var shrinkScale: CGFloat = 1.0
+       @State private var panelSize: CGSize = CGSize(width: 200, height: 100)
+
+       private var currentWidth: CGFloat {
+         let base = expanded ? panelSize.width : buttonSize
+         return base * shrinkScale
+       }
+       private var currentHeight: CGFloat {
+         let base = expanded ? panelSize.height : buttonSize
+         return base * shrinkScale
+       }
+       private var currentCornerRadius: CGFloat {
+         expanded ? 20 : (buttonSize * shrinkScale) / 2
+       }
+
+       var body: some View {
+         GeometryReader { _ in
+           ZStack {
+             if isVisible || expanded {
+               Color.clear
+                 .contentShape(Rectangle())
+                 .onTapGesture { onDismiss() }
+               VStack {
+                 Spacer()
+                 HStack {
+                   Spacer()
+                   morphingContainer
+                 }
+               }
+               .padding(.trailing, 28)
+               .padding(.bottom, 28)
+             }
+             optionsList
+               .fixedSize()
+               .hidden()
+               .onGeometryChange(for: CGSize.self) { proxy in proxy.size } action: { newSize in panelSize = newSize }
+           }
+         }
+         .ignoresSafeArea()
+         .onChange(of: isVisible) { _, newValue in
+           if newValue {
+             withAnimation(.spring(duration: 0.1)) { shrinkScale = 0.8 }
+             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+               withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
+                 expanded = true
+                 shrinkScale = 1.0
+               }
+             }
+           } else {
+             withAnimation(.spring(duration: 0.3, bounce: 0.1)) { expanded = false }
+           }
+         }
+       }
+
+       private var morphContent: some View { /* ZStack with collapsed Image + expanded optionsList */ }
+       @ViewBuilder private var morphingContainer: some View { /* #available iOS 26 branch */ }
+       private var optionsList: some View { /* VStack of option buttons */ }
+     }
+     ```
+     - `LiquidGlassPopoverView` class also modified: added `buttonSize`/`buttonSystemImage` state vars, setters, and updated `updateContent()` and `init`.
+
+   - **`modules/liquid-glass/ios/LiquidGlassModule.swift`** (modified)
+     - Added two new prop registrations in the popover view section:
+     ```swift
+     Prop("buttonSize") { (view, size: CGFloat) in
+       view.setButtonSize(size)
+     }
+     Prop("buttonSystemImage") { (view, image: String) in
+       view.setButtonSystemImage(image)
+     }
+     ```
+
+   - **`modules/liquid-glass/src/LiquidGlassPopover.types.ts`** (modified)
+     - Added `buttonSize?: number;` and `buttonSystemImage?: string;` to `LiquidGlassPopoverProps`
+
+   - **`modules/liquid-glass/src/LiquidGlassPopover.ios.tsx`** (modified)
+     - Removed `if (!visible) return null` early return
+     - Changed return type from `JSX.Element | null` to `JSX.Element`
+     - Added `buttonSize` and `buttonSystemImage` to destructured props and passed through to native view
+
+   - **`app/index.tsx`** (heavily modified)
+     - Added Reanimated imports and animated styles
+     - Replaced conditional rendering with always-mounted layout
+     - Key additions:
+     ```tsx
+     const popoverProgress = useSharedValue(0);
+     useEffect(() => {
+       popoverProgress.value = withSpring(popoverVisible ? 1 : 0, { damping: 20, stiffness: 200 });
+     }, [popoverVisible, popoverProgress]);
+
+     const searchBarStyle = useAnimatedStyle(() => ({
+       opacity: 1 - popoverProgress.value,
+       transform: [
+         { translateX: -popoverProgress.value * 40 },
+         { scale: 1 - popoverProgress.value * 0.05 },
+       ],
+     }));
+     const buttonStyle = useAnimatedStyle(() => ({
+       opacity: popoverProgress.value > 0.01 ? 0 : 1,
+     }));
+     ```
+     - Popover wrapped in `<View style={StyleSheet.absoluteFill} pointerEvents={popoverVisible ? "auto" : "none"}>`
+     - Added `searchBarWrapper` style with `flex: 1`
+
+   - **`docs/native-modules.md`** (modified)
+     - Added `LiquidGlassPopover` to components list
+
+4. Errors and fixes:
+   - **ESLint/TypeScript lint error on unused imports**: When I first added the Reanimated import to `app/index.tsx` without the code that uses them, the post-edit lint hook blocked with `'Animated' is defined but never used` (4 errors). Fixed by doing the complete file rewrite in a single `Write` operation instead of incremental `Edit`s.
+   - **SwiftUI `.modify` doesn't exist**: When adding the `#available(iOS 26.0, *)` glass effect branch, I tried to use a `.modify { view in }` modifier which doesn't exist in SwiftUI. Fixed by extracting `morphContent` as a separate computed property and using `@ViewBuilder` on `morphingContainer` with the `if #available` branching at the top level.
+
+5. Problem Solving:
+   - **Spec validation** identified 6 issues across 2 rounds. All were addressed in the spec before implementation.
+   - **Code review** (most recent action) identified 3 actionable issues that have NOT been fixed yet:
+     1. CRITICAL: `asyncAfter` has no cancellation guard — rapid open/dismiss causes stuck popover. Fix: generation counter pattern.
+     2. IMPORTANT: `importOptions` array recreated every render. Fix: `useMemo`.
+     3. IMPORTANT: `shrinkScale` not reset on dismiss. Fix: add `shrinkScale = 1.0` in dismiss branch.
+
+6. All user messages:
+   - "It would be nice to have some animation for the import source selector. When I click the plus button the panel pops up with those two options to take a picture with the camera and select from the library. The transition between the search bar and that panel is quite rough. It basically appears on the screen. The idea would be to animate the plus button so it smoothly transitions to the panel. That's something that native iOS apps from Apple offer, for example the Notes app, the add note button, or patterns like that, which smoothly transition to the panel with options to select or something. If needed we can implement that on the native module side but ideally we should avoid tight coupling between, for example, the button component and the panel component. Ideally they should stay separate."
+   - "The animation effect in the native apps is something like this: 1. The original element slightly shrinks to the center (to 80% of the size, maybe), while its content vanishes (fades out) 2. The new element, which is bigger, starts appearing right after - the boundaries of the original element grow to the target size, and its content smoothly appear (fades in) For the Add button -> Source Selector transition it would mean that the plus button disappears and then the element grows from the bottom right corner where the plus button is originally displayed, to the panel size (grows significantly horizontally and vertically to some extent)"
+   - `/spec:validate` (triggered twice)
+   - "Please address the feedback" (after first validation)
+   - `/spec:decompose`
+   - `/spec:execute`
+
+7. Pending Tasks:
+   - **Task #7** (Final spring tuning and edge case verification) — still pending, requires on-device testing
+   - **Code review fixes** (not yet addressed):
+     - CRITICAL: Add generation counter to cancel stale `asyncAfter` callbacks in `LiquidGlassPopoverView.swift`
+     - IMPORTANT: Wrap `importOptions` in `useMemo` in `app/index.tsx`
+     - IMPORTANT: Reset `shrinkScale = 1.0` in dismiss branch in `LiquidGlassPopoverView.swift`
+
+8. Current Work:
+   The `/spec:execute` workflow was in progress. All 8 implementation tasks were completed (#1-#6, #8 done; #7 is on-device tuning). A code review was just completed and returned 1 CRITICAL and 2 IMPORTANT issues that need fixing. The code review was the last action taken before this summary request.
+
+9. Optional Next Step:
+   Fix the 3 issues identified by the code review:
+   1. Add `@State private var animationGeneration = 0` and generation guard to the `asyncAfter` callback in `LiquidGlassPopoverView.swift` (CRITICAL - prevents stuck popover on rapid tap)
+   2. Add `shrinkScale = 1.0` to the dismiss branch in the `.onChange(of: isVisible)` handler (IMPORTANT)
+   3. Wrap `importOptions` in `useMemo` in `app/index.tsx` (IMPORTANT)
+   
+   These are direct follow-ups to the `/spec:execute` command the user invoked, which includes the code review → fix cycle as part of the execution workflow.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Few issues:
+
+1. The panel itself isn't interactive!!! It's impossible to select the source - taping does nothing.
+1. Related to the above - the entire panel looks tapable - the highlight effect is on the entire panel rather than on specific options; maybe it was like this already - but it's still worth fixing
+1. There's a visible blink between the fake button created by the panel and the genuine button - before the fake one appears, the real one disappears. They should fade into each other whithout the user to notice.
+1. The panel resize animation should bounce slightly (like a 105% of the target size and back 100%)
+1. The search box hide/appear slide animation bounces too much - reduce it by 2 at least.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Please refactor the logic in @app/index.tsx so the search bar/plus button/popover animation logic is contained within a single custom hook.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

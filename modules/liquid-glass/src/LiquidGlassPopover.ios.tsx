@@ -13,8 +13,9 @@ export function LiquidGlassPopover({
   options,
   onSelect,
   onDismiss,
+  buttonSize,
   style,
-}: LiquidGlassPopoverProps): JSX.Element | null {
+}: LiquidGlassPopoverProps): JSX.Element {
   const handleOptionSelect = useCallback(
     (event: { nativeEvent: { id: string } }) => {
       onSelect(event.nativeEvent.id);
@@ -26,14 +27,11 @@ export function LiquidGlassPopover({
     onDismiss();
   }, [onDismiss]);
 
-  if (!visible) {
-    return null;
-  }
-
   return (
     <NativeLiquidGlassPopoverView
       visible={visible}
       options={options}
+      buttonSize={buttonSize}
       onOptionSelect={handleOptionSelect}
       onDismiss={handleDismiss}
       style={[styles.container, style]}

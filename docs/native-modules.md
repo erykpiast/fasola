@@ -10,6 +10,7 @@ Custom Expo module providing iOS-specific UI components with glass/blur effects.
 - `LiquidGlassInput` - Glass-effect text inputs
 - `LiquidGlassSelect` - Glass-effect picker/dropdown
 - `LiquidGlassMenu` - Glass-effect context menus
+- `LiquidGlassPopover` - Glass-effect popover with morph animation from a collapsed button state
 
 ### Implementation
 

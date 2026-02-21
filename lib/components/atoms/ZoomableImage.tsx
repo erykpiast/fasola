@@ -1,6 +1,9 @@
-import { Zoomable } from "@likashefqet/react-native-image-zoom";
-import { type JSX, useCallback } from "react";
+import { type JSX, useCallback, useRef } from "react";
 import { type ViewStyle } from "react-native";
+import {
+  ResumableZoom,
+  type ResumableZoomRefType,
+} from "react-native-zoom-toolkit";
 
 export function ZoomableImage({
   children,
@@ -8,36 +11,44 @@ export function ZoomableImage({
   onZoomChange,
   minScale = 1,
   maxScale = 5,
-  doubleTapScale = 3,
 }: {
   children: JSX.Element;
   style?: ViewStyle;
   onZoomChange?: (isZoomed: boolean) => void;
   minScale?: number;
   maxScale?: number;
-  doubleTapScale?: number;
 }): JSX.Element {
-  const handleInteractionStart = useCallback((): void => {
+  const ref = useRef<ResumableZoomRefType>(null);
+
+  const handlePinchStart = useCallback((): void => {
     onZoomChange?.(true);
   }, [onZoomChange]);
 
-  const handleResetAnimationEnd = useCallback((): void => {
-    onZoomChange?.(false);
-  }, [onZoomChange]);
+  const handlePanStart = useCallback((): void => {
+    const state = ref.current?.getState();
+    if (state && state.scale > minScale) {
+      onZoomChange?.(true);
+    }
+  }, [onZoomChange, minScale]);
+
+  const handleGestureEnd = useCallback((): void => {
+    const state = ref.current?.getState();
+    if (!state) return;
+    const atRest = Math.abs(state.scale - minScale) < 0.01;
+    onZoomChange?.(!atRest);
+  }, [onZoomChange, minScale]);
 
   return (
-    <Zoomable
+    <ResumableZoom
+      ref={ref}
       minScale={minScale}
       maxScale={maxScale}
-      doubleTapScale={doubleTapScale}
-      isDoubleTapEnabled
-      isPanEnabled
-      isPinchEnabled
-      onInteractionStart={handleInteractionStart}
-      onResetAnimationEnd={handleResetAnimationEnd}
-      style={style}
+      style={{ ...style, overflow: "hidden" }}
+      onPinchStart={handlePinchStart}
+      onPanStart={handlePanStart}
+      onGestureEnd={handleGestureEnd}
     >
       {children}
-    </Zoomable>
+    </ResumableZoom>
   );
 }

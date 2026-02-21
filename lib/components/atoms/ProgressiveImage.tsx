@@ -1,4 +1,8 @@
-import { type ImageContentFit, Image } from "expo-image";
+import {
+  type ImageContentFit,
+  type ImageLoadEventData,
+  Image,
+} from "expo-image";
 import { type JSX, useCallback, useEffect } from "react";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 import Animated, {
@@ -18,11 +22,13 @@ export function ProgressiveImage({
   thumbnailUri,
   style,
   contentFit = "cover",
+  onLoad,
 }: {
   uri: ImageUri;
   thumbnailUri: ImageUri | undefined;
   style?: ViewStyle;
   contentFit?: ImageContentFit;
+  onLoad?: (event: ImageLoadEventData) => void;
 }): JSX.Element {
   const thumbnailOpacity = useSharedValue(thumbnailUri ? 1 : 0);
 
@@ -32,9 +38,13 @@ export function ProgressiveImage({
     }
   }, [thumbnailUri, thumbnailOpacity]);
 
-  const handleFullImageLoad = useCallback((): void => {
-    thumbnailOpacity.value = withTiming(0, { duration: FADE_DURATION_MS });
-  }, [thumbnailOpacity]);
+  const handleFullImageLoad = useCallback(
+    (event: ImageLoadEventData): void => {
+      thumbnailOpacity.value = withTiming(0, { duration: FADE_DURATION_MS });
+      onLoad?.(event);
+    },
+    [thumbnailOpacity, onLoad],
+  );
 
   const thumbnailStyle = useAnimatedStyle(() => ({
     opacity: thumbnailOpacity.value,

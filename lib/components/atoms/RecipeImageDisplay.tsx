@@ -1,6 +1,10 @@
 import { DebugVisualization } from "@/features/photo-adjustment/components/DebugVisualization";
 import type { ImageUri } from "@/lib/types/primitives";
-import { Image, type ImageContentFit } from "expo-image";
+import {
+  Image,
+  type ImageContentFit,
+  type ImageLoadEventData,
+} from "expo-image";
 import { type JSX } from "react";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 
@@ -8,10 +12,12 @@ export function RecipeImageDisplay({
   uri,
   style,
   contentFit = "cover",
+  onLoad,
 }: {
   uri: ImageUri;
   style?: ViewStyle;
   contentFit?: ImageContentFit;
+  onLoad?: (event: ImageLoadEventData) => void;
 }): JSX.Element {
   // Defensive check: ensure uri is a non-empty string
   const validUri = uri && typeof uri === "string" ? uri : "";
@@ -22,6 +28,7 @@ export function RecipeImageDisplay({
         source={{ uri: validUri }}
         style={styles.image}
         contentFit={contentFit}
+        onLoad={onLoad}
       />
       <DebugVisualization />
     </View>

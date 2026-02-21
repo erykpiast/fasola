@@ -7,6 +7,7 @@ import { DeleteButton } from "@/lib/components/atoms/DeleteButton";
 import { EditButton } from "@/lib/components/atoms/EditButton";
 import { ProgressiveImage } from "@/lib/components/atoms/ProgressiveImage";
 import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
+import { useImageCoverSize } from "@/lib/hooks/useImageCoverSize";
 import type { RecipeId } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useRouter } from "expo-router";
@@ -60,6 +61,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
 
   const [isZoomed, setIsZoomed] = useState(false);
   const { width, height } = useWindowDimensions();
+  const { coverSize, onImageLoad } = useImageCoverSize(width, height);
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: withTiming(isZoomed ? 0 : 1, { duration: 200 }),
@@ -82,7 +84,8 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         <ProgressiveImage
           uri={recipe.photoUri}
           thumbnailUri={recipe.thumbnailUri}
-          style={{ width, height }}
+          style={coverSize ?? { width, height }}
+          onLoad={onImageLoad}
         />
       </ZoomableImage>
       <Animated.View

@@ -1,11 +1,13 @@
 import { Alert } from "@/lib/alert";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
+import { useCoverSize } from "@/lib/hooks/useCoverSize";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getColors } from "@/platform/theme/glassStyles";
 import { useTheme } from "@/platform/theme/useTheme";
+import type { ImageLoadEventData } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { type JSX, useCallback, useRef, useState } from "react";
@@ -33,6 +35,19 @@ export function EditRecipeForm({
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const [isZoomed, setIsZoomed] = useState(false);
+  const [sourceSize, setSourceSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const handleImageLoad = useCallback((event: ImageLoadEventData): void => {
+    setSourceSize({
+      width: event.source.width,
+      height: event.source.height,
+    });
+  }, []);
+
+  const coverSize = useCoverSize(sourceSize, width, width);
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
     initialValues: recipe.metadata,
     onSubmit,
@@ -94,11 +109,11 @@ export function EditRecipeForm({
             style={{ width, height: width }}
             onZoomChange={setIsZoomed}
             maxScale={3}
-            doubleTapScale={2}
           >
             <RecipeImageDisplay
               uri={recipe.photoUri}
-              style={{ width, height: width }}
+              style={coverSize ?? { width, height: width }}
+              onLoad={handleImageLoad}
             />
           </ZoomableImage>
         </View>

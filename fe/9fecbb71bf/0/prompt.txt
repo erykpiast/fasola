@@ -1,0 +1,107 @@
+Implement the following plan:
+
+# Fix Image Zoom Pan Limits for Cover Mode
+
+## Context
+
+Images display with `contentFit="cover"`, which crops one axis. The current zoom library (`@likashefqet/react-native-image-zoom`) calculates pan limits from container dimensions only, preventing the user from panning to see the cropped portions when zoomed.
+
+`react-native-zoom-toolkit`'s `ResumableZoom` solves this natively: it measures child and container dimensions independently and uses `Math.max(0, childSize * scale - containerSize) / 2` for pan limits. By sizing the image child to the cover-rendered dimensions (larger than the container), pan limits automatically account for the full image extent. Reset goes to `minScale`, not hardcoded `1`.
+
+## Steps
+
+### 1. Swap dependency
+
+Remove `@likashefqet/react-native-image-zoom`. The project already has `react-native-zoom-toolkit@5.0.1` in the registry (shares the same peer deps: gesture-handler >=2.19, reanimated >=2).
+
+### 2. Create `useCoverSize` hook — `lib/hooks/useCoverSize.ts` (new)
+
+Encapsulates the cover dimension calculation, reusable by both screens.
+
+```typescript
+// Given source image dimensions and container dimensions,
+// returns the cover-rendered size (may be larger than container on one axis).
+// Returns undefined until source dimensions are known.
+function useCoverSize(
+  sourceSize: { width: number; height: number } | null,
+  containerWidth: number,
+  containerHeight: number,
+): { width: number; height: number } | undefined
+```
+
+### 3. Rewrite `lib/components/atoms/ZoomableImage.tsx`
+
+Replace `Zoomable` with `ResumableZoom`. Key changes:
+
+- Accept `contentWidth?` and `contentHeight?` props (the cover dimensions for the child)
+- Wrap children in `ResumableZoom` with `style={{ ..., overflow: 'hidden' }}`
+- Detect zoom state via `onPinchStart`/`onPanStart` (→ zoomed) and `onGestureEnd` (→ check if at rest position via ref `getState()`)
+- Map to existing `onZoomChange` callback
+
+### 4. Update `lib/components/atoms/ProgressiveImage.tsx`
+
+- Add `onLoad?: (event: ImageLoadEventData) => void` prop
+- Forward the expo-image `onLoad` event from the main `<Image>` to the parent
+
+### 5. Update `lib/components/atoms/RecipeImageDisplay.tsx`
+
+- Add `onLoad?: (event: ImageLoadEventData) => void` prop
+- Forward it to the `<Image>` component
+
+### 6. Update `features/recipe-preview/components/RecipeViewScreen.tsx`
+
+- Track source dimensions from `onLoad` callback
+- Compute cover size via `useCoverSize(sourceSize, width, height)`
+- Render `ProgressiveImage` at cover dimensions with `contentFit="cover"`
+- Pass `contentWidth`/`contentHeight` to ZoomableImage (or let ResumableZoom auto-measure the oversized child)
+
+### 7. Update `features/recipe-form/components/EditRecipeForm.tsx`
+
+Same pattern as step 6, with square container (`width` x `width`).
+
+## Files Modified
+
+- `package.json` — dependency swap
+- `lib/hooks/useCoverSize.ts` (new)
+- `lib/components/atoms/ZoomableImage.tsx` — rewrite
+- `lib/components/atoms/ProgressiveImage.tsx` — add onLoad
+- `lib/components/atoms/RecipeImageDisplay.tsx` — add onLoad
+- `features/recipe-preview/components/RecipeViewScreen.tsx` — cover sizing
+- `features/recipe-form/components/EditRecipeForm.tsx` — cover sizing
+
+## Verification
+
+1. Preview screen: landscape image in portrait container — zoom in, pan horizontally to see left/right edges
+2. Preview screen: portrait image — zoom in, pan vertically to see top/bottom edges
+3. Edit screen (square container) — same tests
+4. Double-tap zoom in/out returns to correct state
+5. Image with matching aspect ratio — behavior unchanged (no crop, no extra pan range)
+6. Overlay hides during zoom, reappears on reset
+7. Edit screen scroll disabled during zoom
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

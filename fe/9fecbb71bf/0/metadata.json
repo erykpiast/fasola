@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "fe9fecbb71bf",
+  "session_id": "c31b5b08-139a-4bfe-82bf-32bc494034ed",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T23:48:13.125483Z",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "features/recipe-form/components/EditRecipeForm.tsx",
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ProgressiveImage.tsx",
+    "lib/components/atoms/RecipeImageDisplay.tsx",
+    "lib/components/atoms/ZoomableImage.tsx",
+    "lib/hooks/useCoverSize.ts",
+    "package.json"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 91,
+    "cache_creation_tokens": 77911,
+    "cache_read_tokens": 1786632,
+    "output_tokens": 16286,
+    "api_call_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T23:48:12.995907Z",
+    "agent_lines": 93,
+    "human_added": 42,
+    "human_modified": 16,
+    "human_removed": 0,
+    "total_committed": 151,
+    "agent_percentage": 61.58940397350994
+  }
+}

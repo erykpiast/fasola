@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "fe9fecbb71bf",
+  "strategy": "manual-commit",
+  "branch": "feat/image_zoom",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "features/recipe-form/components/EditRecipeForm.tsx",
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ProgressiveImage.tsx",
+    "lib/components/atoms/RecipeImageDisplay.tsx",
+    "lib/components/atoms/ZoomableImage.tsx",
+    "lib/hooks/useCoverSize.ts",
+    "package.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fe/9fecbb71bf/0/metadata.json",
+      "transcript": "/fe/9fecbb71bf/0/full.jsonl",
+      "context": "/fe/9fecbb71bf/0/context.md",
+      "content_hash": "/fe/9fecbb71bf/0/content_hash.txt",
+      "prompt": "/fe/9fecbb71bf/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 91,
+    "cache_creation_tokens": 77911,
+    "cache_read_tokens": 1786632,
+    "output_tokens": 16286,
+    "api_call_count": 33
+  }
+}

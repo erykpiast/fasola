@@ -1,21 +1,22 @@
 import { router } from "expo-router";
 import { LiquidGlassPopover } from "liquid-glass";
-import { Suspense, useCallback, useEffect, type JSX } from "react";
+import { Suspense, useCallback, useEffect, useMemo, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import {
   usePhotoImport,
   type ImportOption,
 } from "../features/photos/hooks/usePhotoImport";
+import { usePopoverTransition } from "../features/photos/hooks/usePopoverTransition";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
@@ -45,8 +46,15 @@ function Content(): JSX.Element {
     useRecipeFilter(recipes);
   const { handleFocus, handleBlur, key } = useSearchFocus();
   const { setDebugData } = useDebugContext();
-  const { showPopover, handleOptionSelect, popoverVisible, dismissPopover } =
-    usePhotoImport();
+  const {
+    showPopover,
+    handleOptionSelect,
+    popoverVisible,
+    dismissPopover,
+    isImporting,
+  } = usePhotoImport();
+  const { searchBarStyle, buttonStyle } =
+    usePopoverTransition(popoverVisible, isImporting);
 
   useEffect(() => {
     return () => {
@@ -65,21 +73,17 @@ function Content(): JSX.Element {
     [handleOptionSelect],
   );
 
-  // Dismiss keyboard when popover becomes visible
-  useEffect(() => {
-    if (popoverVisible) {
-      Keyboard.dismiss();
-    }
-  }, [popoverVisible]);
-
-  const importOptions = [
-    { id: "camera", label: t("addRecipe.camera"), systemImage: "camera" },
-    {
-      id: "library",
-      label: t("addRecipe.library"),
-      systemImage: "photo.on.rectangle",
-    },
-  ];
+  const importOptions = useMemo(
+    () => [
+      { id: "camera", label: t("addRecipe.camera"), systemImage: "camera" },
+      {
+        id: "library",
+        label: t("addRecipe.library"),
+        systemImage: "photo.on.rectangle",
+      },
+    ],
+    [t],
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -88,12 +92,12 @@ function Content(): JSX.Element {
       ) : (
         <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} />
       )}
-      {!popoverVisible && (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoid}
-        >
-          <View style={styles.bottomBar}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoid}
+      >
+        <View style={styles.bottomBar}>
+          <Animated.View style={[styles.searchBarWrapper, searchBarStyle]}>
             <SearchBar
               key={key}
               value={searchTerm}
@@ -101,18 +105,27 @@ function Content(): JSX.Element {
               onFocus={handleFocus}
               onBlur={handleBlur}
             />
+          </Animated.View>
+          <Animated.View style={buttonStyle}>
             <AddRecipeButton onPress={showPopover} />
-          </View>
-        </KeyboardAvoidingView>
-      )}
-      {popoverVisible && (
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          !popoverVisible && isImporting && { opacity: 0 },
+        ]}
+        pointerEvents={popoverVisible ? "auto" : "none"}
+      >
         <LiquidGlassPopover
-          visible={true}
+          visible={popoverVisible}
           options={importOptions}
+          buttonSize={56}
           onSelect={handleImportOptionSelect}
           onDismiss={dismissPopover}
         />
-      )}
+      </View>
     </View>
   );
 }
@@ -143,6 +156,9 @@ const styles = StyleSheet.create({
     // NOTE: The same effective space from the screen to button edges for the `Add note` button in the Apple Notes app
     paddingHorizontal: 28,
     paddingBottom: 28,
+  },
+  searchBarWrapper: {
+    flex: 1,
   },
   suspenseFallback: {
     flex: 1,

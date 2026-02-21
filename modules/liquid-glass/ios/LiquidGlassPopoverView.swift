@@ -12,7 +12,7 @@ public final class LiquidGlassPopoverView: ExpoView {
   
   private var isVisible: Bool = false
   private var options: [PopoverOption] = []
-  
+  private var buttonSize: CGFloat = 48
   let onOptionSelect = EventDispatcher()
   let onDismiss = EventDispatcher()
   
@@ -20,6 +20,7 @@ public final class LiquidGlassPopoverView: ExpoView {
     let content = LiquidGlassPopoverContent(
       isVisible: false,
       options: [],
+      buttonSize: 48,
       onOptionSelect: { _ in },
       onDismiss: { }
     )
@@ -79,6 +80,11 @@ public final class LiquidGlassPopoverView: ExpoView {
     updateContent()
   }
   
+  func setButtonSize(_ size: CGFloat) {
+    buttonSize = size
+    updateContent()
+  }
+
   func setOptions(_ optionsData: [[String: Any]]) {
     options = optionsData.compactMap { dict in
       guard let id = dict["id"] as? String,
@@ -95,6 +101,7 @@ public final class LiquidGlassPopoverView: ExpoView {
     let content = LiquidGlassPopoverContent(
       isVisible: isVisible,
       options: options,
+      buttonSize: buttonSize,
       onOptionSelect: { [weak self] optionId in
         self?.onOptionSelect(["id": optionId])
       },
@@ -106,103 +113,147 @@ public final class LiquidGlassPopoverView: ExpoView {
   }
 }
 
+struct HighlightButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .opacity(configuration.isPressed ? 0.5 : 1.0)
+      .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+  }
+}
+
 struct LiquidGlassPopoverContent: View {
   var isVisible: Bool
   var options: [PopoverOption]
+  var buttonSize: CGFloat
   var onOptionSelect: (String) -> Void
   var onDismiss: () -> Void
-  
+
+  @State private var expanded = false
+  @State private var shrinkScale: CGFloat = 1.0
+  @State private var panelSize: CGSize = CGSize(width: 200, height: 100)
+  @State private var animationGeneration: Int = 0
+
+  private var currentWidth: CGFloat {
+    let base = expanded ? panelSize.width : buttonSize
+    return base * shrinkScale
+  }
+
+  private var currentHeight: CGFloat {
+    let base = expanded ? panelSize.height : buttonSize
+    return base * shrinkScale
+  }
+
+  private var currentCornerRadius: CGFloat {
+    expanded ? 20 : (buttonSize * shrinkScale) / 2
+  }
+
   var body: some View {
-    GeometryReader { geometry in
+    GeometryReader { _ in
       ZStack {
-        // Invisible backdrop for outside tap detection
-        if isVisible {
-          Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture {
-              onDismiss()
-            }
-        }
-        
-        // Popover content positioned at the bottom-right with safe area
-        VStack {
-          Spacer()
-          HStack {
+        if isVisible || expanded {
+          VStack {
             Spacer()
-            if isVisible {
-              popoverMenu
-                .transition(
-                  .scale(scale: 0.5, anchor: .bottomTrailing)
-                  .combined(with: .opacity)
-                )
+            HStack {
+              Spacer()
+              morphingContainer
             }
           }
+          .padding(.trailing, 28)
+          .padding(.bottom, 28)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .contentShape(Rectangle())
+          .onTapGesture {
+            onDismiss()
+          }
         }
-        .padding(.trailing, 28)
-        .padding(.bottom, geometry.safeAreaInsets.bottom + 28)
+
+        // Hidden measurement view to capture panel natural size
+        optionsList
+          .fixedSize()
+          .hidden()
+          .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+          } action: { newSize in
+            panelSize = newSize
+          }
       }
-      .animation(.spring(duration: 0.3, bounce: 0.2), value: isVisible)
     }
     .ignoresSafeArea()
+    .onChange(of: isVisible) { _, newValue in
+      // Generation counter cancels stale Phase 2 callbacks on rapid open/dismiss.
+      // The dismiss branch must reset shrinkScale to 1.0 to handle the case where
+      // Phase 1 set it to 0.8 but Phase 2 was cancelled by the guard.
+      animationGeneration += 1
+      let currentGeneration = animationGeneration
+      if newValue {
+        // Phase 1: Shrink the button circle to 80%
+        withAnimation(.spring(duration: 0.1)) {
+          shrinkScale = 0.8
+        }
+        // Phase 2: Expand to panel size
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+          guard animationGeneration == currentGeneration else { return }
+          withAnimation(.spring(duration: 0.35, bounce: 0.3)) {
+            expanded = true
+            shrinkScale = 1.0
+          }
+        }
+      } else {
+        // Reverse: collapse to circle in one spring
+        withAnimation(.spring(duration: 0.3, bounce: 0.1)) {
+          expanded = false
+          shrinkScale = 1.0
+        }
+      }
+    }
   }
-  
+
+  private var morphContent: some View {
+    ZStack {
+      // Expanded content (options list)
+      optionsList
+        .fixedSize()
+        .opacity(expanded ? 1 : 0)
+    }
+    .frame(width: currentWidth, height: currentHeight)
+  }
+
   @ViewBuilder
-  private var popoverMenu: some View {
+  private var morphingContainer: some View {
     if #available(iOS 26.0, *) {
-      VStack(alignment: .leading, spacing: 0) {
-        ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-          Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-            onOptionSelect(option.id)
-          }) {
-            HStack(spacing: 12) {
-              Image(systemName: option.systemImage)
-                .font(.system(size: 20))
-                .frame(width: 24)
-              Text(option.label)
-                .font(.body)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-          }
-          .buttonStyle(.plain)
-          
-          if index < options.count - 1 {
-            Divider()
-          }
-        }
-      }
-      .fixedSize()
-      .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 20))
+      morphContent
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: currentCornerRadius))
     } else {
-      VStack(alignment: .leading, spacing: 0) {
-        ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-          Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-            onOptionSelect(option.id)
-          }) {
-            HStack(spacing: 12) {
-              Image(systemName: option.systemImage)
-                .font(.system(size: 20))
-                .frame(width: 24)
-              Text(option.label)
-                .font(.body)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+      morphContent
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: currentCornerRadius))
+    }
+  }
+
+  private var optionsList: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
+        Button(action: {
+          let generator = UIImpactFeedbackGenerator(style: .light)
+          generator.impactOccurred()
+          onOptionSelect(option.id)
+        }) {
+          HStack(spacing: 12) {
+            Image(systemName: option.systemImage)
+              .font(.system(size: 20))
+              .frame(width: 24)
+            Text(option.label)
+              .font(.body)
           }
-          .buttonStyle(.plain)
-          
-          if index < options.count - 1 {
-            Divider()
-          }
+          .padding(.horizontal, 16)
+          .padding(.vertical, 14)
+        }
+        .buttonStyle(HighlightButtonStyle())
+
+        if index < options.count - 1 {
+          Divider()
         }
       }
-      .fixedSize()
-      .background(.ultraThinMaterial)
-      .clipShape(RoundedRectangle(cornerRadius: 20))
     }
   }
 }

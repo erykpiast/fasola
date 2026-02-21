@@ -11,5 +11,6 @@ export type LiquidGlassPopoverProps = {
   options: Array<LiquidGlassPopoverOption>;
   onSelect: (id: string) => void;
   onDismiss: () => void;
+  buttonSize?: number;
   style?: ViewStyle;
 };

@@ -96,11 +96,15 @@ public final class LiquidGlassModule: Module {
       Prop("visible") { (view, visible: Bool) in
         view.setVisible(visible)
       }
-      
+
       Prop("options") { (view, options: [[String: Any]]) in
         view.setOptions(options)
       }
-      
+
+      Prop("buttonSize") { (view, size: CGFloat) in
+        view.setButtonSize(size)
+      }
+
       Events("onOptionSelect", "onDismiss")
     }
   }

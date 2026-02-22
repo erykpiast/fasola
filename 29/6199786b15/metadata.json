@@ -3,7 +3,7 @@
   "checkpoint_id": "296199786b15",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 19,
+  "checkpoints_count": 22,
   "files_touched": [
     "app/_layout.tsx",
     "app/index.tsx",
@@ -26,13 +26,18 @@
     "lib/repositories/sources.ts",
     "lib/repositories/types.ts",
     "lib/types/primitives.ts",
+    "lib/types/recipe.ts",
     "lib/types/source.ts",
     "modules/liquid-glass/ios/LiquidGlassModule.swift",
     "modules/liquid-glass/ios/LiquidGlassPopoverView.swift",
+    "modules/liquid-glass/src/LiquidGlassInput.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.types.ts",
     "modules/liquid-glass/src/LiquidGlassPopover.ios.tsx",
     "modules/liquid-glass/src/LiquidGlassPopover.tsx",
     "modules/liquid-glass/src/LiquidGlassPopover.types.ts",
     "platform/i18n/translations/en.json",
+    "platform/theme/glassStyles.ts",
     "specs/016_manage_books/plan.md",
     "specs/016_manage_books/spec.md"
   ],
@@ -78,13 +83,20 @@
       "context": "/29/6199786b15/5/context.md",
       "content_hash": "/29/6199786b15/5/content_hash.txt",
       "prompt": "/29/6199786b15/5/prompt.txt"
+    },
+    {
+      "metadata": "/29/6199786b15/6/metadata.json",
+      "transcript": "/29/6199786b15/6/full.jsonl",
+      "context": "/29/6199786b15/6/context.md",
+      "content_hash": "/29/6199786b15/6/content_hash.txt",
+      "prompt": "/29/6199786b15/6/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 4243,
-    "cache_creation_tokens": 956633,
-    "cache_read_tokens": 28158110,
-    "output_tokens": 122964,
-    "api_call_count": 322
+    "input_tokens": 4306,
+    "cache_creation_tokens": 1197777,
+    "cache_read_tokens": 31050576,
+    "output_tokens": 136164,
+    "api_call_count": 361
   }
 }

@@ -1,0 +1,777 @@
+Implement the following plan:
+
+# Fix All Code Review Issues + Layout Bugs
+
+## Context
+
+Two parallel code reviews (code quality + security) identified 16 issues across the Manage Books feature. The user also reported two layout bugs: the manage-books bottom bar sits higher than the recipe list's, and the add-book text input gets covered by the keyboard.
+
+---
+
+## Layout Fixes (User-Reported)
+
+### A. Bottom bar positioning mismatch
+
+**Problem**: `manage-books.tsx` bottom bar uses `paddingBottom: insets.bottom + 12` (~46px on modern iPhones). `index.tsx` bottom bar uses fixed `paddingBottom: 28`. The manage-books buttons appear higher.
+
+**File**: `app/manage-books.tsx` (line 353, 460-468)
+
+**Fix**: Change `paddingBottom: insets.bottom + 12` to `paddingBottom: 28` to match index.tsx. The fixed 28px matches Apple Notes spacing (see index.tsx comment on line 231).
+
+### B. Keyboard covers add-book input
+
+**Problem**: When "plus" is tapped, `LiquidGlassInput` appears in the absolutely-positioned bottom bar. No `KeyboardAvoidingView` wraps it, so the keyboard covers the input.
+
+**File**: `app/manage-books.tsx` (lines 353-393, 460-468)
+
+**Fix**: Wrap the bottom bar in `KeyboardAvoidingView` with `behavior={Platform.OS === "ios" ? "padding" : "height"}`, matching the pattern in `index.tsx` lines 143-161. Move the absolute positioning from `bottomBar` style to the `KeyboardAvoidingView` wrapper.
+
+---
+
+## Code Review Fixes
+
+### 1. Delete dead `getLastUsed()` from SourceRepository
+
+**File**: `lib/repositories/sources.ts` — delete lines 69-76
+
+### 2. Add JSON.parse guard in SourceRepository.getAll()
+
+**File**: `lib/repositories/sources.ts` — wrap `JSON.parse(data)` at line 12 in try/catch, return `[]` on failure
+
+### 3. Add async write lock to SourceRepository
+
+**File**: `lib/repositories/sources.ts` — add a simple promise-chain mutex (`withLock` helper). Wrap `create`, `rename`, `delete`, `touch` bodies.
+
+### 4. Add maxLength constraint on source names
+
+**Files**:
+- `lib/repositories/sources.ts` — add `MAX_SOURCE_NAME_LENGTH = 100`, enforce in `create()` and `rename()`
+- `app/manage-books.tsx` — add `maxLength={100}` to TextInput (line 146) and LiquidGlassInput (line 362)
+- `features/source-selector/components/SourceSelector.tsx` — add `maxLength={100}` to LiquidGlassInput
+
+### 5. Reset promise on failure in SourcesContext
+
+**File**: `features/sources/context/SourcesContext.tsx` — add `.catch()` that sets `sourcesPromise = null` then rethrows
+
+### 6. Improve RecipeMetadata.source type
+
+**File**: `lib/types/recipe.ts` — change `source?: ... | string` to `source?: SourceId | https/http template literals`; add SourceId import
+
+### 7. Expand getColors() with textSecondary and separator
+
+**File**: `platform/theme/glassStyles.ts` — add `textSecondary` and `separator` to both light/dark color objects
+
+### 8. Collapse duplicated LiquidGlassInput in SourceSelector
+
+**File**: `features/source-selector/components/SourceSelector.tsx` — merge `hasNoSources` and `isEditingNewSource` branches into `hasNoSources || isEditingNewSource`
+
+### 9. Reduce SwipeableBookRow props (use theme colors internally)
+
+**File**: `app/manage-books.tsx` — remove `textColor`, `secondaryColor`, `separatorColor` props. Add `useTheme()` + `getColors()` inside the component. Use `colors.text`, `colors.textSecondary`, `colors.separator`. Update parent to use colors object directly instead of local isDark ternaries.
+
+### 10. Hoist withSpring(0) before conditionals
+
+**File**: `app/manage-books.tsx` — in `.onEnd()` handler (lines 80-90), hoist `translateX.value = withSpring(0)` before the if/else chain
+
+### 11. Add try/catch/finally to cascade delete
+
+**File**: `app/manage-books.tsx` — wrap onPress body in try/catch/finally. Move `isDeletingRef.current = false` to `finally`.
+
+### 12. Distinguish validation vs infrastructure errors
+
+**File**: `app/manage-books.tsx` — in `handleConfirmAdd` and `handleConfirmEdit` catch blocks, check error message for known validation strings; `console.warn` unexpected errors
+
+### 13. Fix overflow button accessibilityLabel
+
+**Files**:
+- `platform/i18n/translations/en.json` — add `"moreOptions": "More options"` under accessibility key
+- `app/index.tsx` — change accessibilityLabel to use new key
+
+### 14. Remove unnecessary handleBack useCallback
+
+**File**: `app/manage-books.tsx` — delete `handleBack`, use `router.back` directly
+
+### 15. Remove trivial handleSourceChange wrapper
+
+**File**: `app/recipe/add.tsx` — delete `handleSourceChange`, pass `setSource` directly
+
+### 16. Remove redundant handleDismiss wrapper
+
+**File**: `modules/liquid-glass/src/LiquidGlassPopover.ios.tsx` — delete `handleDismiss`, pass `onDismiss` directly
+
+---
+
+## Execution Order
+
+1. `platform/theme/glassStyles.ts` — add colors (prerequisite for #9)
+2. `lib/repositories/sources.ts` — all repository fixes (#1, #2, #3, #4)
+3. `lib/types/recipe.ts` — type fix (#6)
+4. `features/sources/context/SourcesContext.tsx` — promise retry (#5)
+5. `features/source-selector/components/SourceSelector.tsx` — dedup + maxLength (#8, #4)
+6. `app/manage-books.tsx` — all UI fixes (#A, #B, #9, #10, #11, #12, #14, #4)
+7. `app/index.tsx` + `en.json` — accessibility (#13)
+8. `app/recipe/add.tsx` — wrapper removal (#15)
+9. `modules/liquid-glass/src/LiquidGlassPopover.ios.tsx` — wrapper removal (#16)
+
+## Verification
+
+1. `npx tsc --noEmit` — type check passes
+2. `npx expo lint` — no new lint errors
+3. Open manage-books on iOS simulator — bottom bar aligns with recipe list bottom bar
+4. Tap "plus" on manage-books — keyboard appears, input stays visible above it
+5. Add, rename, delete a book with recipes — all operations work
+6. Force-kill and reopen — data persists correctly
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+<task-notification>
+<task-id>afc3af5adb0b0a9aa</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<status>completed</status>
+<summary>Agent "Testing quality review" completed</summary>
+<result>I now have complete context. Here is the review.
+
+---
+
+# Code Review: Test Quality and Coverage Gaps
+
+## Review Metrics
+- **Files Reviewed**: 22 (new + modified)
+- **Critical Issues**: 1
+- **High Priority**: 5
+- **Medium Priority**: 4
+- **Low Priority**: 2
+- **Test Coverage**: 0% -- zero project-level test files exist
+
+## Executive Summary
+
+This project has **no test infrastructure whatsoever**. There is no test runner configured (`package.json` has no `test` script), no Jest/Vitest config, no test files anywhere in the project source tree. `@types/jest` is installed as a devDependency but never used. The spec document (`/Users/eryk.napierala/Development/fasola/specs/016_manage_books/spec.md`) defines 11 unit tests and 4 integration tests as acceptance criteria, but none have been written. The new code introduces a repository with non-trivial business logic (duplicate detection, 24-hour recency windows, case-insensitive comparison), a context layer with module-level mutable state, and a screen with concurrent delete cascades -- all untested.
+
+---
+
+## CRITICAL Issues (Must Fix)
+
+### 1. No test runner, no test infrastructure, no tests
+
+**Impact**: Every bug ships silently. The spec explicitly lists 11 unit tests and 4 integration tests as acceptance criteria. None exist.
+
+**Root Cause**: `package.json` has no `test` script. No Jest or Vitest config exists. `@types/jest` is a dead devDependency. There is no pattern in the codebase for any contributor to follow when writing tests.
+
+**Solution**: Install and configure a test runner, then write tests for the new code. The minimum viable setup:
+
+```bash
+npm install --save-dev jest ts-jest @testing-library/react-native @testing-library/jest-native react-test-renderer
+```
+
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "test": "jest"
+  }
+}
+```
+
+Create `jest.config.ts`:
+```typescript
+import type { Config } from "jest";
+
+const config: Config = {
+  preset: "jest-expo",
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/$1",
+  },
+  transformIgnorePatterns: [
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)",
+  ],
+};
+
+export default config;
+```
+
+This unlocks all the test writing described below.
+
+---
+
+## HIGH Priority (Fix Before Merge)
+
+### 2. SourceRepository has zero unit tests for critical business logic
+
+**File**: `/Users/eryk.napierala/Development/fasola/lib/repositories/sources.ts`
+
+**Impact**: The duplicate name check (case-insensitive), empty name rejection, 24-hour recency window, and sort order are all logic that will silently break if touched. These are the exact kind of pure-data operations that are trivially testable and high-value to test.
+
+**Root Cause**: No test infrastructure existed when the code was written.
+
+**Required tests** (mock `storage` and `Crypto.randomUUID`):
+
+```typescript
+// lib/repositories/__tests__/sources.test.ts
+
+import { sourceRepository } from "../sources";
+import { storage } from "../../storage";
+import * as Crypto from "expo-crypto";
+
+jest.mock("../../storage", () => ({
+  storage: {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+  },
+}));
+
+jest.mock("expo-crypto", () => ({
+  randomUUID: jest.fn(() => "test-uuid-1"),
+}));
+
+const mockStorage = storage as jest.Mocked<typeof storage>;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockStorage.getItem.mockResolvedValue(null);
+  mockStorage.setItem.mockResolvedValue(undefined);
+});
+
+describe("SourceRepository", () => {
+  describe("create", () => {
+    it("creates a source with UUID, trimmed name, and current timestamp", async () => {
+      const now = Date.now();
+      jest.spyOn(Date, "now").mockReturnValue(now);
+
+      const result = await sourceRepository.create("  My Book  ");
+
+      expect(result).toEqual({
+        id: "test-uuid-1",
+        name: "My Book",
+        lastUsedAt: now,
+      });
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "@sources",
+        expect.stringContaining('"name":"My Book"')
+      );
+    });
+
+    it("throws on empty/whitespace-only name", async () => {
+      await expect(sourceRepository.create("   ")).rejects.toThrow(
+        "Source name cannot be empty"
+      );
+    });
+
+    it("throws on case-insensitive duplicate name", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "existing", name: "My Book", lastUsedAt: 1 }])
+      );
+
+      await expect(sourceRepository.create("my book")).rejects.toThrow(
+        "A book with this name already exists"
+      );
+    });
+  });
+
+  describe("rename", () => {
+    it("changes name while preserving id and lastUsedAt", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "id-1", name: "Old", lastUsedAt: 100 }])
+      );
+
+      await sourceRepository.rename("id-1", "New Name");
+
+      const saved = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      expect(saved[0]).toEqual({ id: "id-1", name: "New Name", lastUsedAt: 100 });
+    });
+
+    it("rejects duplicate name excluding self", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([
+          { id: "id-1", name: "Book A", lastUsedAt: 100 },
+          { id: "id-2", name: "Book B", lastUsedAt: 200 },
+        ])
+      );
+
+      await expect(sourceRepository.rename("id-1", "Book B")).rejects.toThrow();
+    });
+
+    it("allows renaming to same name (self)", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "id-1", name: "Book A", lastUsedAt: 100 }])
+      );
+
+      await expect(sourceRepository.rename("id-1", "Book A")).resolves.toBeUndefined();
+    });
+
+    it("no-ops silently for non-existent id", async () => {
+      mockStorage.getItem.mockResolvedValue(JSON.stringify([]));
+
+      await expect(sourceRepository.rename("ghost", "Name")).resolves.toBeUndefined();
+      expect(mockStorage.setItem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("delete", () => {
+    it("removes entity from storage", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([
+          { id: "id-1", name: "A", lastUsedAt: 1 },
+          { id: "id-2", name: "B", lastUsedAt: 2 },
+        ])
+      );
+
+      await sourceRepository.delete("id-1");
+
+      const saved = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      expect(saved).toHaveLength(1);
+      expect(saved[0].id).toBe("id-2");
+    });
+
+    it("no-ops for non-existent id (writes empty-ish array, no throw)", async () => {
+      mockStorage.getItem.mockResolvedValue(JSON.stringify([]));
+
+      await expect(sourceRepository.delete("ghost")).resolves.toBeUndefined();
+    });
+  });
+
+  describe("getLastUsed", () => {
+    it("returns most recent source if within 24 hours", async () => {
+      const recent = Date.now() - 1000;
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "id-1", name: "A", lastUsedAt: recent }])
+      );
+
+      const result = await sourceRepository.getLastUsed();
+      expect(result?.id).toBe("id-1");
+    });
+
+    it("returns null if most recent source is older than 24 hours", async () => {
+      const old = Date.now() - 25 * 60 * 60 * 1000;
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "id-1", name: "A", lastUsedAt: old }])
+      );
+
+      const result = await sourceRepository.getLastUsed();
+      expect(result).toBeNull();
+    });
+
+    it("returns null for empty storage", async () => {
+      const result = await sourceRepository.getLastUsed();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getAll", () => {
+    it("returns sources sorted by lastUsedAt descending", async () => {
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([
+          { id: "old", name: "Old", lastUsedAt: 100 },
+          { id: "new", name: "New", lastUsedAt: 300 },
+          { id: "mid", name: "Mid", lastUsedAt: 200 },
+        ])
+      );
+
+      const result = await sourceRepository.getAll();
+      expect(result.map((s) => s.id)).toEqual(["new", "mid", "old"]);
+    });
+  });
+
+  describe("touch", () => {
+    it("updates lastUsedAt without changing name", async () => {
+      const now = Date.now();
+      jest.spyOn(Date, "now").mockReturnValue(now);
+      mockStorage.getItem.mockResolvedValue(
+        JSON.stringify([{ id: "id-1", name: "Book", lastUsedAt: 1 }])
+      );
+
+      await sourceRepository.touch("id-1");
+
+      const saved = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      expect(saved[0].name).toBe("Book");
+      expect(saved[0].lastUsedAt).toBe(now);
+    });
+  });
+});
+```
+
+---
+
+### 3. SourcesContext module-level promise cache is never invalidated
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx`, lines 28-35
+
+**Impact**: The module-level `let sourcesPromise` is set once and never cleared. If the `SourcesProvider` unmounts and remounts (e.g., during navigation resets, error boundaries, or Fast Refresh), it will serve stale data from the first load. The same pattern exists in `RecipesContext.tsx` (line 37), so this is a systemic issue.
+
+**Root Cause**: The `use()` hook pattern with module-level caching assumes the provider mounts exactly once for the lifetime of the app. There is no cleanup path.
+
+**Test that would catch this**:
+
+```typescript
+describe("SourcesProvider", () => {
+  it("serves fresh data when remounted after source mutation", async () => {
+    // First mount: returns initial sources
+    // Unmount
+    // External mutation (e.g., iCloud sync writes to storage)
+    // Second mount: should fetch fresh data, not cached promise
+  });
+});
+```
+
+**Solution**: Reset the cache when the provider unmounts, or on `refresh()`:
+
+```typescript
+// In SourcesProvider:
+useEffect(() => {
+  return () => {
+    sourcesPromise = null; // Clear cache on unmount
+  };
+}, []);
+```
+
+This is the same fix needed in `RecipesContext.tsx`.
+
+---
+
+### 4. Delete cascade in manage-books.tsx has no concurrency guard for sequential deleteRecipe calls
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx`, lines 259-264
+
+**Impact**: The `isDeletingRef` guard on line 239 prevents re-entry at the `handleDeleteBook` level, but inside the `onPress` callback, `deleteRecipe` is called sequentially in a `for...of` loop. Each call does a full `getAll()` + `filter()` + `setItem()` cycle on the recipes storage. If another context mutation (e.g., background processing completing a recipe) interleaves, recipes can be lost or re-persisted.
+
+**Root Cause**: The repository is not transactional. Each `deleteRecipe` reads-modifies-writes the entire array independently.
+
+**Tests needed**:
+
+```typescript
+describe("delete cascade", () => {
+  it("deletes all recipes belonging to a source", async () => {
+    // Setup: 3 recipes with source "book-1", 2 with source "book-2"
+    // Delete "book-1"
+    // Assert: only 2 recipes remain, all with source "book-2"
+  });
+
+  it("handles concurrent background processing during delete", async () => {
+    // Setup: recipe "r1" with source "book-1" is "processing"
+    // Start delete cascade for "book-1"
+    // Simulate updateComplete("r1", ...) arriving mid-cascade
+    // Assert: no crash, no orphaned data
+  });
+});
+```
+
+**Mitigation** (not a full fix, but reduces the race window): Use `Promise.all` instead of sequential `for...of` as the spec suggests, or batch-delete at the repository level:
+
+```typescript
+// Add to SourceRepository or RecipeRepository
+async deleteBySource(sourceId: SourceId): Promise<void> {
+  const data = await storage.getItem(RECIPES_KEY);
+  if (!data) return;
+  const recipes: Array<Recipe> = JSON.parse(data);
+  const toDelete = recipes.filter((r) => r.metadata.source === sourceId);
+  const toKeep = recipes.filter((r) => r.metadata.source !== sourceId);
+  
+  // Single write for all recipe removals
+  await storage.setItem(RECIPES_KEY, JSON.stringify(toKeep));
+  
+  // Clean up files
+  await Promise.all(toDelete.map((r) => Promise.all([
+    storage.deletePhoto(r.id),
+    storage.deleteThumbnail(r.id),
+  ])));
+}
+```
+
+---
+
+### 5. SourceSelector `handleConfirmNewSource` does not handle `createSource` failure
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/source-selector/components/SourceSelector.tsx`, lines 96-109
+
+**Impact**: If `createSource` throws (duplicate name, empty name), the error propagates unhandled. The `SourceSelector` is exposed via `useImperativeHandle` to the parent `AddRecipeForm`, which calls `confirmNewSource()` on line 68. The parent catches nothing. The user sees an unhandled promise rejection and the UI is stuck in editing state.
+
+**Root Cause**: The `handleConfirmAdd` in `manage-books.tsx` (line 232) wraps in try/catch, but `SourceSelector.handleConfirmNewSource` does not.
+
+**Test needed**:
+
+```typescript
+describe("SourceSelector", () => {
+  it("returns undefined and resets state when createSource throws", async () => {
+    // Mock createSource to reject with "duplicate name"
+    // Call confirmNewSource via ref
+    // Assert: returns undefined, isEditingNewSource is false, newSourceText is ""
+  });
+});
+```
+
+**Solution** at `/Users/eryk.napierala/Development/fasola/features/source-selector/components/SourceSelector.tsx`:
+
+```typescript
+const handleConfirmNewSource = useCallback(async (): Promise<
+  SourceId | undefined
+> => {
+  const trimmedSource = newSourceText.trim();
+  if (!trimmedSource) {
+    return undefined;
+  }
+
+  try {
+    const newSource = await createSource(trimmedSource);
+    onValueChange(newSource.id, false);
+    setIsEditingNewSource(false);
+    setNewSourceText("");
+    return newSource.id;
+  } catch {
+    // Duplicate name or validation error -- stay in edit mode, return undefined
+    return undefined;
+  }
+}, [newSourceText, createSource, onValueChange]);
+```
+
+---
+
+### 6. `hasNoSources` inline input path does not call `onValueChange` after creation
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/source-selector/components/SourceSelector.tsx`, lines 173-183
+
+**Impact**: When `hasNoSources` is true, the component renders a `LiquidGlassInput` with `onSubmitEditing={handleConfirmNewSource}`. But `handleConfirmNewSource` calls `onValueChange(newSource.id, false)` only after successful creation. The problem: if the user is in the `hasNoSources` path and types a name, then `handleConfirmNewSource` succeeds, `onValueChange` fires, but `hasNoSources` immediately becomes `false` (because `sources` now has one item). The component re-renders into the `LiquidGlassSelect` path. This works, but the `onHasNoSourcesChange` effect (line 56-58) fires asynchronously, which can cause the parent (`AddRecipeForm`) to briefly see `hasNoSources=false` before `onValueChange` propagates the new SourceId. If the parent uses `hasNoSources` to decide confirm behavior, there's a timing gap.
+
+**Test needed**:
+
+```typescript
+describe("SourceSelector hasNoSources flow", () => {
+  it("transitions from inline input to select after first source creation", () => {
+    // Render with empty sources
+    // Assert: LiquidGlassInput visible
+    // Submit "My Book"
+    // Assert: onValueChange called with new SourceId
+    // Assert: onHasNoSourcesChange called with false
+    // Assert: LiquidGlassSelect now visible
+  });
+});
+```
+
+---
+
+## MEDIUM Priority (Fix Soon)
+
+### 7. `getLastUsed` is duplicated between repository and context with subtly different semantics
+
+**Files**: 
+- `/Users/eryk.napierala/Development/fasola/lib/repositories/sources.ts`, lines 69-76
+- `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx`, lines 88-95
+
+**Impact**: The repository method reads from storage (async), sorts, and checks the first element. The context method sorts the in-memory array and checks the first element. If the in-memory array is out of sync with storage (which is possible if another process writes to storage), they return different results. More importantly, having two implementations of the same business rule (24-hour recency) means a logic change must be applied in two places.
+
+**Test needed**:
+
+```typescript
+describe("getLastUsed 24-hour boundary", () => {
+  it("returns source at exactly 23h59m (boundary)", () => {
+    // lastUsedAt = now - 23*60*60*1000 - 59*60*1000
+    // Assert: returned
+  });
+
+  it("returns null at exactly 24h01m (boundary)", () => {
+    // lastUsedAt = now - 24*60*60*1000 - 60*1000
+    // Assert: null
+  });
+});
+```
+
+**Solution**: Remove `getLastUsed` from the repository. The context already provides it synchronously. The repository method is never called directly after the context was introduced.
+
+---
+
+### 8. `usePopoverTransition` API change is untested and may break if called with wrong arity
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/photos/hooks/usePopoverTransition.ts`
+
+**Impact**: The function signature changed from 2 parameters to 1 (`shouldHideUI: boolean`). The call site in `app/index.tsx` (line 60) now calls `usePopoverTransition(popoverVisible || isImporting)`. If any other consumer still passes two arguments, TypeScript will catch it at compile time, but the behavioral change (combining two booleans into one OR expression at the call site) is a logic shift that should have a unit test.
+
+**Test needed**:
+
+```typescript
+describe("usePopoverTransition", () => {
+  it("returns opacity 0 and translated style when shouldHideUI is true", () => {
+    // Render hook with shouldHideUI=true
+    // Assert: searchBarStyle has opacity approaching 0, translateX approaching -40
+    // Assert: buttonStyle has opacity approaching 0
+  });
+
+  it("returns full opacity when shouldHideUI is false", () => {
+    // Render hook with shouldHideUI=false
+    // Assert: searchBarStyle has opacity 1, translateX 0
+  });
+});
+```
+
+---
+
+### 9. `SourcesContext.touchSource` uses `Date.now()` independently from the repository
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx`, lines 76-86
+
+**Impact**: Line 81 does `{ ...s, lastUsedAt: Date.now() }` for the in-memory state, while the repository's `touch` method on line 65 of `sources.ts` also calls `Date.now()`. These two `Date.now()` calls happen at different times (the repository call is awaited first). The in-memory `lastUsedAt` and the persisted `lastUsedAt` will differ by the I/O latency of the storage write. For the 24-hour recency check this is negligible, but it's a pattern inconsistency -- `createSource` correctly uses the repository's returned value (which has the authoritative timestamp), while `touchSource` fabricates its own.
+
+**Test needed**:
+
+```typescript
+describe("touchSource timestamp consistency", () => {
+  it("uses the same timestamp in memory and storage", async () => {
+    // Mock Date.now to return sequential values
+    // Call touchSource
+    // Assert: in-memory lastUsedAt matches what repository persisted
+  });
+});
+```
+
+**Solution**: Have the repository's `touch` return the updated `Source`, then use that in the state update:
+
+```typescript
+// In repository:
+async touch(id: SourceId): Promise<Source | null> {
+  const sources = await this.getAll();
+  const source = sources.find((s) => s.id === id);
+  if (!source) return null;
+  source.lastUsedAt = Date.now();
+  await storage.setItem(SOURCES_KEY, JSON.stringify(sources));
+  return source;
+}
+
+// In context:
+const touchSource = useCallback(async (id: SourceId): Promise<void> => {
+  const updated = await sourceRepository.touch(id);
+  if (updated) {
+    setSources((prev) =>
+      prev.map((s) => (s.id === id ? updated : s))
+    );
+  }
+}, []);
+```
+
+---
+
+### 10. `manage-books.tsx` delete cascade deletes recipes sequentially, not in parallel
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx`, lines 259-264
+
+**Impact**: The spec on line 358 of `plan.md` shows `await Promise.all(recipesToDelete.map(...))`, but the implementation uses a sequential `for...of` loop. For a book with many recipes, this creates unnecessary latency -- each delete waits for the previous one to complete. More critically, each iteration re-reads the full recipes array from storage, meaning later iterations are reading an array that's already been filtered by earlier iterations. This is wasted I/O.
+
+The existing code:
+```typescript
+for (const r of recipesToDelete) {
+  await deleteRecipe(r.id);
+}
+```
+
+This is a deliberate choice (sequential deletes are safer for state consistency), but the spec explicitly calls for parallel. A test would verify the cascade completes correctly either way.
+
+---
+
+## LOW Priority (Opportunities)
+
+### 11. Non-iOS fallback popover has no dark mode support
+
+**File**: `/Users/eryk.napierala/Development/fasola/modules/liquid-glass/src/LiquidGlassPopover.tsx`, line 63
+
+The fallback `LiquidGlassPopover` (used on Android/web) hardcodes `backgroundColor: "#fff"` and `color` is inherited as black. In dark mode this will render a bright white menu. Not a testing issue per se, but a manual test gap.
+
+---
+
+### 12. `SourceSelector` has duplicated `LiquidGlassInput` blocks
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/source-selector/components/SourceSelector.tsx`, lines 173-194
+
+The `hasNoSources` path (lines 173-183) and the `isEditingNewSource` path (lines 184-194) render identical `LiquidGlassInput` JSX. This is a DRY violation, not a test gap, but it means any behavioral test for the inline input flow needs to cover both paths separately despite identical markup.
+
+---
+
+## Strengths
+
+- The spec document (`/Users/eryk.napierala/Development/fasola/specs/016_manage_books/spec.md`) is exceptionally thorough. It defines exact test cases with clear acceptance criteria. The gap is entirely in execution.
+- The `SourceRepository` has clean separation from the context layer. It is trivially mockable and testable.
+- The `SourcesContext` follows the exact same structural pattern as `RecipesContext`, making it predictable.
+- The module-level `use()` + Suspense pattern for initial data loading is consistent across both providers.
+- Case-insensitive duplicate detection and trim-on-input are correct defensive measures.
+
+---
+
+## Proactive Suggestions
+
+### 1. Add a batch delete operation to the recipe repository
+The delete cascade in `manage-books.tsx` does N sequential reads + writes for N recipes. A single `deleteBySource(sourceId)` method would do one read, one filter, one write, then batch file cleanup. This is both faster and eliminates the concurrent mutation race window described in Issue #4.
+
+### 2. Extract the 24-hour constant
+The magic number `24 * 60 * 60 * 1000` appears in two locations (repository line 74, context line 93). Extract to a shared constant:
+```typescript
+// lib/repositories/sources.ts or lib/types/source.ts
+export const RECENT_SOURCE_WINDOW_MS = 24 * 60 * 60 * 1000;
+```
+
+### 3. Add a minimal smoke test for the provider chain
+The provider ordering in `/Users/eryk.napierala/Development/fasola/app/_layout.tsx` is critical (`SourcesProvider` must wrap `RecipesProvider`). A render test that mounts `RootLayout` and asserts no throw would catch provider ordering regressions.
+
+---
+
+## Systemic Patterns
+
+**Pattern: Zero test infrastructure in a codebase with 22+ source files and growing complexity.**
+
+This is the single most impactful finding. The codebase has `@types/jest` installed, detailed spec documents with test acceptance criteria, and code that is structurally testable (repositories behind interfaces, contexts with clear boundaries, pure utility functions). The only missing piece is the actual test runner config and test files. Every issue in this review would have been preventable or detectable with the tests the spec already defines. The repository layer in particular is a textbook case for unit testing -- pure async functions operating on JSON-serialized data with a mockable storage backend.</result>
+<usage><total_tokens>90550</total_tokens><tool_uses>49</tool_uses><duration_ms>177257</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-504/-Users-eryk-napierala-Development-fasola/tasks/afc3af5adb0b0a9aa.output
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+there is a strange bug that on the manage books screen the bottom components are not aligned vertically. The buttons are in one line and the text field is few pixels lower. We must align all of them in the same line - exactly how it's done for in the add new source component.
+
+---
+
+[Request interrupted by user for tool use]

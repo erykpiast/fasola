@@ -21,12 +21,18 @@ export function LiquidGlassInput({
   variant = "form",
   autoFocus = false,
   style,
+  maxLength,
 }: LiquidGlassInputProps): JSX.Element {
   const handleChangeText = useCallback(
     (event: { nativeEvent: { text: string } }) => {
-      onChangeText(event.nativeEvent.text);
+      const text = event.nativeEvent.text;
+      if (maxLength != null && text.length > maxLength) {
+        onChangeText(text.slice(0, maxLength));
+        return;
+      }
+      onChangeText(text);
     },
-    [onChangeText]
+    [onChangeText, maxLength]
   );
 
   const handleClear = useCallback(() => {

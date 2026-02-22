@@ -4,7 +4,7 @@ import {
   type SourceSelectorRef,
 } from "@/features/source-selector/components/SourceSelector";
 import { Alert } from "@/lib/alert";
-import type { PhotoUri } from "@/lib/types/primitives";
+import type { PhotoUri, SourceId } from "@/lib/types/primitives";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
@@ -21,9 +21,9 @@ export function AddRecipeForm({
   onConfirm,
 }: {
   photoUri: PhotoUri;
-  source: string;
-  onSourceChange: (source: string, isAutomatic?: boolean) => void;
-  onConfirm: (sourceOverride?: string) => void;
+  source: SourceId;
+  onSourceChange: (sourceId: SourceId, isAutomatic?: boolean) => void;
+  onConfirm: (sourceOverride?: SourceId) => void;
 }): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();

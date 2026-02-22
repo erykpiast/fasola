@@ -13,4 +13,6 @@ export type LiquidGlassPopoverProps = {
   onDismiss: () => void;
   buttonSize?: number;
   style?: ViewStyle;
+  anchor?: "bottomTrailing" | "topTrailing";
+  buttonOffset?: { x: number; y: number };
 };

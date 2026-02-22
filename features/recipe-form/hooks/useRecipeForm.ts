@@ -125,7 +125,7 @@ export function useRecipeForm(config: {
 
     const trimmedValues: RecipeMetadata = {
       title: state.values.title?.trim() || undefined,
-      source: state.values.source?.trim() || undefined,
+      source: state.values.source || undefined,
       tags: state.values.tags,
     };
 

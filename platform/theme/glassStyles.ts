@@ -13,6 +13,8 @@ export const colors = {
   light: {
     background: "#F5F5F5",
     text: "#6262a5",
+    textSecondary: "rgba(0, 0, 0, 0.5)",
+    separator: "rgba(0, 0, 0, 0.1)",
     glassBackground: "rgba(255, 255, 255, 0.7)",
     glassBorder: "rgba(255, 255, 255, 0.3)",
     glassPressedOverlay: "rgba(0, 0, 0, 0.05)",
@@ -20,6 +22,8 @@ export const colors = {
   dark: {
     background: "#000000",
     text: "#FFFFFF",
+    textSecondary: "rgba(255, 255, 255, 0.5)",
+    separator: "rgba(255, 255, 255, 0.15)",
     glassBackground: "rgba(0, 0, 0, 0.7)",
     glassBorder: "rgba(255, 255, 255, 0.1)",
     glassPressedOverlay: "rgba(255, 255, 255, 0.15)",

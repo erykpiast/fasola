@@ -1,4 +1,4 @@
-import type { RecipeId } from "../types/primitives";
+import type { RecipeId, SourceId } from "../types/primitives";
 import type { Recipe, RecipeMetadata } from "../types/recipe";
 
 export interface RecipeRepository {
@@ -7,7 +7,7 @@ export interface RecipeRepository {
   save(recipe: Omit<Recipe, "id" | "timestamp">): Promise<Recipe>;
   update(id: RecipeId, metadata: RecipeMetadata): Promise<Recipe>;
   delete(id: RecipeId): Promise<void>;
-  savePending(originalPhotoUri: string, source?: string): Promise<Recipe>;
+  savePending(originalPhotoUri: string, source?: SourceId): Promise<Recipe>;
   updateProcessing(id: RecipeId): Promise<void>;
   updateComplete(
     id: RecipeId,

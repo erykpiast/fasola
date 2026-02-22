@@ -1,3 +1,4 @@
+import { useSourceName } from "@/features/sources/hooks/useSourceName";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { LinearGradient } from "expo-linear-gradient";
 import { type JSX } from "react";
@@ -8,8 +9,9 @@ export function MetadataOverlay({
 }: {
   metadata: RecipeMetadata;
 }): JSX.Element | null {
+  const { displayName: sourceDisplayName } = useSourceName(metadata.source);
   const hasTitle = !!metadata.title;
-  const hasSource = !!metadata.source;
+  const hasSource = !!sourceDisplayName;
   const hasTags = metadata.tags && metadata.tags.length > 0;
 
   if (!hasTitle && !hasSource && !hasTags) {
@@ -29,7 +31,7 @@ export function MetadataOverlay({
       )}
       {hasSource && (
         <Text style={styles.source} numberOfLines={1} ellipsizeMode="tail">
-          {metadata.source}
+          {sourceDisplayName}
         </Text>
       )}
       {hasTags && (

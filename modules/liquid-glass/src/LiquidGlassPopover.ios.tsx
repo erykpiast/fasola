@@ -3,6 +3,7 @@ import { type JSX, useCallback } from "react";
 import { StyleSheet } from "react-native";
 import type { LiquidGlassPopoverProps } from "./LiquidGlassPopover.types";
 
+
 const NativeLiquidGlassPopoverView = requireNativeViewManager(
   "LiquidGlass",
   "LiquidGlassPopoverView"
@@ -15,6 +16,8 @@ export function LiquidGlassPopover({
   onDismiss,
   buttonSize,
   style,
+  anchor,
+  buttonOffset,
 }: LiquidGlassPopoverProps): JSX.Element {
   const handleOptionSelect = useCallback(
     (event: { nativeEvent: { id: string } }) => {
@@ -23,17 +26,15 @@ export function LiquidGlassPopover({
     [onSelect]
   );
 
-  const handleDismiss = useCallback(() => {
-    onDismiss();
-  }, [onDismiss]);
-
   return (
     <NativeLiquidGlassPopoverView
       visible={visible}
       options={options}
       buttonSize={buttonSize}
+      anchor={anchor}
+      buttonOffset={buttonOffset}
       onOptionSelect={handleOptionSelect}
-      onDismiss={handleDismiss}
+      onDismiss={onDismiss}
       style={[styles.container, style]}
     />
   );

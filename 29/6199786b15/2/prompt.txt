@@ -1,0 +1,96 @@
+Implement the following plan:
+
+# Refactor app/index.tsx: Extract Hooks
+
+## Context
+
+The `Content` component in `app/index.tsx` mixes two self-contained concerns inline — import popover logic and global options logic — alongside the component's core rendering. Extracting each into a dedicated hook reduces the component to wiring and JSX.
+
+## Changes
+
+### 1. New file: `features/photos/hooks/useImportPopover.ts`
+
+Co-located with `usePhotoImport` and `usePopoverTransition` (same directory).
+
+Moves from `Content`:
+- `usePhotoImport()` call (lines 52-58)
+- `usePopoverTransition(popoverVisible || isImporting)` call (lines 59-60)
+- `importOptions` useMemo (lines 82-92)
+- `handleImportOptionSelect` useCallback (lines 75-80)
+
+Returns all values as a single object wrapped in `useMemo`. Calls `useTranslation` internally for option labels.
+
+### 2. New file: `features/recipes-list/hooks/useGlobalOptions.ts`
+
+The home screen is the recipes-list screen; co-located here.
+
+Moves from `Content`:
+- `overflowVisible` useState (line 62)
+- `usePopoverTransition(overflowVisible)` call (line 63)
+- `overflowOptions` useMemo (lines 94-103)
+- `handleOverflowPress` useCallback with haptics (lines 105-110)
+- `handleOverflowSelect` useCallback with router.push (lines 112-117)
+- `handleOverflowDismiss` useCallback (lines 119-121)
+
+Returns all values as a single object wrapped in `useMemo`. Calls `useTranslation` internally. Shorter names: `visible`, `options`, `handlePress`, `handleSelect`, `handleDismiss`, `buttonStyle`.
+
+### 3. Modify: `app/index.tsx`
+
+Replace inline logic with two hook calls. Remaining `Content` body:
+
+```
+const { ... } = useImportPopover();
+const { ... } = useGlobalOptions();
+
+// Stays inline (trivial, 7 lines total):
+useEffect cleanup for setDebugData
+handleRecipeTap useCallback
+```
+
+Import removals: `Haptics`, `useState`, `useMemo`, `usePhotoImport`, `ImportOption`, `usePopoverTransition`.
+
+Import additions: `useImportPopover`, `useGlobalOptions`.
+
+Retained: `useTranslation` (still used for `t("accessibility.moreOptions")` in JSX), `Platform` (KeyboardAvoidingView behavior).
+
+JSX unchanged.
+
+## Files
+
+| File | Action |
+|------|--------|
+| `features/photos/hooks/useImportPopover.ts` | Create |
+| `features/recipes-list/hooks/useGlobalOptions.ts` | Create |
+| `app/index.tsx` | Modify imports + Content body |
+
+## Verification
+
+1. `npx tsc --noEmit` passes
+2. Open on iOS simulator — home screen behaves identically (import popover, global options menu, search, grid)
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

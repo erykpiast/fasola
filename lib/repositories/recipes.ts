@@ -1,6 +1,6 @@
 import * as Crypto from "expo-crypto";
 import { storage } from "../storage";
-import type { RecipeId, StorageKey } from "../types/primitives";
+import type { RecipeId, SourceId, StorageKey } from "../types/primitives";
 import type { Recipe, RecipeMetadata } from "../types/recipe";
 import { migrateIfNeeded } from "./photosToRecipesMigration";
 import type { RecipeRepository } from "./types";
@@ -116,7 +116,7 @@ class AsyncStorageRecipeRepository implements RecipeRepository {
 
   async savePending(
     originalPhotoUri: string,
-    source?: string
+    source?: SourceId
   ): Promise<Recipe> {
     const id = Crypto.randomUUID();
     const timestamp = Date.now();

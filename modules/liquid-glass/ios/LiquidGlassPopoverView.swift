@@ -13,6 +13,9 @@ public final class LiquidGlassPopoverView: ExpoView {
   private var isVisible: Bool = false
   private var options: [PopoverOption] = []
   private var buttonSize: CGFloat = 48
+  private var anchor: String = "bottomTrailing"
+  private var buttonOffsetX: CGFloat = 28
+  private var buttonOffsetY: CGFloat = 28
   let onOptionSelect = EventDispatcher()
   let onDismiss = EventDispatcher()
   
@@ -21,6 +24,9 @@ public final class LiquidGlassPopoverView: ExpoView {
       isVisible: false,
       options: [],
       buttonSize: 48,
+      anchor: "bottomTrailing",
+      buttonOffsetX: 28,
+      buttonOffsetY: 28,
       onOptionSelect: { _ in },
       onDismiss: { }
     )
@@ -85,6 +91,17 @@ public final class LiquidGlassPopoverView: ExpoView {
     updateContent()
   }
 
+  func setAnchor(_ value: String) {
+    anchor = value
+    updateContent()
+  }
+
+  func setButtonOffset(_ offset: [String: CGFloat]) {
+    buttonOffsetX = offset["x"] ?? 28
+    buttonOffsetY = offset["y"] ?? 28
+    updateContent()
+  }
+
   func setOptions(_ optionsData: [[String: Any]]) {
     options = optionsData.compactMap { dict in
       guard let id = dict["id"] as? String,
@@ -102,6 +119,9 @@ public final class LiquidGlassPopoverView: ExpoView {
       isVisible: isVisible,
       options: options,
       buttonSize: buttonSize,
+      anchor: anchor,
+      buttonOffsetX: buttonOffsetX,
+      buttonOffsetY: buttonOffsetY,
       onOptionSelect: { [weak self] optionId in
         self?.onOptionSelect(["id": optionId])
       },
@@ -125,11 +145,15 @@ struct LiquidGlassPopoverContent: View {
   var isVisible: Bool
   var options: [PopoverOption]
   var buttonSize: CGFloat
+  var anchor: String
+  var buttonOffsetX: CGFloat
+  var buttonOffsetY: CGFloat
   var onOptionSelect: (String) -> Void
   var onDismiss: () -> Void
 
   @State private var expanded = false
   @State private var shrinkScale: CGFloat = 1.0
+  @State private var appearOpacity: CGFloat = 0
   @State private var panelSize: CGSize = CGSize(width: 200, height: 100)
   @State private var animationGeneration: Int = 0
 
@@ -151,20 +175,13 @@ struct LiquidGlassPopoverContent: View {
     GeometryReader { _ in
       ZStack {
         if isVisible || expanded {
-          VStack {
-            Spacer()
-            HStack {
-              Spacer()
-              morphingContainer
+          anchoredLayout
+            .opacity(appearOpacity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              onDismiss()
             }
-          }
-          .padding(.trailing, 28)
-          .padding(.bottom, 28)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .contentShape(Rectangle())
-          .onTapGesture {
-            onDismiss()
-          }
         }
 
         // Hidden measurement view to capture panel natural size
@@ -186,6 +203,11 @@ struct LiquidGlassPopoverContent: View {
       animationGeneration += 1
       let currentGeneration = animationGeneration
       if newValue {
+        // Fade in the morph circle to match the React button fade-out
+        appearOpacity = 0
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
+          appearOpacity = 1
+        }
         // Phase 1: Shrink the button circle to 80%
         withAnimation(.spring(duration: 0.1)) {
           shrinkScale = 0.8
@@ -203,6 +225,7 @@ struct LiquidGlassPopoverContent: View {
         withAnimation(.spring(duration: 0.3, bounce: 0.1)) {
           expanded = false
           shrinkScale = 1.0
+          appearOpacity = 0
         }
       }
     }
@@ -227,6 +250,31 @@ struct LiquidGlassPopoverContent: View {
       morphContent
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: currentCornerRadius))
+    }
+  }
+
+  @ViewBuilder
+  private var anchoredLayout: some View {
+    if anchor == "topTrailing" {
+      VStack {
+        HStack {
+          Spacer()
+          morphingContainer
+        }
+        Spacer()
+      }
+      .padding(.trailing, buttonOffsetX)
+      .padding(.top, buttonOffsetY)
+    } else {
+      VStack {
+        Spacer()
+        HStack {
+          Spacer()
+          morphingContainer
+        }
+      }
+      .padding(.trailing, buttonOffsetX)
+      .padding(.bottom, buttonOffsetY)
     }
   }
 

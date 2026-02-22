@@ -1,3 +1,5 @@
+import { useSources } from "@/features/sources/context/SourcesContext";
+import type { SourceId } from "@/lib/types/primitives";
 import { LiquidGlassInput, LiquidGlassSelect } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getGlassInputColors } from "@/platform/theme/glassStyles";
@@ -19,20 +21,19 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSourceHistory } from "../hooks/useSourceHistory";
 
 const ADD_NEW_VALUE = "__ADD_NEW__";
 
 export interface SourceSelectorRef {
-  confirmNewSource: () => Promise<string | undefined>;
+  confirmNewSource: () => Promise<SourceId | undefined>;
   cancelEdit: () => void;
 }
 
 export const SourceSelector = forwardRef<
   SourceSelectorRef,
   {
-    value: string;
-    onValueChange: (source: string, isAutomatic?: boolean) => void;
+    value: SourceId;
+    onValueChange: (sourceId: SourceId, isAutomatic?: boolean) => void;
     onInteraction?: () => void;
     onEditingChange?: (editing: boolean) => void;
     onHasNoSourcesChange?: (hasNoSources: boolean) => void;
@@ -43,32 +44,37 @@ export const SourceSelector = forwardRef<
 ): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { sources, lastUsed, isLoading, addSource } = useSourceHistory();
+  const { sources, createSource, getLastUsed } = useSources();
 
   const [isEditingNewSource, setIsEditingNewSource] = useState(false);
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [newSourceText, setNewSourceText] = useState("");
   const [tempValue, setTempValue] = useState(value);
 
-  const hasNoSources = !isLoading && sources.length === 0;
+  const hasNoSources = sources.length === 0;
 
   useEffect(() => {
     onHasNoSourcesChange?.(hasNoSources);
   }, [hasNoSources, onHasNoSourcesChange]);
 
   useEffect(() => {
-    if (!value && lastUsed) {
-      onValueChange(lastUsed, true);
+    if (!value) {
+      const lastUsed = getLastUsed();
+      if (lastUsed) {
+        onValueChange(lastUsed.id, true);
+      }
     }
-  }, [lastUsed, value, onValueChange]);
+  }, [getLastUsed, value, onValueChange]);
 
   // Sync tempValue when value changes externally
   useEffect(() => {
     setTempValue(value);
   }, [value]);
 
+  const selectedSourceName = sources.find((s) => s.id === value)?.name ?? "";
+
   const openPickerModal = useCallback(() => {
-    setTempValue(value || (sources.length > 0 ? sources[0].source : ""));
+    setTempValue(value || (sources.length > 0 ? sources[0].id : ""));
     setPickerModalVisible(true);
     onInteraction?.();
   }, [value, sources, onInteraction]);
@@ -88,19 +94,19 @@ export const SourceSelector = forwardRef<
   }, [value]);
 
   const handleConfirmNewSource = useCallback(async (): Promise<
-    string | undefined
+    SourceId | undefined
   > => {
     const trimmedSource = newSourceText.trim();
     if (!trimmedSource) {
       return undefined;
     }
 
-    await addSource(trimmedSource);
-    onValueChange(trimmedSource, false);
+    const newSource = await createSource(trimmedSource);
+    onValueChange(newSource.id, false);
     setIsEditingNewSource(false);
     setNewSourceText("");
-    return trimmedSource;
-  }, [newSourceText, addSource, onValueChange]);
+    return newSource.id;
+  }, [newSourceText, createSource, onValueChange]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingNewSource(false);
@@ -152,11 +158,11 @@ export const SourceSelector = forwardRef<
                 enabled={false}
               />
             )}
-            {sources.map((entry) => (
+            {sources.map((source) => (
               <Picker.Item
-                key={entry.source}
-                label={entry.source}
-                value={entry.source}
+                key={source.id}
+                label={source.name}
+                value={source.id}
               />
             ))}
             <Picker.Item
@@ -164,29 +170,21 @@ export const SourceSelector = forwardRef<
               value={ADD_NEW_VALUE}
             />
           </Picker>
-        ) : hasNoSources ? (
-          <LiquidGlassInput
-            value={value}
-            onChangeText={(text) => onValueChange(text, false)}
-            placeholder={t("sourceSelector.addNewPlaceholder")}
-            variant="form"
-            autoFocus
-            style={styles.glassSelect}
-          />
-        ) : isEditingNewSource ? (
+        ) : hasNoSources || isEditingNewSource ? (
           <LiquidGlassInput
             value={newSourceText}
             onChangeText={setNewSourceText}
             placeholder={t("sourceSelector.addNewPlaceholder")}
             variant="form"
             autoFocus
+            maxLength={100}
             returnKeyType="done"
             onSubmitEditing={handleConfirmNewSource}
             style={styles.glassSelect}
           />
         ) : (
           <LiquidGlassSelect
-            value={value}
+            value={selectedSourceName}
             placeholder={t("sourceSelector.placeholder")}
             onPress={openPickerModal}
             style={styles.glassSelect}
@@ -240,11 +238,11 @@ export const SourceSelector = forwardRef<
               style={styles.pickerWheel}
               itemStyle={themeColors.pickerItem}
             >
-              {sources.map((entry) => (
+              {sources.map((source) => (
                 <Picker.Item
-                  key={entry.source}
-                  label={entry.source}
-                  value={entry.source}
+                  key={source.id}
+                  label={source.name}
+                  value={source.id}
                 />
               ))}
               <Picker.Item

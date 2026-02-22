@@ -6,12 +6,8 @@ import {
   withSpring,
 } from "react-native-reanimated";
 
-export function usePopoverTransition(
-  popoverVisible: boolean,
-  isImporting: boolean,
-) {
+export function usePopoverTransition(shouldHideUI: boolean) {
   const progress = useSharedValue(0);
-  const shouldHideUI = popoverVisible || isImporting;
 
   useEffect(() => {
     progress.value = withSpring(shouldHideUI ? 1 : 0, {
@@ -21,10 +17,10 @@ export function usePopoverTransition(
   }, [shouldHideUI, progress]);
 
   useEffect(() => {
-    if (popoverVisible) {
+    if (shouldHideUI) {
       Keyboard.dismiss();
     }
-  }, [popoverVisible]);
+  }, [shouldHideUI]);
 
   const searchBarStyle = useAnimatedStyle(() => ({
     opacity: 1 - progress.value,

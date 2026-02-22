@@ -105,6 +105,14 @@ public final class LiquidGlassModule: Module {
         view.setButtonSize(size)
       }
 
+      Prop("anchor") { (view, anchor: String) in
+        view.setAnchor(anchor)
+      }
+
+      Prop("buttonOffset") { (view, offset: [String: CGFloat]) in
+        view.setButtonOffset(offset)
+      }
+
       Events("onOptionSelect", "onDismiss")
     }
   }

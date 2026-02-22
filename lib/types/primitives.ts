@@ -10,5 +10,8 @@ export type ImageUri = PhotoUri;
 export type FileUri = string;
 export type DataUrl = string;
 
+// Sources
+export type SourceId = string;
+
 // Storage
 export type StorageKey = string;

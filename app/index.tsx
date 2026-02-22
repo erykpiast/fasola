@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { LiquidGlassPopover } from "liquid-glass";
-import { Suspense, useCallback, useEffect, useMemo, type JSX } from "react";
+import { LiquidGlassButton, LiquidGlassPopover } from "liquid-glass";
+import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
   KeyboardAvoidingView,
@@ -10,16 +10,14 @@ import {
   View,
 } from "react-native";
 import Animated from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
-import {
-  usePhotoImport,
-  type ImportOption,
-} from "../features/photos/hooks/usePhotoImport";
-import { usePopoverTransition } from "../features/photos/hooks/usePopoverTransition";
+import { useImportPopover } from "../features/photos/hooks/useImportPopover";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
+import { useGlobalOptions } from "../features/recipes-list/hooks/useGlobalOptions";
 import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
 import { SearchBar } from "../features/search/components/SearchBar";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
@@ -41,20 +39,25 @@ function Content(): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { recipes } = useRecipes();
   const { filteredRecipes, searchTerm, setSearchTerm } =
     useRecipeFilter(recipes);
   const { handleFocus, handleBlur, key } = useSearchFocus();
   const { setDebugData } = useDebugContext();
+
   const {
     showPopover,
-    handleOptionSelect,
     popoverVisible,
     dismissPopover,
     isImporting,
-  } = usePhotoImport();
-  const { searchBarStyle, buttonStyle } =
-    usePopoverTransition(popoverVisible, isImporting);
+    searchBarStyle,
+    buttonStyle,
+    importOptions,
+    handleImportOptionSelect,
+  } = useImportPopover();
+
+  const globalOptions = useGlobalOptions();
 
   useEffect(() => {
     return () => {
@@ -66,25 +69,6 @@ function Content(): JSX.Element {
     router.push(`/recipe/${id}`);
   }, []);
 
-  const handleImportOptionSelect = useCallback(
-    (id: string) => {
-      handleOptionSelect(id as ImportOption);
-    },
-    [handleOptionSelect],
-  );
-
-  const importOptions = useMemo(
-    () => [
-      { id: "camera", label: t("addRecipe.camera"), systemImage: "camera" },
-      {
-        id: "library",
-        label: t("addRecipe.library"),
-        systemImage: "photo.on.rectangle",
-      },
-    ],
-    [t],
-  );
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {recipes.length === 0 ? (
@@ -92,6 +76,19 @@ function Content(): JSX.Element {
       ) : (
         <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} />
       )}
+
+      {/* Overflow menu button - top right */}
+      <Animated.View
+        style={[styles.overflowButton, { top: insets.top + 8 }, globalOptions.buttonStyle]}
+        pointerEvents={popoverVisible || globalOptions.visible ? "none" : "auto"}
+      >
+        <LiquidGlassButton
+          onPress={globalOptions.handlePress}
+          systemImage="ellipsis"
+          accessibilityLabel={t("accessibility.moreOptions")}
+        />
+      </Animated.View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoid}
@@ -111,9 +108,12 @@ function Content(): JSX.Element {
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Import popover (bottom trailing) */}
       <View
         style={[
           StyleSheet.absoluteFill,
+          styles.popoverLayer,
           !popoverVisible && isImporting && { opacity: 0 },
         ]}
         pointerEvents={popoverVisible ? "auto" : "none"}
@@ -124,6 +124,22 @@ function Content(): JSX.Element {
           buttonSize={56}
           onSelect={handleImportOptionSelect}
           onDismiss={dismissPopover}
+        />
+      </View>
+
+      {/* Overflow popover (top trailing) */}
+      <View
+        style={[StyleSheet.absoluteFill, styles.popoverLayer]}
+        pointerEvents={globalOptions.visible ? "auto" : "none"}
+      >
+        <LiquidGlassPopover
+          visible={globalOptions.visible}
+          anchor="topTrailing"
+          buttonOffset={{ x: 28, y: insets.top + 8 }}
+          options={globalOptions.options}
+          buttonSize={48}
+          onSelect={globalOptions.handleSelect}
+          onDismiss={globalOptions.handleDismiss}
         />
       </View>
     </View>
@@ -143,6 +159,14 @@ export default function Index(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overflowButton: {
+    position: "absolute",
+    right: 28,
+    zIndex: 10,
+  },
+  popoverLayer: {
+    zIndex: 11,
   },
   keyboardAvoid: {
     position: "absolute",

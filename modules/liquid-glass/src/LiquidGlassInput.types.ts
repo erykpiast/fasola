@@ -17,4 +17,5 @@ export type LiquidGlassInputProps = {
   onSubmitEditing?: () => void;
   blurOnSubmit?: boolean;
   multiline?: boolean;
+  maxLength?: number;
 };

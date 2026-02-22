@@ -16,6 +16,7 @@ export function LiquidGlassInput({
   onSubmitEditing,
   blurOnSubmit,
   multiline,
+  maxLength,
 }: LiquidGlassInputProps): JSX.Element {
   const height = variant === "search" ? 48 : label ? 76 : 56;
 
@@ -33,6 +34,7 @@ export function LiquidGlassInput({
         onSubmitEditing={onSubmitEditing}
         blurOnSubmit={blurOnSubmit}
         multiline={multiline}
+        maxLength={maxLength}
         style={styles.input}
       />
     </View>

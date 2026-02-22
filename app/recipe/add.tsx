@@ -1,8 +1,8 @@
 import { useBackgroundProcessing } from "@/features/background-processing";
 import { AddRecipeForm } from "@/features/recipe-form/components/AddRecipeForm";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
-import { sourceHistoryRepository } from "@/lib/repositories/sourceHistory";
-import type { PhotoUri } from "@/lib/types/primitives";
+import { useSources } from "@/features/sources/context/SourcesContext";
+import type { PhotoUri, SourceId } from "@/lib/types/primitives";
 import { useTheme, type Theme } from "@/platform/theme/useTheme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState, type JSX } from "react";
@@ -12,30 +12,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AddRecipeScreen(): JSX.Element {
   const theme = useTheme();
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
-  const [source, setSource] = useState("");
+  const [source, setSource] = useState<SourceId>("");
   const { savePending } = useRecipes();
+  const { touchSource } = useSources();
   const { addToQueue } = useBackgroundProcessing();
 
-  const handleSourceChange = useCallback(
-    (newSource: string) => {
-      setSource(newSource);
-    },
-    []
-  );
-
   const handleConfirm = useCallback(
-    async (sourceOverride?: string) => {
+    async (sourceOverride?: SourceId) => {
       const effectiveSource = sourceOverride ?? source;
       if (!uri || !effectiveSource) {
         return;
       }
 
       const recipe = await savePending(uri, effectiveSource);
-      await sourceHistoryRepository.addSource(effectiveSource);
+      await touchSource(effectiveSource);
       addToQueue(recipe.id);
       router.replace("/");
     },
-    [uri, source, savePending, addToQueue]
+    [uri, source, savePending, touchSource, addToQueue]
   );
 
   if (!uri) {
@@ -55,7 +49,7 @@ export default function AddRecipeScreen(): JSX.Element {
       <AddRecipeForm
         photoUri={uri}
         source={source}
-        onSourceChange={handleSourceChange}
+        onSourceChange={setSource}
         onConfirm={handleConfirm}
       />
     </SafeAreaView>

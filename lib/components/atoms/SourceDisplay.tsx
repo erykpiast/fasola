@@ -1,14 +1,8 @@
+import { useSourceName } from "@/features/sources/hooks/useSourceName";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { type JSX } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-
-const isUrl = (str: string): boolean => {
-  if (typeof str !== "string") {
-    return false;
-  }
-  return str.startsWith("http://") || str.startsWith("https://");
-};
 
 const getHostname = (url: string): string => {
   try {
@@ -26,18 +20,19 @@ export function SourceDisplay({
   source?: string;
   style?: object;
 }): JSX.Element | null {
-  if (!source) {
+  const { displayName, isUrl: isUrlSource } = useSourceName(source);
+
+  if (!displayName) {
     return null;
   }
 
   const handlePress = async () => {
-    if (isUrl(source)) {
+    if (isUrlSource && source) {
       await WebBrowser.openBrowserAsync(source);
     }
   };
 
-  const isUrlSource = isUrl(source);
-  const displayText = isUrlSource ? getHostname(source) : source;
+  const displayText = isUrlSource ? getHostname(displayName) : displayName;
 
   const content = (
     <View style={[styles.container, style]}>

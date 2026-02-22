@@ -41,7 +41,8 @@
     "removeTag": "Remove tag",
     "back": "Go back",
     "delete": "Delete recipe",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "moreOptions": "More options"
   },
   "deleteRecipe": {
     "title": "Delete Recipe?",
@@ -65,6 +66,21 @@
   },
   "import": {
     "confirmHint": "Confirming in {seconds}s..."
+  },
+  "menu": {
+    "manageBooks": "Manage Books"
+  },
+  "manageBooks": {
+    "title": "Manage Books",
+    "addBook": "Add Book",
+    "emptyState": "No books yet",
+    "recipeCount_one": "{{count}} recipe",
+    "recipeCount_other": "{{count}} recipes",
+    "back": "Back",
+    "deleteConfirmTitle": "Delete \"{{name}}\"?",
+    "deleteConfirmMessage": "This cannot be undone. All {{count}} recipes imported from this book will be permanently removed.",
+    "deleteConfirmCancel": "Cancel",
+    "deleteConfirmAction": "Delete"
   },
   "processing": {
     "messages": {

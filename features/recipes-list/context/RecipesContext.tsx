@@ -1,5 +1,5 @@
 import { recipeRepository } from "@/lib/repositories/recipes";
-import type { PhotoUri, RecipeId } from "@/lib/types/primitives";
+import type { PhotoUri, RecipeId, SourceId } from "@/lib/types/primitives";
 import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
 import {
   createContext,
@@ -19,7 +19,7 @@ type RecipesContextValue = {
     metadata: RecipeMetadata,
     recognizedText?: string
   ) => Promise<void>;
-  savePending: (photoUri: PhotoUri, source?: string) => Promise<Recipe>;
+  savePending: (photoUri: PhotoUri, source?: SourceId) => Promise<Recipe>;
   updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
   updateProcessing: (id: RecipeId) => Promise<void>;
   updateComplete: (
@@ -69,7 +69,7 @@ export function RecipesProvider({
   );
 
   const savePending = useCallback(
-    async (photoUri: PhotoUri, source?: string): Promise<Recipe> => {
+    async (photoUri: PhotoUri, source?: SourceId): Promise<Recipe> => {
       const newRecipe = await recipeRepository.savePending(photoUri, source);
       setRecipes((prev) => [newRecipe, ...prev]);
       return newRecipe;

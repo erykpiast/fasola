@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "296199786b15",
+  "session_id": "7dc13d16-d46f-409c-9eca-fdaa6145e95b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T23:51:33.245029Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "app/index.tsx",
+    "features/source-selector/hooks/useSourceHistory.ts",
+    "lib/repositories/sourceHistory.ts",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/ios/LiquidGlassPopoverView.swift",
+    "modules/liquid-glass/src/LiquidGlassPopover.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassPopover.tsx",
+    "modules/liquid-glass/src/LiquidGlassPopover.types.ts",
+    "specs/016_manage_books/plan.md",
+    "specs/016_manage_books/spec.md"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 75,
+    "cache_creation_tokens": 148710,
+    "cache_read_tokens": 4639322,
+    "output_tokens": 18324,
+    "api_call_count": 53
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T23:51:32.942593Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 204,
+    "human_removed": 1224,
+    "total_committed": 204,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/7dc13d16-d46f-409c-9eca-fdaa6145e95b.jsonl"
+}

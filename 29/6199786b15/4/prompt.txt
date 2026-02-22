@@ -1,0 +1,143 @@
+Implement the following plan:
+
+# Plan: LiquidGlassPopover buttonOffset prop
+
+## Context
+
+The popover's internal morphing button is positioned with hardcoded padding that doesn't match the actual trigger button's position. The overflow (three-dots) button is at `right: 28, top: insets.top + 8` but the popover's fake button renders at `trailing: 28, top: safeArea + 28` — a 20pt vertical gap that causes a visible jump on morph.
+
+General rule: the popover's fake morphing button must exactly overlap the real trigger button. The `anchor` enum picks the corner layout, but the exact offset within that corner must be caller-controlled.
+
+## Solution: `buttonOffset` prop
+
+Add `buttonOffset?: { x: number; y: number }` to `LiquidGlassPopoverProps`.
+
+- `x`: distance from trailing (right) screen edge to the button's trailing edge
+- `y`: distance from anchor edge (bottom for `bottomTrailing`, top for `topTrailing`) to the button's corresponding edge
+- Default: `{ x: 28, y: 28 }` — preserves existing import popover behavior
+- Caller handles safe area insets — no internal safe area calculation in native code
+
+## Files to change
+
+### 1. `modules/liquid-glass/src/LiquidGlassPopover.types.ts`
+Add `buttonOffset` to props type:
+```typescript
+export type LiquidGlassPopoverProps = {
+  // ...existing
+  buttonOffset?: { x: number; y: number };
+};
+```
+
+### 2. `modules/liquid-glass/src/LiquidGlassPopover.ios.tsx`
+Pass `buttonOffset` to native view. Convert `{ x, y }` to the format expected by native (dict).
+
+### 3. `modules/liquid-glass/ios/LiquidGlassModule.swift`
+Register `buttonOffset` prop:
+```swift
+Prop("buttonOffset") { (view, offset: [String: CGFloat]) in
+  view.setButtonOffset(offset)
+}
+```
+
+### 4. `modules/liquid-glass/ios/LiquidGlassPopoverView.swift`
+- Add `buttonOffsetX: CGFloat = 28` and `buttonOffsetY: CGFloat = 28` properties on `LiquidGlassPopoverView`
+- Pass them through to `LiquidGlassPopoverContent`
+- Add `setButtonOffset` method parsing `{ "x": N, "y": N }` dict
+- Replace hardcoded padding in `anchoredLayout`:
+  - `bottomTrailing`: `.padding(.trailing, buttonOffsetX).padding(.bottom, buttonOffsetY)`
+  - `topTrailing`: `.padding(.trailing, buttonOffsetX).padding(.top, buttonOffsetY)`
+- Delete `topSafeAreaInset` computed property (caller provides the full offset including safe area)
+
+### 5. `modules/liquid-glass/src/LiquidGlassPopover.tsx` (non-iOS fallback)
+Use `buttonOffset` values for positioning instead of hardcoded `paddingTop: 60, paddingRight: 16`:
+- `bottomTrailing`: `paddingRight: offset.x, paddingBottom: offset.y`, flex-end alignment
+- `topTrailing`: `paddingRight: offset.x, paddingTop: offset.y`, flex-start/flex-end alignment
+
+### 6. `app/index.tsx`
+Update overflow popover to pass explicit offset matching the real button position:
+```typescript
+<LiquidGlassPopover
+  visible={overflowVisible}
+  anchor="topTrailing"
+  buttonOffset={{ x: 28, y: insets.top + 8 }}
+  options={overflowOptions}
+  buttonSize={44}
+  onSelect={handleOverflowSelect}
+  onDismiss={handleOverflowDismiss}
+/>
+```
+Import popover unchanged — default `{ x: 28, y: 28 }` already matches its button.
+
+### 7. Spec/plan docs
+Update `specs/016_manage_books/spec.md` section 6 prop table and `specs/016_manage_books/plan.md` Task 10/11 to reflect `buttonOffset`.
+
+## Verification
+
+1. `npx expo run:ios`
+2. Tap three-dots button → morph starts exactly at the button, no jump
+3. Tap plus button → import popover morph starts exactly at that button (regression check)
+4. Dismiss both → morph collapses back to exact button position
+5. Non-iOS fallback: menu appears near the correct corner with proper padding
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+It's still not what I meant. The three dots button appears in the top rigth corner of the screen and the panel should appear there as well.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+From my manual measures, the panel should appear two pixels higher to be aligned with the button. Then, what's even more wrong - the button must fadeout when the panel is visible to make the morph effect. See how it's done for the plus button and the import source selection panel.
+
+---
+
+[Request interrupted by user for tool use]

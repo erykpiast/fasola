@@ -1,0 +1,1054 @@
+Implement the following plan:
+
+# Plan: Fix overflow popover morph — size and position alignment
+
+## Context
+
+The overflow morph looks worse than the plus button morph. The panel "appears from nowhere" instead of morphing out of the button. Root cause: size and position mismatches between the morph circle and the actual button.
+
+## Analysis
+
+### Why the plus button morph works
+
+Corner alignment + oversizing:
+
+- Button layout: `paddingHorizontal: 28, paddingBottom: 28`, view size 48pt
+- Button's bottom-right corner at `(right: 28, bottom: 28)` from screen edges
+- Popover: `buttonSize=56`, default `buttonOffset={x:28, y:28}` (`bottomTrailing`)
+- Morph circle's bottom-right corner at same `(right: 28, bottom: 28)` — **exact corner alignment**
+- `56 > 48` means the morph circle **envelops** the button (extends 8pt up and 8pt left)
+- Phase 1 shrinks to `56 × 0.8 = 44.8pt` — still ≥ visual glass circle (~44pt)
+- Button fades out simultaneously → seamless
+
+### Why the three-dots morph fails
+
+Two compounding errors:
+
+1. **Size too small**: `buttonSize=44` < view size 48pt. The morph circle is smaller than the button. Phase 1 shrinks to `44 × 0.8 = 35.2pt` — far smaller than the visual glass circle.
+
+2. **Corner misalignment**: `buttonOffset.y = insets.top + 6` but button `top = insets.top + 8`. The morph's top edge is 2pt above the button's top edge. Combined with the undersized diameter, the morph center is **4pt higher and 2pt more rightward** than the button center.
+
+### Position math
+
+| Measurement | Button | Morph (current) | Morph (fixed) |
+|---|---|---|---|
+| Right edge from screen right | 28pt | 28pt | 28pt |
+| Top edge from screen top | `insets.top + 8` | `insets.top + 6` | `insets.top + 8` |
+| Diameter | 48pt | 44pt | 48pt |
+| Center X from right | 52pt | 50pt | 52pt |
+| Center Y from top | `insets.top + 32` | `insets.top + 28` | `insets.top + 32` |
+
+## Changes
+
+### `app/index.tsx` — two prop changes on the overflow `LiquidGlassPopover`
+
+1. **`buttonOffset.y`**: `insets.top + 6` → `insets.top + 8` — align top-right corner with button's top-right corner
+
+2. **`buttonSize`**: `44` → `48` — match the React view size so the morph circle covers the button exactly
+
+Alternative for (2): `buttonSize={56}` matches the plus button's 56/48 oversize ratio. Phase 1 would shrink to 44.8pt ≈ visual glass circle. Stronger envelope effect but needs visual check since the morph extends 8pt below and left of the button.
+
+## Verification
+
+1. Tap three-dots → morph circle appears exactly over the button, expands down-left into panel
+2. Dismiss → collapses back to button position, button fades in
+3. Tap plus → import popover still morphs correctly (regression)
+4. Both morphs should feel equally smooth
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+The `usePopoverTransition` takes the `isImporting` boolean as input. It's too specific name for the general context. Maybe we can do the || on the call site for the plus button/search box specifically?
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+the fake button for the popover morph should appear above the real button on the z-axis so the z-index should be higher than the original button's.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+# Code Review
+
+## Current Repository State
+ M app/_layout.tsx
+ M app/index.tsx
+ M app/recipe/add.tsx
+ M features/photos/hooks/usePopoverTransition.ts
+ M features/recipe-form/components/AddRecipeForm.tsx
+ M features/recipe-form/hooks/useRecipeForm.ts
+ M features/recipe-preview/components/MetadataOverlay.tsx
+ M features/recipes-list/context/RecipesContext.tsx
+ M features/source-selector/components/SourceSelector.tsx
+ D features/source-selector/hooks/useSourceHistory.ts
+ M features/source-selector/index.ts
+ M lib/components/atoms/SourceDisplay.tsx
+ M lib/repositories/recipes.ts
+ D lib/repositories/sourceHistory.ts
+ M lib/repositories/types.ts
+ M lib/types/primitives.ts
+ M modules/liquid-glass/ios/LiquidGlassModule.swift
+ M modules/liquid-glass/ios/LiquidGlassPopoverView.swift
+ M modules/liquid-glass/src/LiquidGlassPopover.ios.tsx
+ M modules/liquid-glass/src/LiquidGlassPopover.tsx
+ M modules/liquid-glass/src/LiquidGlassPopover.types.ts
+ M platform/i18n/translations/en.json
+?? app/manage-books.tsx
+?? features/sources/
+?? lib/repositories/sources.ts
+?? lib/types/source.ts
+?? specs/016_manage_books/
+---
+ app/_layout.tsx                                    | 19 ++---
+ app/index.tsx                                      | 81 +++++++++++++++++++++-
+ app/recipe/add.tsx                                 | 15 ++--
+ features/photos/hooks/usePopoverTransition.ts      | 10 +--
+ features/recipe-form/components/AddRecipeForm.tsx  |  8 +--
+ features/recipe-form/hooks/useRecipeForm.ts        |  2 +-
+ .../recipe-preview/components/MetadataOverlay.tsx  |  6 +-
+ features/recipes-list/context/RecipesContext.tsx   |  6 +-
+ .../source-selector/components/SourceSelector.tsx  | 60 +++++++++-------
+ features/source-selector/hooks/useSourceHistory.ts | 61 ----------------
+ features/source-selector/index.ts                  |  1 -
+ lib/components/atoms/SourceDisplay.tsx             | 17 ++---
+ lib/repositories/recipes.ts                        |  4 +-
+ lib/repositories/sourceHistory.ts                  | 62 -----------------
+ lib/repositories/types.ts                          |  4 +-
+ lib/types/primitives.ts                            |  3 +
+ modules/liquid-glass/ios/LiquidGlassModule.swift   |  8 +++
+ .../liquid-glass/ios/LiquidGlassPopoverView.swift  | 74 ++++++++++++++++----
+ .../liquid-glass/src/LiquidGlassPopover.ios.tsx    |  4 ++
+ modules/liquid-glass/src/LiquidGlassPopover.tsx    | 25 ++++++-
+ .../liquid-glass/src/LiquidGlassPopover.types.ts   |  2 +
+ platform/i18n/translations/en.json                 | 15 ++++
+ 22 files changed, 271 insertions(+), 216 deletions(-)
+---
+deb6c33 refactor: consolidate cover-size logic into useImageCoverSize hook
+694f997 fix: allow to pad and zoom beyond initial image boundaries Entire-Checkpoint: fe9fecbb71bf
+6f21aa0 feat: morph the plus button to the source selector panel Entire-Checkpoint: 180ea044636a
+5ad4194 chore: add spec and plan for source selector panel transition Entire-Checkpoint: d0b87395ce30
+70760a9 fix: change wording from photo to recipe Entire-Checkpoint: 180ea044636a
+
+## Pre-Review Analysis: Think This Through End-to-End
+
+Before launching review agents, analyze the complete impact and context:
+
+### Impact Assessment
+- **System Impact**: What systems, services, or components could be affected by these changes?
+- **Deployment Context**: What's the risk level and timeline for these changes?
+- **Integration Points**: Are there external dependencies, APIs, or team workflows involved?
+- **Stakeholder Impact**: Who depends on the code being reviewed?
+
+### Review Strategy Coordination
+Based on impact assessment and ****, determine:
+- **Critical vs. Nice-to-Have**: Which review aspects are CRITICAL vs. optional for this change?
+- **Potential Conflicts**: Could findings from different review areas suggest competing solutions?
+- **Shared Context**: What context should all review agents be aware of?
+- **Appropriate Rigor**: What level of analysis matches the change scope and risk?
+
+## Review Strategy
+
+Based on **** and the impact assessment above, determine which review agents are needed:
+
+If reviewing "changes" or recent modifications:
+1. Analyze the file types that have been modified
+2. Launch only relevant review agents:
+   - **Documentation files only** (*.md, *.txt, README): Launch only Documentation & API Review agent
+   - **Test files only** (*test.*, *.spec.*, tests/): Launch Testing Quality Review and Code Quality Review agents
+   - **Config files only** (*.json, *.yaml, *.toml, .*rc): Launch Security & Dependencies Review and Architecture Review agents
+   - **Source code files** (*.ts, *.js, *.py, etc.): Launch all 6 review agents
+   - **Mixed changes**: Launch agents relevant to each file type present
+
+If reviewing a specific directory or broad scope:
+- Launch all 6 review agents for comprehensive coverage
+
+Use the Task tool to invoke the appropriate code-review-expert agents concurrently with enhanced thinking trigger instructions:
+
+## 1. Architecture & Design Review
+```
+Subagent: code-review-expert
+Description: Architecture review with end-to-end analysis
+Prompt: Review the architecture and design patterns in: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: module organization, separation of concerns, dependency management, abstraction levels, design pattern usage, and architectural consistency. Check available experts with claudekit for domain-specific patterns.
+
+THINK THIS THROUGH END-TO-END:
+- Trace architectural impacts: How does this change affect all dependent systems?
+- Map the complete data/control flow through the architecture
+- Identify what breaks when components fail or change
+- Consider the full deployment and integration pipeline
+- Analyze how this fits into the broader system architecture
+
+Check available experts with claudekit for domain-specific patterns.
+```
+
+## 2. Code Quality Review
+```
+Subagent: code-review-expert
+Description: Code quality review  
+Prompt: Review code quality and maintainability in: 
+Focus on: readability, naming conventions, code complexity, DRY principles, code smells, refactoring opportunities, and consistent coding patterns. Pull domain-specific quality metrics from available experts.
+```
+
+## 3. Security & Dependencies Review
+```
+Subagent: code-review-expert
+Description: Security and dependencies review with alternative hypothesis analysis
+Prompt: Perform security and dependency analysis of: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: input validation, injection vulnerabilities, authentication/authorization, secrets management, dependency vulnerabilities, license compliance, version pinning, and supply chain security. Use security insights from domain experts if available.
+
+CONSIDER ALTERNATIVE HYPOTHESES:
+- Beyond obvious vulnerabilities, what other attack vectors exist?
+- How else could these security controls be bypassed or exploited?
+- What assumptions about user behavior, data flow, or system boundaries could an attacker violate?
+- Are there alternative explanations for apparent security measures?
+- What if the current security model is fundamentally flawed?
+
+Use security insights from domain experts if available.
+```
+
+## 4. Performance & Scalability Review
+```
+Subagent: code-review-expert
+Description: Performance and scalability review
+Prompt: Analyze performance and scalability in: 
+Focus on: algorithm complexity, memory usage, database queries, caching strategies, async patterns, resource management, load handling, and horizontal scaling considerations. Get performance patterns from relevant experts.
+```
+
+## 5. Testing Quality Review
+```
+Subagent: code-review-expert
+Description: Testing quality review
+Prompt: Review test quality and effectiveness for: 
+Focus on: meaningful assertions, test isolation, edge case handling, failure scenario coverage, mock vs real dependencies balance, test maintainability, clear test names, and actual behavior verification (not just coverage metrics). Check for testing-expert insights if available.
+```
+
+## 6. Documentation & API Review
+```
+Subagent: code-review-expert
+Description: Documentation and API review
+Prompt: Review documentation and API design for: 
+
+Focus on: README completeness, API documentation, breaking changes, code comments, JSDoc/TypeDoc coverage, usage examples, migration guides, and developer experience. Evaluate API consistency and contract clarity.
+
+Documentation Review Guidelines:
+- Consider purpose and audience: Who needs this information and why?
+- Evaluate effectiveness: Does the documentation achieve its goals?
+- Focus on clarity: Can users understand and apply the information?
+- Identify real issues: Missing information, errors, contradictions, outdated content
+- Respect intentional variation: Multiple examples may show different valid approaches
+```
+
+## Post-Review Consolidation: Consider Alternative Hypotheses
+
+After all agents complete, apply alternative hypothesis thinking before consolidating:
+
+### Cross-Pattern Analysis
+- **Competing Solutions**: Do findings from different review areas suggest conflicting solutions or approaches?
+- **Alternative Explanations**: Are there alternative explanations for patterns seen across multiple review areas?
+- **Root Cause Investigation**: Could the same underlying issue be manifesting in multiple review aspects?
+- **Intentional Trade-offs**: What if apparent "problems" are actually intentional design decisions with valid reasoning?
+
+### Prioritization with Context
+- **Real vs. Theoretical Issues**: Which issues matter given the actual deployment context and timeline?
+- **Conflicting Recommendations**: How do we sequence fixes that might conflict with each other?
+- **Alternative Approaches**: If obvious fixes prove problematic, what are the alternative solutions?
+
+Then consolidate findings into this structured format:
+
+```
+🗂 Consolidated Code Review Report - [Target]
+
+📋 Review Scope
+Target: [directory/files reviewed] ([X files, Y lines])
+Focus: Architecture, Security, Performance, Testing, Documentation
+
+📊 Executive Summary
+Brief overview of code quality, key strengths, and critical issues requiring attention.
+
+🔴 CRITICAL Issues (Must Fix Immediately)
+1. 🔒 [Security/🏗️ Architecture/⚡ Performance/🧪 Testing/📝 Documentation/💥 Breaking] [Issue Name]
+   File: [path:line]
+   Impact: [description]
+   Solution:
+   ```[code example]```
+
+2. [Additional critical issues with type icons...]
+
+🟠 HIGH Priority Issues
+1. [Type icon] [Issue name]
+   File: [path:line]
+   Impact: [description]
+   Solution: [recommendation]
+
+2. [Additional high priority issues...]
+
+🟡 MEDIUM Priority Issues
+1. [Type icon] [Issue name] - [file:line]
+   Extract into: [suggested refactoring]
+
+2. [Additional medium priority issues...]
+
+✅ Quality Metrics
+Include only aspects that were actually reviewed based on the file types and agents launched:
+┌─────────────────┬───────┬────────────────────────────────────┐
+│ Aspect          │ Score │ Notes                              │
+├─────────────────┼───────┼────────────────────────────────────┤
+│ [Only include relevant aspects based on what was reviewed]      │
+│ Architecture    │ X/10  │ [Clean separation, coupling issues]│
+│ Code Quality    │ X/10  │ [Readability, consistency, patterns]│
+│ Security        │ X/10  │ [Critical vulnerabilities, if any] │
+│ Performance     │ X/10  │ [Bottlenecks, scalability concerns]│
+│ Testing         │ X/10  │ [Coverage percentage, test quality]│
+│ Documentation   │ X/10  │ [API docs, comments, examples]     │
+└─────────────────┴───────┴────────────────────────────────────┘
+
+For example:
+- Documentation-only review: Show only Documentation row
+- Test file review: Show Testing and Code Quality rows
+- Config file review: Show Security and Architecture rows
+- Full code review: Show all relevant aspects
+
+✨ Strengths to Preserve
+- [Key strength with evidence]
+- [Additional strengths...]
+
+🚀 Proactive Improvements
+1. [Pattern/Practice Name]
+   ```[code example]```
+
+2. [Additional improvements...]
+
+📊 Issue Distribution
+- Architecture: [X critical, Y high, Z medium]
+- Security: [X critical, Y high, Z medium]
+- Performance: [X critical, Y high, Z medium]
+- Testing: [X critical, Y high, Z medium]
+- Documentation: [X critical, Y high, Z medium]
+
+⚠️ Systemic Issues
+Repeated problems that need addressing:
+- [Problem pattern] (X occurrences)
+  → [Actionable fix/next step]
+- [Additional problems with solutions...]
+```
+
+After all agents complete, consolidate findings into this format. Focus on actionable feedback with specific file locations and code examples. Use type icons:
+🔒 Security | 🏗️ Architecture | ⚡ Performance | 🧪 Testing | 📝 Documentation | 💥 Breaking Change
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+<task-notification>
+<task-id>a49efb1cee327954d</task-id>
+<tool-use-id>toolu_018ipnESDNwyotyZybcuj6Rc</tool-use-id>
+<status>completed</status>
+<summary>Agent "Performance & scalability review" completed</summary>
+<result>I have all the data needed. Here is the analysis.
+
+---
+
+# Code Review: Performance & Scalability
+
+## Review Metrics
+- **Files Reviewed**: 12
+- **Critical Issues**: 1
+- **High Priority**: 3
+- **Medium Priority**: 4
+- **Suggestions**: 3
+
+## Executive Summary
+
+The most damaging performance issue is the sequential recipe deletion loop in `manage-books.tsx`, which triggers N full storage read-parse-write cycles and N React state updates for N recipes. The repository layer compounds this by deserializing the entire dataset and resolving file URIs on every single mutation. The native SwiftUI bridge recreates the entire root view on each prop change, though SwiftUI's diffing mitigates the real cost. Several O(n) lookups are used where an index or memoized value would suffice, but at realistic data volumes these are cosmetic.
+
+---
+
+## CRITICAL Issues (Must Fix)
+
+### 1. Sequential recipe deletion causes O(n^2) storage I/O with cascading re-renders
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx:262-264`
+
+**Impact**: Deleting a book with 20 recipes executes 20 sequential calls to `deleteRecipe`. Each call in `RecipesContext` (line 119-122) calls `recipeRepository.delete()`, which itself calls `this.getAll()` -- parsing the full JSON, resolving every photo URI via `Promise.all` over all remaining recipes, filtering, then writing back. That's 20 full read-parse-resolveAllURIs-filter-write cycles. Additionally, each call triggers `setSources(prev => prev.filter(...))`, causing 20 consecutive React re-renders of every component consuming `RecipesContext` (9 files subscribe).
+
+**Root Cause**: The repository has no bulk delete operation. The context method is designed for single-item removal. The caller compensates with a `for...await` loop, which serializes the worst of both worlds.
+
+**Current Code**:
+```typescript
+const recipesToDelete = recipes.filter(
+  (r) => r.metadata.source === sourceId
+);
+for (const r of recipesToDelete) {
+  await deleteRecipe(r.id);
+}
+```
+
+**Solution**: Add a bulk delete to the repository and context.
+
+```typescript
+// lib/repositories/recipes.ts
+async deleteMany(ids: Array<RecipeId>): Promise<void> {
+  const idSet = new Set(ids);
+  for (const id of ids) {
+    await storage.deletePhoto(id);
+    await storage.deleteThumbnail(id);
+  }
+  const data = await storage.getItem(RECIPES_KEY);
+  if (!data) return;
+  const recipes: Array<Recipe> = JSON.parse(data);
+  const filtered = recipes.filter((r) => !idSet.has(r.id));
+  await storage.setItem(RECIPES_KEY, JSON.stringify(filtered.map(stripRuntimeFields)));
+}
+
+// RecipesContext.tsx
+const deleteRecipes = useCallback(async (ids: Array<RecipeId>) => {
+  await recipeRepository.deleteMany(ids);
+  const idSet = new Set(ids);
+  setRecipes((prev) => prev.filter((recipe) => !idSet.has(recipe.id)));
+}, []);
+
+// manage-books.tsx
+const recipesToDelete = recipes.filter(
+  (r) => r.metadata.source === sourceId
+);
+await deleteRecipes(recipesToDelete.map((r) => r.id));
+```
+
+This reduces N storage read-parse-write cycles to 1, and N React state updates to 1.
+
+---
+
+## HIGH Priority (Fix Before Merge)
+
+### 2. Every source repository mutation does a full getAll() (parse + sort) before write
+
+**File**: `/Users/eryk.napierala/Development/fasola/lib/repositories/sources.ts:21-66`
+
+**Impact**: `create`, `rename`, `delete`, and `touch` all call `getAll()` which parses JSON and sorts the array, only to immediately serialize and write back. This is 2x the necessary I/O per mutation. While the sources array is small (tens of items, not hundreds), the pattern is architecturally unsound and will compound if adopted by other repositories.
+
+**Root Cause**: No raw read method exists; `getAll()` bundles parsing, sorting, and returning a consumer-ready array. Mutations need the raw data, not the sorted consumer view.
+
+**Solution**: Extract a private raw read method.
+
+```typescript
+class SourceRepository {
+  private async readRaw(): Promise<Array<Source>> {
+    const data = await storage.getItem(SOURCES_KEY);
+    if (!data) return [];
+    return JSON.parse(data);
+  }
+
+  private async writeRaw(sources: Array<Source>): Promise<void> {
+    await storage.setItem(SOURCES_KEY, JSON.stringify(sources));
+  }
+
+  async getAll(): Promise<Array<Source>> {
+    const sources = await this.readRaw();
+    return sources.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  }
+
+  async create(name: string): Promise<Source> {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("Source name cannot be empty");
+    const sources = await this.readRaw();
+    if (sources.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      throw new Error("A book with this name already exists");
+    }
+    const newSource: Source = {
+      id: Crypto.randomUUID(),
+      name: trimmed,
+      lastUsedAt: Date.now(),
+    };
+    sources.push(newSource);
+    await this.writeRaw(sources);
+    return newSource;
+  }
+  // ... same pattern for rename, delete, touch
+}
+```
+
+### 3. getLastUsed() copies and sorts the entire sources array on every call
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx:88-95`
+
+**Impact**: `getLastUsed` is called inside a `useEffect` in `SourceSelector` (line 61-67) which runs on mount and whenever `getLastUsed` identity changes. Since `getLastUsed` is wrapped in `useCallback` with `[sources]` as dependency, it gets a new identity every time sources changes. The sort itself is O(n log n) per call. More importantly, this triggers the effect in `SourceSelector` to re-fire on every sources update, potentially calling `onValueChange` repeatedly.
+
+**Root Cause**: Returning a function that computes on call means the work cannot be memoized. The result should be a derived value, not a function.
+
+**Solution**: Replace the function with a memoized value.
+
+```typescript
+const lastUsedSource = useMemo((): Source | null => {
+  if (sources.length === 0) return null;
+  let mostRecent = sources[0];
+  for (let i = 1; i < sources.length; i++) {
+    if (sources[i].lastUsedAt > mostRecent.lastUsedAt) {
+      mostRecent = sources[i];
+    }
+  }
+  const isWithin24Hours =
+    Date.now() - mostRecent.lastUsedAt < 24 * 60 * 60 * 1000;
+  return isWithin24Hours ? mostRecent : null;
+}, [sources]);
+```
+
+This avoids the sort allocation entirely (single-pass O(n) max-find), and the value is stable across renders when sources hasn't changed.
+
+### 4. Two always-mounted LiquidGlassPopover native views on the home screen
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/index.tsx:163-195`
+
+**Impact**: Both `LiquidGlassPopover` instances are always mounted in the React tree, each backed by a `UIHostingController` with a `GeometryReader`, a hidden measurement view, and SwiftUI `@State` variables. When neither popover is visible, these views still participate in layout passes and the SwiftUI render pipeline. The hidden measurement view (`optionsList.fixedSize().hidden()`) in particular forces SwiftUI to lay out the full options list even when the popover is collapsed.
+
+**Root Cause**: The iOS native implementation (`LiquidGlassPopover.ios.tsx`) always renders the native view regardless of `visible`. The non-iOS fallback (`LiquidGlassPopover.tsx`) returns `null` when not visible -- the correct approach. The iOS version cannot do this because the morph animation requires the view to already exist before `visible` transitions to `true`.
+
+**Solution**: The animation constraint is real, so full conditional mounting would break the morph. However, you can mitigate by gating the hidden measurement view:
+
+```swift
+// LiquidGlassPopoverView.swift - only measure when visible or expanded
+if isVisible || expanded {
+    optionsList
+        .fixedSize()
+        .hidden()
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { newSize in
+            panelSize = newSize
+        }
+}
+```
+
+Since the options list content is known before the popover opens (it's set via props), `panelSize` will already be computed from the first time `isVisible` becomes `true`. This eliminates continuous measurement layout passes when the popover is hidden.
+
+---
+
+## MEDIUM Priority (Fix Soon)
+
+### 5. SwiftUI root view recreation on every prop change
+
+**File**: `/Users/eryk.napierala/Development/fasola/modules/liquid-glass/ios/LiquidGlassPopoverView.swift:117-133`
+
+**Impact**: Every prop setter (`setVisible`, `setOptions`, `setButtonSize`, `setAnchor`, `setButtonOffset`) calls `updateContent()`, which constructs a new `LiquidGlassPopoverContent` struct and assigns it to `hostingController.rootView`. When multiple props update in the same React commit, this fires multiple times.
+
+**Root Cause**: Expo Modules Core delivers prop changes individually. There is no batching mechanism in the native view lifecycle.
+
+**Practical Impact**: SwiftUI's structural diffing means replacing `rootView` with an identical-except-one-field struct is cheap -- SwiftUI diffs the view tree and only updates what changed. The real cost is the closure captures in `onOptionSelect` and `onDismiss` which create new allocations each time, but these are negligible. This is a known Expo Modules pattern limitation. Not worth refactoring unless profiling shows frame drops.
+
+### 6. Keyboard.dismiss() fires when isImporting becomes true, not just on popover
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/photos/hooks/usePopoverTransition.ts:19-23`
+
+**Impact**: The `shouldHideUI` parameter is `popoverVisible || isImporting`. When the user starts importing a photo (without the popover being visible), `Keyboard.dismiss()` fires. If the search bar was focused, the keyboard dismisses unexpectedly. This is a behavioral issue more than a performance issue, but the dismiss-during-import causes an unnecessary layout reflow (keyboard animation + view resize) that competes with the import processing.
+
+**Solution**: Track the actual intent separately.
+
+```typescript
+export function usePopoverTransition(shouldHideUI: boolean, dismissKeyboard: boolean = shouldHideUI) {
+  // ...
+  useEffect(() => {
+    if (dismissKeyboard) {
+      Keyboard.dismiss();
+    }
+  }, [dismissKeyboard]);
+  // ...
+}
+```
+
+Caller in `index.tsx`:
+```typescript
+const { searchBarStyle, buttonStyle } =
+  usePopoverTransition(popoverVisible || isImporting, popoverVisible);
+```
+
+### 7. sources.find() on every render in SourceSelector
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/source-selector/components/SourceSelector.tsx:74`
+
+**Impact**: `const selectedSourceName = sources.find((s) => s.id === value)?.name ?? ""` runs on every render, outside of `useMemo`. For a list of <50 sources this is sub-microsecond, but it violates the project's own memoization convention from `AGENTS.md` ("Wrap all returned objects in useMemo").
+
+**Solution**:
+```typescript
+const selectedSourceName = useMemo(
+  () => sources.find((s) => s.id === value)?.name ?? "",
+  [sources, value]
+);
+```
+
+### 8. Module-level sourcesPromise singleton never resets
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx:28-35`
+
+**Impact**: The module-level `let sourcesPromise` is set once and never cleared. If `SourcesProvider` unmounts and remounts (e.g., during navigation reset or hot reload), the stale promise delivers the original data, ignoring any changes persisted since then. The same pattern exists in `RecipesContext.tsx:37-44`.
+
+**Root Cause**: This is a standard React 18/19 Suspense + `use()` pattern for initial data loading. The singleton avoids waterfall fetches. But it assumes the provider is mounted once for the app's lifetime.
+
+**Solution**: Reset the promise when `refresh()` is called, and ensure the provider handles remounts.
+
+```typescript
+function getSourcesPromise(): Promise<Array<Source>> {
+  if (!sourcesPromise) {
+    sourcesPromise = sourceRepository.getAll();
+  }
+  return sourcesPromise;
+}
+
+// Add to refresh:
+const refresh = useCallback(async (): Promise<void> => {
+  const freshSources = await sourceRepository.getAll();
+  sourcesPromise = Promise.resolve(freshSources); // Update singleton
+  setSources(freshSources);
+}, []);
+```
+
+---
+
+## Strengths
+
+- The context providers correctly use `useMemo` for the value object, preventing unnecessary consumer re-renders from value identity changes.
+- `useCallback` discipline is consistent throughout -- callbacks are properly memoized with correct dependency arrays.
+- The `recipeCounts` computation in `manage-books.tsx` correctly uses `useMemo` with a Map for O(1) lookups per source.
+- The Reanimated `useSharedValue` / `useAnimatedStyle` pattern in `SwipeableBookRow` correctly keeps gesture-driven animations on the UI thread.
+- The `isDeletingRef` guard prevents double-tap race conditions on delete.
+
+## Systemic Patterns
+
+**Read-then-write repository anti-pattern**: Both `SourceRepository` and `AsyncStorageRecipeRepository` follow the same pattern where every mutation reads the full dataset, modifies it, and writes it back. This is inherent to using a flat key-value store (AsyncStorage) for relational data. At current scale (personal recipe app, likely <500 recipes) this is acceptable. If the dataset grows past ~1000 records, consider SQLite via `expo-sqlite` or `op-sqlite` which supports indexed queries, batch operations, and transactions natively.
+
+**Context granularity**: Both `RecipesContext` and `SourcesContext` expose a single context with all data and all mutation functions. Any change to `recipes` or `sources` re-renders every consumer, even those that only need a single function like `deleteRecipe`. At current consumer count (9 for recipes, 5 for sources) this is manageable. If the number of consumers grows, consider splitting read (data) and write (actions) into separate contexts so action-only consumers don't re-render on data changes.</result>
+<usage><total_tokens>46376</total_tokens><tool_uses>21</tool_uses><duration_ms>111803</duration_ms></usage>
+</task-notification>
+Full transcript available at: REDACTED.output
+
+---
+
+<task-notification>
+<task-id>a14c408b45f2f9382</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<status>completed</status>
+<summary>Agent "Architecture & design review" completed</summary>
+<result>I now have a complete picture. Here is the review.
+
+---
+
+# Code Review: Source Entity Model + Manage Books Screen + Overflow Menu
+
+## Review Metrics
+- **Files Reviewed**: 22
+- **Critical Issues**: 0
+- **High Priority**: 4
+- **Medium Priority**: 5
+- **Low Priority**: 3
+- **Suggestions**: 3
+
+## Executive Summary
+
+The data model migration from string-based source history to ID-based Source entities is well-motivated and cleanly executed. The spec was thorough and the implementation follows it faithfully. The `SourcesContext` mirrors the established `RecipesContext` pattern exactly. The main architectural concerns are: (1) a module-level singleton promise that never resets after mutations, (2) the `RecipeMetadata.source` type not being updated to reflect its new semantics, (3) duplicated business logic between the repository and context layers, and (4) the `app/index.tsx` screen accumulating presentational complexity that should be factored out.
+
+---
+
+## HIGH Priority (Fix Before Merge)
+
+### 1. Stale module-level `sourcesPromise` after mutations
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx:28-35`
+
+**Impact**: If `SourcesProvider` ever remounts (e.g., after a navigation reset, error boundary recovery, or Fast Refresh during development), `use(getSourcesPromise())` returns the original stale promise from first mount. The in-memory `sources` state diverges from what the user sees after creating/deleting/renaming sources.
+
+**Root Cause**: The module-scoped `sourcesPromise` is assigned once and never invalidated. The `RecipesContext` has the same pattern and the same latent bug, but the risk is higher here because `SourcesProvider` wraps the entire app and source mutations are now frequent (CRUD screen).
+
+```typescript
+// Current
+let sourcesPromise: Promise<Array<Source>> | null = null;
+
+function getSourcesPromise(): Promise<Array<Source>> {
+  if (!sourcesPromise) {
+    sourcesPromise = sourceRepository.getAll();
+  }
+  return sourcesPromise;
+}
+```
+
+**Solution**: Invalidate the cached promise when any mutation occurs so that a remount fetches fresh data.
+
+```typescript
+let sourcesPromise: Promise<Array<Source>> | null = null;
+
+function getSourcesPromise(): Promise<Array<Source>> {
+  if (!sourcesPromise) {
+    sourcesPromise = sourceRepository.getAll();
+  }
+  return sourcesPromise;
+}
+
+function invalidateSourcesPromise(): void {
+  sourcesPromise = null;
+}
+```
+
+Then call `invalidateSourcesPromise()` at the end of every mutation callback (`createSource`, `renameSource`, `deleteSource`, `touchSource`, `refresh`). This ensures any future remount fetches current data. The same fix should be applied to `RecipesContext` separately.
+
+---
+
+### 2. `RecipeMetadata.source` type does not reflect the semantic change
+
+**File**: `/Users/eryk.napierala/Development/fasola/lib/types/recipe.ts:14-18`
+
+**Impact**: The `source` field's runtime semantics changed from "human-readable name string" to "SourceId or URL string," but the type definition was not updated. Developers reading the type see `source?: string` (or the existing URL template literals) and have no indication that non-URL values are now opaque UUIDs rather than display names. The spec explicitly calls for this update.
+
+**Current**:
+```typescript
+export interface RecipeMetadata {
+  title?: string;
+  source?: `https://${string}` | `http://${string}` | string;
+  tags: Array<`#${string}`>;
+}
+```
+
+**Solution**: Use the `SourceId` type to make the semantic change visible at the type level.
+
+```typescript
+import type { SourceId } from "./primitives";
+
+export interface RecipeMetadata {
+  title?: string;
+  source?: SourceId | `https://${string}` | `http://${string}`;
+  tags: Array<`#${string}`>;
+}
+```
+
+The union `SourceId | URL literal` is redundant with the current alias (`SourceId = string`), but it documents intent and will catch errors if `SourceId` is ever branded. This is what the spec prescribed.
+
+---
+
+### 3. Duplicated `getLastUsed` business logic across repository and context
+
+**Files**:
+- `/Users/eryk.napierala/Development/fasola/lib/repositories/sources.ts:69-76`
+- `/Users/eryk.napierala/Development/fasola/features/sources/context/SourcesContext.tsx:88-95`
+
+**Impact**: The 24-hour threshold rule is implemented in two places with identical logic. If the business rule changes (e.g., 12-hour window, or "most recent regardless of time"), both must be updated in lockstep. One will inevitably be missed.
+
+**Root Cause**: The context reimplements `getLastUsed` synchronously from in-memory state because calling the async repository method would be unnecessary overhead. Reasonable motivation, but the duplication is a maintenance trap.
+
+**Solution**: Extract the 24-hour threshold constant and the selection logic into a shared pure function in the `Source` type module.
+
+```typescript
+// lib/types/source.ts
+export const SOURCE_RECENCY_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
+export function findLastUsedSource(sources: Array<Source>): Source | null {
+  if (sources.length === 0) return null;
+  const sorted = [...sources].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  const mostRecent = sorted[0];
+  return Date.now() - mostRecent.lastUsedAt < SOURCE_RECENCY_THRESHOLD_MS
+    ? mostRecent
+    : null;
+}
+```
+
+Both the repository and context call this function. The repository can pass its already-sorted array; the context can pass its in-memory array.
+
+---
+
+### 4. `useSourceName` parameter type is `string | undefined` instead of `SourceId | undefined`
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/hooks/useSourceName.ts:5`
+
+**Impact**: Minor type-safety gap. The parameter should be `SourceId | undefined` (or the full union from `RecipeMetadata.source`) to match the semantic type alias convention enforced in `AGENTS.md`. Using bare `string` here defeats the purpose of introducing `SourceId`.
+
+**Current**:
+```typescript
+export function useSourceName(source: string | undefined): {
+```
+
+**Solution**:
+```typescript
+export function useSourceName(source: SourceId | `https://${string}` | `http://${string}` | undefined): {
+```
+
+Or, if that's too verbose, at minimum:
+```typescript
+import type { SourceId } from "@/lib/types/primitives";
+
+export function useSourceName(source: SourceId | string | undefined): {
+```
+
+This keeps the `SourceId` alias visible at call sites.
+
+---
+
+## MEDIUM Priority (Fix Soon)
+
+### 5. `app/index.tsx` accumulating unrelated UI concerns
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/index.tsx`
+
+**Impact**: The `Content` component now manages two independent popover state machines (import popover + overflow popover), the recipe grid, the search bar, keyboard avoidance, and z-index layering. This is trending toward a god component. Adding a third popover or toolbar element will make the file unwieldy.
+
+**Root Cause**: Route files in `app/` are acting as both screen layout and interaction orchestrators. The established pattern in `features/` (separating hooks, components, context) isn't being applied at the screen level.
+
+**Solution**: Extract the overflow menu into its own component within a `features/overflow-menu/` or similar module. The component would own its visibility state, haptic feedback, option list, and popover rendering. The screen file would just place it:
+
+```typescript
+// In app/index.tsx
+<OverflowMenu onHide={...} />
+```
+
+This also avoids the cross-popover `pointerEvents` coordination being managed with inline boolean expressions.
+
+---
+
+### 6. Sequential recipe deletion in cascade is O(n) with individual awaits
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx:259-262`
+
+**Impact**: Deleting a book with many recipes issues one storage write per recipe, sequentially. Each `deleteRecipe` calls `recipeRepository.delete` which reads the full array, filters, and writes it back. For a book with 50 recipes, that's 50 sequential read-filter-write cycles on the same storage key.
+
+```typescript
+for (const r of recipesToDelete) {
+  await deleteRecipe(r.id);
+}
+```
+
+The spec actually prescribed `Promise.all`:
+
+```typescript
+await Promise.all(recipesToDelete.map((r) => deleteRecipe(r.id)));
+```
+
+But even `Promise.all` is problematic here because each `deleteRecipe` does a full read-filter-write cycle on the same storage key, creating a race condition where concurrent writes can lose data.
+
+**Solution (short-term)**: The sequential approach is actually safer than `Promise.all` given the current repository implementation, so keep the `for...of` loop. But add a `deleteMany` method to `RecipeRepository` that performs a single read, filters out all target IDs, and writes once:
+
+```typescript
+async deleteMany(ids: Set<RecipeId>): Promise<void> {
+  const recipes = await this.getAll();
+  const filtered = recipes.filter((r) => !ids.has(r.id));
+  await storage.setItem(RECIPES_KEY, JSON.stringify(filtered));
+  // Photo/thumbnail cleanup for each
+  for (const id of ids) { /* cleanup logic */ }
+}
+```
+
+This reduces O(n) storage round-trips to O(1).
+
+---
+
+### 7. SwiftUI anchor uses raw string comparison instead of an enum
+
+**File**: `/Users/eryk.napierala/Development/fasola/modules/liquid-glass/ios/LiquidGlassPopoverView.swift:253-280`
+
+**Impact**: The anchor parameter is a raw `String` with `== "topTrailing"` comparison. Typos in the string (from JS or Swift side) silently fall through to the `else` branch. No compiler help.
+
+```swift
+if anchor == "topTrailing" {
+  // ...
+} else {
+  // bottomTrailing (default)
+}
+```
+
+**Solution**: Define a Swift enum and convert from the string prop value.
+
+```swift
+enum PopoverAnchor: String {
+  case bottomTrailing
+  case topTrailing
+}
+
+// In anchoredLayout:
+let resolvedAnchor = PopoverAnchor(rawValue: anchor) ?? .bottomTrailing
+switch resolvedAnchor {
+case .topTrailing: ...
+case .bottomTrailing: ...
+}
+```
+
+This ensures exhaustive handling when new anchors are added.
+
+---
+
+### 8. `SourceDisplay` parameter type is still `string | undefined` 
+
+**File**: `/Users/eryk.napierala/Development/fasola/lib/components/atoms/SourceDisplay.tsx:18-20`
+
+**Impact**: Same issue as `useSourceName`. The `source` prop should use the semantic type alias. This component lives in `lib/components/atoms/`, a shared layer -- using a bare `string` prop when the value is always a `SourceId` or URL obscures the contract.
+
+```typescript
+export function SourceDisplay({
+  source,
+  style,
+}: {
+  source?: string;  // Should be SourceId | URL | undefined
+  style?: object;
+}): JSX.Element | null {
+```
+
+---
+
+### 9. Magic number 28 repeated across files for spacing
+
+**Files**: Multiple -- `/Users/eryk.napierala/Development/fasola/app/index.tsx:189,214`, `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx:403,436,443`, `/Users/eryk.napierala/Development/fasola/modules/liquid-glass/ios/LiquidGlassPopoverView.swift:92-93`
+
+**Impact**: The value `28` appears as a magic number in both TypeScript (popover offset defaults, style padding) and Swift (default `buttonOffsetX`/`buttonOffsetY`). Changing the app's edge inset requires finding and updating every occurrence.
+
+**Solution**: Define a shared layout constant (e.g., `SCREEN_EDGE_INSET = 28`) in a layout/spacing module and reference it from all sites. The Swift side can receive it as a prop default from JS rather than hardcoding its own default.
+
+---
+
+## LOW Priority (Opportunities)
+
+### 10. `SourceRepository` reads the full array for every single operation
+
+**File**: `/Users/eryk.napierala/Development/fasola/lib/repositories/sources.ts`
+
+Every method (`getById`, `create`, `rename`, `delete`, `touch`) calls `this.getAll()` which deserializes the entire JSON array from storage. This is fine at the expected scale (dozens of sources), but the pattern doesn't scale. If this ever becomes a performance concern, the fix is to cache the parsed array in the class instance and invalidate on writes. Not urgent -- just noting the pattern.
+
+---
+
+### 11. `handleBack` wraps `router.back()` in `useCallback` unnecessarily
+
+**File**: `/Users/eryk.napierala/Development/fasola/app/manage-books.tsx:211-213`
+
+```typescript
+const handleBack = useCallback(() => {
+  router.back();
+}, []);
+```
+
+`router.back` is a stable function from `expo-router`. The `useCallback` wrapper with an empty dependency array is equivalent to passing `router.back` directly. Not harmful, but adds noise.
+
+---
+
+### 12. `features/sources/` has no barrel `index.ts` export
+
+**File**: `/Users/eryk.napierala/Development/fasola/features/sources/`
+
+The `features/source-selector/` module has an `index.ts` barrel file. The new `features/sources/` module does not. Consumers import directly from `@/features/sources/context/SourcesContext` and `@/features/sources/hooks/useSourceName`. A barrel file would provide a cleaner public API and make it easier to refactor internals.
+
+---
+
+## Strengths
+
+- **Spec fidelity**: The implementation matches the spec almost line-for-line. The phased approach (entity model, consumer migration, CRUD screen, gestures, overflow menu) produced a clean, reviewable diff.
+
+- **Context pattern consistency**: `SourcesContext` mirrors `RecipesContext` exactly -- same `use()` preloading, same module-scoped promise cache, same `useMemo`-wrapped context value, same guard hook. A developer familiar with one immediately understands the other.
+
+- **Clean deletion of old code**: `sourceHistory.ts` and `useSourceHistory.ts` are fully removed with no orphaned imports. The migration is complete, not partial.
+
+- **Native module extension is minimal and backward-compatible**: The `anchor` and `buttonOffset` props default to the existing behavior. No existing call sites need changes.
+
+- **`usePopoverTransition` simplification**: Reducing from `(popoverVisible, isImporting)` to a single `shouldHideUI` boolean moves the concern of "what constitutes hidden UI" to the caller, which is the correct responsibility boundary. The hook becomes reusable for the overflow menu without modification.
+
+- **`useSourceName` as a thin synchronous hook**: Avoids async lookups, prevents UI flicker, and cleanly encapsulates the URL-vs-ID branching logic. Components that display source names don't need to know about the ID system.
+
+---
+
+## Systemic Patterns
+
+**Repository-per-entity with full JSON serialization on every operation**: Both `SourceRepository` and `RecipeRepository` store the entire entity collection as a single JSON blob in `AsyncStorage`. Every read deserializes all entities; every write serializes and overwrites all entities. This is adequate for the current scale but creates a structural ceiling. If entity counts grow, consider indexing by ID in separate storage keys, or introducing an in-memory cache at the repository layer. The preloaded-context pattern already provides the cache for reads; the gap is write-side efficiency.
+
+**Screen files (`app/`) accumulating orchestration logic**: `app/index.tsx` and `app/manage-books.tsx` both contain significant interaction logic (popover state machines, gesture handling, delete cascades). The `features/` directory structure exists to house this complexity, but it's not being used for screen-level interactions. Establishing a convention -- screen files compose feature components, they don't implement features -- would keep the `app/` directory lean as the app grows.</result>
+<usage><total_tokens>59241</total_tokens><tool_uses>32</tool_uses><duration_ms>141573</duration_ms></usage>
+</task-notification>
+Full transcript available at: REDACTED.output

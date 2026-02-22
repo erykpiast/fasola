@@ -3,13 +3,14 @@
   "checkpoint_id": "296199786b15",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 22,
+  "checkpoints_count": 32,
   "files_touched": [
     "app/_layout.tsx",
     "app/index.tsx",
     "app/manage-books.tsx",
     "app/recipe/add.tsx",
     "features/photos/hooks/useImportPopover.ts",
+    "features/photos/hooks/usePopoverTransition.ts",
     "features/recipe-form/components/AddRecipeForm.tsx",
     "features/recipe-form/hooks/useRecipeForm.ts",
     "features/recipe-preview/components/MetadataOverlay.tsx",
@@ -90,13 +91,20 @@
       "context": "/29/6199786b15/6/context.md",
       "content_hash": "/29/6199786b15/6/content_hash.txt",
       "prompt": "/29/6199786b15/6/prompt.txt"
+    },
+    {
+      "metadata": "/29/6199786b15/7/metadata.json",
+      "transcript": "/29/6199786b15/7/full.jsonl",
+      "context": "/29/6199786b15/7/context.md",
+      "content_hash": "/29/6199786b15/7/content_hash.txt",
+      "prompt": "/29/6199786b15/7/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 4306,
-    "cache_creation_tokens": 1197777,
-    "cache_read_tokens": 31050576,
-    "output_tokens": 136164,
-    "api_call_count": 361
+    "input_tokens": 4378,
+    "cache_creation_tokens": 1377653,
+    "cache_read_tokens": 33109361,
+    "output_tokens": 140372,
+    "api_call_count": 399
   }
 }

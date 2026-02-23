@@ -20,7 +20,6 @@ the most out of their cook books.
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
@@ -53,11 +52,3 @@ This app uses custom native modules (like `expo-text-extractor` for OCR) that re
 4. **Open the app** on your iPhone and it will connect to the development server
 
 **Note:** Apps signed with a free Apple Developer account expire after 7 days and need to be rebuilt.
-
-### Android Device
-
-```bash
-npx expo run:android --device
-```
-
-Then start the development server with `npx expo start --dev-client`.

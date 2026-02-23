@@ -7,6 +7,8 @@ const SF_SYMBOL_TO_IONICON: Record<string, string> = {
   xmark: "close",
   checkmark: "checkmark",
   plus: "add",
+  "info.circle": "information-circle-outline",
+  envelope: "mail-outline",
 };
 
 export function LiquidGlassButton({

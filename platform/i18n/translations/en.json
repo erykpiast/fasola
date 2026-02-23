@@ -71,7 +71,8 @@
     "heading": "Your recipes"
   },
   "menu": {
-    "manageBooks": "Your Books"
+    "manageBooks": "Your Books",
+    "about": "About"
   },
   "manageBooks": {
     "title": "Your Books",
@@ -86,6 +87,21 @@
     "deleteConfirmMessage": "This cannot be undone. All {{count}} recipes imported from this book will be permanently removed.",
     "deleteConfirmCancel": "Cancel",
     "deleteConfirmAction": "Delete"
+  },
+  "about": {
+    "title": "About fasola",
+    "intro": "fasola is a recipes manager built with passion for software, food and books.",
+    "onDevice": "Your data stays on your device — no cloud, no accounts.",
+    "openSource": "The app is open-source.",
+    "githubLink": "View source on GitHub",
+    "author": "Author",
+    "authorEmail": "eryk.napierala@gmail.com",
+    "authorCopyright": "\u00a9 2026 Eryk Napiera\u0142a",
+    "authorBio": "Product developer based in Wrocław, Poland. Married to a cooking enthusiast who got tired of bookmarking recipes and losing them.",
+    "getHelp": "Get help",
+    "helpText1": "Have idea for a feature, found a bug, or just want to say hi? I'd love to hear from you.",
+    "helpText2": "Just drop me an e-mail!",
+    "helpCta": "Send feedback"
   },
   "processing": {
     "messages": {

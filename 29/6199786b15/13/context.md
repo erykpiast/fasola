@@ -254,3 +254,28 @@ Please review these aspects of your changes:
 
 💡 **Tip:** The code-review-e...
 
+### Prompt 19
+
+The action button/label must be vertically centered for multiline list items. For single line it should be position with exact margins as it's today.
+
+### Prompt 20
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The cod...
+

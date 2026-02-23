@@ -6,7 +6,6 @@
   "checkpoints_count": 62,
   "files_touched": [
     "app/_layout.tsx",
-    "app/about.tsx",
     "app/index.tsx",
     "app/manage-books.tsx",
     "app/recipe/add.tsx",
@@ -35,7 +34,6 @@
     "lib/types/source.ts",
     "modules/liquid-glass/ios/LiquidGlassModule.swift",
     "modules/liquid-glass/ios/LiquidGlassPopoverView.swift",
-    "modules/liquid-glass/src/LiquidGlassButton.tsx",
     "modules/liquid-glass/src/LiquidGlassInput.ios.tsx",
     "modules/liquid-glass/src/LiquidGlassInput.tsx",
     "modules/liquid-glass/src/LiquidGlassInput.types.ts",
@@ -148,10 +146,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 5680,
-    "cache_creation_tokens": 2866477,
-    "cache_read_tokens": 44086563,
-    "output_tokens": 178364,
-    "api_call_count": 560
+    "input_tokens": 5645,
+    "cache_creation_tokens": 2918936,
+    "cache_read_tokens": 41827491,
+    "output_tokens": 175361,
+    "api_call_count": 537
   }
 }

@@ -1,9 +1,9 @@
 {
-  "cli_version": "0.4.4",
+  "cli_version": "0.4.2",
   "checkpoint_id": "296199786b15",
   "strategy": "manual-commit",
   "branch": "feat/book_management",
-  "checkpoints_count": 74,
+  "checkpoints_count": 62,
   "files_touched": [
     "app/_layout.tsx",
     "app/about.tsx",
@@ -148,10 +148,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 6486,
-    "cache_creation_tokens": 2974388,
-    "cache_read_tokens": 44289595,
-    "output_tokens": 182774,
-    "api_call_count": 580
+    "input_tokens": 5680,
+    "cache_creation_tokens": 2866477,
+    "cache_read_tokens": 44086563,
+    "output_tokens": 178364,
+    "api_call_count": 560
   }
 }

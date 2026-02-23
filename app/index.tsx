@@ -26,6 +26,12 @@ import { useTranslation } from "../platform/i18n/useTranslation";
 import { getColors } from "../platform/theme/glassStyles";
 import { useTheme } from "../platform/theme/useTheme";
 
+const HEADER_TOP_GAP = 8;
+// NOTE: 61 makes the gap above the three global menu button equal to the gap below
+const HEADER_ROW_HEIGHT = 61;
+const HEADER_BOTTOM_GAP = 8;
+const HEADER_AREA_HEIGHT = HEADER_TOP_GAP + HEADER_ROW_HEIGHT + HEADER_BOTTOM_GAP;
+
 function ErrorFallback({ error }: { error?: Error }): JSX.Element {
   return (
     <View style={styles.errorContainer}>
@@ -74,14 +80,17 @@ function Content(): JSX.Element {
       {recipes.length === 0 ? (
         <EmptyState />
       ) : (
-        <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} />
+        <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} headerInset={HEADER_AREA_HEIGHT} />
       )}
 
-      {/* Overflow menu button - top right */}
+      {/* Header row - title + overflow menu button */}
       <Animated.View
-        style={[styles.overflowButton, { top: insets.top + 8 }, globalOptions.buttonStyle]}
+        style={[styles.headerRow, { top: insets.top + HEADER_TOP_GAP }, globalOptions.buttonStyle]}
         pointerEvents={popoverVisible || globalOptions.visible ? "none" : "auto"}
       >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {t("library.heading")}
+        </Text>
         <LiquidGlassButton
           onPress={globalOptions.handlePress}
           systemImage="ellipsis"
@@ -135,7 +144,7 @@ function Content(): JSX.Element {
         <LiquidGlassPopover
           visible={globalOptions.visible}
           anchor="topTrailing"
-          buttonOffset={{ x: 28, y: insets.top + 8 }}
+          buttonOffset={{ x: 28, y: insets.top + HEADER_TOP_GAP }}
           options={globalOptions.options}
           buttonSize={48}
           onSelect={globalOptions.handleSelect}
@@ -160,10 +169,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  overflowButton: {
+  headerRow: {
     position: "absolute",
+    left: 28,
     right: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 10,
+    height: 48,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "bold",
   },
   popoverLayer: {
     zIndex: 11,

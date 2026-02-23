@@ -67,6 +67,9 @@
   "import": {
     "confirmHint": "Confirming in {seconds}s..."
   },
+  "library": {
+    "heading": "Your recipes"
+  },
   "menu": {
     "manageBooks": "Manage Books"
   },

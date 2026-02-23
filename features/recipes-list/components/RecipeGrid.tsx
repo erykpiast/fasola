@@ -42,15 +42,17 @@ function RecipeItem({
 export function RecipeGrid({
   recipes,
   onRecipeTap,
+  headerInset = 0,
 }: {
   recipes: Array<Recipe>;
   onRecipeTap?: (id: RecipeId) => void;
+  headerInset?: number;
 }): JSX.Element {
   const insets = useSafeAreaInsets();
 
   const contentContainerStyle = useMemo(
-    () => ({ ...styles.container, paddingTop: insets.top }),
-    [insets.top]
+    () => ({ ...styles.container, paddingTop: insets.top + headerInset }),
+    [insets.top, headerInset]
   );
 
   const renderItem = useCallback(

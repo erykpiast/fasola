@@ -71,10 +71,10 @@
     "heading": "Your recipes"
   },
   "menu": {
-    "manageBooks": "Manage Books"
+    "manageBooks": "Your Books"
   },
   "manageBooks": {
-    "title": "Manage Books",
+    "title": "Your Books",
     "addBook": "Add Book",
     "emptyState": "No books yet",
     "recipeCount_one": "{{count}} recipe",

@@ -1,0 +1,177 @@
+Implement the following plan:
+
+# Fix: ProcessingIndicator not visible on recipe preview
+
+## Context
+
+When a recipe is pending or processing, the `ProcessingIndicator` component is correctly mounted (the same `recipe.status` check that disables the edit button also gates the indicator), but it renders as 0x0 pixels due to a layout collapse.
+
+## Root Cause
+
+In `RecipeViewScreen.tsx` (line 95), the wrapper `<View pointerEvents="none">` has **no style**. All its children use `position: "absolute"`:
+
+- `MetadataOverlay` — absolute, but specifies its own height via padding/content, so it overflows and remains visible
+- `ProcessingIndicator` — absolute with `top:0, left:0, right:0, bottom:0`, so its dimensions are **derived from the parent**. Parent is 0x0 → indicator is 0x0
+- `DebugVisualization` — absolute
+
+Since no child contributes intrinsic height, the parent View collapses to 0x0. ProcessingIndicator inherits that zero size.
+
+## Fix
+
+Add `StyleSheet.absoluteFillObject` to the wrapper View at line 95 of `features/recipe-preview/components/RecipeViewScreen.tsx`:
+
+```tsx
+// Before:
+<View pointerEvents="none">
+
+// After:
+<View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+```
+
+This makes the View fill the overlay Animated.View. Since it's absolutely positioned, it doesn't affect the sibling button layout. `pointerEvents="none"` already ensures touches pass through to the buttons.
+
+### File to modify
+- `features/recipe-preview/components/RecipeViewScreen.tsx` — line 95 only
+
+## Verification
+
+1. Import a new photo and navigate to its recipe preview while processing is in progress
+2. Confirm the ActivityIndicator spinner and rotating progress messages appear centered on screen
+3. Confirm the edit button remains disabled during processing
+4. Confirm the back, delete, and edit buttons remain tappable (not blocked by the pointer-events-none overlay)
+5. Confirm MetadataOverlay still displays correctly on ready recipes
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+let's add the radial gradient to the overlay, the loading overlay, from transparency in the middle to black on the edges, so it looks like a vignette effect on the photo or something.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Actually, let's do the opposite - black in the middle, transparent on edges. The gradient must be RADIAL
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+To clear this warning, run:
+`watchman watch-del '/Users/eryk.napierala/Development/fasola' ; watchman watch-project '/Users/eryk.napierala/Development/fasola'`
+
+λ Bundling failed 6ms node_modules/.pnpm/expo-router@6.0.12_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.9_expo-_2nn2bddfug6zsbnq3ei6hmd4gy/node_modules/expo-router/node/render.js (1 module)
+
+Metro error: ENOENT: no such file or directory, open '/Users/eryk.napierala/Development/fasola/node_modules/.pnpm/expo-router@6.0.12_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.9_expo-_2nn2bddfug6zsbnq3ei6hmd4gy/node_modules/expo-router/node_modules/@react-navigation/native/package.json'
+
+Import stack:
+
+ node_modules/.pnpm/expo-router@6.0.12_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.REDACTED.js
+ | import "@react-navigation/native"
+
+ node_modules/.pnpm/expo-router@6.0.12_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.9_expo-_2nn2bddfug6zsbnq3ei6hmd4gy/node_modules/expo-router/node/render.js
+ | import "expo-router/build/static/renderStaticContent"
+
+ 
+ | import "expo-router/node/render.js"
+
+
+
+Web Bundling failed 177ms node_modules/.pnpm/expo-router@6.0.12_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.REDACTED.js (215 modules)
+
+---
+
+Can we make the gradient an ellipse rather than a circle? Like 80% of the screen width and 100 px height?
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

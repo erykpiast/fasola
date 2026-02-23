@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "296199786b15",
+  "session_id": "7f3bee3d-9198-4540-81a0-5574159819f9",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-23T21:54:08.738005Z",
+  "branch": "feat/book_management",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/manage-books.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "ee98b979-a7a5-424a-9f8e-18cf474ee771",
+  "token_usage": {
+    "input_tokens": 16,
+    "cache_creation_tokens": 49516,
+    "cache_read_tokens": 452548,
+    "output_tokens": 5106,
+    "api_call_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-23T21:54:08.639525Z",
+    "agent_lines": 203,
+    "human_added": 30,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 233,
+    "agent_percentage": 87.1244635193133
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/7f3bee3d-9198-4540-81a0-5574159819f9.jsonl"
+}

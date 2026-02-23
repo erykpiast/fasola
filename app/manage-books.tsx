@@ -11,11 +11,12 @@ import { useTheme } from "@/platform/theme/useTheme";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useCallback, useMemo, useRef, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 import {
   KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,6 +25,9 @@ import {
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  type SharedValue,
+  interpolate,
+  interpolateColor,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -31,7 +35,30 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const SWIPE_THRESHOLD = 80;
+function useActionButtonScale(
+  translateX: SharedValue<number>,
+  sign: 1 | -1
+): { transform: Array<{ scale: number }>; opacity: number } {
+  return useAnimatedStyle(() => {
+    const w = Math.max(sign * translateX.value - BUTTON_GAP, 0);
+    if (w <= SCALE_MIN_WIDTH) {
+      return { transform: [{ scale: 0 }], opacity: 0 };
+    }
+    if (w < BUTTON_SCALE_THRESHOLD) {
+      const s =
+        (w - SCALE_MIN_WIDTH) / (BUTTON_SCALE_THRESHOLD - SCALE_MIN_WIDTH);
+      return { transform: [{ scale: s }], opacity: s };
+    }
+    return { transform: [{ scale: 1 }], opacity: 1 };
+  });
+}
+
+const SWIPE_THRESHOLD = 60;
+const ACTION_BUTTON_WIDTH = 80;
+const BUTTON_GAP = 12;
+const BUTTON_CONTENT_WIDTH = ACTION_BUTTON_WIDTH - BUTTON_GAP;
+const BUTTON_SCALE_THRESHOLD = BUTTON_CONTENT_WIDTH;
+const SCALE_MIN_WIDTH = 10;
 
 function SwipeableBookRow({
   source,
@@ -60,83 +87,165 @@ function SwipeableBookRow({
   const isDark = theme === "dark";
   const textColor = isDark ? "#FFFFFF" : "#000000";
   const translateX = useSharedValue(0);
+  const startX = useSharedValue(0);
   const isEditing = editingSourceId === source.id;
+  const isEditingShared = useSharedValue(isEditing);
+
+  isEditingShared.value = isEditing;
+
+  useEffect(() => {
+    translateX.value = withSpring(isEditing ? ACTION_BUTTON_WIDTH : 0);
+  }, [isEditing, translateX]);
 
   const triggerDelete = useCallback(() => {
+    translateX.value = withSpring(0);
     onDelete(source.id);
-  }, [source.id, onDelete]);
+  }, [source.id, onDelete, translateX]);
 
-  const triggerEdit = useCallback(() => {
-    onStartEdit(source.id);
-  }, [source.id, onStartEdit]);
+  const handleEditPress = useCallback(() => {
+    if (isEditing) {
+      onConfirmEdit();
+    } else {
+      onStartEdit(source.id);
+    }
+  }, [isEditing, onConfirmEdit, onStartEdit, source.id]);
 
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
+    .onStart(() => {
+      startX.value = translateX.value;
     })
-    .onEnd((event) => {
+    .onUpdate((event) => {
+      const raw = startX.value + event.translationX;
+      const limit = ACTION_BUTTON_WIDTH * 1.5;
+      translateX.value = Math.max(-limit, Math.min(limit, raw));
+    })
+    .onEnd(() => {
+      if (isEditingShared.value) {
+        if (translateX.value < SWIPE_THRESHOLD / 2) {
+          translateX.value = withSpring(0);
+          runOnJS(onCancelEdit)();
+        } else {
+          translateX.value = withSpring(ACTION_BUTTON_WIDTH);
+        }
+      } else {
+        if (translateX.value < -SWIPE_THRESHOLD) {
+          translateX.value = withSpring(-ACTION_BUTTON_WIDTH);
+        } else if (translateX.value > SWIPE_THRESHOLD) {
+          translateX.value = withSpring(ACTION_BUTTON_WIDTH);
+        } else {
+          translateX.value = withSpring(0);
+        }
+      }
+    });
+
+  const tap = Gesture.Tap().onEnd(() => {
+    if (Math.abs(translateX.value) > 10 && !isEditingShared.value) {
       translateX.value = withSpring(0);
-      if (event.translationX < -SWIPE_THRESHOLD) {
-        runOnJS(triggerDelete)();
-      } else if (event.translationX > SWIPE_THRESHOLD) {
-        runOnJS(triggerEdit)();
-      }
-    });
+    }
+  });
 
-  const cancelPan = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .failOffsetY([-10, 10])
-    .onEnd((event) => {
-      if (event.translationX > SWIPE_THRESHOLD) {
-        runOnJS(onCancelEdit)();
-      }
-    });
+  const gesture = Gesture.Race(pan, tap);
 
-  const contentStyle = useAnimatedStyle(() => ({
+  const contentAnimStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
-  const deleteBackgroundStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value < 0 ? Math.min(1, -translateX.value / SWIPE_THRESHOLD) : 0,
+  const contentBgStyle = useAnimatedStyle(() => {
+    const absX = Math.abs(translateX.value);
+    const progress = Math.min(absX / SWIPE_THRESHOLD, 1);
+    const bgColor = interpolateColor(
+      progress,
+      [0, 1],
+      isDark
+        ? ["rgba(44,43,45,0)", "#2c2b2d"]
+        : ["rgba(128,128,128,0)", "rgba(128,128,128,0.12)"]
+    );
+    return {
+      backgroundColor: bgColor,
+      borderRadius: interpolate(progress, [0, 1], [0, 21]),
+    };
+  });
+
+  const editButtonWidthStyle = useAnimatedStyle(() => ({
+    width: translateX.value > BUTTON_GAP ? translateX.value - BUTTON_GAP : 0,
+    opacity: translateX.value > BUTTON_GAP ? 1 : 0,
   }));
 
-  const editBackgroundStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value > 0 ? Math.min(1, translateX.value / SWIPE_THRESHOLD) : 0,
+  const deleteButtonWidthStyle = useAnimatedStyle(() => ({
+    width: -translateX.value > BUTTON_GAP ? -translateX.value - BUTTON_GAP : 0,
+    opacity: -translateX.value > BUTTON_GAP ? 1 : 0,
   }));
+
+  const editScaleStyle = useActionButtonScale(translateX, 1);
+  const deleteScaleStyle = useActionButtonScale(translateX, -1);
 
   return (
-    <GestureDetector gesture={isEditing ? cancelPan : pan}>
-      <Animated.View>
-        {/* Delete background (swipe left) */}
-        <Animated.View
-          style={[
-            styles.actionBackground,
-            styles.deleteBackground,
-            deleteBackgroundStyle,
-          ]}
+    <View style={styles.rowContainer}>
+      {/* Edit button - left */}
+      <Animated.View
+        style={[
+          styles.actionButtonContainer,
+          styles.editButtonContainer,
+          editButtonWidthStyle,
+        ]}
+      >
+        <Pressable
+          onPress={handleEditPress}
+          style={styles.actionButtonPressable}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isEditing
+              ? t("manageBooks.confirmEditAction")
+              : t("manageBooks.editAction")
+          }
         >
-          <MaterialIcons name="delete" size={24} color="#FFFFFF" />
-        </Animated.View>
+          <Animated.View style={[styles.actionButtonContent, editScaleStyle]}>
+            <View style={[styles.actionButtonIcon, styles.editButtonColor]}>
+              <MaterialIcons
+                name={isEditing ? "check" : "edit"}
+                size={26}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text numberOfLines={1} style={[styles.actionButtonLabel, { color: colors.textSecondary }]}>
+              {isEditing
+                ? t("manageBooks.confirmEditAction")
+                : t("manageBooks.editAction")}
+            </Text>
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
 
-        {/* Edit background (swipe right) */}
-        <Animated.View
-          style={[
-            styles.actionBackground,
-            styles.editBackground,
-            editBackgroundStyle,
-          ]}
+      {/* Delete button - right */}
+      <Animated.View
+        style={[
+          styles.actionButtonContainer,
+          styles.deleteButtonContainer,
+          deleteButtonWidthStyle,
+        ]}
+      >
+        <Pressable
+          onPress={triggerDelete}
+          style={styles.actionButtonPressable}
+          accessibilityRole="button"
+          accessibilityLabel={t("manageBooks.deleteConfirmAction")}
         >
-          <MaterialIcons
-            name={isEditing ? "check" : "edit"}
-            size={24}
-            color="#FFFFFF"
-          />
-        </Animated.View>
+          <Animated.View style={[styles.actionButtonContent, deleteScaleStyle]}>
+            <View style={[styles.actionButtonIcon, styles.deleteButtonColor]}>
+              <MaterialIcons name="delete" size={26} color="#FFFFFF" />
+            </View>
+            <Text numberOfLines={1} style={[styles.actionButtonLabel, { color: colors.textSecondary }]}>
+              {t("manageBooks.deleteConfirmAction")}
+            </Text>
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
 
-        {/* Content */}
-        <Animated.View style={[styles.listItem, contentStyle]}>
+      {/* Content */}
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[styles.listItem, contentAnimStyle, contentBgStyle]}>
           {isEditing ? (
             <>
               <TextInput
@@ -144,8 +253,10 @@ function SwipeableBookRow({
                 value={editText}
                 onChangeText={onEditTextChange}
                 maxLength={100}
+                multiline
                 autoFocus
                 selectTextOnFocus
+                blurOnSubmit
                 returnKeyType="done"
                 onSubmitEditing={onConfirmEdit}
               />
@@ -168,15 +279,9 @@ function SwipeableBookRow({
             </>
           )}
         </Animated.View>
+      </GestureDetector>
 
-        <View
-          style={[
-            styles.separator,
-            { backgroundColor: colors.separator },
-          ]}
-        />
-      </Animated.View>
-    </GestureDetector>
+    </View>
   );
 }
 
@@ -414,10 +519,12 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 120,
   },
+  rowContainer: {
+    overflow: "hidden",
+  },
   listItem: {
     paddingHorizontal: 28,
-    paddingVertical: 14,
-    backgroundColor: "transparent",
+    paddingVertical: 12,
   },
   bookTitle: {
     fontSize: 17,
@@ -428,27 +535,54 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   editInput: {
+    flex: 1,
     fontSize: 17,
     fontWeight: "400",
     padding: 0,
     margin: 0,
+    marginRight: ACTION_BUTTON_WIDTH,
   },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 28,
+  actionButtonContainer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    overflow: "hidden",
   },
-  actionBackground: {
-    ...StyleSheet.absoluteFillObject,
+  editButtonContainer: {
+    left: 6,
+  },
+  deleteButtonContainer: {
+    right: 6,
+  },
+  actionButtonPressable: {
+    flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 28,
+    alignItems: "center",
   },
-  deleteBackground: {
-    backgroundColor: "#FF3B30",
-    alignItems: "flex-end",
+  actionButtonContent: {
+    width: BUTTON_CONTENT_WIDTH,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  editBackground: {
+  actionButtonIcon: {
+    minWidth: 36,
+    height: 36,
+    alignSelf: "stretch",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  actionButtonLabel: {
+    fontSize: 13.5,
+    fontWeight: "500",
+    marginTop: 4,
+  },
+  editButtonColor: {
     backgroundColor: "#007AFF",
-    alignItems: "flex-start",
+  },
+  deleteButtonColor: {
+    backgroundColor: "#FF3B30",
   },
   emptyState: {
     flex: 1,

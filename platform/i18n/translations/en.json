@@ -77,6 +77,8 @@
     "recipeCount_one": "{{count}} recipe",
     "recipeCount_other": "{{count}} recipes",
     "back": "Back",
+    "editAction": "Edit",
+    "confirmEditAction": "Done",
     "deleteConfirmTitle": "Delete \"{{name}}\"?",
     "deleteConfirmMessage": "This cannot be undone. All {{count}} recipes imported from this book will be permanently removed.",
     "deleteConfirmCancel": "Cancel",

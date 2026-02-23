@@ -3,7 +3,7 @@
   "checkpoint_id": "296199786b15",
   "strategy": "manual-commit",
   "branch": "feat/book_management",
-  "checkpoints_count": 58,
+  "checkpoints_count": 60,
   "files_touched": [
     "app/_layout.tsx",
     "app/index.tsx",
@@ -16,6 +16,7 @@
     "features/recipe-preview/components/MetadataOverlay.tsx",
     "features/recipe-preview/components/ProcessingIndicator.tsx",
     "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "features/recipes-list/components/RecipeGrid.tsx",
     "features/recipes-list/context/RecipesContext.tsx",
     "features/recipes-list/hooks/useGlobalOptions.ts",
     "features/source-selector/components/SourceSelector.tsx",
@@ -128,6 +129,13 @@
       "context": "/29/6199786b15/11/context.md",
       "content_hash": "/29/6199786b15/11/content_hash.txt",
       "prompt": "/29/6199786b15/11/prompt.txt"
+    },
+    {
+      "metadata": "/29/6199786b15/12/metadata.json",
+      "transcript": "/29/6199786b15/12/full.jsonl",
+      "context": "/29/6199786b15/12/context.md",
+      "content_hash": "/29/6199786b15/12/content_hash.txt",
+      "prompt": "/29/6199786b15/12/prompt.txt"
     }
   ],
   "token_usage": {

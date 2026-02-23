@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "296199786b15",
+  "session_id": "5c0cfec9-b69c-43ad-8d92-5c39cc3b087e",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-23T22:15:53.523996Z",
+  "branch": "feat/book_management",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/index.tsx",
+    "features/recipes-list/components/RecipeGrid.tsx",
+    "platform/i18n/translations/en.json"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "b9e66d29-5ed9-4282-b33c-ee67623597ed",
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-23T22:15:52.972442Z",
+    "agent_lines": 27,
+    "human_added": 31,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 60,
+    "agent_percentage": 45
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/5c0cfec9-b69c-43ad-8d92-5c39cc3b087e.jsonl"
+}

@@ -1,0 +1,141 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Context: manage books screen, the books list row item actions.
+
+I measured the action buttons size in the native Apple iOS app (Reminders) that we're trying to mimic and:
+
+1. The button height is 108 px
+1. The icon height is 60 px (edge to edge for the white pixels in the trash image)
+1. The label size is 32 px (the height of the letter "l" in "Delete")
+1. Gap between the label and the button is 20 px
+1. The border radius of the gray background behind the item title is 64 px
+1. #2c2b2d - the gra...
+
+### Prompt 2
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡...
+
+### Prompt 3
+
+The action button must have 28 px horizontal margin around - from both the gray background of the item and the edge of the screen.
+
+### Prompt 4
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-rev...
+
+### Prompt 5
+
+1. The button height is 110 px - should be 108 px                             
+1. The icon height is 46 px - should be 60 px
+1. The label size is 26 px - should be 32 px       
+1. Gap between the label and the button is 27 px - should be 20 px
+
+### Prompt 6
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert s...
+
+### Prompt 7
+
+The margin around the buttons is 38 px, should be 30 px
+
+### Prompt 8
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡...
+
+### Prompt 9
+
+The item row has 202 px of the height, should have 190 px. Let's also remove horizontal line separators between the items
+
+### Prompt 10
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert s...
+

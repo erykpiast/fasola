@@ -5,9 +5,16 @@ import { Platform } from "react-native";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { usePopoverTransition } from "@/features/photos/hooks/usePopoverTransition";
 
+interface MenuOption {
+  id: string;
+  label: string;
+  systemImage: string;
+  route: "/manage-books" | "/about";
+}
+
 export function useGlobalOptions(): {
   visible: boolean;
-  options: Array<{ id: string; label: string; systemImage: string }>;
+  options: Array<MenuOption>;
   handlePress: () => void;
   handleSelect: (id: string) => void;
   handleDismiss: () => void;
@@ -17,12 +24,19 @@ export function useGlobalOptions(): {
   const [visible, setVisible] = useState(false);
   const { buttonStyle } = usePopoverTransition(visible);
 
-  const options = useMemo(
+  const options = useMemo<Array<MenuOption>>(
     () => [
       {
         id: "manage-books",
         label: t("menu.manageBooks"),
         systemImage: "books.vertical",
+        route: "/manage-books",
+      },
+      {
+        id: "about",
+        label: t("menu.about"),
+        systemImage: "info.circle",
+        route: "/about",
       },
     ],
     [t],
@@ -35,12 +49,16 @@ export function useGlobalOptions(): {
     setVisible(true);
   }, []);
 
-  const handleSelect = useCallback((id: string) => {
-    setVisible(false);
-    if (id === "manage-books") {
-      router.push("/manage-books");
-    }
-  }, []);
+  const handleSelect = useCallback(
+    (id: string) => {
+      setVisible(false);
+      const selected = options.find((o) => o.id === id);
+      if (selected) {
+        router.push(selected.route);
+      }
+    },
+    [options],
+  );
 
   const handleDismiss = useCallback(() => {
     setVisible(false);

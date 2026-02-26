@@ -1,0 +1,49 @@
+{
+  "fill" : "automatic",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "image1.jpg",
+          "name" : "image1",
+          "position" : {
+            "scale" : 1.06,
+            "translation-in-points" : [
+              -7,
+              0
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "ff.png",
+          "name" : "ff",
+          "position" : {
+            "scale" : 0.5,
+            "translation-in-points" : [
+              16.06166590048747,
+              24.5
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

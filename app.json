@@ -17,20 +17,9 @@
         "LSSupportsOpeningDocumentsInPlace": true
       }
     },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.erykpiast.fasola"
-    },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/icon/bold.svg"
     },
     "plugins": [
       "expo-router",
@@ -40,9 +29,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#7B9E30",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#7B9E30"
           }
         }
       ],
@@ -65,6 +54,9 @@
         "projectId": "783aa343-f1f6-4fda-9425-2f305a8aca3a"
       }
     },
-    "owner": "erykpiast"
+    "owner": "erykpiast",
+    "android": {
+      "package": "com.erykpiast.fasola"
+    }
   }
 }

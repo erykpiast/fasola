@@ -1,14 +1,23 @@
 {
-  "cli_version": "0.4.2",
+  "cli_version": "0.4.4",
   "checkpoint_id": "296199786b15",
   "strategy": "manual-commit",
-  "branch": "feat/book_management",
-  "checkpoints_count": 62,
+  "branch": "feat/icon",
+  "checkpoints_count": 68,
   "files_touched": [
+    "app.json",
     "app/_layout.tsx",
     "app/index.tsx",
     "app/manage-books.tsx",
     "app/recipe/add.tsx",
+    "assets/images/android-icon-background.png",
+    "assets/images/android-icon-foreground.png",
+    "assets/images/android-icon-monochrome.png",
+    "assets/images/favicon.png",
+    "assets/images/partial-react-logo.png",
+    "assets/images/react-logo.png",
+    "assets/images/react-logo@2x.png",
+    "assets/images/react-logo@3x.png",
     "features/photos/hooks/useImportPopover.ts",
     "features/photos/hooks/usePopoverTransition.ts",
     "features/recipe-form/components/AddRecipeForm.tsx",
@@ -143,13 +152,20 @@
       "context": "/29/6199786b15/13/context.md",
       "content_hash": "/29/6199786b15/13/content_hash.txt",
       "prompt": "/29/6199786b15/13/prompt.txt"
+    },
+    {
+      "metadata": "/29/6199786b15/14/metadata.json",
+      "transcript": "/29/6199786b15/14/full.jsonl",
+      "context": "/29/6199786b15/14/context.md",
+      "content_hash": "/29/6199786b15/14/content_hash.txt",
+      "prompt": "/29/6199786b15/14/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 5645,
-    "cache_creation_tokens": 2918936,
-    "cache_read_tokens": 41827491,
-    "output_tokens": 175361,
-    "api_call_count": 537
+    "input_tokens": 6357,
+    "cache_creation_tokens": 3225187,
+    "cache_read_tokens": 43695882,
+    "output_tokens": 183648,
+    "api_call_count": 575
   }
 }

@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "296199786b15",
+  "session_id": "c0bb8ea1-4682-41d4-a5c8-6d83c0fb1d74",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-26T21:04:16.198827Z",
+  "branch": "feat/icon",
+  "checkpoints_count": 6,
+  "files_touched": [
+    "app.json",
+    "assets/images/android-icon-background.png",
+    "assets/images/android-icon-foreground.png",
+    "assets/images/android-icon-monochrome.png",
+    "assets/images/favicon.png",
+    "assets/images/partial-react-logo.png",
+    "assets/images/react-logo.png",
+    "assets/images/react-logo@2x.png",
+    "assets/images/react-logo@3x.png"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 712,
+    "cache_creation_tokens": 306251,
+    "cache_read_tokens": 1868391,
+    "output_tokens": 8287,
+    "api_call_count": 38
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-26T21:04:15.994989Z",
+    "agent_lines": 2,
+    "human_added": 675,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 678,
+    "agent_percentage": 0.2949852507374631
+  },
+  "transcript_path": ".claude/projects/-Users-eryk-napierala-Development-fasola/c0bb8ea1-4682-41d4-a5c8-6d83c0fb1d74.jsonl"
+}

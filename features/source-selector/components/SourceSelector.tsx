@@ -26,7 +26,7 @@ const ADD_NEW_VALUE = "__ADD_NEW__";
 
 export interface SourceSelectorRef {
   confirmNewSource: () => Promise<SourceId | undefined>;
-  cancelEdit: () => void;
+  cancelEdit: () => boolean;
 }
 
 export const SourceSelector = forwardRef<
@@ -108,14 +108,18 @@ export const SourceSelector = forwardRef<
     return newSource.id;
   }, [newSourceText, createSource, onValueChange]);
 
-  const handleCancelEdit = useCallback(() => {
-    setIsEditingNewSource(false);
+  const handleCancelEdit = useCallback<() => boolean>((): boolean => {
+    const wasEditing = isEditingNewSource;
+    if (wasEditing) {
+      setIsEditingNewSource(false);
+    }
     setNewSourceText("");
-  }, []);
+    return wasEditing;
+  }, [isEditingNewSource]);
 
   useEffect(() => {
-    onEditingChange?.(isEditingNewSource);
-  }, [isEditingNewSource, onEditingChange]);
+    onEditingChange?.(isEditingNewSource || hasNoSources);
+  }, [isEditingNewSource, hasNoSources, onEditingChange]);
 
   useImperativeHandle(
     ref,

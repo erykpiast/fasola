@@ -36,8 +36,8 @@ export function AddRecipeForm({
 
   const handleClose = useCallback(() => {
     if (isEditingSource) {
-      sourceSelectorRef.current?.cancelEdit();
-      return;
+      const cancelled = sourceSelectorRef.current?.cancelEdit();
+      if (cancelled) return;
     }
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

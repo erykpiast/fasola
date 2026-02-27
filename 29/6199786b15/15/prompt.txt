@@ -1,0 +1,91 @@
+Implement the following plan:
+
+# Fix: Checkmark button inert when no books exist
+
+## Context
+
+When a user has no sources/books and tries to add a recipe, the SourceSelector renders an inline text input (due to `hasNoSources === true`). The checkmark button appears functional but does nothing when pressed.
+
+**Root cause:** `SourceSelector` tracks editing state via `isEditingNewSource`, which starts as `false`. When the input shows because `hasNoSources` is true (not because the user explicitly chose "Add New"), `isEditingNewSource` stays `false`. The `onEditingChange` callback only fires with the value of `isEditingNewSource`, so the parent `AddRecipeForm` never learns editing is active. The button disabled logic `!isEditingSource && !source` evaluates to `true` (disabled), and `ConfirmButton` silently swallows taps without visual feedback.
+
+**Secondary issue:** Fixing the above by itself would break the X (close) button. Currently the X button works by accident — `isEditingSource` is false, so it skips the "cancel edit" branch and shows the discard alert. After fixing the main bug, the X button would enter the "cancel edit" branch, which would loop forever since there's no picker state to restore to when `hasNoSources`.
+
+## Changes
+
+### 1. `features/source-selector/components/SourceSelector.tsx`
+
+**a)** Change `onEditingChange` effect (line 116-118) to report the effective editing state:
+```typescript
+useEffect(() => {
+  onEditingChange?.(isEditingNewSource || hasNoSources);
+}, [isEditingNewSource, hasNoSources, onEditingChange]);
+```
+
+**b)** Update `SourceSelectorRef` interface — change `cancelEdit` return type from `void` to `boolean`:
+```typescript
+export interface SourceSelectorRef {
+  confirmNewSource: () => Promise<SourceId | undefined>;
+  cancelEdit: () => boolean;
+}
+```
+
+**c)** Update `handleCancelEdit` to return whether cancellation was meaningful:
+```typescript
+const handleCancelEdit = useCallback((): boolean => {
+  if (!isEditingNewSource) {
+    setNewSourceText("");
+    return false;
+  }
+  setIsEditingNewSource(false);
+  setNewSourceText("");
+  return true;
+}, [isEditingNewSource]);
+```
+
+### 2. `features/recipe-form/components/AddRecipeForm.tsx`
+
+**a)** Update `handleClose` (line 37-41) to check the return value of `cancelEdit`:
+```typescript
+const handleClose = useCallback(() => {
+  if (isEditingSource) {
+    const cancelled = sourceSelectorRef.current?.cancelEdit();
+    if (cancelled) return;
+  }
+  // ... rest unchanged (discard alert)
+```
+
+## Verification
+
+1. Delete all sources/books from the manage-books screen
+2. Import a new recipe photo
+3. Type a book name in the input field
+4. Tap checkmark — recipe should be created with the new book
+5. Tap X — should show the discard confirmation alert
+6. With existing books: select "Add New" from picker, type name, tap X — should return to picker (not show discard alert)
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.REDACTED.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

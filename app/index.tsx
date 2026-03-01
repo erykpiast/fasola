@@ -21,6 +21,7 @@ import { useGlobalOptions } from "../features/recipes-list/hooks/useGlobalOption
 import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
 import { SearchBar } from "../features/search/components/SearchBar";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
+import { useTags } from "../features/tags/context/TagsContext";
 import type { RecipeId } from "../lib/types/primitives";
 import { useTranslation } from "../platform/i18n/useTranslation";
 import { getColors } from "../platform/theme/glassStyles";
@@ -47,8 +48,9 @@ function Content(): JSX.Element {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { recipes } = useRecipes();
+  const { tagLookup } = useTags();
   const { filteredRecipes, searchTerm, setSearchTerm } =
-    useRecipeFilter(recipes);
+    useRecipeFilter(recipes, tagLookup);
   const { handleFocus, handleBlur, key } = useSearchFocus();
   const { setDebugData } = useDebugContext();
 

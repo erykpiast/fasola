@@ -2,7 +2,10 @@ import { Alert } from "@/lib/alert";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
 import { useImageCoverSize } from "@/lib/hooks/useImageCoverSize";
-import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
+import { useTags } from "@/features/tags/context/TagsContext";
+import { resolveTagLabels } from "@/features/tags/utils/resolveRecipeTags";
+import type { RecipeMetadataWrite } from "@/lib/repositories/types";
+import type { Recipe } from "@/lib/types/recipe";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getColors } from "@/platform/theme/glassStyles";
@@ -26,17 +29,24 @@ export function EditRecipeForm({
   onSubmit,
 }: {
   recipe: Recipe;
-  onSubmit: (metadata: RecipeMetadata) => void;
+  onSubmit: (metadata: RecipeMetadataWrite) => void;
 }): JSX.Element {
   const theme = useTheme();
   const colors = getColors(theme);
   const { t } = useTranslation();
+  const { tagLookup } = useTags();
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const [isZoomed, setIsZoomed] = useState(false);
   const { coverSize, onImageLoad } = useImageCoverSize(width, width);
+  const resolvedInitialTags = resolveTagLabels(recipe.metadata.tagIds, tagLookup);
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
-    initialValues: recipe.metadata,
+    initialValues: {
+      title: recipe.metadata.title,
+      source: recipe.metadata.source,
+      tags: resolvedInitialTags,
+      tagIds: recipe.metadata.tagIds,
+    },
     onSubmit,
   });
 

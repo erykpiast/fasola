@@ -3,6 +3,7 @@
 // Identifiers
 export type RecipeId = string;
 export type PhotoId = RecipeId;
+export type TagId = string;
 
 // URIs and URLs
 export type PhotoUri = string;

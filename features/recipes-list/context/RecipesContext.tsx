@@ -1,6 +1,7 @@
 import { recipeRepository } from "@/lib/repositories/recipes";
+import type { RecipeMetadataWrite } from "@/lib/repositories/types";
 import type { PhotoUri, RecipeId, SourceId } from "@/lib/types/primitives";
-import type { Recipe, RecipeMetadata } from "@/lib/types/recipe";
+import type { Recipe } from "@/lib/types/recipe";
 import {
   createContext,
   use,
@@ -11,24 +12,26 @@ import {
   type JSX,
   type ReactNode,
 } from "react";
+import { useTags } from "@/features/tags/context/TagsContext";
 
 type RecipesContextValue = {
   recipes: Array<Recipe>;
   addRecipe: (
     photoUri: PhotoUri,
-    metadata: RecipeMetadata,
+    metadata: RecipeMetadataWrite,
     recognizedText?: string
   ) => Promise<void>;
   savePending: (photoUri: PhotoUri, source?: SourceId) => Promise<Recipe>;
-  updateRecipe: (id: string, metadata: RecipeMetadata) => Promise<void>;
+  updateRecipe: (id: RecipeId, metadata: RecipeMetadataWrite) => Promise<void>;
   updateProcessing: (id: RecipeId) => Promise<void>;
   updateComplete: (
     id: RecipeId,
-    processedPhotoUri: string,
+    processedPhotoUri: PhotoUri,
     recognizedText?: string,
-    classifiedMetadata?: Partial<RecipeMetadata>
+    classifiedMetadata?: Partial<RecipeMetadataWrite>
   ) => Promise<void>;
   deleteRecipe: (id: RecipeId) => Promise<void>;
+  deleteRecipes: (ids: Array<RecipeId>) => Promise<void>;
   refreshFromStorage: () => Promise<void>;
 };
 
@@ -48,13 +51,14 @@ export function RecipesProvider({
 }: {
   children: ReactNode;
 }): JSX.Element {
+  const { refreshTags } = useTags();
   const initialRecipes = use(getRecipesPromise());
   const [recipes, setRecipes] = useState<Array<Recipe>>(initialRecipes);
 
   const addRecipe = useCallback(
     async (
       photoUri: PhotoUri,
-      metadata: RecipeMetadata,
+      metadata: RecipeMetadataWrite,
       recognizedText?: string
     ) => {
       const newRecipe = await recipeRepository.save({
@@ -64,8 +68,9 @@ export function RecipesProvider({
         status: "ready",
       });
       setRecipes((prev) => [newRecipe, ...prev]);
+      await refreshTags();
     },
-    []
+    [refreshTags]
   );
 
   const savePending = useCallback(
@@ -78,13 +83,14 @@ export function RecipesProvider({
   );
 
   const updateRecipe = useCallback(
-    async (id: string, metadata: RecipeMetadata) => {
+    async (id: RecipeId, metadata: RecipeMetadataWrite) => {
       const updatedRecipe = await recipeRepository.update(id, metadata);
       setRecipes((prev) =>
         prev.map((recipe) => (recipe.id === id ? updatedRecipe : recipe))
       );
+      await refreshTags();
     },
-    []
+    [refreshTags]
   );
 
   const updateProcessing = useCallback(async (id: RecipeId) => {
@@ -99,9 +105,9 @@ export function RecipesProvider({
   const updateComplete = useCallback(
     async (
       id: RecipeId,
-      processedPhotoUri: string,
+      processedPhotoUri: PhotoUri,
       recognizedText?: string,
-      classifiedMetadata?: Partial<RecipeMetadata>
+      classifiedMetadata?: Partial<RecipeMetadataWrite>
     ) => {
       const updatedRecipe = await recipeRepository.updateComplete(
         id,
@@ -112,19 +118,36 @@ export function RecipesProvider({
       setRecipes((prev) =>
         prev.map((recipe) => (recipe.id === id ? updatedRecipe : recipe))
       );
+      await refreshTags();
     },
-    []
+    [refreshTags]
   );
 
   const deleteRecipe = useCallback(async (id: RecipeId) => {
     await recipeRepository.delete(id);
     setRecipes((prev) => prev.filter((recipe) => recipe.id !== id));
-  }, []);
+    await refreshTags();
+  }, [refreshTags]);
+
+  const deleteRecipes = useCallback(
+    async (ids: Array<RecipeId>): Promise<void> => {
+      if (ids.length === 0) {
+        return;
+      }
+
+      await recipeRepository.deleteMany(ids);
+      const idsToDelete = new Set(ids);
+      setRecipes((prev) => prev.filter((recipe) => !idsToDelete.has(recipe.id)));
+      await refreshTags();
+    },
+    [refreshTags]
+  );
 
   const refreshFromStorage = useCallback(async () => {
     const freshRecipes = await recipeRepository.getAll();
     setRecipes(freshRecipes);
-  }, []);
+    await refreshTags();
+  }, [refreshTags]);
 
   const value = useMemo(
     (): RecipesContextValue => ({
@@ -135,9 +158,20 @@ export function RecipesProvider({
       updateProcessing,
       updateComplete,
       deleteRecipe,
+      deleteRecipes,
       refreshFromStorage,
     }),
-    [recipes, addRecipe, savePending, updateRecipe, updateProcessing, updateComplete, deleteRecipe, refreshFromStorage]
+    [
+      recipes,
+      addRecipe,
+      savePending,
+      updateRecipe,
+      updateProcessing,
+      updateComplete,
+      deleteRecipe,
+      deleteRecipes,
+      refreshFromStorage,
+    ]
   );
 
   return (

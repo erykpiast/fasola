@@ -4,6 +4,7 @@ import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext"
 import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
 import { SourcesProvider } from "@/features/sources/context/SourcesContext";
+import { TagsProvider } from "@/features/tags/context/TagsContext";
 import { Stack } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 import { Suspense, useEffect, type JSX } from "react";
@@ -25,14 +26,16 @@ export default function RootLayout(): JSX.Element {
       <Suspense fallback={<View style={styles.suspenseFallback} />}>
         <DebugProvider>
           <SourcesProvider>
-            <RecipesProvider>
-              <ICloudSyncProvider>
-                <BackgroundProcessingProvider>
-                  <Stack screenOptions={{ headerShown: false }} />
-                  <WebViewSetup />
-                </BackgroundProcessingProvider>
-              </ICloudSyncProvider>
-            </RecipesProvider>
+            <TagsProvider>
+              <RecipesProvider>
+                <ICloudSyncProvider>
+                  <BackgroundProcessingProvider>
+                    <Stack screenOptions={{ headerShown: false }} />
+                    <WebViewSetup />
+                  </BackgroundProcessingProvider>
+                </ICloudSyncProvider>
+              </RecipesProvider>
+            </TagsProvider>
           </SourcesProvider>
         </DebugProvider>
       </Suspense>

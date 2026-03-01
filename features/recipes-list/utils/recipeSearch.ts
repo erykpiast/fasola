@@ -1,9 +1,13 @@
+import { resolveNormalizedTagTexts } from "@/features/tags/utils/resolveRecipeTags";
+import type { TagId } from "@/lib/types/primitives";
 import type { Recipe } from "@/lib/types/recipe";
+import type { Tag } from "@/lib/types/tag";
 import createFuzzySearch from "@nozbe/microfuzz";
 
 export function filterRecipes(
   recipes: Array<Recipe>,
-  searchTerm: string
+  searchTerm: string,
+  tagLookup: Map<TagId, Tag> = new Map()
 ): Array<Recipe> {
   const normalizedSearchTerm = searchTerm.trim().replace(/^#/, "");
 
@@ -14,7 +18,7 @@ export function filterRecipes(
   const fuzzySearch = createFuzzySearch(recipes, {
     getText: (recipe) => [
       recipe.metadata.title || "",
-      ...recipe.metadata.tags.map((tag: string) => tag.slice(1)),
+      ...resolveNormalizedTagTexts(recipe.metadata.tagIds, tagLookup),
     ],
   });
 

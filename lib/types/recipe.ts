@@ -1,4 +1,4 @@
-import type { PhotoUri, RecipeId, SourceId } from "./primitives";
+import type { PhotoUri, RecipeId, SourceId, TagId } from "./primitives";
 
 export interface Recipe {
   id: RecipeId;
@@ -14,5 +14,5 @@ export interface Recipe {
 export interface RecipeMetadata {
   title?: string;
   source?: SourceId | `https://${string}` | `http://${string}`;
-  tags: Array<`#${string}`>;
+  tagIds: Array<TagId>;
 }

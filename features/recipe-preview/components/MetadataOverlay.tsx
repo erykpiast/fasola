@@ -1,3 +1,5 @@
+import { useTags } from "@/features/tags/context/TagsContext";
+import { resolveTagLabels } from "@/features/tags/utils/resolveRecipeTags";
 import { useSourceName } from "@/features/sources/hooks/useSourceName";
 import type { RecipeMetadata } from "@/lib/types/recipe";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,10 +11,12 @@ export function MetadataOverlay({
 }: {
   metadata: RecipeMetadata;
 }): JSX.Element | null {
+  const { tagLookup } = useTags();
   const { displayName: sourceDisplayName } = useSourceName(metadata.source);
+  const tagLabels = resolveTagLabels(metadata.tagIds, tagLookup);
   const hasTitle = !!metadata.title;
   const hasSource = !!sourceDisplayName;
-  const hasTags = metadata.tags && metadata.tags.length > 0;
+  const hasTags = tagLabels.length > 0;
 
   if (!hasTitle && !hasSource && !hasTags) {
     return null;
@@ -37,7 +41,7 @@ export function MetadataOverlay({
       {hasTags && (
         <View style={styles.tagsContainer}>
           <Text style={styles.tags} numberOfLines={1} ellipsizeMode="tail">
-            {metadata.tags.join("  ")}
+            {tagLabels.join("  ")}
           </Text>
         </View>
       )}

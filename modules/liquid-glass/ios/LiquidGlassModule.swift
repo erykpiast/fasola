@@ -63,11 +63,15 @@ public final class LiquidGlassModule: Module {
         view.setVariant(variant)
       }
 
+      Prop("selectedTags") { (view, selectedTags: [[String: Any]]) in
+        view.setSelectedTags(selectedTags)
+      }
+
       Prop("autoFocus") { (view, autoFocus: Bool) in
         view.setAutoFocus(autoFocus)
       }
 
-      Events("onChangeText", "onClear", "onInputFocus", "onInputBlur")
+      Events("onChangeText", "onClear", "onTagPress", "onInputFocus", "onInputBlur")
     }
     
     // LiquidGlassSelect view

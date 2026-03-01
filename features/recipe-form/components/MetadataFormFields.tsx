@@ -88,6 +88,7 @@ export function MetadataFormFields({
           value={value.title ?? ""}
           onChangeText={(text) => onChange({ title: text || undefined })}
           placeholder={t("recipeForm.title.placeholder")}
+          variant="text"
           returnKeyType="next"
           onSubmitEditing={() => tagsRef.current?.focus()}
           blurOnSubmit={true}

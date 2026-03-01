@@ -1,5 +1,5 @@
 import { type JSX } from "react";
-import { StyleSheet, TextInput, Text, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, Text, View } from "react-native";
 import type { LiquidGlassInputProps } from "./LiquidGlassInput.types";
 
 export function LiquidGlassInput({
@@ -9,7 +9,9 @@ export function LiquidGlassInput({
   label,
   onFocus,
   onBlur,
-  variant = "form",
+  variant = "text",
+  selectedTags = [],
+  onTagPress,
   style,
   autoFocus,
   returnKeyType,
@@ -18,25 +20,56 @@ export function LiquidGlassInput({
   multiline,
   maxLength,
 }: LiquidGlassInputProps): JSX.Element {
-  const height = variant === "search" ? 48 : label ? 76 : 56;
+  const shouldShowTags = variant === "tags" || variant === "mixed";
+  const shouldShowTextInput = variant === "text" || variant === "mixed";
+  const shouldUseAccent = selectedTags.length > 0 && value.trim().length > 0;
+  const height = label ? 76 : 56;
 
   return (
-    <View style={[styles.container, { height }, style]}>
+    <View
+      style={[
+        styles.container,
+        shouldUseAccent && styles.containerAccented,
+        { height },
+        style,
+      ]}
+    >
       {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        autoFocus={autoFocus}
-        returnKeyType={returnKeyType}
-        onSubmitEditing={onSubmitEditing}
-        blurOnSubmit={blurOnSubmit}
-        multiline={multiline}
-        maxLength={maxLength}
-        style={styles.input}
-      />
+      <View style={styles.row}>
+        {shouldShowTags && (
+          <View style={styles.tagsContainer}>
+            {selectedTags.map((tag) => (
+              <Pressable
+                key={tag.id}
+                onPress={onTagPress ? () => onTagPress(tag.id) : undefined}
+                style={[
+                  styles.tagPill,
+                  shouldUseAccent && styles.tagPillAccented,
+                ]}
+                accessibilityLabel={tag.accessibilityLabel ?? tag.label}
+              >
+                <Text style={styles.tagText}>{tag.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+        {shouldShowTextInput && (
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            autoFocus={autoFocus}
+            returnKeyType={returnKeyType}
+            onSubmitEditing={onSubmitEditing}
+            blurOnSubmit={blurOnSubmit}
+            multiline={multiline}
+            maxLength={maxLength}
+            style={styles.input}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -49,12 +82,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     justifyContent: "center",
   },
+  containerAccented: {
+    borderColor: "rgba(10, 132, 255, 0.4)",
+    backgroundColor: "rgba(10, 132, 255, 0.06)",
+  },
   label: {
     fontSize: 13,
     color: "rgba(0, 0, 0, 0.5)",
     marginBottom: 2,
   },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexShrink: 1,
+  },
+  tagPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
+  },
+  tagPillAccented: {
+    backgroundColor: "rgba(10, 132, 255, 0.18)",
+  },
+  tagText: {
+    fontSize: 14,
+    color: "rgba(0, 0, 0, 0.8)",
+  },
   input: {
     fontSize: 17,
+    flex: 1,
   },
 });

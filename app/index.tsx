@@ -114,7 +114,7 @@ function Content(): JSX.Element {
               onBlur={handleBlur}
             />
           </Animated.View>
-          <Animated.View style={buttonStyle}>
+          <Animated.View style={[styles.addButtonWrapper, buttonStyle]}>
             <AddRecipeButton onPress={showPopover} />
           </Animated.View>
         </View>
@@ -168,6 +168,9 @@ export default function Index(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  addButtonWrapper: {
+    justifyContent: "center"
+  },
   container: {
     flex: 1,
   },

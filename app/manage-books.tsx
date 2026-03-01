@@ -464,7 +464,7 @@ export default function ManageBooksScreen(): JSX.Element {
                   value={newBookName}
                   onChangeText={setNewBookName}
                   placeholder={t("sourceSelector.addNewPlaceholder")}
-                  variant="form"
+                  variant="text"
                   style={styles.addInputField}
                   autoFocus
                   maxLength={100}

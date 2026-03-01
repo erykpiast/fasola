@@ -14,12 +14,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { useImportPopover } from "../features/photos/hooks/useImportPopover";
+import { usePopoverTransition } from "../features/photos/hooks/usePopoverTransition";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
 import { useGlobalOptions } from "../features/recipes-list/hooks/useGlobalOptions";
 import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
 import { SearchBar } from "../features/search/components/SearchBar";
+import { useAddButtonFocusTransition } from "../features/search/hooks/useAddButtonFocusTransition";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import { useTags } from "../features/tags/context/TagsContext";
 import type { RecipeId } from "../lib/types/primitives";
@@ -51,7 +53,7 @@ function Content(): JSX.Element {
   const { tagLookup } = useTags();
   const { filteredRecipes, searchTerm, setSearchTerm } =
     useRecipeFilter(recipes, tagLookup);
-  const { handleFocus, handleBlur, key } = useSearchFocus();
+  const { handleFocus, handleBlur, key, isFocused } = useSearchFocus();
   const { setDebugData } = useDebugContext();
 
   const {
@@ -59,19 +61,23 @@ function Content(): JSX.Element {
     popoverVisible,
     dismissPopover,
     isImporting,
-    searchBarStyle,
-    buttonStyle,
     importOptions,
     handleImportOptionSelect,
   } = useImportPopover();
+  const shouldHideSearchBar = popoverVisible || isImporting;
+  const { buttonStyle } = usePopoverTransition(shouldHideSearchBar);
 
   const globalOptions = useGlobalOptions();
+  const { addButtonOuterStyle, addButtonInnerStyle } =
+    useAddButtonFocusTransition(isFocused);
 
   useEffect(() => {
     return () => {
       setDebugData(null);
     };
   }, [setDebugData]);
+
+  const isAddButtonInteractive = !isFocused && !popoverVisible && !isImporting;
 
   const handleRecipeTap = useCallback((id: RecipeId): void => {
     router.push(`/recipe/${id}`);
@@ -105,17 +111,25 @@ function Content(): JSX.Element {
         style={styles.keyboardAvoid}
       >
         <View style={styles.bottomBar}>
-          <Animated.View style={[styles.searchBarWrapper, searchBarStyle]}>
+          <View style={styles.searchBarWrapper}>
             <SearchBar
               key={key}
               value={searchTerm}
               onChangeText={setSearchTerm}
               onFocus={handleFocus}
               onBlur={handleBlur}
+              isHidden={shouldHideSearchBar}
             />
-          </Animated.View>
-          <Animated.View style={[styles.addButtonWrapper, buttonStyle]}>
-            <AddRecipeButton onPress={showPopover} />
+          </View>
+          <Animated.View
+            style={[styles.addButtonOuterWrapper, buttonStyle, addButtonOuterStyle]}
+          >
+            <Animated.View
+              style={[styles.addButtonWrapper, addButtonInnerStyle]}
+              pointerEvents={isAddButtonInteractive ? "auto" : "none"}
+            >
+              <AddRecipeButton onPress={showPopover} />
+            </Animated.View>
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
@@ -168,8 +182,12 @@ export default function Index(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  addButtonOuterWrapper: {
+    justifyContent: "center",
+  },
   addButtonWrapper: {
-    justifyContent: "center"
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     flex: 1,
@@ -199,7 +217,6 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: "row",
-    gap: 12,
     // NOTE: The same effective space from the screen to button edges for the `Add note` button in the Apple Notes app
     paddingHorizontal: 28,
     paddingBottom: 28,

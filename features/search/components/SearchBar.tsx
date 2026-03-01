@@ -1,23 +1,28 @@
 import { useTranslation } from "@/platform/i18n/useTranslation";
+import { useSearchBarVisibilityTransition } from "@/features/search/hooks/useSearchBarVisibilityTransition";
 import { LiquidGlassInput } from "liquid-glass";
 import { type JSX } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
 
 export function SearchBar({
   value,
   onChangeText,
   onFocus,
   onBlur,
+  isHidden,
 }: {
   value: string;
   onChangeText: (text: string) => void;
   onFocus: () => void;
   onBlur: () => void;
+  isHidden: boolean;
 }): JSX.Element {
   const { t } = useTranslation();
+  const { containerStyle } = useSearchBarVisibilityTransition(isHidden);
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, containerStyle]}>
       <LiquidGlassInput
         value={value}
         onChangeText={onChangeText}
@@ -30,7 +35,7 @@ export function SearchBar({
         variant="mixed"
         returnKeyType="search"
       />
-    </View>
+    </Animated.View>
   );
 }
 

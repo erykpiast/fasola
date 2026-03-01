@@ -5,7 +5,9 @@ export function filterRecipes(
   recipes: Array<Recipe>,
   searchTerm: string
 ): Array<Recipe> {
-  if (!searchTerm || !searchTerm.trim()) {
+  const normalizedSearchTerm = searchTerm.trim().replace(/^#/, "");
+
+  if (!normalizedSearchTerm) {
     return recipes;
   }
 
@@ -16,5 +18,5 @@ export function filterRecipes(
     ],
   });
 
-  return fuzzySearch(searchTerm).map((result) => result.item);
+  return fuzzySearch(normalizedSearchTerm).map((result) => result.item);
 }

@@ -27,7 +27,7 @@ export function SearchBar({
         leadingSystemImage="magnifyingglass"
         showClearButton
         onClear={() => onChangeText("")}
-        variant="search"
+        variant="mixed"
         returnKeyType="search"
       />
     </View>

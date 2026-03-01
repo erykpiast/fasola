@@ -179,7 +179,7 @@ export const SourceSelector = forwardRef<
             value={newSourceText}
             onChangeText={setNewSourceText}
             placeholder={t("sourceSelector.addNewPlaceholder")}
-            variant="form"
+            variant="text"
             autoFocus
             maxLength={100}
             returnKeyType="done"

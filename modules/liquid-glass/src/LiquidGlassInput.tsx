@@ -70,6 +70,18 @@ export function LiquidGlassInput({
             multiline={multiline}
             maxLength={maxLength}
             style={styles.input}
+            onKeyPress={(event): void => {
+              if (
+                event.nativeEvent.key === "Backspace" &&
+                value.length === 0 &&
+                selectedTags.length > 0
+              ) {
+                const lastTag = selectedTags[selectedTags.length - 1];
+                if (lastTag) {
+                  onTagPress?.(lastTag.id);
+                }
+              }
+            }}
           />
         )}
         {shouldShowClearButton && (

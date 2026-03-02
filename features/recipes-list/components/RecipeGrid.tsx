@@ -4,7 +4,7 @@ import type { RecipeId } from "@/lib/types/primitives";
 import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list";
 import { Suspense, useCallback, useMemo, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
@@ -43,10 +43,12 @@ export function RecipeGrid({
   recipes,
   onRecipeTap,
   headerInset = 0,
+  onSurfaceTouchStart,
 }: {
   recipes: Array<Recipe>;
   onRecipeTap?: (id: RecipeId) => void;
   headerInset?: number;
+  onSurfaceTouchStart?: () => void;
 }): JSX.Element {
   const insets = useSafeAreaInsets();
 
@@ -66,17 +68,24 @@ export function RecipeGrid({
 
   return (
     <FlashList
+      style={styles.list}
       data={recipes}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       numColumns={COLUMNS}
       contentContainerStyle={contentContainerStyle}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+      onTouchStart={onSurfaceTouchStart}
     />
   );
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
   container: {
     paddingBottom: 120,
   },

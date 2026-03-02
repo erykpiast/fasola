@@ -72,6 +72,10 @@ public final class LiquidGlassModule: Module {
         view.setAutoFocus(autoFocus)
       }
 
+      Prop("isFocused") { (view, isFocused: Bool) in
+        view.setFocused(isFocused)
+      }
+
       Prop("returnKeyType") { (view, returnKeyType: String) in
         view.setReturnKeyType(returnKeyType)
       }

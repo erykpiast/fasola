@@ -3,8 +3,10 @@ import { LiquidGlassButton, LiquidGlassPopover } from "liquid-glass";
 import { Suspense, useCallback, useEffect, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -79,9 +81,27 @@ function Content(): JSX.Element {
 
   const isAddButtonInteractive = !isFocused && !popoverVisible && !isImporting;
 
-  const handleRecipeTap = useCallback((id: RecipeId): void => {
-    router.push(`/recipe/${id}`);
-  }, []);
+  const dismissSearchFocus = useCallback((): void => {
+    if (!isFocused) {
+      return;
+    }
+
+    handleBlur();
+    Keyboard.dismiss();
+  }, [handleBlur, isFocused]);
+
+  const handleRecipeTap = useCallback(
+    (id: RecipeId): void => {
+      dismissSearchFocus();
+      router.push(`/recipe/${id}`);
+    },
+    [dismissSearchFocus]
+  );
+
+  const handleGlobalMenuPress = useCallback((): void => {
+    dismissSearchFocus();
+    globalOptions.handlePress();
+  }, [dismissSearchFocus, globalOptions]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -92,19 +112,26 @@ function Content(): JSX.Element {
           recipes={filteredRecipes}
           onRecipeTap={handleRecipeTap}
           headerInset={HEADER_AREA_HEIGHT}
+          onSurfaceTouchStart={dismissSearchFocus}
         />
       )}
 
       {/* Header row - title + overflow menu button */}
       <Animated.View
-        style={[styles.headerRow, { top: insets.top + HEADER_TOP_GAP }, globalOptions.buttonStyle]}
+        style={[
+          styles.headerRow,
+          { top: insets.top + HEADER_TOP_GAP },
+          globalOptions.buttonStyle,
+        ]}
         pointerEvents={popoverVisible || globalOptions.visible ? "none" : "auto"}
       >
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {t("library.heading")}
-        </Text>
+        <Pressable onPress={dismissSearchFocus} style={styles.headerTitleTouchArea}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            {t("library.heading")}
+          </Text>
+        </Pressable>
         <LiquidGlassButton
-          onPress={globalOptions.handlePress}
+          onPress={handleGlobalMenuPress}
           systemImage="ellipsis"
           accessibilityLabel={t("accessibility.moreOptions")}
         />
@@ -123,6 +150,7 @@ function Content(): JSX.Element {
               onFocus={handleFocus}
               onBlur={handleBlur}
               isHidden={shouldHideSearchBar}
+              isFocused={isFocused}
             />
           </View>
           <Animated.View
@@ -210,6 +238,9 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
   },
+  headerTitleTouchArea: {
+    paddingRight: 12,
+  },
   popoverLayer: {
     zIndex: 11,
   },
@@ -218,6 +249,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 10,
   },
   bottomBar: {
     flexDirection: "row",

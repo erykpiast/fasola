@@ -1,12 +1,13 @@
 import { SourceSelector } from "@/features/source-selector";
+import type { RecipeMetadataWrite } from "@/lib/repositories/types";
 import { LiquidGlassInput } from "@/modules/liquid-glass";
 import { GlassLikeTagInput } from "@/lib/components/atoms/GlassLikeTagInput";
-import type { RecipeMetadata } from "@/lib/types/recipe";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getGlassInputColors } from "@/platform/theme/glassStyles";
 import { type Theme, useTheme } from "@/platform/theme/useTheme";
 import { type JSX, useCallback, useRef } from "react";
 import {
+  type NativeMethods,
   Platform,
   type ScrollView,
   StyleSheet,
@@ -14,7 +15,6 @@ import {
   TextInput,
   View,
   type ViewStyle,
-  findNodeHandle,
 } from "react-native";
 
 function scrollToElement(element: ScrollView, y: number, height: number) {
@@ -29,8 +29,8 @@ export function MetadataFormFields({
   style,
   scrollViewRef,
 }: {
-  value: RecipeMetadata;
-  onChange: (metadata: Partial<RecipeMetadata>) => void;
+  value: RecipeMetadataWrite;
+  onChange: (metadata: Partial<RecipeMetadataWrite>) => void;
   style?: ViewStyle;
   scrollViewRef: React.RefObject<ScrollView | null>;
 }): JSX.Element {
@@ -43,7 +43,7 @@ export function MetadataFormFields({
 
   const scrollToInput = useCallback(
     (containerRef: React.RefObject<View | null>) => {
-      if (scrollViewRef.current || !containerRef.current) {
+      if (!scrollViewRef.current || !containerRef.current) {
         return;
       }
 
@@ -56,20 +56,22 @@ export function MetadataFormFields({
       }
 
       setTimeout(() => {
-        if (!containerRef.current || !scrollViewRef.current) {
+        const container = containerRef.current;
+        const scrollView = scrollViewRef.current;
+
+        if (!container || !scrollView) {
           return;
         }
 
-        const nodeHandle = findNodeHandle(scrollViewRef.current);
-
-        if (nodeHandle === null) {
+        const nativeScrollRef = scrollView.getNativeScrollRef();
+        if (!nativeScrollRef) {
           return;
         }
 
-        containerRef.current.measureLayout(
-          nodeHandle,
+        container.measureLayout(
+          nativeScrollRef as unknown as NativeMethods,
           (_x, y, _width, height) => {
-            scrollToElement(scrollViewRef.current!, y, height);
+            scrollToElement(scrollView, y, height);
           },
           () => {}
         );
@@ -86,6 +88,7 @@ export function MetadataFormFields({
           value={value.title ?? ""}
           onChangeText={(text) => onChange({ title: text || undefined })}
           placeholder={t("recipeForm.title.placeholder")}
+          variant="text"
           returnKeyType="next"
           onSubmitEditing={() => tagsRef.current?.focus()}
           blurOnSubmit={true}
@@ -106,7 +109,7 @@ export function MetadataFormFields({
       <View ref={tagsContainerRef}>
         <GlassLikeTagInput
           ref={tagsRef}
-          tags={value.tags}
+          tags={value.tags ?? []}
           onChange={(tags) => onChange({ tags: tags as Array<`#${string}`> })}
           onFocus={() => scrollToInput(tagsContainerRef)}
           label={t("recipeForm.tags.label")}

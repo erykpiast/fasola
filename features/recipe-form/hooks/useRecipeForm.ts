@@ -1,22 +1,23 @@
-import type { RecipeMetadata } from "@/lib/types/recipe";
+import type { RecipeMetadataWrite } from "@/lib/repositories/types";
 import { parseTags, validateTags } from "@/lib/utils/recipeValidation";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useCallback, useMemo, useReducer, useState } from "react";
 
-const emptyMetadata: RecipeMetadata = {
+const emptyMetadata: RecipeMetadataWrite = {
   title: undefined,
   source: undefined,
   tags: [],
+  tagIds: [],
 };
 
 type FormState = {
-  values: RecipeMetadata;
+  values: RecipeMetadataWrite;
   errors: Record<string, string>;
   isDirty: boolean;
 };
 
 type FormAction =
-  | { type: "UPDATE_VALUES"; updates: Partial<RecipeMetadata> }
+  | { type: "UPDATE_VALUES"; updates: Partial<RecipeMetadataWrite> }
   | { type: "SET_ERRORS"; errors: Record<string, string> }
   | {
       type: "UPDATE_FROM_EXTRACTION";
@@ -25,11 +26,11 @@ type FormAction =
     };
 
 function detectChanges(
-  current: RecipeMetadata,
-  updates: Partial<RecipeMetadata>
+  current: RecipeMetadataWrite,
+  updates: Partial<RecipeMetadataWrite>
 ): boolean {
   return Object.entries(updates).some(([key, newValue]) => {
-    const currentValue = current[key as keyof RecipeMetadata];
+    const currentValue = current[key as keyof RecipeMetadataWrite];
 
     if (Array.isArray(newValue) && Array.isArray(currentValue)) {
       return (
@@ -67,7 +68,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
     }
 
     case "UPDATE_FROM_EXTRACTION": {
-      const updates: Partial<RecipeMetadata> = {};
+      const updates: Partial<RecipeMetadataWrite> = {};
+      const existingTags = state.values.tags ?? [];
 
       if (!state.values.title && action.title) {
         updates.title = action.title;
@@ -75,10 +77,10 @@ function formReducer(state: FormState, action: FormAction): FormState {
 
       if (action.suggestedTags && action.suggestedTags.length > 0) {
         const newTags = action.suggestedTags.filter(
-          (tag) => !state.values.tags.includes(tag)
+          (tag) => !existingTags.includes(tag)
         );
         if (newTags.length > 0) {
-          updates.tags = [...state.values.tags, ...newTags];
+          updates.tags = [...existingTags, ...newTags];
         }
       }
 
@@ -94,12 +96,12 @@ function formReducer(state: FormState, action: FormAction): FormState {
 }
 
 export function useRecipeForm(config: {
-  initialValues?: RecipeMetadata;
-  onSubmit: (metadata: RecipeMetadata) => void;
+  initialValues?: RecipeMetadataWrite;
+  onSubmit: (metadata: RecipeMetadataWrite) => void;
 }): {
-  values: RecipeMetadata;
+  values: RecipeMetadataWrite;
   errors: Record<string, string>;
-  handleChange: (updates: Partial<RecipeMetadata>) => void;
+  handleChange: (updates: Partial<RecipeMetadataWrite>) => void;
   handleSubmit: () => void;
   isDirty: boolean;
   updateFromExtraction: (
@@ -116,20 +118,22 @@ export function useRecipeForm(config: {
     isDirty: false,
   });
 
-  const handleChange = useCallback((updates: Partial<RecipeMetadata>) => {
+  const handleChange = useCallback((updates: Partial<RecipeMetadataWrite>) => {
     dispatch({ type: "UPDATE_VALUES", updates });
   }, []);
 
   const handleSubmit = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
-    const trimmedValues: RecipeMetadata = {
+    const tags = state.values.tags ?? [];
+    const trimmedValues: RecipeMetadataWrite = {
       title: state.values.title?.trim() || undefined,
       source: state.values.source || undefined,
-      tags: state.values.tags,
+      tags,
+      tagIds: state.values.tagIds,
     };
 
-    if (trimmedValues.tags.length > 0 && !validateTags(trimmedValues.tags)) {
+    if (tags.length > 0 && !validateTags(tags)) {
       newErrors.tags = t("errors.invalidTags");
     }
 
@@ -165,7 +169,12 @@ export function useRecipeForm(config: {
 export function useTagInput(
   tags: Array<`#${string}`>,
   onChange: (tags: Array<`#${string}`>) => void
-) {
+): {
+  inputValue: string;
+  handleInputChange: (text: string) => void;
+  handleInputBlur: () => void;
+  handleRemoveTag: (index: number) => void;
+} {
   const [inputValue, setInputValue] = useState("");
 
   const handleInputChange = useCallback((text: string) => {

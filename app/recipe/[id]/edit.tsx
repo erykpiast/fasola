@@ -3,7 +3,7 @@ import { EditRecipeForm } from "@/features/recipe-form/components/EditRecipeForm
 import { useRecipeById } from "@/features/recipe-preview/hooks/useRecipeById";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { Alert } from "@/lib/alert";
-import type { RecipeMetadata } from "@/lib/types/recipe";
+import type { RecipeMetadataWrite } from "@/lib/repositories/types";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState, type JSX } from "react";
@@ -23,7 +23,7 @@ export default function EditRecipeScreen(): JSX.Element {
   }, [setDebugData]);
 
   const handleSubmit = useCallback(
-    async (metadata: RecipeMetadata) => {
+    async (metadata: RecipeMetadataWrite): Promise<void> => {
       if (!recipe || isSubmitting) return;
 
       setIsSubmitting(true);

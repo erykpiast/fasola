@@ -1,10 +1,12 @@
 import { router } from "expo-router";
 import { LiquidGlassButton, LiquidGlassPopover } from "liquid-glass";
-import { Suspense, useCallback, useEffect, type JSX } from "react";
+import { Suspense, useCallback, useEffect, useMemo, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -14,13 +16,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDebugContext } from "../features/photo-adjustment/context/DebugContext";
 import { EmptyState } from "../features/photos/components/EmptyState";
 import { useImportPopover } from "../features/photos/hooks/useImportPopover";
+import { usePopoverTransition } from "../features/photos/hooks/usePopoverTransition";
 import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeButton";
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
 import { useGlobalOptions } from "../features/recipes-list/hooks/useGlobalOptions";
-import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
+import { filterRecipesWithQuery } from "../features/recipes-list/utils/recipeSearch";
 import { SearchBar } from "../features/search/components/SearchBar";
+import { useAddButtonFocusTransition } from "../features/search/hooks/useAddButtonFocusTransition";
+import { useSearchQuery } from "../features/search/hooks/useSearchQuery";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
+import { useTags } from "../features/tags/context/TagsContext";
 import type { RecipeId } from "../lib/types/primitives";
 import { useTranslation } from "../platform/i18n/useTranslation";
 import { getColors } from "../platform/theme/glassStyles";
@@ -47,9 +53,18 @@ function Content(): JSX.Element {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { recipes } = useRecipes();
-  const { filteredRecipes, searchTerm, setSearchTerm } =
-    useRecipeFilter(recipes);
-  const { handleFocus, handleBlur, key } = useSearchFocus();
+  const { tags, tagLookup } = useTags();
+  const {
+    query,
+    addTagFromSuggestion,
+    removeSelectedTag,
+    setFreeText,
+    clearQuery,
+  } = useSearchQuery();
+  const filteredRecipes = useMemo(() => {
+    return filterRecipesWithQuery(recipes, query, tagLookup);
+  }, [recipes, query, tagLookup]);
+  const { handleFocus, handleBlur, key, isFocused } = useSearchFocus();
   const { setDebugData } = useDebugContext();
 
   const {
@@ -57,13 +72,15 @@ function Content(): JSX.Element {
     popoverVisible,
     dismissPopover,
     isImporting,
-    searchBarStyle,
-    buttonStyle,
     importOptions,
     handleImportOptionSelect,
   } = useImportPopover();
+  const shouldHideSearchBar = popoverVisible || isImporting;
+  const { buttonStyle } = usePopoverTransition(shouldHideSearchBar);
 
   const globalOptions = useGlobalOptions();
+  const { addButtonOuterStyle, addButtonInnerStyle } =
+    useAddButtonFocusTransition(isFocused);
 
   useEffect(() => {
     return () => {
@@ -71,28 +88,59 @@ function Content(): JSX.Element {
     };
   }, [setDebugData]);
 
-  const handleRecipeTap = useCallback((id: RecipeId): void => {
-    router.push(`/recipe/${id}`);
-  }, []);
+  const isAddButtonInteractive = !isFocused && !popoverVisible && !isImporting;
+
+  const dismissSearchFocus = useCallback((): void => {
+    if (!isFocused) {
+      return;
+    }
+
+    handleBlur();
+    Keyboard.dismiss();
+  }, [handleBlur, isFocused]);
+
+  const handleRecipeTap = useCallback(
+    (id: RecipeId): void => {
+      dismissSearchFocus();
+      router.push(`/recipe/${id}`);
+    },
+    [dismissSearchFocus]
+  );
+
+  const handleGlobalMenuPress = useCallback((): void => {
+    dismissSearchFocus();
+    globalOptions.handlePress();
+  }, [dismissSearchFocus, globalOptions]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {recipes.length === 0 ? (
         <EmptyState />
       ) : (
-        <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} headerInset={HEADER_AREA_HEIGHT} />
+        <RecipeGrid
+          recipes={filteredRecipes}
+          onRecipeTap={handleRecipeTap}
+          headerInset={HEADER_AREA_HEIGHT}
+          onSurfaceTouchStart={dismissSearchFocus}
+        />
       )}
 
       {/* Header row - title + overflow menu button */}
       <Animated.View
-        style={[styles.headerRow, { top: insets.top + HEADER_TOP_GAP }, globalOptions.buttonStyle]}
+        style={[
+          styles.headerRow,
+          { top: insets.top + HEADER_TOP_GAP },
+          globalOptions.buttonStyle,
+        ]}
         pointerEvents={popoverVisible || globalOptions.visible ? "none" : "auto"}
       >
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {t("library.heading")}
-        </Text>
+        <Pressable onPress={dismissSearchFocus} style={styles.headerTitleTouchArea}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            {t("library.heading")}
+          </Text>
+        </Pressable>
         <LiquidGlassButton
-          onPress={globalOptions.handlePress}
+          onPress={handleGlobalMenuPress}
           systemImage="ellipsis"
           accessibilityLabel={t("accessibility.moreOptions")}
         />
@@ -103,17 +151,32 @@ function Content(): JSX.Element {
         style={styles.keyboardAvoid}
       >
         <View style={styles.bottomBar}>
-          <Animated.View style={[styles.searchBarWrapper, searchBarStyle]}>
+          <View style={styles.searchBarWrapper}>
             <SearchBar
               key={key}
-              value={searchTerm}
-              onChangeText={setSearchTerm}
+              selectedTags={query.selectedTags}
+              freeText={query.freeText}
+              suggestionPrefix={query.suggestionPrefix}
+              allTags={tags}
+              onChangeFreeText={setFreeText}
+              onAddTagFromSuggestion={addTagFromSuggestion}
+              onRemoveSelectedTag={removeSelectedTag}
+              onClearQuery={clearQuery}
               onFocus={handleFocus}
               onBlur={handleBlur}
+              blocked={shouldHideSearchBar}
+              isFocused={isFocused}
             />
-          </Animated.View>
-          <Animated.View style={buttonStyle}>
-            <AddRecipeButton onPress={showPopover} />
+          </View>
+          <Animated.View
+            style={[styles.addButtonOuterWrapper, buttonStyle, addButtonOuterStyle]}
+          >
+            <Animated.View
+              style={[styles.addButtonWrapper, addButtonInnerStyle]}
+              pointerEvents={isAddButtonInteractive ? "auto" : "none"}
+            >
+              <AddRecipeButton onPress={showPopover} />
+            </Animated.View>
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
@@ -166,6 +229,13 @@ export default function Index(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  addButtonOuterWrapper: {
+    justifyContent: "center",
+  },
+  addButtonWrapper: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
   },
@@ -183,6 +253,9 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
   },
+  headerTitleTouchArea: {
+    paddingRight: 12,
+  },
   popoverLayer: {
     zIndex: 11,
   },
@@ -191,10 +264,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 10,
   },
   bottomBar: {
     flexDirection: "row",
-    gap: 12,
     // NOTE: The same effective space from the screen to button edges for the `Add note` button in the Apple Notes app
     paddingHorizontal: 28,
     paddingBottom: 28,

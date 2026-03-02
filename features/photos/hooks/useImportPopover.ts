@@ -4,15 +4,12 @@ import {
   usePhotoImport,
   type ImportOption,
 } from "@/features/photos/hooks/usePhotoImport";
-import { usePopoverTransition } from "@/features/photos/hooks/usePopoverTransition";
 
 export function useImportPopover(): {
   showPopover: () => void;
   popoverVisible: boolean;
   dismissPopover: () => void;
   isImporting: boolean;
-  searchBarStyle: ReturnType<typeof usePopoverTransition>["searchBarStyle"];
-  buttonStyle: ReturnType<typeof usePopoverTransition>["buttonStyle"];
   importOptions: Array<{ id: string; label: string; systemImage: string }>;
   handleImportOptionSelect: (id: string) => void;
 } {
@@ -24,8 +21,6 @@ export function useImportPopover(): {
     dismissPopover,
     isImporting,
   } = usePhotoImport();
-  const { searchBarStyle, buttonStyle } =
-    usePopoverTransition(popoverVisible || isImporting);
 
   const handleImportOptionSelect = useCallback(
     (id: string) => {
@@ -52,8 +47,6 @@ export function useImportPopover(): {
       popoverVisible,
       dismissPopover,
       isImporting,
-      searchBarStyle,
-      buttonStyle,
       importOptions,
       handleImportOptionSelect,
     }),
@@ -62,8 +55,6 @@ export function useImportPopover(): {
       popoverVisible,
       dismissPopover,
       isImporting,
-      searchBarStyle,
-      buttonStyle,
       importOptions,
       handleImportOptionSelect,
     ],

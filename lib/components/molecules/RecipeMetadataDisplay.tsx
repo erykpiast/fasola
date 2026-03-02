@@ -1,3 +1,5 @@
+import { useTags } from "@/features/tags/context/TagsContext";
+import { resolveTagLabels } from "@/features/tags/utils/resolveRecipeTags";
 import { SourceDisplay } from "@/lib/components/atoms/SourceDisplay";
 import { TagList } from "@/lib/components/atoms/TagList";
 import type { RecipeMetadata } from "@/lib/types/recipe";
@@ -12,8 +14,10 @@ export function RecipeMetadataDisplay({
   metadata: RecipeMetadata;
   style?: object;
 }): JSX.Element | null {
+  const { tagLookup } = useTags();
   const { t } = useTranslation();
-  const hasTags = metadata.tags && metadata.tags.length > 0;
+  const tagLabels = resolveTagLabels(metadata.tagIds, tagLookup);
+  const hasTags = tagLabels.length > 0;
   const hasSource = !!metadata.source;
 
   if (!hasTags && !hasSource) {
@@ -26,7 +30,7 @@ export function RecipeMetadataDisplay({
 
   return (
     <View style={[styles.container, style]}>
-      {hasTags && <TagList tags={metadata.tags} style={styles.tags} />}
+      {hasTags && <TagList tags={tagLabels} style={styles.tags} />}
       {hasSource && (
         <SourceDisplay source={metadata.source} style={styles.source} />
       )}

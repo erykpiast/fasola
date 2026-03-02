@@ -293,7 +293,7 @@ export default function ManageBooksScreen(): JSX.Element {
   const isDark = theme === "dark";
   const textColor = isDark ? "#FFFFFF" : "#000000";
   const { sources, createSource, renameSource, deleteSource } = useSources();
-  const { recipes, deleteRecipe } = useRecipes();
+  const { recipes, deleteRecipes } = useRecipes();
   const isDeletingRef = useRef(false);
 
   const [isAddingBook, setIsAddingBook] = useState(false);
@@ -363,9 +363,7 @@ export default function ManageBooksScreen(): JSX.Element {
                 const recipesToDelete = recipes.filter(
                   (r) => r.metadata.source === sourceId
                 );
-                for (const r of recipesToDelete) {
-                  await deleteRecipe(r.id);
-                }
+                await deleteRecipes(recipesToDelete.map((recipe) => recipe.id));
                 LayoutAnimation.configureNext(
                   LayoutAnimation.Presets.easeInEaseOut
                 );
@@ -378,7 +376,7 @@ export default function ManageBooksScreen(): JSX.Element {
         ]
       );
     },
-    [sources, recipeCounts, recipes, deleteRecipe, deleteSource, t]
+    [sources, recipeCounts, recipes, deleteRecipes, deleteSource, t]
   );
 
   const handleStartEdit = useCallback(
@@ -466,7 +464,7 @@ export default function ManageBooksScreen(): JSX.Element {
                   value={newBookName}
                   onChangeText={setNewBookName}
                   placeholder={t("sourceSelector.addNewPlaceholder")}
-                  variant="form"
+                  variant="text"
                   style={styles.addInputField}
                   autoFocus
                   maxLength={100}

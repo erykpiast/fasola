@@ -61,7 +61,7 @@ export async function processClarity(
 
     // Convert to data URL
     console.log("  Converting result to data URL...");
-    const result = matToDataUrl(cv, current);
+    const result = matToDataUrl(cv, current, "bgr");
 
     // Cleanup
     current.delete();
@@ -76,4 +76,3 @@ export async function processClarity(
     throw error;
   }
 }
-

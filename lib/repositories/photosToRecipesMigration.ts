@@ -22,7 +22,7 @@ export async function migrateIfNeeded(newKey: StorageKey): Promise<void> {
       id: photo.id,
       photoUri: photo.uri,
       timestamp: photo.timestamp,
-      metadata: { tags: [] },
+      metadata: { tagIds: [] },
       status: "ready" as const,
     }));
     await storage.setItem(newKey, JSON.stringify(newRecipes));

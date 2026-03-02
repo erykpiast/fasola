@@ -18,8 +18,14 @@ export function LiquidGlassInput({
   onClear,
   onFocus,
   onBlur,
-  variant = "form",
+  variant = "text",
+  selectedTags = [],
+  onTagPress,
+  returnKeyType = "done",
+  onSubmitEditing,
+  blurOnSubmit = true,
   autoFocus = false,
+  isFocused,
   style,
   maxLength,
 }: LiquidGlassInputProps): JSX.Element {
@@ -47,7 +53,18 @@ export function LiquidGlassInput({
     onBlur?.();
   }, [onBlur]);
 
-  const height = variant === "search" ? 48 : label ? 76 : 56;
+  const handleTagPress = useCallback(
+    (event: { nativeEvent: { id: string } }) => {
+      onTagPress?.(event.nativeEvent.id);
+    },
+    [onTagPress]
+  );
+
+  const handleSubmitEditing = useCallback((): void => {
+    onSubmitEditing?.();
+  }, [onSubmitEditing]);
+
+  const height = label ? 76 : variant === "mixed" || variant === "tags" ? 48 : 56;
 
   return (
     <NativeLiquidGlassInputView
@@ -57,9 +74,15 @@ export function LiquidGlassInput({
       leadingSystemImage={leadingSystemImage}
       showClearButton={showClearButton}
       variant={variant}
+      selectedTags={selectedTags}
       autoFocus={autoFocus}
+      isFocused={isFocused}
+      returnKeyType={returnKeyType}
+      blurOnSubmit={blurOnSubmit}
       onChangeText={handleChangeText}
       onClear={handleClear}
+      onTagPress={handleTagPress}
+      onInputSubmit={handleSubmitEditing}
       onInputFocus={handleFocus}
       onInputBlur={handleBlur}
       style={[styles.container, { height }, style]}

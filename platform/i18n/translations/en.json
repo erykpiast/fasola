@@ -34,7 +34,14 @@
     "emptyState": "No additional details"
   },
   "search": {
-    "placeholder": "Search recipes..."
+    "placeholder": "Search recipes...",
+    "selectedPill": {
+      "accessibilityLabel": "Selected tag #{{tag}}"
+    },
+    "suggestions": {
+      "accessibilityLabel_one": "#{{tag}}, {{countLabel}} recipe",
+      "accessibilityLabel_other": "#{{tag}}, {{countLabel}} recipes"
+    }
   },
   "accessibility": {
     "close": "Close",

@@ -1,6 +1,8 @@
 import type { DataUrl } from "@/lib/types/primitives";
 import type { CV, CVMat } from "../../types/opencv";
 
+type MatChannelOrder = "bgr" | "rgb";
+
 export function imgsize(img: CVMat): string {
   return `${img.cols}x${img.rows}`;
 }
@@ -34,12 +36,19 @@ export async function loadImageMat(
 /**
  * Converts an OpenCV Mat to a DataUrl.
  */
-export function matToDataUrl(cv: CV, mat: CVMat): DataUrl {
+export function matToDataUrl(
+  cv: CV,
+  mat: CVMat,
+  channelOrder: MatChannelOrder = "bgr"
+): DataUrl {
   const img = new cv.Mat();
   if (mat.channels() === 1) {
     cv.cvtColor(mat, img, cv.COLOR_GRAY2RGBA);
   } else if (mat.channels() === 3) {
-    cv.cvtColor(mat, img, cv.COLOR_RGB2RGBA);
+    // Most pipeline mats are BGR because inputs are normalized via RGBA->BGR.
+    const conversionCode =
+      channelOrder === "rgb" ? cv.COLOR_RGB2RGBA : cv.COLOR_BGR2RGBA;
+    cv.cvtColor(mat, img, conversionCode);
   } else {
     mat.copyTo(img);
   }
@@ -119,4 +128,3 @@ export function norm2pix(
     return [x, y];
   });
 }
-

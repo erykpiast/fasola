@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { LiquidGlassButton, LiquidGlassPopover } from "liquid-glass";
-import { Suspense, useCallback, useEffect, type JSX } from "react";
+import { Suspense, useCallback, useEffect, useMemo, type JSX } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import {
   Keyboard,
@@ -21,9 +21,10 @@ import { AddRecipeButton } from "../features/recipe-form/components/AddRecipeBut
 import { RecipeGrid } from "../features/recipes-list/components/RecipeGrid";
 import { useRecipes } from "../features/recipes-list/context/RecipesContext";
 import { useGlobalOptions } from "../features/recipes-list/hooks/useGlobalOptions";
-import { useRecipeFilter } from "../features/recipes-list/hooks/useRecipeFilter";
+import { filterRecipesWithQuery } from "../features/recipes-list/utils/recipeSearch";
 import { SearchBar } from "../features/search/components/SearchBar";
 import { useAddButtonFocusTransition } from "../features/search/hooks/useAddButtonFocusTransition";
+import { useSearchQuery } from "../features/search/hooks/useSearchQuery";
 import { useSearchFocus } from "../features/search/hooks/useSearchFocus";
 import { useTags } from "../features/tags/context/TagsContext";
 import type { RecipeId } from "../lib/types/primitives";
@@ -52,9 +53,17 @@ function Content(): JSX.Element {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { recipes } = useRecipes();
-  const { tagLookup } = useTags();
-  const { filteredRecipes, searchTerm, setSearchTerm } =
-    useRecipeFilter(recipes, tagLookup);
+  const { tags, tagLookup } = useTags();
+  const {
+    query,
+    addTagFromSuggestion,
+    removeSelectedTag,
+    setFreeText,
+    clearQuery,
+  } = useSearchQuery();
+  const filteredRecipes = useMemo(() => {
+    return filterRecipesWithQuery(recipes, query, tagLookup);
+  }, [recipes, query, tagLookup]);
   const { handleFocus, handleBlur, key, isFocused } = useSearchFocus();
   const { setDebugData } = useDebugContext();
 
@@ -145,11 +154,17 @@ function Content(): JSX.Element {
           <View style={styles.searchBarWrapper}>
             <SearchBar
               key={key}
-              value={searchTerm}
-              onChangeText={setSearchTerm}
+              selectedTags={query.selectedTags}
+              freeText={query.freeText}
+              suggestionPrefix={query.suggestionPrefix}
+              allTags={tags}
+              onChangeFreeText={setFreeText}
+              onAddTagFromSuggestion={addTagFromSuggestion}
+              onRemoveSelectedTag={removeSelectedTag}
+              onClearQuery={clearQuery}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              isHidden={shouldHideSearchBar}
+              blocked={shouldHideSearchBar}
               isFocused={isFocused}
             />
           </View>

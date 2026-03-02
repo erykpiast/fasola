@@ -35,6 +35,9 @@
   },
   "search": {
     "placeholder": "Search recipes...",
+    "selectedPill": {
+      "accessibilityLabel": "Selected tag #{{tag}}"
+    },
     "suggestions": {
       "accessibilityLabel_one": "#{{tag}}, {{countLabel}} recipe",
       "accessibilityLabel_other": "#{{tag}}, {{countLabel}} recipes"

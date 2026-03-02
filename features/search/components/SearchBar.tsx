@@ -1,12 +1,12 @@
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useSearchBarVisibilityTransition } from "@/features/search/hooks/useSearchBarVisibilityTransition";
+import type { SearchQueryTag } from "@/features/search/hooks/useSearchQuery";
 import { useTagSuggestions } from "@/features/search/hooks/useTagSuggestions";
-import { useTags } from "@/features/tags/context/TagsContext";
 import type { TagId } from "@/lib/types/primitives";
 import type { Tag } from "@/lib/types/tag";
 import { LiquidGlassInput, LiquidGlassSuggestions } from "liquid-glass";
 import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 
 const SEARCH_INPUT_HEIGHT = 48;
@@ -15,87 +15,61 @@ const SUGGESTION_ROW_HEIGHT = 40;
 const MIN_SUGGESTIONS_WIDTH = 180;
 const MAX_SUGGESTIONS_WIDTH = 320;
 
-function extractSuggestionPrefix(freeText: string): string {
-  const withoutTrailingSpaces = freeText.replace(/\s+$/, "");
-  if (withoutTrailingSpaces.length === 0) {
-    return "";
-  }
-
-  const fragments = withoutTrailingSpaces.split(/\s+/);
-  const trailingFragment = fragments[fragments.length - 1] ?? "";
-  return trailingFragment.replace(/^#+/, "");
-}
-
 export function SearchBar({
-  value,
-  onChangeText,
+  selectedTags,
+  freeText,
+  suggestionPrefix,
+  allTags,
+  onChangeFreeText,
+  onAddTagFromSuggestion,
+  onRemoveSelectedTag,
+  onClearQuery,
+  blocked = false,
+  isFocused,
   onFocus,
   onBlur,
-  isHidden,
-  isFocused,
-  onSelectSuggestion,
+  onSubmitEditing,
+  style,
 }: {
-  value: string;
-  onChangeText: (text: string) => void;
-  onFocus: () => void;
-  onBlur: () => void;
-  isHidden: boolean;
+  selectedTags: Array<SearchQueryTag>;
+  freeText: string;
+  suggestionPrefix: string;
+  allTags: Array<Tag>;
+  onChangeFreeText: (text: string) => void;
+  onAddTagFromSuggestion: (tag: Tag) => void;
+  onRemoveSelectedTag: (tagId: TagId) => void;
+  onClearQuery: () => void;
+  blocked?: boolean;
   isFocused?: boolean;
-  onSelectSuggestion?: (tag: Tag) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onSubmitEditing?: () => void;
+  style?: ViewStyle;
 }): JSX.Element {
   const { t } = useTranslation();
-  const { tags } = useTags();
-  const { containerStyle } = useSearchBarVisibilityTransition(isHidden);
+  const { containerStyle } = useSearchBarVisibilityTransition(blocked);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<
-    Array<{ id: TagId; label: string; accessibilityLabel?: string }>
-  >([]);
 
-  const suggestionPrefix = useMemo((): string => {
-    return extractSuggestionPrefix(value);
-  }, [value]);
   const excludedTagIds = useMemo((): Array<TagId> => {
     return selectedTags.map((tag) => tag.id);
   }, [selectedTags]);
-  const hasUserInput = value.trim().length > 0;
-
-  const handleSelectSuggestion = useCallback(
-    (tag: Tag): void => {
-      if (onSelectSuggestion) {
-        onSelectSuggestion(tag);
-        return;
-      }
-
-      setSelectedTags((prevTags) => {
-        if (prevTags.some((prevTag) => prevTag.id === tag.id)) {
-          return prevTags;
-        }
-
-        return [
-          ...prevTags,
-          {
-            id: tag.id,
-            label: tag.label.replace(/^#/, ""),
-            accessibilityLabel: t("search.suggestions.accessibilityLabel", {
-              count: tag.recipeCount,
-              countLabel: tag.recipeCount > 99 ? "99+" : String(tag.recipeCount),
-              tag: tag.label.replace(/^#/, ""),
-            }),
-          },
-        ];
-      });
-
-      onChangeText("");
-    },
-    [onSelectSuggestion, onChangeText, t]
-  );
 
   const { suggestions, handleSuggestionPress } = useTagSuggestions({
-    tags,
+    tags: allTags,
     prefix: suggestionPrefix,
-    onSelectSuggestion: handleSelectSuggestion,
+    onSelectSuggestion: onAddTagFromSuggestion,
     excludedTagIds,
   });
+
+  const liquidSelectedTags = useMemo(() => {
+    return selectedTags.map((tag) => ({
+      id: tag.id,
+      label: tag.label,
+      accessibilityLabel: t("search.selectedPill.accessibilityLabel", {
+        tag: tag.label,
+      }),
+    }));
+  }, [selectedTags, t]);
 
   const liquidSuggestions = useMemo(() => {
     return suggestions.map((suggestion) => ({
@@ -123,73 +97,72 @@ export function SearchBar({
   }, [liquidSuggestions]);
 
   const suggestionsPanelHeight = liquidSuggestions.length * SUGGESTION_ROW_HEIGHT;
+  const suggestionsStyle = useMemo(
+    (): ViewStyle => ({
+      alignSelf: "flex-start",
+      width: suggestionsPanelWidth,
+      height: suggestionsPanelHeight,
+    }),
+    [suggestionsPanelWidth, suggestionsPanelHeight]
+  );
 
   const isSuggestionsVisible =
-    isInputFocused && !isHidden && hasUserInput && liquidSuggestions.length > 0;
+    isInputFocused &&
+    !blocked &&
+    freeText.trim().length > 0 &&
+    liquidSuggestions.length > 0;
 
   const handleFocus = useCallback((): void => {
     setIsInputFocused(true);
-    onFocus();
+    onFocus?.();
   }, [onFocus]);
 
   const handleBlur = useCallback((): void => {
     setIsInputFocused(false);
-    onBlur();
+    onBlur?.();
   }, [onBlur]);
 
   const handleSubmitEditing = useCallback((): void => {
     setIsInputFocused(false);
-  }, []);
-
-  const handleTagPress = useCallback((id: TagId): void => {
-    setSelectedTags((prevTags) =>
-      prevTags.filter((tag) => tag.id !== id)
-    );
-  }, []);
+    onSubmitEditing?.();
+  }, [onSubmitEditing]);
 
   useEffect((): void => {
-    if (isFocused === false) {
+    if (isFocused === false || blocked) {
       setIsInputFocused(false);
     }
-  }, [isFocused]);
+  }, [isFocused, blocked]);
 
   return (
-    <Animated.View style={[styles.container, containerStyle]}>
-      <LiquidGlassInput
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholder={t("search.placeholder")}
-        leadingSystemImage="magnifyingglass"
-        showClearButton
-        onClear={() => {
-          setSelectedTags([]);
-          onChangeText("");
-        }}
-        variant="mixed"
-        selectedTags={selectedTags}
-        onTagPress={handleTagPress}
-        isFocused={isFocused}
-        returnKeyType="search"
-        onSubmitEditing={handleSubmitEditing}
-        blurOnSubmit
-      />
-      <View style={styles.suggestionsLayer} pointerEvents="box-none">
-        <LiquidGlassSuggestions
-          visible={isSuggestionsVisible}
-          suggestions={liquidSuggestions}
-          onSuggestionPress={handleSuggestionPress}
-          style={[
-            styles.suggestions,
-            {
-              width: suggestionsPanelWidth,
-              height: suggestionsPanelHeight,
-            },
-          ]}
+    <View style={style}>
+      <Animated.View style={[styles.container, containerStyle]}>
+        <LiquidGlassInput
+          value={freeText}
+          onChangeText={onChangeFreeText}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          placeholder={t("search.placeholder")}
+          leadingSystemImage="magnifyingglass"
+          showClearButton
+          onClear={onClearQuery}
+          variant="mixed"
+          selectedTags={liquidSelectedTags}
+          onTagPress={onRemoveSelectedTag}
+          isFocused={isFocused}
+          returnKeyType="search"
+          onSubmitEditing={handleSubmitEditing}
+          blurOnSubmit
         />
-      </View>
-    </Animated.View>
+        <View style={styles.suggestionsLayer} pointerEvents="box-none">
+          <LiquidGlassSuggestions
+            visible={isSuggestionsVisible}
+            suggestions={liquidSuggestions}
+            onSuggestionPress={handleSuggestionPress}
+            style={suggestionsStyle}
+          />
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -203,8 +176,5 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: SEARCH_INPUT_HEIGHT + SUGGESTIONS_GAP,
     zIndex: 20,
-  },
-  suggestions: {
-    alignSelf: "flex-start",
   },
 });

@@ -440,7 +440,7 @@ async function threshold(
     remapped.delete();
   }
 
-  const dataUrl = matToDataUrl(cv, result);
+  const dataUrl = matToDataUrl(cv, result, "bgr");
 
   mapXSmall.delete();
   mapYSmall.delete();

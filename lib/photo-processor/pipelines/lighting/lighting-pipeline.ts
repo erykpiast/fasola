@@ -73,7 +73,7 @@ export async function processLighting(
 
     // Convert colored version to data URL
     console.log("  Converting colored result to data URL...");
-    const coloredUri = matToDataUrl(cv, current);
+    const coloredUri = matToDataUrl(cv, current, "bgr");
 
     // Create grayscale version for OCR
     console.log("  Creating grayscale version for OCR...");
@@ -81,7 +81,7 @@ export async function processLighting(
     cv.cvtColor(current, gray, cv.COLOR_BGR2GRAY);
     const grayBgr = new cv.Mat();
     cv.cvtColor(gray, grayBgr, cv.COLOR_GRAY2BGR);
-    const grayscaleUri = matToDataUrl(cv, grayBgr);
+    const grayscaleUri = matToDataUrl(cv, grayBgr, "bgr");
 
     // Cleanup
     current.delete();

@@ -23,7 +23,7 @@ export function LiquidGlassInput({
   const shouldShowTags = variant === "tags" || variant === "mixed";
   const shouldShowTextInput = variant === "text" || variant === "mixed";
   const shouldUseAccent = selectedTags.length > 0 && value.trim().length > 0;
-  const height = label ? 76 : 56;
+  const height = label ? 76 : variant === "mixed" || variant === "tags" ? 48 : 56;
 
   return (
     <View

@@ -88,7 +88,11 @@ function Content(): JSX.Element {
       {recipes.length === 0 ? (
         <EmptyState />
       ) : (
-        <RecipeGrid recipes={filteredRecipes} onRecipeTap={handleRecipeTap} headerInset={HEADER_AREA_HEIGHT} />
+        <RecipeGrid
+          recipes={filteredRecipes}
+          onRecipeTap={handleRecipeTap}
+          headerInset={HEADER_AREA_HEIGHT}
+        />
       )}
 
       {/* Header row - title + overflow menu button */}

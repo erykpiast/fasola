@@ -13,4 +13,10 @@ export type {
   LiquidGlassPopoverProps,
 } from "./src/LiquidGlassPopover.types";
 
+export { LiquidGlassSuggestions } from "./src/LiquidGlassSuggestions";
+export type {
+  LiquidGlassSuggestion,
+  LiquidGlassSuggestionsProps,
+} from "./src/LiquidGlassSuggestions.types";
+
 export { ioniconsToSFSymbol, toSFSymbol } from "./src/iconMapping";

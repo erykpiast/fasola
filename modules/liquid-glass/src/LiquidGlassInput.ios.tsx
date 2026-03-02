@@ -21,6 +21,9 @@ export function LiquidGlassInput({
   variant = "text",
   selectedTags = [],
   onTagPress,
+  returnKeyType = "done",
+  onSubmitEditing,
+  blurOnSubmit = true,
   autoFocus = false,
   style,
   maxLength,
@@ -56,7 +59,11 @@ export function LiquidGlassInput({
     [onTagPress]
   );
 
-  const height = label ? 76 : 56;
+  const handleSubmitEditing = useCallback((): void => {
+    onSubmitEditing?.();
+  }, [onSubmitEditing]);
+
+  const height = label ? 76 : variant === "mixed" || variant === "tags" ? 48 : 56;
 
   return (
     <NativeLiquidGlassInputView
@@ -68,9 +75,12 @@ export function LiquidGlassInput({
       variant={variant}
       selectedTags={selectedTags}
       autoFocus={autoFocus}
+      returnKeyType={returnKeyType}
+      blurOnSubmit={blurOnSubmit}
       onChangeText={handleChangeText}
       onClear={handleClear}
       onTagPress={handleTagPress}
+      onInputSubmit={handleSubmitEditing}
       onInputFocus={handleFocus}
       onInputBlur={handleBlur}
       style={[styles.container, { height }, style]}

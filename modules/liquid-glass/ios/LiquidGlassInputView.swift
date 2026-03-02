@@ -260,6 +260,10 @@ private struct LiquidGlassInputContent: View {
     variant == "tags" || variant == "mixed"
   }
 
+  private var hasClearableContent: Bool {
+    !value.isEmpty || !selectedTags.isEmpty
+  }
+
   private var uiReturnKeyType: UIReturnKeyType {
     switch returnKeyType {
     case "next":
@@ -313,7 +317,7 @@ private struct LiquidGlassInputContent: View {
 
       inlineContent
 
-      if showClearButton && !value.isEmpty {
+      if showClearButton && hasClearableContent {
         Button(action: {
           text = ""
           onClear()

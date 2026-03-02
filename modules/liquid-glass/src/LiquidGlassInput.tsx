@@ -7,6 +7,8 @@ export function LiquidGlassInput({
   onChangeText,
   placeholder = "",
   label,
+  showClearButton = false,
+  onClear,
   onFocus,
   onBlur,
   variant = "text",
@@ -23,6 +25,7 @@ export function LiquidGlassInput({
   const shouldShowTags = variant === "tags" || variant === "mixed";
   const shouldShowTextInput = variant === "text" || variant === "mixed";
   const shouldUseAccent = selectedTags.length > 0 && value.trim().length > 0;
+  const shouldShowClearButton = showClearButton && (value.length > 0 || selectedTags.length > 0);
   const height = label ? 76 : variant === "mixed" || variant === "tags" ? 48 : 56;
 
   return (
@@ -68,6 +71,15 @@ export function LiquidGlassInput({
             maxLength={maxLength}
             style={styles.input}
           />
+        )}
+        {shouldShowClearButton && (
+          <Pressable
+            onPress={onClear}
+            style={styles.clearButton}
+            accessibilityLabel="Clear search"
+          >
+            <Text style={styles.clearButtonIcon}>x</Text>
+          </Pressable>
         )}
       </View>
     </View>
@@ -118,5 +130,19 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 17,
     flex: 1,
+  },
+  clearButton: {
+    marginLeft: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(60, 60, 67, 0.2)",
+  },
+  clearButtonIcon: {
+    fontSize: 12,
+    lineHeight: 14,
+    color: "rgba(60, 60, 67, 0.85)",
   },
 });

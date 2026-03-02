@@ -25,6 +25,7 @@ export function LiquidGlassInput({
   onSubmitEditing,
   blurOnSubmit = true,
   autoFocus = false,
+  isFocused,
   style,
   maxLength,
 }: LiquidGlassInputProps): JSX.Element {
@@ -75,6 +76,7 @@ export function LiquidGlassInput({
       variant={variant}
       selectedTags={selectedTags}
       autoFocus={autoFocus}
+      isFocused={isFocused}
       returnKeyType={returnKeyType}
       blurOnSubmit={blurOnSubmit}
       onChangeText={handleChangeText}

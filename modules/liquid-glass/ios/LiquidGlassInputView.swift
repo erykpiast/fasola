@@ -39,6 +39,7 @@ public final class LiquidGlassInputView: ExpoView {
   private var variant: String = "text"
   private var selectedTags: [LiquidGlassSelectedTag] = []
   private var autoFocusFlag: Bool = false
+  private var focusedOverride: Bool? = nil
   private var returnKeyType: String = "done"
   private var blurOnSubmitFlag: Bool = true
 
@@ -145,6 +146,11 @@ public final class LiquidGlassInputView: ExpoView {
     updateContent()
   }
 
+  func setFocused(_ isFocused: Bool) {
+    focusedOverride = isFocused
+    updateContent()
+  }
+
   func setReturnKeyType(_ newReturnKeyType: String) {
     returnKeyType = newReturnKeyType
     updateContent()
@@ -165,6 +171,7 @@ public final class LiquidGlassInputView: ExpoView {
       variant: variant,
       selectedTags: selectedTags,
       autoFocus: autoFocusFlag,
+      focusedOverride: focusedOverride,
       returnKeyType: returnKeyType,
       blurOnSubmit: blurOnSubmitFlag,
       onChangeText: { [weak self] text in
@@ -223,6 +230,7 @@ private struct LiquidGlassInputContent: View {
   var variant: String
   var selectedTags: [LiquidGlassSelectedTag]
   var autoFocus: Bool
+  var focusedOverride: Bool?
   var returnKeyType: String
   var blurOnSubmit: Bool
   var onChangeText: (String) -> Void
@@ -262,6 +270,10 @@ private struct LiquidGlassInputContent: View {
       return .done
     }
   }
+
+  private var effectiveIsFocused: Bool {
+    focusedOverride ?? isTextInputFocused
+  }
   
   var body: some View {
     Group {
@@ -279,7 +291,7 @@ private struct LiquidGlassInputContent: View {
     }
     .onAppear {
       text = value
-      if autoFocus {
+      if autoFocus && focusedOverride == nil {
         isTextInputFocused = true
       }
     }
@@ -368,7 +380,16 @@ private struct LiquidGlassInputContent: View {
                 text: $text,
                 placeholder: placeholder,
                 returnKeyType: uiReturnKeyType,
-                isFocused: $isTextInputFocused,
+                isFocused: Binding(
+                  get: {
+                    effectiveIsFocused
+                  },
+                  set: { newValue in
+                    if focusedOverride == nil {
+                      isTextInputFocused = newValue
+                    }
+                  }
+                ),
                 blurOnSubmit: blurOnSubmit,
                 onFocus: onFocus,
                 onBlur: onBlur,
@@ -404,6 +425,11 @@ private struct LiquidGlassInputContent: View {
         }
         .onChange(of: isTextInputFocused) { _, focused in
           if focused {
+            scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
+          }
+        }
+        .onChange(of: focusedOverride) { _, focused in
+          if focused == true {
             scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
           }
         }

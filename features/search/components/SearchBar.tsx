@@ -5,7 +5,7 @@ import { useTags } from "@/features/tags/context/TagsContext";
 import type { TagId } from "@/lib/types/primitives";
 import type { Tag } from "@/lib/types/tag";
 import { LiquidGlassInput, LiquidGlassSuggestions } from "liquid-glass";
-import { useCallback, useMemo, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -32,6 +32,7 @@ export function SearchBar({
   onFocus,
   onBlur,
   isHidden,
+  isFocused,
   onSelectSuggestion,
 }: {
   value: string;
@@ -39,6 +40,7 @@ export function SearchBar({
   onFocus: () => void;
   onBlur: () => void;
   isHidden: boolean;
+  isFocused?: boolean;
   onSelectSuggestion?: (tag: Tag) => void;
 }): JSX.Element {
   const { t } = useTranslation();
@@ -145,6 +147,12 @@ export function SearchBar({
     );
   }, []);
 
+  useEffect((): void => {
+    if (isFocused === false) {
+      setIsInputFocused(false);
+    }
+  }, [isFocused]);
+
   return (
     <Animated.View style={[styles.container, containerStyle]}>
       <LiquidGlassInput
@@ -162,6 +170,7 @@ export function SearchBar({
         variant="mixed"
         selectedTags={selectedTags}
         onTagPress={handleTagPress}
+        isFocused={isFocused}
         returnKeyType="search"
         onSubmitEditing={handleSubmitEditing}
         blurOnSubmit

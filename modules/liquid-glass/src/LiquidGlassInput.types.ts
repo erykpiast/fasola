@@ -22,6 +22,7 @@ export type LiquidGlassInputProps = {
   onTagPress?: (id: TagId) => void;
   style?: ViewStyle;
   autoFocus?: boolean;
+  isFocused?: boolean;
   returnKeyType?: "done" | "next" | "search";
   onSubmitEditing?: () => void;
   blurOnSubmit?: boolean;

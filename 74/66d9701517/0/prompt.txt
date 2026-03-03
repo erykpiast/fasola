@@ -1,0 +1,46 @@
+Implement the following plan:
+
+# Restore iCloud Sync
+
+## Context
+iCloud sync was disabled in commit `f23ef25` because a paid Apple Developer Program membership was required. The user has now registered, so the feature can be re-enabled. The implementation is fully complete — only the config plugin reference was removed.
+
+## Changes
+
+### 1. Add plugin back to `app.json`
+Add `"./modules/icloud-sync/app.plugin.js"` to the `plugins` array (after `expo-build-properties`).
+
+### 2. Remove TODO comment from `modules/icloud-sync/app.plugin.js`
+Remove lines 6-8 (the TODO comment about re-enabling).
+
+### 3. Regenerate native project
+Run `npx expo prebuild --clean` to regenerate iOS native code with iCloud entitlements injected.
+
+## Verification
+- Check `ios/fasola/fasola.entitlements` contains `com.apple.developer.icloud-container-identifiers` with `iCloud.com.erykpiast.fasola`
+- Check `ios/fasola/Info.plist` contains `NSUbiquitousContainers`
+- Build and run on device to confirm iCloud container access
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/2d3c4078-16af-4cd8-bfae-28dca8c5253f.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+Address any concerns before proceeding.

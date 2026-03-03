@@ -1,7 +1,7 @@
 import ExpoModulesCore
 import Foundation
 
-private let containerId = "iCloud.com.erykpiast.fasola"
+private let containerId = "iCloud.com.eryknapierala.fasola"
 
 public final class ICloudSyncModule: Module {
   private var metadataQuery: NSMetadataQuery?

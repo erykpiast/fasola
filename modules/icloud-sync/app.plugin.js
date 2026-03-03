@@ -3,9 +3,6 @@ const {
   withInfoPlist,
 } = require("expo/config-plugins");
 
-// TODO: Re-enable this plugin in app.json once you have a paid Apple Developer membership.
-// Add this line back to the "plugins" array in app.json:
-//   "./modules/icloud-sync/app.plugin.js"
 const CONTAINER_ID = "iCloud.com.eryknapierala.fasola";
 
 function withICloudEntitlements(config) {

@@ -1,0 +1,23 @@
+eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build)> npx expo run:ios --device
+Unexpected devicectl JSON version output from devicectl. Connecting to physical Apple devices may not work as expected.
+✔ Select a device › 🌐 koci telefon (26.4)
+› Using --device 00008110-000E2D2822A0201E
+› Your computer requires some additional setup before you can build onto physical iOS devices.
+  Learn more: https://expo.fyi/setup-xcode-signing
+CommandError: No code signing certificates are available to use. - please do whatever it takes to fix. Run commands yourself
+
+---
+
+Tool loaded.
+
+---
+
+My team is "Eryk Napierała"
+
+---
+
+done
+
+---
+
+Tool loaded.

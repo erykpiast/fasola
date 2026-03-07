@@ -28,3 +28,32 @@ done
 
 Tool loaded.
 
+### Prompt 6
+
+Tool loaded.
+
+### Prompt 7
+
+Tool loaded.
+
+### Prompt 8
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+Address any concerns before ...
+

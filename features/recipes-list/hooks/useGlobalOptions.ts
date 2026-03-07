@@ -9,7 +9,7 @@ interface MenuOption {
   id: string;
   label: string;
   systemImage: string;
-  route: "/manage-books" | "/about";
+  route: "/manage-books" | "/about" | "/settings";
 }
 
 export function useGlobalOptions(): {
@@ -31,6 +31,12 @@ export function useGlobalOptions(): {
         label: t("menu.manageBooks"),
         systemImage: "books.vertical",
         route: "/manage-books",
+      },
+      {
+        id: "settings",
+        label: t("menu.settings"),
+        systemImage: "gearshape",
+        route: "/settings",
       },
       {
         id: "about",

@@ -1,3 +1,5 @@
+import { usePreferences } from "@/features/settings/context/PreferencesContext";
+import { getTagDisplayLabel } from "@/features/tags/utils/tagDisplayLabels";
 import type { TagId } from "@/lib/types/primitives";
 import type { Tag } from "@/lib/types/tag";
 import { useCallback, useMemo } from "react";
@@ -31,12 +33,14 @@ export function useTagSuggestions({
 }: {
   tags: Array<Tag>;
   prefix: string;
-  onSelectSuggestion: (tag: Tag) => void;
+  onSelectSuggestion: (tag: Tag, displayLabel?: string) => void;
   excludedTagIds?: Array<TagId>;
 }): {
   suggestions: Array<TagSuggestion>;
   handleSuggestionPress: (id: TagId) => void;
 } {
+  const { uiLanguage } = usePreferences();
+
   const normalizedPrefix = useMemo(
     (): string => normalizePrefix(prefix),
     [prefix]
@@ -58,7 +62,11 @@ export function useTagSuggestions({
           return true;
         }
 
-        return tag.normalizedLabel.startsWith(normalizedPrefix);
+        const localizedLabel = getTagDisplayLabel(tag.normalizedLabel, uiLanguage);
+        return (
+          tag.normalizedLabel.startsWith(normalizedPrefix) ||
+          localizedLabel.toLowerCase().startsWith(normalizedPrefix)
+        );
       })
       .sort((left, right) => {
         if (left.recipeCount !== right.recipeCount) {
@@ -70,11 +78,11 @@ export function useTagSuggestions({
       .slice(0, MAX_SUGGESTIONS)
       .map((tag) => ({
         id: tag.id,
-        label: tag.label.replace(/^#/, ""),
+        label: getTagDisplayLabel(tag.normalizedLabel, uiLanguage),
         recipeCount: tag.recipeCount,
         countLabel: formatCount(tag.recipeCount),
       }));
-  }, [tags, normalizedPrefix, excludedTagIdSet]);
+  }, [tags, normalizedPrefix, excludedTagIdSet, uiLanguage]);
 
   const handleSuggestionPress = useCallback(
     (id: TagId): void => {
@@ -83,9 +91,10 @@ export function useTagSuggestions({
         return;
       }
 
-      onSelectSuggestion(tag);
+      const displayLabel = getTagDisplayLabel(tag.normalizedLabel, uiLanguage);
+      onSelectSuggestion(tag, displayLabel);
     },
-    [tagsById, onSelectSuggestion]
+    [tagsById, onSelectSuggestion, uiLanguage]
   );
 
   return useMemo(

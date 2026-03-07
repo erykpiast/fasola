@@ -1,5 +1,6 @@
 import * as Crypto from "expo-crypto";
 import { storage } from "../storage";
+import type { AppLanguage } from "../types/language";
 import type { SourceId, StorageKey } from "../types/primitives";
 import type { Source } from "../types/source";
 
@@ -20,7 +21,9 @@ class SourceRepository {
     if (!data) return [];
     try {
       const sources: Array<Source> = JSON.parse(data);
-      return sources.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+      return sources
+        .map((s) => ({ ...s, language: (s.language ?? "en") as AppLanguage }))
+        .sort((a, b) => b.lastUsedAt - a.lastUsedAt);
     } catch {
       return [];
     }
@@ -31,7 +34,7 @@ class SourceRepository {
     return sources.find((s) => s.id === id) ?? null;
   }
 
-  async create(name: string): Promise<Source> {
+  async create(name: string, language: AppLanguage = "en"): Promise<Source> {
     return withLock(async () => {
       const trimmed = name.trim();
       if (!trimmed) throw new Error("Source name cannot be empty");
@@ -45,11 +48,22 @@ class SourceRepository {
       const newSource: Source = {
         id: Crypto.randomUUID(),
         name: trimmed,
+        language,
         lastUsedAt: Date.now(),
       };
       sources.push(newSource);
       await storage.setItem(SOURCES_KEY, JSON.stringify(sources));
       return newSource;
+    });
+  }
+
+  async setLanguage(id: SourceId, language: AppLanguage): Promise<void> {
+    return withLock(async () => {
+      const sources = await this.getAll();
+      const source = sources.find((s) => s.id === id);
+      if (!source) return;
+      source.language = language;
+      await storage.setItem(SOURCES_KEY, JSON.stringify(sources));
     });
   }
 

@@ -26,7 +26,7 @@ function extractSuggestionPrefix(freeText: string): string {
 
 export function useSearchQuery(): {
   query: SearchQuery;
-  addTagFromSuggestion: (tag: Tag) => void;
+  addTagFromSuggestion: (tag: Tag, displayLabel?: string) => void;
   removeSelectedTag: (tagId: TagId) => void;
   setFreeText: (freeText: string) => void;
   clearQuery: () => void;
@@ -34,7 +34,7 @@ export function useSearchQuery(): {
   const [selectedTags, setSelectedTags] = useState<Array<SearchQueryTag>>([]);
   const [freeText, setFreeTextState] = useState("");
 
-  const addTagFromSuggestion = useCallback((tag: Tag): void => {
+  const addTagFromSuggestion = useCallback((tag: Tag, displayLabel?: string): void => {
     setSelectedTags((previousTags) => {
       if (previousTags.some((previousTag) => previousTag.id === tag.id)) {
         return previousTags;
@@ -44,7 +44,7 @@ export function useSearchQuery(): {
         ...previousTags,
         {
           id: tag.id,
-          label: tag.label.replace(/^#/, ""),
+          label: displayLabel ?? tag.label.replace(/^#/, ""),
         },
       ];
     });
@@ -82,7 +82,7 @@ export function useSearchQuery(): {
   return useMemo(
     (): {
       query: SearchQuery;
-      addTagFromSuggestion: (tag: Tag) => void;
+      addTagFromSuggestion: (tag: Tag, displayLabel?: string) => void;
       removeSelectedTag: (tagId: TagId) => void;
       setFreeText: (freeText: string) => void;
       clearQuery: () => void;

@@ -36,7 +36,7 @@ export function SearchBar({
   suggestionPrefix: string;
   allTags: Array<Tag>;
   onChangeFreeText: (text: string) => void;
-  onAddTagFromSuggestion: (tag: Tag) => void;
+  onAddTagFromSuggestion: (tag: Tag, displayLabel?: string) => void;
   onRemoveSelectedTag: (tagId: TagId) => void;
   onClearQuery: () => void;
   blocked?: boolean;

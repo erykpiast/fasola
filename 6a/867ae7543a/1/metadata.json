@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "6a867ae7543a",
+  "session_id": "8328ff71-72af-4069-beea-6de25a59038e",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-07T11:58:24.600175Z",
+  "branch": "chore/testflight_build",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "features/search/hooks/useAddButtonFocusTransition.ts",
+    "lib/photo-processor/types/opencv.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "e03701be5a60",
+  "token_usage": {
+    "input_tokens": 52,
+    "cache_creation_tokens": 23288,
+    "cache_read_tokens": 451548,
+    "output_tokens": 3916,
+    "api_call_count": 26
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-07T11:58:24.575674Z",
+    "agent_lines": 0,
+    "human_added": 2,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 2,
+    "agent_percentage": 0
+  }
+}

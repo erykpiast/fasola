@@ -1,3 +1,4 @@
+import { usePreferences } from "@/features/settings/context/PreferencesContext";
 import { sourceRepository } from "@/lib/repositories/sources";
 import type { AppLanguage } from "@/lib/types/language";
 import type { SourceId } from "@/lib/types/primitives";
@@ -46,6 +47,7 @@ export function SourcesProvider({
 }): JSX.Element {
   const initialSources = use(getSourcesPromise());
   const [sources, setSources] = useState<Array<Source>>(initialSources);
+  const { ocrLanguage } = usePreferences();
 
   const getSourceName = useCallback(
     (id: SourceId): string | undefined => {
@@ -56,11 +58,11 @@ export function SourcesProvider({
 
   const createSource = useCallback(
     async (name: string, language?: AppLanguage): Promise<Source> => {
-      const newSource = await sourceRepository.create(name, language);
+      const newSource = await sourceRepository.create(name, language ?? ocrLanguage);
       setSources((prev) => [newSource, ...prev]);
       return newSource;
     },
-    []
+    [ocrLanguage]
   );
 
   const setSourceLanguage = useCallback(

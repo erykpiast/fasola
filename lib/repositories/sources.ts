@@ -22,7 +22,7 @@ class SourceRepository {
     try {
       const sources: Array<Source> = JSON.parse(data);
       return sources
-        .map((s) => ({ ...s, language: s.language ?? "en" as AppLanguage }))
+        .map((s) => ({ ...s, language: (s.language ?? "en") as AppLanguage }))
         .sort((a, b) => b.lastUsedAt - a.lastUsedAt);
     } catch {
       return [];

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { Keyboard } from "react-native";
+import { Keyboard, type ViewStyle } from "react-native";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +9,7 @@ import {
 export function useSearchBarVisibilityTransition(
   shouldHide: boolean,
 ): {
-  containerStyle: ReturnType<typeof useAnimatedStyle>;
+  containerStyle: ViewStyle;
 } {
   const progress = useSharedValue(0);
 

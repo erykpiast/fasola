@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { ViewStyle } from "react-native";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -8,7 +9,7 @@ import {
 export function usePopoverTransition(
   shouldHideButton: boolean,
 ): {
-  buttonStyle: ReturnType<typeof useAnimatedStyle>;
+  buttonStyle: ViewStyle;
 } {
   const progress = useSharedValue(0);
 

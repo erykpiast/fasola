@@ -1,0 +1,129 @@
+eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build)> npx expo run:ios --device
+Unexpected devicectl JSON version output from devicectl. Connecting to physical Apple devices may not work as expected.
+✔ Select a device › 🌐 koci telefon (26.4)
+› Using --device 00008110-000E2D2822A0201E
+› Your computer requires some additional setup before you can build onto physical iOS devices.
+  Learn more: https://expo.fyi/setup-xcode-signing
+CommandError: No code signing certificates are available to use. - please do whatever it takes to fix. Run commands yourself
+
+---
+
+Tool loaded.
+
+---
+
+My team is "Eryk Napierała"
+
+---
+
+done
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+Address any concerns before proceeding.
+
+---
+
+Tool loaded.
+
+---
+
+<task-notification>
+<task-id>bpk1x8pc9</task-id>
+<tool-use-id>toolu_01SeN82vc5DS8y8y2sNrvJGD</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-eryk-napierala-Projects-fasola-chore-testflight-build/tasks/bpk1x8pc9.output</output-file>
+<status>failed</status>
+<summary>Background command "Build and run on physical iOS device" failed with exit code 1</summary>
+</task-notification>
+Read the output file to retrieve the result: /private/tmp/claude-501/-Users-eryk-napierala-Projects-fasola-chore-testflight-build/tasks/bpk1x8pc9.output
+
+---
+
+<task-notification>
+<task-id>b9a5fsejs</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-eryk-napierala-Projects-fasola-chore-testflight-build/tasks/b9a5fsejs.output</output-file>
+<status>failed</status>
+<summary>Background command "Build and deploy to physical iOS device" failed with exit code 1</summary>
+</task-notification>
+Read the output file to retrieve the result: /private/tmp/claude-501/-Users-eryk-napierala-Projects-fasola-chore-testflight-build/tasks/b9a5fsejs.output
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run typecheck-project]: Running project-wide TypeScript validation...
+████ TypeScript Validation Failed ████
+
+TypeScript compilation errors must be fixed:
+
+  app/index.tsx(133,11): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(172,51): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(172,64): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(175,48): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  features/search/components/SearchBar.tsx(138,48): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  
+
+REQUIRED ACTIONS:
+1. Fix all TypeScript errors shown above
+2. Run 'npx tsc --noEmit' to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically

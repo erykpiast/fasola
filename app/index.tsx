@@ -130,7 +130,6 @@ function Content(): JSX.Element {
         style={[
           styles.headerRow,
           { top: insets.top + HEADER_TOP_GAP },
-          // @ts-expect-error Reanimated DefaultStyle cursor type incompatibility
           globalOptions.buttonStyle,
         ]}
         pointerEvents={popoverVisible || globalOptions.visible ? "none" : "auto"}
@@ -170,11 +169,9 @@ function Content(): JSX.Element {
             />
           </View>
           <Animated.View
-            // @ts-expect-error Reanimated DefaultStyle cursor type incompatibility
             style={[styles.addButtonOuterWrapper, buttonStyle, addButtonOuterStyle]}
           >
             <Animated.View
-              // @ts-expect-error Reanimated DefaultStyle cursor type incompatibility
               style={[styles.addButtonWrapper, addButtonInnerStyle]}
               pointerEvents={isAddButtonInteractive ? "auto" : "none"}
             >

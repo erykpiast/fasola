@@ -135,7 +135,6 @@ export function SearchBar({
 
   return (
     <View style={style}>
-      {/* @ts-expect-error Reanimated DefaultStyle cursor type incompatibility */}
       <Animated.View style={[styles.container, containerStyle]}>
         <LiquidGlassInput
           value={freeText}

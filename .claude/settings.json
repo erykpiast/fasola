@@ -72,6 +72,10 @@
           },
           {
             "type": "command",
+            "command": ".claude/hooks/check-learnings.sh"
+          },
+          {
+            "type": "command",
             "command": "claudekit-hooks run create-checkpoint"
           }
         ]

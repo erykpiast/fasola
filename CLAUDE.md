@@ -11,6 +11,7 @@ Fasola is a recipe photo management app built with Expo/React Native. Users impo
 - [Architecture](docs/architecture.md) - Directory structure, patterns, type system
 - [Commands](docs/commands.md) - Development, quality, and utility commands
 - [Native Modules](docs/native-modules.md) - liquid-glass iOS components
+- [Learnings](docs/learnings.md) - Distilled debugging insights and development patterns
 
 ## Code Style
 

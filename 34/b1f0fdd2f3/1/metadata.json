@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "34b1f0fdd2f3",
+  "session_id": "37a0df6d-d5fe-4a4a-bf45-28a1462d7f0a",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-07T12:46:08.291212Z",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "features/search/hooks/useAddButtonFocusTransition.ts",
+    "lib/photo-processor/types/opencv.ts",
+    "specs/018_language_pl/feat-language-pl.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b95767065404",
+  "token_usage": {
+    "input_tokens": 5865,
+    "cache_creation_tokens": 337975,
+    "cache_read_tokens": 9831355,
+    "output_tokens": 50052,
+    "api_call_count": 85
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-07T12:46:06.741616Z",
+    "agent_lines": 1309,
+    "human_added": 4119,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 5428,
+    "agent_percentage": 24.11569638909359
+  }
+}

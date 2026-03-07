@@ -64,3 +64,24 @@ Can we change the bundle name from com.erykpiast.fasola to com.eryknapierala.fas
 
 Yeah, there are no active installations yet. Let's commit that specific change separately as a "chore: rename the app ID to match the owner account"
 
+### Prompt 11
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert sub...
+

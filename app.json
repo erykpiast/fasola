@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.erykpiast.fasola",
+      "bundleIdentifier": "com.eryknapierala.fasola",
       "buildConfiguration": "Debug",
       "infoPlist": {
         "UIFileSharingEnabled": true,
@@ -51,12 +51,12 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "783aa343-f1f6-4fda-9425-2f305a8aca3a"
+        "projectId": "06ade8bf-bcef-44f3-91a9-b21c88c5ebe0"
       }
     },
-    "owner": "erykpiast",
+    "owner": "eryknapierala",
     "android": {
-      "package": "com.erykpiast.fasola"
+      "package": "com.eryknapierala.fasola"
     }
   }
 }

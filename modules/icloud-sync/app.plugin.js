@@ -6,7 +6,7 @@ const {
 // TODO: Re-enable this plugin in app.json once you have a paid Apple Developer membership.
 // Add this line back to the "plugins" array in app.json:
 //   "./modules/icloud-sync/app.plugin.js"
-const CONTAINER_ID = "iCloud.com.erykpiast.fasola";
+const CONTAINER_ID = "iCloud.com.eryknapierala.fasola";
 
 function withICloudEntitlements(config) {
   config = withEntitlementsPlist(config, (config) => {

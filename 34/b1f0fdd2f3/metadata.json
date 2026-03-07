@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "34b1f0fdd2f3",
+  "strategy": "manual-commit",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "app/_layout.tsx",
+    "app/index.tsx",
+    "app/manage-books.tsx",
+    "app/settings.tsx",
+    "features/background-processing/context/BackgroundProcessingContext.tsx",
+    "features/recipe-form/components/EditRecipeForm.tsx",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipes-list/hooks/useGlobalOptions.ts",
+    "features/search/components/SearchBar.tsx",
+    "features/search/hooks/useAddButtonFocusTransition.ts",
+    "features/search/hooks/useSearchQuery.ts",
+    "features/search/hooks/useTagSuggestions.ts",
+    "features/settings/context/PreferencesContext.tsx",
+    "features/sources/context/SourcesContext.tsx",
+    "features/tags/hooks/useLocalizedTagLabels.ts",
+    "features/tags/utils/resolveRecipeTags.ts",
+    "features/tags/utils/tagDisplayLabels.ts",
+    "lib/components/molecules/RecipeMetadataDisplay.tsx",
+    "lib/photo-processor/index.ts",
+    "lib/photo-processor/ocr-bridge/index.d.ts",
+    "lib/photo-processor/ocr-bridge/index.native.ts",
+    "lib/photo-processor/ocr-bridge/index.web.ts",
+    "lib/photo-processor/pipelines/text-recognition/text-recognition-pipeline.ts",
+    "lib/photo-processor/types.ts",
+    "lib/photo-processor/types/opencv.ts",
+    "lib/repositories/preferences.ts",
+    "lib/repositories/sources.ts",
+    "lib/text-classifier/labels.ts",
+    "lib/types/language.ts",
+    "lib/types/source.ts",
+    "platform/i18n/config.ts",
+    "platform/i18n/translations/en.json",
+    "platform/i18n/translations/pl.json",
+    "specs/018_language_pl/feat-language-pl.md",
+    "specs/018_language_pl/task-breakdown.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/34/b1f0fdd2f3/0/metadata.json",
+      "transcript": "/34/b1f0fdd2f3/0/full.jsonl",
+      "context": "/34/b1f0fdd2f3/0/context.md",
+      "content_hash": "/34/b1f0fdd2f3/0/content_hash.txt",
+      "prompt": "/34/b1f0fdd2f3/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 34,
+    "cache_creation_tokens": 129984,
+    "cache_read_tokens": 684100,
+    "output_tokens": 12487,
+    "api_call_count": 24
+  }
+}

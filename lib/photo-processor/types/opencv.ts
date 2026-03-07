@@ -101,6 +101,7 @@ export interface CV {
   COLOR_GRAY2BGR: number;
   COLOR_GRAY2RGBA: number;
   COLOR_RGB2RGBA: number;
+  COLOR_BGR2RGBA: number;
   COLOR_RGBA2GRAY: number;
   COLOR_BGR2Lab: number;
   COLOR_Lab2BGR: number;

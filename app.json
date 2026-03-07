@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.eryknapierala.fasola",
-      "buildConfiguration": "Debug",
+      "appleTeamId": "SRBZTFXF42",
       "infoPlist": {
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true

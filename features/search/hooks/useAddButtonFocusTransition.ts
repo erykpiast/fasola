@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import type { ViewStyle } from "react-native";
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -12,7 +13,6 @@ const ADD_BUTTON_SIZE = 48;
 const ADD_BUTTON_GAP = 12;
 const HIDE_COLLAPSE_DURATION_MS = 250;
 const SHOW_COLLAPSE_DURATION_MS = 500;
-const COLLAPSE_DELAY_MS = 250;
 const HIDE_VISUAL_SPRING_CONFIG = {
   damping: 28,
   stiffness: 220,
@@ -27,8 +27,8 @@ const SHOW_VISUAL_SPRING_CONFIG = {
 } as const;
 
 export function useAddButtonFocusTransition(isSearchFocused: boolean): {
-  addButtonOuterStyle: ReturnType<typeof useAnimatedStyle>;
-  addButtonInnerStyle: ReturnType<typeof useAnimatedStyle>;
+  addButtonOuterStyle: ViewStyle;
+  addButtonInnerStyle: ViewStyle;
 } {
   const visualProgress = useSharedValue(0);
   const collapseProgress = useSharedValue(0);

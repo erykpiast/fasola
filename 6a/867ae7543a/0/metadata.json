@@ -3,29 +3,33 @@
   "checkpoint_id": "6a867ae7543a",
   "session_id": "57f77b4b-2ea3-42d0-aef4-733bbcd12e3d",
   "strategy": "manual-commit",
-  "created_at": "2026-03-07T11:58:24.544367Z",
+  "created_at": "2026-03-07T12:37:35.132561Z",
   "branch": "chore/testflight_build",
-  "checkpoints_count": 2,
+  "checkpoints_count": 4,
   "files_touched": [
+    "app.json",
+    "features/photos/hooks/usePopoverTransition.ts",
     "features/search/hooks/useAddButtonFocusTransition.ts",
-    "lib/photo-processor/types/opencv.ts"
+    "features/search/hooks/useSearchBarVisibilityTransition.ts"
   ],
   "agent": "Claude Code",
-  "turn_id": "e126b4330b6d",
+  "turn_id": "c106826af4d7",
+  "checkpoint_transcript_start": 76,
+  "transcript_lines_at_start": 76,
   "token_usage": {
-    "input_tokens": 24,
-    "cache_creation_tokens": 12141,
-    "cache_read_tokens": 195669,
-    "output_tokens": 2397,
-    "api_call_count": 14
+    "input_tokens": 784,
+    "cache_creation_tokens": 103746,
+    "cache_read_tokens": 2546109,
+    "output_tokens": 10016,
+    "api_call_count": 55
   },
   "initial_attribution": {
-    "calculated_at": "2026-03-07T11:58:24.52444Z",
-    "agent_lines": 1,
-    "human_added": 1,
-    "human_modified": 0,
-    "human_removed": 0,
-    "total_committed": 2,
-    "agent_percentage": 50
+    "calculated_at": "2026-03-07T12:37:34.982128Z",
+    "agent_lines": 7,
+    "human_added": 0,
+    "human_modified": 1,
+    "human_removed": 1,
+    "total_committed": 8,
+    "agent_percentage": 87.5
   }
 }

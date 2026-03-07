@@ -3,9 +3,12 @@
   "checkpoint_id": "6a867ae7543a",
   "strategy": "manual-commit",
   "branch": "chore/testflight_build",
-  "checkpoints_count": 5,
+  "checkpoints_count": 7,
   "files_touched": [
+    "app.json",
+    "features/photos/hooks/usePopoverTransition.ts",
     "features/search/hooks/useAddButtonFocusTransition.ts",
+    "features/search/hooks/useSearchBarVisibilityTransition.ts",
     "lib/photo-processor/types/opencv.ts"
   ],
   "sessions": [
@@ -32,10 +35,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 98,
-    "cache_creation_tokens": 48078,
-    "cache_read_tokens": 819531,
-    "output_tokens": 8287,
-    "api_call_count": 52
+    "input_tokens": 858,
+    "cache_creation_tokens": 139683,
+    "cache_read_tokens": 3169971,
+    "output_tokens": 15906,
+    "api_call_count": 93
   }
 }

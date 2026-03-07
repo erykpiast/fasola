@@ -1,0 +1,101 @@
+Base directory for this skill: /Users/eryk.napierala/.claude/skills/ship
+
+# Ship
+
+Prepare code changes for a pull request using conversation context and current git state.
+
+## Process
+
+### Step 1: Assess Changes
+
+Run `git status` and `git diff` to understand all changes. Combine with conversation context about what was worked on to provide better descriptions.
+
+### Step 2: Propose Branch Name
+
+Follow the format: `{PREFIX}/{SHORT_NAME}`
+
+- `PREFIX` — the Linear ticket ID if available, otherwise a conventional commit type (`feat`, `fix`, `chore`)
+- `SHORT_NAME` — three to five words separated with `_`, describing the scope
+
+### Step 3: Draft Commit Message
+
+Use conventional commits with the appropriate scope. Always use present tense verbs.
+
+- The first line is a concise summary
+- The body describes high-level changes in detail
+- Avoid mentioning exact modules, files, or function names in the body
+
+**Example:**
+```
+feat(user): add SSO login capability
+
+Users can now sign in with their SSO provider, streamlining authentication
+and improving security for enterprise accounts.
+
+This change introduces backend logic to handle the SSO authentication
+flow, updates the user model to support SSO identities, and adds a new UI
+entry point for SSO login on the sign-in page.
+
+Tested with Okta and AzureAD providers. User provisioning and session
+handling confirmed.
+```
+
+### Step 4: Draft PR Title
+
+Set the PR title to exactly match the commit message header (first line).
+
+### Step 5: Draft PR Description
+
+Structure with three H2 headers:
+
+- **Why** — The motivation for the change. Ask the user if they didn't specify the reason during the conversation.
+- **What** — Exactly matches the commit message body.
+- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
+  - Create an H3 header for each scenario
+  - Each scenario contains precise manual steps as checkbox bullets
+  - Never include steps like "run tests" or "linting passes" — those belong in CI
+  - Example:
+    ### SSO Login
+    - [ ] Go to the login page
+    - [ ] Select the SSO option
+    - [ ] Authenticate with SSO
+    - [ ] Verify the dashboard is displayed
+
+### Step 6: Confirm and Execute
+
+Always present the proposed branch name, commit message, PR title, and PR description to the user **before** executing any git commands. Wait for explicit confirmation.
+
+When creating the PR, always create it as a **draft**.
+
+---
+
+Tool loaded.
+
+---
+
+yes!
+
+---
+
+Some dependencies in package.json use floating version selectors. Let's pin them to actually installed versions.
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+Why Expo doctor insists to use floating selectors for these packages? eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build) [1]> npx expo install --check
+The following packages should be updated for best compatibility with the installed expo version:
+  @react-navigation/bottom-tabs@7.4.9 - expected version: ^7.4.0
+  @react-navigation/native@7.1.18 - expected version: ^7.1.8
+Your project may not work correctly until you install the expected versions of the packages.
+? Fix dependencies? › (Y/n)
+
+---
+
+Yes

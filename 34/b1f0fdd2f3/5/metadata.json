@@ -1,9 +1,11 @@
 {
   "cli_version": "0.4.9",
   "checkpoint_id": "34b1f0fdd2f3",
+  "session_id": "d0ba0d84-0b8e-45b3-a2e2-4f13138cb8b1",
   "strategy": "manual-commit",
+  "created_at": "2026-03-07T12:46:10.153723Z",
   "branch": "feat/language_pl",
-  "checkpoints_count": 23,
+  "checkpoints_count": 2,
   "files_touched": [
     "app/_layout.tsx",
     "app/index.tsx",
@@ -42,55 +44,22 @@
     "specs/018_language_pl/feat-language-pl.md",
     "specs/018_language_pl/task-breakdown.md"
   ],
-  "sessions": [
-    {
-      "metadata": "/34/b1f0fdd2f3/0/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/0/full.jsonl",
-      "context": "/34/b1f0fdd2f3/0/context.md",
-      "content_hash": "/34/b1f0fdd2f3/0/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/0/prompt.txt"
-    },
-    {
-      "metadata": "/34/b1f0fdd2f3/1/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/1/full.jsonl",
-      "context": "/34/b1f0fdd2f3/1/context.md",
-      "content_hash": "/34/b1f0fdd2f3/1/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/1/prompt.txt"
-    },
-    {
-      "metadata": "/34/b1f0fdd2f3/2/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/2/full.jsonl",
-      "context": "/34/b1f0fdd2f3/2/context.md",
-      "content_hash": "/34/b1f0fdd2f3/2/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/2/prompt.txt"
-    },
-    {
-      "metadata": "/34/b1f0fdd2f3/3/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/3/full.jsonl",
-      "context": "/34/b1f0fdd2f3/3/context.md",
-      "content_hash": "/34/b1f0fdd2f3/3/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/3/prompt.txt"
-    },
-    {
-      "metadata": "/34/b1f0fdd2f3/4/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/4/full.jsonl",
-      "context": "/34/b1f0fdd2f3/4/context.md",
-      "content_hash": "/34/b1f0fdd2f3/4/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/4/prompt.txt"
-    },
-    {
-      "metadata": "/34/b1f0fdd2f3/5/metadata.json",
-      "transcript": "/34/b1f0fdd2f3/5/full.jsonl",
-      "context": "/34/b1f0fdd2f3/5/context.md",
-      "content_hash": "/34/b1f0fdd2f3/5/content_hash.txt",
-      "prompt": "/34/b1f0fdd2f3/5/prompt.txt"
-    }
-  ],
+  "agent": "Claude Code",
+  "turn_id": "98fa1e7b07e4",
   "token_usage": {
-    "input_tokens": 8124,
-    "cache_creation_tokens": 1378786,
-    "cache_read_tokens": 30085404,
-    "output_tokens": 156679,
-    "api_call_count": 357
+    "input_tokens": 17,
+    "cache_creation_tokens": 17782,
+    "cache_read_tokens": 156030,
+    "output_tokens": 1352,
+    "api_call_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-07T12:46:10.085639Z",
+    "agent_lines": 2635,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2635,
+    "agent_percentage": 100
   }
 }

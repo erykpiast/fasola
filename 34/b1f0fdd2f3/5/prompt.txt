@@ -1,0 +1,61 @@
+Implement the following plan:
+
+# Fix: Polish placeholder text clipped behind input edge
+
+## Context
+
+When the app language is set to Polish, the first 1-2 characters of placeholder text in text inputs appear visually behind (clipped by) the left edge of the input. English placeholders render correctly.
+
+## Root Cause
+
+The `BackspaceAwareTextField` (UIViewRepresentable wrapping UITextField) is inside a horizontal `ScrollView` in `LiquidGlassInputView.swift`. On appear, `scrollInlineContentToTail` scrolls to `"input-tail"` with `.trailing` anchor.
+
+UITextField's `intrinsicContentSize` is driven by its placeholder text width. Polish placeholders are wider than English ones (e.g., "Szukaj przepisów..." vs "Search recipes..."). When the intrinsic size makes the HStack content wider than the visible ScrollView area, the scroll-to-tail call shifts content right, hiding the first characters.
+
+## Fix
+
+**File:** `modules/liquid-glass/ios/LiquidGlassInputView.swift`
+
+Override `intrinsicContentSize` in `DeletingAwareUITextField` to opt out of width-based intrinsic sizing:
+
+```swift
+override var intrinsicContentSize: CGSize {
+  CGSize(width: UIView.noIntrinsicMetric, height: super.intrinsicContentSize.height)
+}
+```
+
+`UIView.noIntrinsicMetric` tells SwiftUI "this view has no preferred width." The existing `.frame(minWidth: 80, idealWidth: 120)` modifiers on the SwiftUI side will control the actual rendered width. This works for any placeholder text length in any language — the UITextField never inflates the ScrollView content beyond what the frame modifiers allow.
+
+## Verification
+
+1. Run the app with Polish language — placeholder text should be fully visible (SearchBar, recipe form title, tags)
+2. Switch to English — same inputs should still look correct
+3. Test mixed-mode inputs with tags — scrolling and tag layout should still work
+4. Test with focus/blur — scroll behavior should be preserved
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/707570d8-2a7a-4ebf-9108-c95b2b8a4fad.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

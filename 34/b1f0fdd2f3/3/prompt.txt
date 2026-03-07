@@ -1,0 +1,926 @@
+Implement the following plan:
+
+# Spec Validation: Polish Language Support (Updated)
+
+## Summary: **Ready**
+
+The spec is implementation-ready. Both critical gaps (storage layer, native OCR) have been fixed in the spec itself. The spec is thorough, accurately reflects the codebase, and has a sensible phased approach.
+
+---
+
+## WHY — Intent and Purpose: Complete
+
+- Clear problem statement: app is English-only, author is Polish, users have Polish cookbooks
+- Well-defined goals (UI, OCR, tags, search, settings) and non-goals (no third language, no system auto-detect, no data migration)
+- Strong user value: Polish OCR + Polish UI for the primary user base
+
+## WHAT — Scope and Requirements: Complete
+
+- All data models specified (`AppLanguage`, `Source.language`, `Recipe.manuallyEdited`, `PreferencesRepository`)
+- API contracts defined (function signatures with types)
+- Integration points identified (i18next, Tesseract.js, expo-text-extractor, storage layer)
+- Performance considerations documented (translation file size, tag lookup O(1), search expansion, worker reinit latency)
+- Security: correctly notes no concerns (all local data)
+
+## HOW — Implementation Details: Complete
+
+- 6-phase implementation roadmap with clear dependencies
+- Code samples for every significant change
+- File change table listing all ~30 files
+- Testing strategy with unit, integration, and manual test cases
+
+---
+
+## Critical Gaps — All Fixed
+
+| Gap | Status | Fix |
+|-----|--------|-----|
+| `PreferencesRepository` used `AsyncStorage` instead of `lib/storage/` | **Fixed** | Now uses `storage.getItem`/`storage.setItem` with `StorageKey` |
+| `expo-text-extractor` language API unknown | **Resolved** | Native OCR auto-detects Polish; no changes needed |
+
+---
+
+## Remaining Issues (Minor)
+
+### 1. Tag display localization: call-site responsibility
+The spec lists `TagList`, `TagInput`, `GlassLikeTagInput` as needing localized display (Section 7, File Changes table). These are **generic atom components** that receive `Array<string>` — they don't know about `Tag` objects or languages. Localization should happen at call sites:
+- `MetadataFormFields.tsx` converts `RecipeMetadataWrite.tags` → localized display strings
+- `useTagSuggestions.ts` returns localized labels in `TagSuggestion.label`
+- Components rendering recipe cards resolve `tagIds` → localized labels before passing to `TagList`
+
+The spec's `getTagDisplayLabel(tag, uiLanguage)` helper is correct in concept; it just needs to be called at the right layer (not inside atoms).
+
+### 2. `useGlobalOptions` route type
+The spec doesn't show the exact type change. Currently line 12:
+```typescript
+route: "/manage-books" | "/about";
+```
+Needs to become:
+```typescript
+route: "/manage-books" | "/about" | "/settings";
+```
+
+### 3. Polish pluralization edge cases
+Polish has 3 plural forms (`_one`, `_few`, `_many`). The spec configures `compatibilityJSON: "v4"` which is correct. Edge cases to verify during implementation:
+- `count=0` → should use `_many` ("0 przepisów")
+- `count=1` → `_one` ("1 przepis")
+- `count=2-4` → `_few` ("2 przepisy")
+- `count=5-21` → `_many` ("5 przepisów")
+- `count=22-24` → `_few` ("22 przepisy")
+
+---
+
+## Overengineering Analysis
+
+### Recommend cutting: `Recipe.manuallyEdited` tracking
+- **What**: New boolean field on `Recipe`, change detection in `updateRecipe`, filtering in reprocessing
+- **Why cut**: Only used when changing a book's language (rare action). For V1, reprocess ALL recipes in the book — users can re-edit if needed.
+- **Impact**: Removes ~30% of Phase 6 complexity, eliminates a new Recipe field, and simplifies RecipesContext
+
+### Recommend simplifying: Manage-books language UI
+- The spec proposes both a swipe globe button AND an inline badge alternative
+- **Recommendation**: Use only the inline badge ("EN" / "PL" in subtitle, tappable). Drop the globe swipe button entirely. The spec already notes this in Section 11 as the simpler approach.
+
+### Recommend cutting: Phone icon in Settings
+- Shows a phone icon next to the language matching OS locale
+- Low value — users know their device language
+- Adds `expo-localization` dependency to the Settings screen
+- Cut it for V1
+
+### Keep as-is (not overengineered)
+- Tag localization system — O(1) lookup, necessary for bilingual UX
+- Search normalization with all language variants — core requirement
+- Polish classification keywords — minimal change, leverages existing tokenization
+- Separate UI language and OCR language preferences — distinct user needs
+- `PreferencesProvider` at top of provider chain — correct dependency order
+
+---
+
+## Risk Areas
+
+1. **Tesseract.js Polish quality** (Open Question #3) — Polish diacritics may produce poor results. Test early in Phase 4.
+2. **Worker reinit latency** — ~2s + ~4MB download on first Polish OCR. Consider if this needs a loading indicator.
+3. **Tag input localization direction** — When users type tags in the edit form, they type canonical English keys (`#pasta`). The spec doesn't require Polish tag input resolution (correctly listed as Open Question #2 for future enhancement).
+
+---
+
+## Verification Plan
+
+After implementation, verify:
+1. `npm run lint` passes
+2. Switch UI language to Polish in Settings → all strings change immediately
+3. Create a new book → defaults to preferred OCR language
+4. Import a photo in a Polish book → web OCR uses `"pol"` language
+5. Tags display in Polish when UI is Polish, English when English
+6. Search "zupa" finds recipes tagged `#soup`
+7. Search "soup" also finds the same recipes
+8. Change book language → recipes reprocess (all of them in V1)
+9. Settings accessible via cog icon in global menu
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/242e3ffc-daf1-452e-9314-6ac8e560a38e.jsonl
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. User provided a detailed plan for implementing Polish language support across the fasola app (a recipe photo management app built with Expo/React Native).
+
+2. I read the spec files, task breakdown, architecture docs, AGENTS.md, and many source files to understand the codebase.
+
+3. I created 5 tasks for the 5 phases of implementation.
+
+4. Phase 1 - Created files:
+   - `lib/types/language.ts` - AppLanguage type, APP_LANGUAGES, LANGUAGE_DISPLAY_NAMES
+   - `lib/repositories/preferences.ts` - PreferencesRepository with get/set for UI and OCR language
+   - `platform/i18n/translations/pl.json` - Full Polish translation file
+   - `features/settings/context/PreferencesContext.tsx` - PreferencesProvider and usePreferences hook
+   - Updated `platform/i18n/config.ts` - Added pl resources, removed expo-localization auto-detect
+   - Updated `platform/i18n/translations/en.json` - Added menu.settings, settings.*, manageBooks.setLanguageAction keys
+   - Updated `app/_layout.tsx` - Added PreferencesProvider wrapping DebugProvider
+
+5. Phase 2 - Created/updated files:
+   - `app/settings.tsx` - Settings screen with UI language and OCR language selectors
+   - Updated `features/recipes-list/hooks/useGlobalOptions.ts` - Added settings menu entry
+
+6. Phase 3 - Updated files (partially complete):
+   - Updated `lib/types/source.ts` - Added `language: AppLanguage` to Source interface
+   - Updated `lib/repositories/sources.ts` - Added language param to create(), added setLanguage(), added defensive default in getAll()
+   - Updated `features/sources/context/SourcesContext.tsx` - Added setSourceLanguage, updated createSource signature
+   - Started updating `app/manage-books.tsx` - Added imports for useBackgroundProcessing, LANGUAGE_DISPLAY_NAMES, AppLanguage, and destructured setSourceLanguage and addToQueue
+
+Errors encountered:
+- pl.json had Polish quotation marks „" that broke JSON parsing - fixed with Unicode escapes
+- _layout.tsx had mismatched JSX tags during incremental edits - resolved by the final edit
+- Expo Router typed routes initially didn't include /settings but the generated types were actually up to date
+- Many pre-existing TS errors in app/index.tsx, SearchBar.tsx, useAddButtonFocusTransition.ts, geometry/utils.ts that are NOT related to my changes
+- The hook checker reports "unused" errors mid-way through multi-step edits (e.g., importing something before using it in a subsequent edit)
+
+The manage-books.tsx edit is incomplete - I added imports and destructured variables but haven't yet added the language badge UI or language change handler.
+
+Summary:
+1. Primary Request and Intent:
+   The user asked me to implement a comprehensive Polish language support feature across the fasola app (Expo/React Native recipe photo manager). The plan covers 5 phases: (1) language infrastructure (types, preferences, i18n config), (2) settings screen + menu entry, (3) book language support, (4) OCR language pipeline, (5) tag localization + search. Key decisions from the validation summary: skip `Recipe.manuallyEdited` tracking (reprocess ALL recipes on language change), use inline tappable badge for book language (not swipe gesture), skip phone icon in Settings.
+
+2. Key Technical Concepts:
+   - `AppLanguage` type: `"en" | "pl"` union type
+   - i18next with `compatibilityJSON: "v4"` for Polish pluralization (3 forms: `_one`, `_few`, `_many`)
+   - React 19 `use()` hook pattern for async context initialization (same as TagsContext, SourcesContext)
+   - `PreferencesProvider` placed outermost in provider chain (before SourcesProvider)
+   - Per-book `Source.language` field controlling OCR language
+   - Tesseract.js worker reinit on language change (`"eng"` → `"pol"`)
+   - Native OCR (Apple Vision/ML Kit) auto-detects Polish, no changes needed
+   - Tag localization via static `TAG_DISPLAY_LABELS` map (display-time only, canonical keys stay English)
+   - Search normalization: `resolveNormalizedTagTexts` expanded to include all language variants
+   - Storage layer: `lib/storage/` abstraction (not AsyncStorage directly), uses `StorageKey` type
+
+3. Files and Code Sections:
+
+   - **`lib/types/language.ts`** (NEW) - Core type system for language support
+     ```typescript
+     export type AppLanguage = "en" | "pl";
+     export const APP_LANGUAGES: ReadonlyArray<AppLanguage> = ["en", "pl"] as const;
+     export const LANGUAGE_DISPLAY_NAMES: Record<AppLanguage, string> = {
+       en: "English",
+       pl: "Polski",
+     };
+     ```
+
+   - **`lib/repositories/preferences.ts`** (NEW) - Storage for UI/OCR language preferences
+     ```typescript
+     const UI_LANGUAGE_KEY: StorageKey = "@preferences:uiLanguage";
+     const OCR_LANGUAGE_KEY: StorageKey = "@preferences:ocrLanguage";
+     class PreferencesRepository {
+       async getUiLanguage(): Promise<AppLanguage> { /* defaults to "en" */ }
+       async setUiLanguage(lang: AppLanguage): Promise<void> { ... }
+       async getOcrLanguage(): Promise<AppLanguage> { /* defaults to "en" */ }
+       async setOcrLanguage(lang: AppLanguage): Promise<void> { ... }
+     }
+     export const preferencesRepository = new PreferencesRepository();
+     ```
+
+   - **`features/settings/context/PreferencesContext.tsx`** (NEW) - React context with `use()` pattern
+     - Provides `uiLanguage`, `ocrLanguage`, `setUiLanguage`, `setOcrLanguage`
+     - `setUiLanguage` persists + calls `i18n.changeLanguage()`
+     - Module-level promise pattern matching TagsContext/SourcesContext
+     - `i18n.changeLanguage(uiLanguage)` called during promise resolution (before children render)
+
+   - **`platform/i18n/translations/pl.json`** (NEW) - Complete Polish translations (~130 keys)
+     - Includes Polish pluralization: `recipeCount_one`, `recipeCount_few`, `recipeCount_many`
+     - Polish quotation marks encoded as Unicode: `\u201E{{name}}\u201D` (was `„{{name}}"`)
+     - All keys from en.json plus new settings/language keys
+
+   - **`platform/i18n/translations/en.json`** (MODIFIED) - Added new keys
+     - `menu.settings`: "Settings"
+     - `manageBooks.setLanguageAction`: "Language"
+     - `settings.title`, `settings.uiLanguage`, `settings.ocrLanguage`, `settings.back`
+
+   - **`platform/i18n/config.ts`** (MODIFIED) - Added Polish resources, removed auto-detect
+     - Removed `expo-localization` import, hardcoded `lng: "en"` (overridden by PreferencesProvider)
+     - Added `pl` resource bundle
+
+   - **`app/_layout.tsx`** (MODIFIED) - Added PreferencesProvider in provider chain
+     - `PreferencesProvider` wraps `DebugProvider` (outermost after Suspense)
+     - Indentation adjusted for nesting
+
+   - **`app/settings.tsx`** (NEW) - Settings screen with language selectors
+     - Two sections: UI Language and OCR Language
+     - `LanguageOption` component with radio-style checkmark indicator
+     - Pattern follows `app/about.tsx` (header, ScrollView, bottom bar with back button)
+     - Uses `usePreferences()` for state, `APP_LANGUAGES` for iteration
+
+   - **`features/recipes-list/hooks/useGlobalOptions.ts`** (MODIFIED) - Added settings menu
+     - Route type expanded: `"/manage-books" | "/about" | "/settings"`
+     - Settings entry added between manage-books and about: `{ id: "settings", systemImage: "gearshape", route: "/settings" }`
+
+   - **`lib/types/source.ts`** (MODIFIED) - Added language field
+     ```typescript
+     export interface Source {
+       id: SourceId;
+       name: string;
+       language: AppLanguage;  // NEW
+       lastUsedAt: number;
+     }
+     ```
+
+   - **`lib/repositories/sources.ts`** (MODIFIED) - Language support in repository
+     - `create(name, language: AppLanguage = "en")` - accepts language parameter
+     - `setLanguage(id, language)` - new method within withLock
+     - `getAll()` - defensive default: `.map(s => ({ ...s, language: s.language ?? "en" as AppLanguage }))`
+
+   - **`features/sources/context/SourcesContext.tsx`** (MODIFIED) - Added language support
+     - `createSource(name, language?: AppLanguage)` - passes language to repository
+     - `setSourceLanguage(id, language)` - new context method
+     - Both added to value/deps arrays
+
+   - **`app/manage-books.tsx`** (PARTIALLY MODIFIED) - In progress
+     - Added imports: `useBackgroundProcessing`, `LANGUAGE_DISPLAY_NAMES`, `AppLanguage`
+     - Destructured `setSourceLanguage` from `useSources()` and `addToQueue` from `useBackgroundProcessing()`
+     - NOT YET: Language badge UI in SwipeableBookRow, language change handler
+
+   Files read but not yet modified (needed for remaining phases):
+   - `lib/photo-processor/types.ts` - OCR config needs `language?: AppLanguage`
+   - `lib/photo-processor/ocr-bridge/index.web.ts` - Needs language param + worker reinit
+   - `lib/photo-processor/ocr-bridge/index.d.ts` - Type declaration needs language param
+   - `lib/photo-processor/ocr-bridge/index.native.ts` - No changes needed (auto-detects)
+   - `lib/photo-processor/pipelines/text-recognition/text-recognition-pipeline.ts` - Needs language param
+   - `lib/photo-processor/index.ts` - Needs to forward language from config
+   - `features/background-processing/context/BackgroundProcessingContext.tsx` - Needs to read book language
+   - `lib/text-classifier/labels.ts` - Needs Polish keywords appended
+   - `features/tags/utils/resolveRecipeTags.ts` - Needs localized variants
+   - `features/search/hooks/useTagSuggestions.ts` - Needs localized matching
+   - `features/recipes-list/utils/recipeSearch.ts` - Will benefit from updated resolveNormalizedTagTexts
+   - `lib/components/molecules/RecipeMetadataDisplay.tsx` - Uses resolveTagLabels, needs localization
+   - `features/recipe-form/components/EditRecipeForm.tsx` - Uses resolveTagLabels, needs localization
+   - `features/recipe-preview/components/MetadataOverlay.tsx` - Uses resolveTagLabels, needs localization
+   - `features/recipe-form/components/MetadataFormFields.tsx` - Passes tags to GlassLikeTagInput
+
+4. Errors and fixes:
+   - **Polish quotation marks in pl.json**: `"Usunąć „{{name}}"?"` broke JSON parsing (TS1328/TS1002). Fixed by encoding as Unicode escapes: `"Usunąć \u201E{{name}}\u201D?"`
+   - **_layout.tsx JSX nesting**: Multiple incremental edits caused temporary mismatched tags. The final file state is correct with proper nesting.
+   - **Expo Router typed routes**: `/settings` initially reported as invalid route type, but `.expo/types/router.d.ts` was already regenerated and included `/settings`. This was a stale cache issue.
+   - **Pre-existing TS errors**: `app/index.tsx` (cursor type incompatibility with reanimated), `SearchBar.tsx` (same), `useAddButtonFocusTransition.ts` (unused COLLAPSE_DELAY_MS), `geometry/utils.ts` (COLOR_BGR2RGBA). These are NOT caused by my changes and exist on the branch already.
+   - **Transient unused import errors**: The hook checker reports unused imports mid-way through multi-step edits (e.g., importing `useBackgroundProcessing` before adding its usage). These resolve once all edits for a file are complete.
+
+5. Problem Solving:
+   - Successfully implemented Phases 1 and 2 completely
+   - Phase 3 is partially complete: Source type/repo/context are done, manage-books UI update is in progress
+   - The pre-existing TS errors are not blocking - the hook checker runs `tsc --noEmit` on the whole project, catching unrelated issues
+
+6. All user messages:
+   - "Implement the following plan: [detailed spec validation document for Polish Language Support]" - This was the initial and only substantive user message, providing the full implementation plan with 5 phases, specific code changes, and validation notes.
+
+7. Pending Tasks:
+   - **Phase 3 (in progress)**: Finish `app/manage-books.tsx` - add language badge in subtitle ("5 recipes · EN"), tappable badge opening Alert with language options, language change handler that reprocesses all recipes
+   - **Phase 4**: Thread language through OCR pipeline - update `PhotoAdjustmentConfig.ocr` type, `text-recognition-pipeline.ts`, `index.web.ts` (Tesseract language map + worker reinit), `index.d.ts`, `index.ts` (forward language), `BackgroundProcessingContext.tsx` (read book language)
+   - **Phase 5**: Tag localization + search - create `tagDisplayLabels.ts` with TAG_DISPLAY_LABELS map, update `resolveRecipeTags.ts` (add resolveLocalizedTagLabels, expand resolveNormalizedTagTexts), update `useTagSuggestions.ts` (match against localized labels), update call sites (RecipeMetadataDisplay, EditRecipeForm, MetadataOverlay), add Polish keywords to `labels.ts`
+
+8. Current Work:
+   I was in the middle of updating `app/manage-books.tsx` for Phase 3 (Task #3). I've added the imports and destructured the new context values (`setSourceLanguage`, `addToQueue`, `LANGUAGE_DISPLAY_NAMES`, `AppLanguage`), but I haven't yet:
+   - Updated the recipe count subtitle to show language badge (e.g., "5 recipes · EN")
+   - Added a tappable language badge or the `handleSetLanguage` function
+   - The unused import errors (`setSourceLanguage`, `addToQueue`, `LANGUAGE_DISPLAY_NAMES`, `AppLanguage`) are expected and will resolve once I add the UI code
+
+   The SwipeableBookRow component currently shows:
+   ```
+   {t("manageBooks.recipeCount", { count: recipeCount })}
+   ```
+   This needs to become something like:
+   ```
+   {t("manageBooks.recipeCount", { count: recipeCount })} · {source.language.toUpperCase()}
+   ```
+   Plus a handler for changing book language that calls `setSourceLanguage` and requeues recipes via `addToQueue`.
+
+9. Optional Next Step:
+   Continue editing `app/manage-books.tsx` to complete Phase 3:
+   - Add language badge to the subtitle in SwipeableBookRow (both editing and non-editing states)
+   - Add `handleSetLanguage` callback that shows Alert with language options and reprocesses recipes
+   - Make the language badge tappable
+   
+   Then proceed to Phase 4 (OCR pipeline) and Phase 5 (tag localization + search).
+
+   The task I was working on: updating manage-books.tsx. Last edits added imports and destructured `setSourceLanguage` and `addToQueue`. The hook checker reported: `app/manage-books.tsx(5,1): error TS6192: All imports in import declaration are unused` and `app/manage-books.tsx(297,48): error TS6133: 'setSourceLanguage' is declared but its value is never read` and `app/manage-books.tsx(299,9): error TS6133: 'addToQueue' is declared but its value is never read`.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/8c36b201-c740-4524-ae0c-2aba3a8cc93a.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me trace through this conversation chronologically:
+
+1. This is a continuation of a previous session that ran out of context. The summary provided details about implementing Polish language support across the fasola app.
+
+2. At the start of this session, I was in the middle of Phase 3 (Task #3) - updating `app/manage-books.tsx` to add language badge UI and language change handler.
+
+3. I read manage-books.tsx and the task list, then proceeded with edits:
+   - Added `APP_LANGUAGES` import
+   - Added `onSetLanguage` prop to SwipeableBookRow type and destructuring
+   - Added `handleSetLanguage` callback in ManageBooksScreen
+   - Updated subtitle text to show language badge with `source.language.toUpperCase()`
+   - Passed `onSetLanguage={handleSetLanguage}` at the call site
+   - Each edit triggered the typecheck hook which showed pre-existing errors + my unused import errors until all pieces were connected
+
+4. Phase 3 completed, moved to Phase 4 (OCR language pipeline):
+   - Read all pipeline files: types.ts, index.web.ts, index.d.ts, index.native.ts, text-recognition-pipeline.ts, index.ts, BackgroundProcessingContext.tsx
+   - Added `language?: AppLanguage` to `PhotoAdjustmentConfig.ocr` in types.ts
+   - Updated index.d.ts to add language param to extractText signature
+   - Updated index.web.ts with TESSERACT_LANG_MAP, worker reinit on language change, language parameter
+   - Updated index.native.ts to accept (unused) language parameter
+   - Updated text-recognition-pipeline.ts to forward language to extractText
+   - Updated index.ts to pass config.ocr.language to processTextRecognition
+   - Updated BackgroundProcessingContext.tsx to look up book language from sources and pass to OCR config
+
+5. Phase 4 completed, moved to Phase 5 (Tag localization + search):
+   - Read labels.ts, resolveRecipeTags.ts, useTagSuggestions.ts, Tag type, call sites
+   - Used Explore agent to understand tag creation flow
+   - Created tagDisplayLabels.ts with PL_TAG_LABELS map, getTagDisplayLabel(), getAllTagVariants()
+   - Rewrote resolveRecipeTags.ts: added resolveLocalizedTagLabels(), updated resolveNormalizedTagTexts() to use flatMap with getAllTagVariants
+   - Updated RecipeMetadataDisplay.tsx to use resolveLocalizedTagLabels with uiLanguage
+   - Updated MetadataOverlay.tsx to use resolveLocalizedTagLabels with uiLanguage
+   - Updated EditRecipeForm.tsx to use resolveLocalizedTagLabels with uiLanguage
+   - Hit a type error: resolveLocalizedTagLabels returns Array<string> but useRecipeForm expects Array<`#${string}`>
+
+6. Current error: `Type 'string[]' is not assignable to type '#${string}[]'` in EditRecipeForm.tsx line 49
+
+7. I was about to check useRecipeForm's tag type requirement and found that the form uses `Array<`#${string}`>` but MetadataFormFields already does a cast `as Array<`#${string}`>`. The resolvedInitialTags feeds into useRecipeForm's initialValues.tags which expects the template literal type.
+
+Still remaining in Phase 5:
+- Fix the type error in EditRecipeForm.tsx
+- Update useTagSuggestions.ts for localized matching
+- Add Polish keywords to labels.ts
+
+Summary:
+1. Primary Request and Intent:
+   The user asked to implement a comprehensive Polish language support feature across the fasola app (Expo/React Native recipe photo manager), following a detailed 5-phase plan. The phases are: (1) language infrastructure, (2) settings screen, (3) book language support, (4) OCR language pipeline, (5) tag localization + search. Key decisions from validation: skip `Recipe.manuallyEdited` tracking, use inline tappable badge for book language, skip phone icon in Settings.
+
+2. Key Technical Concepts:
+   - `AppLanguage` type: `"en" | "pl"` union type
+   - i18next with `compatibilityJSON: "v4"` for Polish pluralization (3 forms)
+   - React 19 `use()` hook pattern for async context initialization
+   - `PreferencesProvider` placed outermost in provider chain
+   - Per-book `Source.language` field controlling OCR language
+   - Tesseract.js worker reinit on language change (`"eng"` → `"pol"`)
+   - Native OCR auto-detects Polish, no changes needed
+   - Tag localization via static `PL_TAG_LABELS` map (display-time only, canonical keys stay English)
+   - Search normalization: `resolveNormalizedTagTexts` expanded with `getAllTagVariants` to include all language variants
+   - Storage layer: `lib/storage/` abstraction with `StorageKey` type
+
+3. Files and Code Sections:
+
+   **Phase 3 files (completed this session):**
+
+   - **`app/manage-books.tsx`** — Added language badge UI and language change handler
+     - Added imports: `APP_LANGUAGES`, `LANGUAGE_DISPLAY_NAMES`, `useBackgroundProcessing`
+     - Added `onSetLanguage` prop to `SwipeableBookRow`
+     - Updated subtitle to show `source.language.toUpperCase()` with tappable `<Text onPress>`
+     - Added `handleSetLanguage` callback that shows Alert with language options, calls `setSourceLanguage`, and requeues all recipes via `addToQueue`
+     - Passed `onSetLanguage={handleSetLanguage}` at the call site
+
+   **Phase 4 files (completed this session):**
+
+   - **`lib/photo-processor/types.ts`** — Added `language?: AppLanguage` to OCR config
+     ```typescript
+     import type { AppLanguage } from "@/lib/types/language";
+     // ...
+     ocr: {
+       enabled: boolean;
+       language?: AppLanguage;
+     };
+     ```
+
+   - **`lib/photo-processor/ocr-bridge/index.d.ts`** — Updated type declaration
+     ```typescript
+     export function extractText(imageUri: DataUrl, language?: AppLanguage): Promise<OcrResult>;
+     ```
+
+   - **`lib/photo-processor/ocr-bridge/index.web.ts`** — Tesseract language support with worker reinit
+     ```typescript
+     const TESSERACT_LANG_MAP: Record<AppLanguage, string> = { en: "eng", pl: "pol" };
+     let currentWorkerLang: string | null = null;
+     export async function extractText(imageUri: DataUrl, language: AppLanguage = "en"): Promise<OcrResult> {
+       const tessLang = TESSERACT_LANG_MAP[language];
+       // Reinitialize worker if language changed
+       if (worker && currentWorkerLang !== tessLang) {
+         await worker.terminate();
+         worker = null;
+         currentWorkerLang = null;
+       }
+       // ... create worker with tessLang
+     ```
+
+   - **`lib/photo-processor/ocr-bridge/index.native.ts`** — Added unused language param for API compat
+     ```typescript
+     export async function extractText(imageUri: DataUrl, _language?: string): Promise<OcrResult> {
+     ```
+
+   - **`lib/photo-processor/pipelines/text-recognition/text-recognition-pipeline.ts`** — Forwards language
+     ```typescript
+     export async function processTextRecognition(imageDataUrl: DataUrl, language?: AppLanguage): Promise<TextRecognitionResult> {
+       const ocrResult = await extractText(imageDataUrl, language);
+     ```
+
+   - **`lib/photo-processor/index.ts`** — Passes config.ocr.language to processTextRecognition
+     ```typescript
+     const result = await processTextRecognition(ocrImageDataUrl, config.ocr.language);
+     ```
+
+   - **`features/background-processing/context/BackgroundProcessingContext.tsx`** — Looks up book language
+     ```typescript
+     import { useSources } from "@/features/sources/context/SourcesContext";
+     import { isUrl } from "@/lib/utils/recipeValidation";
+     // In provider:
+     const { sources } = useSources();
+     // In processRecipe:
+     let ocrLanguage: AppLanguage = "en";
+     const sourceId = recipe.metadata.source;
+     if (sourceId && !isUrl(sourceId)) {
+       const source = sources.find((s) => s.id === sourceId);
+       if (source) { ocrLanguage = source.language; }
+     }
+     // ...
+     ocr: { enabled: true, language: ocrLanguage },
+     ```
+
+   **Phase 5 files (in progress this session):**
+
+   - **`features/tags/utils/tagDisplayLabels.ts`** (NEW) — Polish display labels for tags
+     - `PL_TAG_LABELS` record mapping ~60 English tag keys to Polish
+     - `getTagDisplayLabel(normalizedLabel, language)` returns localized string
+     - `getAllTagVariants(normalizedLabel)` returns `[english, polish]` for search
+
+   - **`features/tags/utils/resolveRecipeTags.ts`** (MODIFIED) — Added localized tag resolution
+     - Added `resolveLocalizedTagLabels(tagIds, lookup, language)` returning `Array<string>` with `#` prefix
+     - Updated `resolveNormalizedTagTexts` to use `flatMap` with `getAllTagVariants` for bilingual search
+
+   - **`lib/components/molecules/RecipeMetadataDisplay.tsx`** (MODIFIED) — Uses localized tags
+     - Switched from `resolveTagLabels` to `resolveLocalizedTagLabels` with `uiLanguage` from `usePreferences()`
+
+   - **`features/recipe-preview/components/MetadataOverlay.tsx`** (MODIFIED) — Uses localized tags
+     - Same switch to `resolveLocalizedTagLabels` with `uiLanguage`
+
+   - **`features/recipe-form/components/EditRecipeForm.tsx`** (MODIFIED) — Uses localized tags
+     - Switched to `resolveLocalizedTagLabels` but hit type error (see below)
+
+4. Errors and fixes:
+   - **Pre-existing TS errors**: `app/index.tsx` cursor type, `SearchBar.tsx` cursor type, `useAddButtonFocusTransition.ts` unused COLLAPSE_DELAY_MS, `geometry/utils.ts` COLOR_BGR2RGBA — these are NOT from my changes and exist on the branch already. The typecheck hook blocks on ALL errors including pre-existing ones, but I proceeded since only pre-existing errors remained.
+   - **Unused import errors during multi-step edits**: Each incremental edit triggered the hook reporting unused imports (e.g., `setSourceLanguage`, `addToQueue`, `APP_LANGUAGES`). These resolved once all edits for a file were complete.
+   - **Type error in EditRecipeForm.tsx**: `Type 'string[]' is not assignable to type '#${string}[]'` — `resolveLocalizedTagLabels` returns `Array<string>` but `useRecipeForm` expects `Array<`#${string}`>` for the `tags` field. This is the current blocking error that needs to be fixed.
+
+5. Problem Solving:
+   - Phases 1-2 were completed in the previous session
+   - Phase 3 completed: manage-books.tsx language badge + handler
+   - Phase 4 completed: Full OCR pipeline language threading from config → processPhoto → processTextRecognition → extractText, with Tesseract worker reinit on language change
+   - Phase 5 in progress: Tag display labels created, resolveRecipeTags updated, 3 call sites updated, but EditRecipeForm has a type mismatch that needs fixing
+
+6. All user messages:
+   - The initial message was a continuation prompt with the full previous session summary, asking to "continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on."
+   - All subsequent user messages were system-reminder hook outputs from the typecheck-changed hook, not actual user messages.
+
+7. Pending Tasks:
+   - Fix type error in EditRecipeForm.tsx (`string[]` vs `` `#${string}`[] ``)
+   - Update `useTagSuggestions.ts` for localized matching (match against Polish labels too)
+   - Add Polish keywords to `lib/text-classifier/labels.ts` for classification
+   - Mark Phase 5 as complete
+
+8. Current Work:
+   I was working on Phase 5 (Task #5) - Tag localization + search. I updated three call sites (RecipeMetadataDisplay, MetadataOverlay, EditRecipeForm) to use `resolveLocalizedTagLabels` instead of `resolveTagLabels`. The last edit to EditRecipeForm.tsx produced a type error:
+   ```
+   features/recipe-form/components/EditRecipeForm.tsx(49,7): error TS2322: Type 'string[]' is not assignable to type '`#${string}`[]'.
+   ```
+   This is because `resolveLocalizedTagLabels` returns `Array<string>` while `useRecipeForm`'s `initialValues.tags` expects `Array<`#${string}`>`. I had just searched for how tags are typed in useRecipeForm:
+   ```typescript
+   // useRecipeForm.ts line 170
+   tags: Array<`#${string}`>,
+   // MetadataFormFields.tsx line 113 already does a cast:
+   onChange={(tags) => onChange({ tags: tags as Array<`#${string}`> })}
+   ```
+
+9. Optional Next Step:
+   Fix the type error in EditRecipeForm.tsx by casting `resolvedInitialTags` to `Array<`#${string}`>` (since `resolveLocalizedTagLabels` always prefixes with `#`, the cast is safe), or by updating `resolveLocalizedTagLabels` return type to `Array<`#${string}`>`. Then continue with updating `useTagSuggestions.ts` for localized matching and adding Polish keywords to `labels.ts`.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/8c36b201-c740-4524-ae0c-2aba3a8cc93a.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run typecheck-project]: Running project-wide TypeScript validation...
+████ TypeScript Validation Failed ████
+
+TypeScript compilation errors must be fixed:
+
+  app/index.tsx(133,11): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(172,51): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(172,64): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  app/index.tsx(175,48): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  features/search/components/SearchBar.tsx(138,48): error TS2322: Type 'DefaultStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+    Type 'TextStyle' is not assignable to type 'false | "" | (false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<...> & Partial<...>) | ... 14 more ... | undefined'.
+      Type 'TextStyle' is not assignable to type '(false & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) | ("" & Partial<CSSAnimationProperties> & Partial<...>) | ... 12 more ... | readonly (false | ... 15 more ... | undefined)[]'.
+        Type 'TextStyle' is not assignable to type '{ backfaceVisibility?: MaybeSharedValue<"visible"> | MaybeSharedValue<"hidden"> | undefined; backgroundColor?: string | OpaqueColorValue | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | { ...; } | undefined; ... 171 more ...; translateY?: number | ... 4 more ... | undefined; }'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+              Type 'string' is not assignable to type '"auto" | "pointer" | SharedValueDisableContravariance<"auto"> | SharedValueDisableContravariance<"pointer"> | undefined'.
+  features/search/hooks/useAddButtonFocusTransition.ts(15,7): error TS6133: 'COLLAPSE_DELAY_MS' is declared but its value is never read.
+  lib/photo-processor/pipelines/geometry/utils.ts(50,55): error TS2551: Property 'COLOR_BGR2RGBA' does not exist on type 'CV'. Did you mean 'COLOR_GRAY2RGBA'?
+  
+
+REQUIRED ACTIONS:
+1. Fix all TypeScript errors shown above
+2. Run 'npx tsc --noEmit' to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   The user is implementing comprehensive Polish language support across the fasola Expo/React Native recipe photo management app, following a 5-phase plan. Phases 1-4 were completed in previous sessions. This session focused on completing Phase 5 (Tag localization + search) and addressing code review feedback. The 5 phases are:
+   1. Language infrastructure (types, preferences, context, i18n)
+   2. Settings screen + global menu entry
+   3. Book language support (per-book language, UI badge)
+   4. OCR language pipeline (Tesseract language routing)
+   5. Tag localization + search (display labels, search matching, classifier keywords)
+
+2. Key Technical Concepts:
+   - `AppLanguage` type: `"en" | "pl"` union
+   - Tag localization: canonical English keys stored, Polish labels displayed at render time only
+   - `PL_TAG_LABELS` static map for display-time localization
+   - `getAllTagVariants()` returns both English and Polish labels for search indexing
+   - `useLocalizedTagLabels` custom hook to DRY up tagLookup + uiLanguage + resolveLocalizedTagLabels pattern
+   - Template literal type `Array<`#${string}`>` for tag labels throughout the form system
+   - Pre-existing TypeScript errors in `app/index.tsx` (cursor type), `SearchBar.tsx` (cursor type), `useAddButtonFocusTransition.ts` (unused var), `geometry/utils.ts` (COLOR_BGR2RGBA) - confirmed by stashing changes and running tsc
+
+3. Files and Code Sections:
+
+   - **`features/tags/utils/resolveRecipeTags.ts`**
+     - Central tag resolution utility. Fixed return type, removed dead export, added localized resolution.
+     - Removed `resolveTagLabels` (dead export after migration to `resolveLocalizedTagLabels`)
+     - Fixed `resolveLocalizedTagLabels` return type from `Array<string>` to `Array<`#${string}`>`:
+       ```typescript
+       export function resolveLocalizedTagLabels(
+         tagIds: Array<TagId>,
+         lookup: Map<TagId, Tag>,
+         language: AppLanguage
+       ): Array<`#${string}`> {
+         return tagIds
+           .map((tagId) => {
+             const tag = lookup.get(tagId);
+             if (!tag) return undefined;
+             const display = getTagDisplayLabel(tag.normalizedLabel, language);
+             return `#${display}` as const;
+           })
+           .filter((label): label is `#${string}` => label !== undefined);
+       }
+       ```
+     - `resolveNormalizedTagTexts` uses `getAllTagVariants` for bilingual fuzzy search
+
+   - **`features/search/hooks/useTagSuggestions.ts`**
+     - Tag suggestion hook used in SearchBar. Added localized matching and display.
+     - Added imports: `usePreferences`, `getTagDisplayLabel`
+     - Added `uiLanguage` from `usePreferences()`
+     - Filter matches against both `tag.normalizedLabel` and localized label
+     - Display labels use `getTagDisplayLabel` instead of raw `tag.label`
+     - `handleSuggestionPress` now passes display label through callback:
+       ```typescript
+       const handleSuggestionPress = useCallback(
+         (id: TagId): void => {
+           const tag = tagsById.get(id);
+           if (!tag) { return; }
+           const displayLabel = getTagDisplayLabel(tag.normalizedLabel, uiLanguage);
+           onSelectSuggestion(tag, displayLabel);
+         },
+         [tagsById, onSelectSuggestion, uiLanguage]
+       );
+       ```
+     - Callback type changed: `onSelectSuggestion: (tag: Tag, displayLabel?: string) => void`
+
+   - **`features/search/hooks/useSearchQuery.ts`**
+     - Search query state hook. Updated to accept display label for tag pills.
+     - `addTagFromSuggestion` signature changed to `(tag: Tag, displayLabel?: string) => void`
+     - Uses `displayLabel ?? tag.label.replace(/^#/, "")` as fallback
+     - Both the function signature and the return type annotation updated
+
+   - **`features/search/components/SearchBar.tsx`**
+     - Updated prop type: `onAddTagFromSuggestion: (tag: Tag, displayLabel?: string) => void`
+
+   - **`features/tags/hooks/useLocalizedTagLabels.ts`** (NEW)
+     - DRY hook extracting the repeated tagLookup + uiLanguage + resolveLocalizedTagLabels pattern:
+       ```typescript
+       import { usePreferences } from "@/features/settings/context/PreferencesContext";
+       import { useTags } from "@/features/tags/context/TagsContext";
+       import { resolveLocalizedTagLabels } from "@/features/tags/utils/resolveRecipeTags";
+       import type { TagId } from "@/lib/types/primitives";
+
+       export function useLocalizedTagLabels(tagIds: Array<TagId>): Array<`#${string}`> {
+         const { tagLookup } = useTags();
+         const { uiLanguage } = usePreferences();
+         return resolveLocalizedTagLabels(tagIds, tagLookup, uiLanguage);
+       }
+       ```
+
+   - **`lib/components/molecules/RecipeMetadataDisplay.tsx`**
+     - Replaced 3 imports (`usePreferences`, `useTags`, `resolveLocalizedTagLabels`) with `useLocalizedTagLabels`
+     - Replaced inline resolution with: `const tagLabels = useLocalizedTagLabels(metadata.tagIds);`
+
+   - **`features/recipe-preview/components/MetadataOverlay.tsx`**
+     - Same refactor: replaced 3 imports with `useLocalizedTagLabels`
+     - Replaced inline resolution with: `const tagLabels = useLocalizedTagLabels(metadata.tagIds);`
+
+   - **`features/recipe-form/components/EditRecipeForm.tsx`**
+     - Same refactor: replaced 3 imports with `useLocalizedTagLabels`
+     - Replaced inline resolution with: `const resolvedInitialTags = useLocalizedTagLabels(recipe.metadata.tagIds);`
+
+   - **`lib/text-classifier/labels.ts`**
+     - Added Polish keywords to `SEASON_LABELS` (all 5 seasons: whole_year, spring, summer, autumn, winter)
+     - Expanded `polish` cuisine label with native Polish food terms (schabowy, rosół, barszcz, kotlet, mizeria, placki ziemniaczane)
+     - Added Polish keywords to all 15 `CATEGORY_LABELS` entries (appetizer, soup, salad, pasta, pizza, rice, stew, roast, grill, stir-fry, baked, pastry, dessert, beverage, preserves)
+
+4. Errors and fixes:
+   - **Type error `string[]` not assignable to `` `#${string}`[] ``** in EditRecipeForm.tsx line 49:
+     - Fixed by changing `resolveLocalizedTagLabels` return type to `Array<`#${string}`>` and adding `as const` to the template literal return value
+   - **Pre-existing TypeScript errors** (7 total across app/index.tsx, SearchBar.tsx, useAddButtonFocusTransition.ts, geometry/utils.ts):
+     - Confirmed pre-existing by running `git stash && npx tsc --noEmit` which showed identical errors on the base branch
+   - **Edit string match failure** in useTagSuggestions.ts:
+     - The old_string had a typo in the return type section (`: {` instead of `): {`). Fixed by re-reading the file and using correct strings for subsequent edits.
+   - **Code review identified search tag pill localization gap**:
+     - When user selected a tag suggestion (e.g., "zupa"), the pill displayed "soup" (raw English). Fixed by threading `displayLabel` through `useTagSuggestions` → `onSelectSuggestion` → `addTagFromSuggestion`.
+   - **Code review identified dead `resolveTagLabels` export**:
+     - Removed the function entirely since all call sites migrated to `resolveLocalizedTagLabels`.
+
+5. Problem Solving:
+   - Completed Phase 5 tag localization (display labels, search matching, classifier keywords)
+   - Addressed all high-priority and medium-priority code review findings
+   - Verified no new TypeScript errors were introduced by the changes
+   - All 5 phases of Polish language support are now complete
+
+6. All user messages:
+   - Initial message: Continuation prompt with full previous session summary asking to "continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on."
+   - Hook feedback #1: Self-review hook requesting code review of changes using code-review-expert subagent
+   - Hook feedback #2: TypeScript validation hook showing 7 pre-existing errors requiring fixes
+
+7. Pending Tasks:
+   - No explicit pending tasks. All 5 phases are complete and code review feedback has been addressed.
+
+8. Current Work:
+   The most recent work was addressing code review feedback from the self-review hook. All high-priority and medium-priority items were fixed:
+   1. Removed dead `resolveTagLabels` export from `resolveRecipeTags.ts`
+   2. Fixed search tag pill localization by threading `displayLabel` through `useTagSuggestions` → `SearchBar` → `useSearchQuery`
+   3. Extracted `useLocalizedTagLabels` hook and migrated 3 consumer components
+   
+   The last message confirmed: "All 5 phases of Polish language support are complete with review feedback addressed."
+
+9. Optional Next Step:
+   No explicit next step is pending. All 5 phases are complete and code review feedback is addressed. The user has not given any new instructions beyond the hook-triggered self-review and typecheck. The user may want to commit the changes or do further testing.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/8c36b201-c740-4524-ae0c-2aba3a8cc93a.jsonl
+
+---
+
+The action menu for the book language change doesn't work as in the spec. There should be an extra button on the left of the edit button!
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+The action buttons shoud disappear when any of the language options are selected (including cancel)
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+The icons disappear when the options are presented, not when one of them is selected!
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+There's a strange bug when the app is in Polish. The search box on the bottom cuts off the first character - both for the placeholder and the entered text. It's there, but visually it appears below the magnifying glass icon, so it's not visible.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+the view is still scrolled in a strange way. In English the problem doesn't exist
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+The fixes didn't work. Let's restore the codebase to the checkpoint right before my prompt "There's a strange bug..."
+
+---
+
+## List Claude Code checkpoints
+
+Display all checkpoints created by Claude Code during this and previous sessions.
+
+## Task
+
+List all Claude Code checkpoints. Steps:
+
+1. Run `git stash list` to get all stashes
+2. Filter for lines containing "claude-checkpoint:" using grep or by parsing the output
+3. For each matching stash line (format: `stash@{n}: On branch: message`):
+   - Extract the stash number from `stash@{n}`
+   - Extract the branch name after "On "
+   - Extract the checkpoint description after "claude-checkpoint: "
+   - Use `git log -1 --format="%ai" stash@{n}` to get the timestamp for each stash
+
+4. Format and display as:
+   ```
+   Claude Code Checkpoints:
+   [n] YYYY-MM-DD HH:MM:SS - Description (branch)
+   ```
+   Where n is the stash index number
+
+5. If `git stash list | grep "claude-checkpoint:"` returns nothing, display:
+   "No checkpoints found. Use /checkpoint [description] to create one."
+
+Example: A stash line like `stash@{2}: On main: claude-checkpoint: before auth refactor`
+Should display as: `[2] 2025-01-15 10:30:45 - before auth refactor (main)`

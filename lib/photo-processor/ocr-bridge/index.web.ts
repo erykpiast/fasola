@@ -3,30 +3,48 @@
  * Runs OCR in a Web Worker for off-thread processing
  */
 
+import type { AppLanguage } from "@/lib/types/language";
 import type { DataUrl } from "@/lib/types/primitives";
 import { createWorker, type Worker } from "tesseract.js";
 import type { OcrResult } from "./types";
 
+const TESSERACT_LANG_MAP: Record<AppLanguage, string> = {
+  en: "eng",
+  pl: "pol",
+};
+
 // Persistent worker instance for reuse across multiple extractions
 let worker: Worker | null = null;
+let currentWorkerLang: string | null = null;
 
 /**
  * Extract text from an image using Tesseract.js OCR
  * @param imageUri - Data URL of the image to process
+ * @param language - Language for OCR recognition
  * @returns OCR result with extracted text blocks and confidence
  */
-export async function extractText(imageUri: DataUrl): Promise<OcrResult> {
+export async function extractText(imageUri: DataUrl, language: AppLanguage = "en"): Promise<OcrResult> {
   try {
-    console.log("[OCR Bridge] Starting text extraction (web/tesseract)");
+    const tessLang = TESSERACT_LANG_MAP[language];
+    console.log(`[OCR Bridge] Starting text extraction (web/tesseract, lang=${tessLang})`);
+
+    // Reinitialize worker if language changed
+    if (worker && currentWorkerLang !== tessLang) {
+      console.log(`[OCR Bridge] Language changed from ${currentWorkerLang} to ${tessLang}, reinitializing worker`);
+      await worker.terminate();
+      worker = null;
+      currentWorkerLang = null;
+    }
 
     // Lazy initialization: create worker on first use
     if (!worker) {
-      console.log("[OCR Bridge] Initializing Tesseract worker");
+      console.log(`[OCR Bridge] Initializing Tesseract worker for ${tessLang}`);
       try {
-        worker = await createWorker("eng", 1, {
+        worker = await createWorker(tessLang, 1, {
           errorHandler: (err) =>
             console.error("[OCR Bridge] Worker error:", err),
         });
+        currentWorkerLang = tessLang;
         console.log("[OCR Bridge] Tesseract worker ready");
       } catch (workerError) {
         console.error(

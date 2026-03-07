@@ -79,7 +79,8 @@
   },
   "menu": {
     "manageBooks": "Your Books",
-    "about": "About"
+    "about": "About",
+    "settings": "Settings"
   },
   "manageBooks": {
     "title": "Your Books",
@@ -93,7 +94,14 @@
     "deleteConfirmTitle": "Delete \"{{name}}\"?",
     "deleteConfirmMessage": "This cannot be undone. All {{count}} recipes imported from this book will be permanently removed.",
     "deleteConfirmCancel": "Cancel",
-    "deleteConfirmAction": "Delete"
+    "deleteConfirmAction": "Delete",
+    "setLanguageAction": "Language"
+  },
+  "settings": {
+    "title": "Settings",
+    "uiLanguage": "UI Language",
+    "ocrLanguage": "OCR Language",
+    "back": "Back"
   },
   "about": {
     "title": "About fasola",

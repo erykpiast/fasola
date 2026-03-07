@@ -480,6 +480,10 @@ private struct LiquidGlassInputContent: View {
 private final class DeletingAwareUITextField: UITextField {
   var onEmptyBackspace: (() -> Void)?
 
+  override var intrinsicContentSize: CGSize {
+    CGSize(width: UIView.noIntrinsicMetric, height: super.intrinsicContentSize.height)
+  }
+
   override func deleteBackward() {
     if (text ?? "").isEmpty {
       onEmptyBackspace?()

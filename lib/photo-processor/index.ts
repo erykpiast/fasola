@@ -120,7 +120,7 @@ export async function processPhoto(
       console.log("[Photo Processor] Running text recognition");
       // Use grayscale version for OCR if available, otherwise use colored version
       const ocrImageDataUrl = grayscaleImageDataUrl || imageDataUrl;
-      const result = await processTextRecognition(ocrImageDataUrl);
+      const result = await processTextRecognition(ocrImageDataUrl, config.ocr.language);
 
       if (!result.success) {
         console.warn(

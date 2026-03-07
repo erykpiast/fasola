@@ -1,6 +1,9 @@
+import { useBackgroundProcessing } from "@/features/background-processing/context/BackgroundProcessingContext";
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { useSources } from "@/features/sources/context/SourcesContext";
 import { Alert } from "@/lib/alert";
+import { LANGUAGE_DISPLAY_NAMES } from "@/lib/types/language";
+import { APP_LANGUAGES } from "@/lib/types/language";
 import type { SourceId } from "@/lib/types/primitives";
 import type { Source } from "@/lib/types/source";
 import { isUrl } from "@/lib/utils/recipeValidation";
@@ -37,10 +40,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function useActionButtonScale(
   translateX: SharedValue<number>,
-  sign: 1 | -1
+  sign: 1 | -1,
+  offset = 0
 ): { transform: Array<{ scale: number }>; opacity: number } {
   return useAnimatedStyle(() => {
-    const w = Math.max(sign * translateX.value - BUTTON_GAP, 0);
+    const w = Math.max(sign * translateX.value - offset - BUTTON_GAP, 0);
     if (w <= SCALE_MIN_WIDTH) {
       return { transform: [{ scale: 0 }], opacity: 0 };
     }
@@ -55,6 +59,7 @@ function useActionButtonScale(
 
 const SWIPE_THRESHOLD = 60;
 const ACTION_BUTTON_WIDTH = 80;
+const LEFT_REVEAL_WIDTH = ACTION_BUTTON_WIDTH * 2;
 const BUTTON_GAP = 12;
 const BUTTON_CONTENT_WIDTH = ACTION_BUTTON_WIDTH - BUTTON_GAP;
 const BUTTON_SCALE_THRESHOLD = BUTTON_CONTENT_WIDTH;
@@ -66,6 +71,7 @@ function SwipeableBookRow({
   editingSourceId,
   onDelete,
   onStartEdit,
+  onSetLanguage,
   onConfirmEdit,
   onCancelEdit,
   editText,
@@ -76,6 +82,7 @@ function SwipeableBookRow({
   editingSourceId: SourceId | null;
   onDelete: (sourceId: SourceId) => void;
   onStartEdit: (sourceId: SourceId) => void;
+  onSetLanguage: (sourceId: SourceId, onDone: () => void) => void;
   onConfirmEdit: () => void;
   onCancelEdit: () => void;
   editText: string;
@@ -94,13 +101,19 @@ function SwipeableBookRow({
   isEditingShared.value = isEditing;
 
   useEffect(() => {
-    translateX.value = withSpring(isEditing ? ACTION_BUTTON_WIDTH : 0);
+    translateX.value = withSpring(isEditing ? LEFT_REVEAL_WIDTH : 0);
   }, [isEditing, translateX]);
 
   const triggerDelete = useCallback(() => {
     translateX.value = withSpring(0);
     onDelete(source.id);
   }, [source.id, onDelete, translateX]);
+
+  const handleLanguagePress = useCallback(() => {
+    onSetLanguage(source.id, () => {
+      translateX.value = withSpring(0);
+    });
+  }, [source.id, onSetLanguage, translateX]);
 
   const handleEditPress = useCallback(() => {
     if (isEditing) {
@@ -118,8 +131,9 @@ function SwipeableBookRow({
     })
     .onUpdate((event) => {
       const raw = startX.value + event.translationX;
-      const limit = ACTION_BUTTON_WIDTH * 1.5;
-      translateX.value = Math.max(-limit, Math.min(limit, raw));
+      const leftLimit = LEFT_REVEAL_WIDTH * 1.5;
+      const rightLimit = ACTION_BUTTON_WIDTH * 1.5;
+      translateX.value = Math.max(-rightLimit, Math.min(leftLimit, raw));
     })
     .onEnd(() => {
       if (isEditingShared.value) {
@@ -127,13 +141,13 @@ function SwipeableBookRow({
           translateX.value = withSpring(0);
           runOnJS(onCancelEdit)();
         } else {
-          translateX.value = withSpring(ACTION_BUTTON_WIDTH);
+          translateX.value = withSpring(LEFT_REVEAL_WIDTH);
         }
       } else {
         if (translateX.value < -SWIPE_THRESHOLD) {
           translateX.value = withSpring(-ACTION_BUTTON_WIDTH);
         } else if (translateX.value > SWIPE_THRESHOLD) {
-          translateX.value = withSpring(ACTION_BUTTON_WIDTH);
+          translateX.value = withSpring(LEFT_REVEAL_WIDTH);
         } else {
           translateX.value = withSpring(0);
         }
@@ -168,22 +182,56 @@ function SwipeableBookRow({
     };
   });
 
-  const editButtonWidthStyle = useAnimatedStyle(() => ({
-    width: translateX.value > BUTTON_GAP ? translateX.value - BUTTON_GAP : 0,
+  const langButtonWidthStyle = useAnimatedStyle(() => ({
+    width: translateX.value > BUTTON_GAP ? Math.min(translateX.value - BUTTON_GAP, BUTTON_CONTENT_WIDTH) : 0,
     opacity: translateX.value > BUTTON_GAP ? 1 : 0,
   }));
+
+  const editButtonWidthStyle = useAnimatedStyle(() => {
+    const available = translateX.value - ACTION_BUTTON_WIDTH;
+    return {
+      width: available > BUTTON_GAP ? available - BUTTON_GAP : 0,
+      opacity: available > BUTTON_GAP ? 1 : 0,
+    };
+  });
 
   const deleteButtonWidthStyle = useAnimatedStyle(() => ({
     width: -translateX.value > BUTTON_GAP ? -translateX.value - BUTTON_GAP : 0,
     opacity: -translateX.value > BUTTON_GAP ? 1 : 0,
   }));
 
-  const editScaleStyle = useActionButtonScale(translateX, 1);
+  const langScaleStyle = useActionButtonScale(translateX, 1);
+  const editScaleStyle = useActionButtonScale(translateX, 1, ACTION_BUTTON_WIDTH);
   const deleteScaleStyle = useActionButtonScale(translateX, -1);
 
   return (
     <View style={styles.rowContainer}>
-      {/* Edit button - left */}
+      {/* Language button - left-most */}
+      <Animated.View
+        style={[
+          styles.actionButtonContainer,
+          styles.langButtonContainer,
+          langButtonWidthStyle,
+        ]}
+      >
+        <Pressable
+          onPress={handleLanguagePress}
+          style={styles.actionButtonPressable}
+          accessibilityRole="button"
+          accessibilityLabel={t("manageBooks.setLanguageAction")}
+        >
+          <Animated.View style={[styles.actionButtonContent, langScaleStyle]}>
+            <View style={[styles.actionButtonIcon, styles.langButtonColor]}>
+              <MaterialIcons name="language" size={26} color="#FFFFFF" />
+            </View>
+            <Text numberOfLines={1} style={[styles.actionButtonLabel, { color: colors.textSecondary }]}>
+              {t("manageBooks.setLanguageAction")}
+            </Text>
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
+
+      {/* Edit button - left, next to language */}
       <Animated.View
         style={[
           styles.actionButtonContainer,
@@ -264,6 +312,8 @@ function SwipeableBookRow({
                 style={[styles.recipeCount, { color: colors.textSecondary }]}
               >
                 {t("manageBooks.recipeCount", { count: recipeCount })}
+                {" · "}
+                {source.language.toUpperCase()}
               </Text>
             </>
           ) : (
@@ -275,6 +325,8 @@ function SwipeableBookRow({
                 style={[styles.recipeCount, { color: colors.textSecondary }]}
               >
                 {t("manageBooks.recipeCount", { count: recipeCount })}
+                {" · "}
+                {source.language.toUpperCase()}
               </Text>
             </>
           )}
@@ -292,8 +344,9 @@ export default function ManageBooksScreen(): JSX.Element {
   const insets = useSafeAreaInsets();
   const isDark = theme === "dark";
   const textColor = isDark ? "#FFFFFF" : "#000000";
-  const { sources, createSource, renameSource, deleteSource } = useSources();
+  const { sources, createSource, renameSource, setSourceLanguage, deleteSource } = useSources();
   const { recipes, deleteRecipes } = useRecipes();
+  const { addToQueue } = useBackgroundProcessing();
   const isDeletingRef = useRef(false);
 
   const [isAddingBook, setIsAddingBook] = useState(false);
@@ -411,6 +464,38 @@ export default function ManageBooksScreen(): JSX.Element {
     setEditText("");
   }, []);
 
+  const handleSetLanguage = useCallback(
+    (sourceId: SourceId, onDone: () => void) => {
+      const source = sources.find((s) => s.id === sourceId);
+      if (!source) return;
+
+      const options = APP_LANGUAGES.map((lang) => ({
+        text: LANGUAGE_DISPLAY_NAMES[lang],
+        onPress: async () => {
+          onDone();
+          if (lang === source.language) return;
+          await setSourceLanguage(sourceId, lang);
+          const sourceRecipes = recipes.filter(
+            (r) => r.metadata.source === sourceId
+          );
+          for (const recipe of sourceRecipes) {
+            addToQueue(recipe.id);
+          }
+        },
+      }));
+
+      Alert.alert(
+        t("manageBooks.setLanguageAction"),
+        undefined,
+        [
+          ...options,
+          { text: t("manageBooks.deleteConfirmCancel"), style: "cancel", onPress: onDone },
+        ]
+      );
+    },
+    [sources, recipes, setSourceLanguage, addToQueue, t]
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
@@ -438,6 +523,7 @@ export default function ManageBooksScreen(): JSX.Element {
               editingSourceId={editingSourceId}
               onDelete={handleDeleteBook}
               onStartEdit={handleStartEdit}
+              onSetLanguage={handleSetLanguage}
               onConfirmEdit={handleConfirmEdit}
               onCancelEdit={handleCancelEdit}
               editText={editText}
@@ -538,7 +624,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     padding: 0,
     margin: 0,
-    marginRight: ACTION_BUTTON_WIDTH,
+    marginRight: LEFT_REVEAL_WIDTH,
   },
   actionButtonContainer: {
     position: "absolute",
@@ -546,8 +632,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     overflow: "hidden",
   },
-  editButtonContainer: {
+  langButtonContainer: {
     left: 6,
+  },
+  editButtonContainer: {
+    left: ACTION_BUTTON_WIDTH + 6,
   },
   deleteButtonContainer: {
     right: 6,
@@ -575,6 +664,9 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: "500",
     marginTop: 4,
+  },
+  langButtonColor: {
+    backgroundColor: "#8E8E93",
   },
   editButtonColor: {
     backgroundColor: "#007AFF",

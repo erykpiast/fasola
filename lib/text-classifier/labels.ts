@@ -8,15 +8,15 @@
  */
 export const SEASON_LABELS = {
   whole_year:
-    "all-season, year-round, everyday cooking, weeknight meals, pantry staples, comfort food, quick meals, meal prep, leftovers, one-pot, bread, flatbread, pasta, pizza, rice, soup, salad, stew, casserole, sandwich, breakfast, brunch, lunch, dinner, snack, appetizer, side dish, main course, dessert, beverage, baked, pastry, stir-fry, grill, roast, preserves, pickled, fermented",
+    "all-season, year-round, everyday cooking, weeknight meals, pantry staples, comfort food, quick meals, meal prep, leftovers, one-pot, bread, flatbread, pasta, pizza, rice, soup, salad, stew, casserole, sandwich, breakfast, brunch, lunch, dinner, snack, appetizer, side dish, main course, dessert, beverage, baked, pastry, stir-fry, grill, roast, preserves, pickled, fermented, ca\u0142oroczne, codzienne gotowanie, chleb, makaron, ry\u017c, zupa, sa\u0142atka, gulasz, zapiekanka, kanapka, \u015bniadanie, obiad, kolacja, przek\u0105ska, przystawka, deser, nap\u00f3j, ciasto, grill, pieczyste, przetwory",
   spring:
-    "fresh vegetables, asparagus, peas, ramps, radishes, rhubarb, fava beans, artichokes, spring onions, baby greens, herbs, lemon, light salads",
+    "fresh vegetables, asparagus, peas, ramps, radishes, rhubarb, fava beans, artichokes, spring onions, baby greens, herbs, lemon, light salads, wiosna, szparagi, groszek, rzodkiewki, rabarbar, b\u00f3b, karczochy, szczypiorek, zio\u0142a, cytryna",
   summer:
-    "grilled food, salads, berries, cold dishes, barbecue, tomatoes, peaches, corn, zucchini, eggplant, cucumbers, basil, watermelon, stone fruit",
+    "grilled food, salads, berries, cold dishes, barbecue, tomatoes, peaches, corn, zucchini, eggplant, cucumbers, basil, watermelon, stone fruit, lato, grill, sa\u0142atki, jagody, pomidory, brzoskwinie, kukurydza, cukinia, bak\u0142a\u017can, og\u00f3rki, bazylia, arbuz",
   autumn:
-    "pumpkin, squash, mushrooms, warm soups, harvest vegetables, apples, pears, cranberries, sweet potatoes, beets, Brussels sprouts, roasted vegetables, baking spices",
+    "pumpkin, squash, mushrooms, warm soups, harvest vegetables, apples, pears, cranberries, sweet potatoes, beets, Brussels sprouts, roasted vegetables, baking spices, jesie\u0144, dynia, grzyby, jab\u0142ka, gruszki, \u017curawina, bataty, buraki, brukselka",
   winter:
-    "hearty stews, comfort food, root vegetables, warm dishes, casseroles, braises, slow-cooked, baked pasta, cabbage, cauliflower, citrus, dumplings",
+    "hearty stews, comfort food, root vegetables, warm dishes, casseroles, braises, slow-cooked, baked pasta, cabbage, cauliflower, citrus, dumplings, zima, gulasz, warzywa korzeniowe, zapiekanki, kapusta, kalafior, pierogi, kluski",
 } as const;
 
 /**
@@ -41,7 +41,7 @@ export const CUISINE_LABELS = {
     "roast beef, fish and chips, pie, pudding, tea, yorkshire pudding, bangers and mash, scones, shepherd's pie, trifle, cheddar, crumpets, ale",
   // Eastern Europe
   polish:
-    "pierogi, kielbasa, bigos, cabbage, sour cream, beets, rye bread, żurek, gołąbki, pickles, dill, mushrooms, poppy seed, horseradish",
+    "pierogi, kielbasa, bigos, cabbage, sour cream, beets, rye bread, \u017curek, go\u0142\u0105bki, pickles, dill, mushrooms, poppy seed, horseradish, kie\u0142basa, kapusta, \u015bmietana, buraki, chleb \u017cytni, koper, grzyby, mak, chrzan, schabowy, rosó\u0142, barszcz, kotlet, mizeria, placki ziemniaczane",
   ukrainian:
     "borscht, varenyky, salo, cabbage, beets, sour cream, garlic, dill, buckwheat, sunflower oil, rye bread, pickled vegetables, mushrooms",
   eastern_european:
@@ -123,32 +123,32 @@ export const CUISINE_LABELS = {
  */
 export const CATEGORY_LABELS = {
   appetizer:
-    "starter, small bites, finger food, hors d'oeuvres, snacks, tapas, canapés, bruschetta, crostini, dip, spread, mezze, bite-size, party food",
-  soup: "broth, liquid, warm, bowl, vegetables, stock, ramen, chowder, bisque, consommé, creamy soup, noodle soup, lentil soup, miso",
+    "starter, small bites, finger food, hors d'oeuvres, snacks, tapas, canap\u00e9s, bruschetta, crostini, dip, spread, mezze, bite-size, party food, przystawka, przek\u0105ska, koreczki, tartinki",
+  soup: "broth, liquid, warm, bowl, vegetables, stock, ramen, chowder, bisque, consomm\u00e9, creamy soup, noodle soup, lentil soup, miso, zupa, ros\u00f3\u0142, bulion, krem, barszcz, \u017curek, flaki, grochówka, pomidorowa",
   salad:
-    "fresh, greens, vegetables, dressing, cold, lettuce, vinaigrette, chopped salad, caesar, coleslaw, pasta salad, grain salad, cucumber salad, slaw",
+    "fresh, greens, vegetables, dressing, cold, lettuce, vinaigrette, chopped salad, caesar, coleslaw, pasta salad, grain salad, cucumber salad, slaw, sa\u0142atka, sur\u00f3wka, mizeria",
   pasta:
-    "noodles, spaghetti, penne, linguine, Italian, sauce, fettuccine, rigatoni, macaroni, ravioli, gnocchi, al dente, pesto, bolognese",
+    "noodles, spaghetti, penne, linguine, Italian, sauce, fettuccine, rigatoni, macaroni, ravioli, gnocchi, al dente, pesto, bolognese, makaron, kluski, \u0142azanki, pierogi",
   pizza:
-    "dough, cheese, tomato sauce, toppings, Italian, oven-baked, crust, mozzarella, pepperoni, slice, margherita, wood-fired, calzone, flatbread",
-  rice: "grains, pilaf, risotto, fried rice, steamed, side dish, basmati, jasmine, rice bowl, paella, biryani, sushi rice, sticky rice, congee",
-  stew: "slow-cooked, thick, hearty, meat, vegetables, braised, simmered, one-pot, goulash, chili, ragout, casserole, comfort food",
+    "dough, cheese, tomato sauce, toppings, Italian, oven-baked, crust, mozzarella, pepperoni, slice, margherita, wood-fired, calzone, flatbread, pizza, ciasto, ser, sos pomidorowy",
+  rice: "grains, pilaf, risotto, fried rice, steamed, side dish, basmati, jasmine, rice bowl, paella, biryani, sushi rice, sticky rice, congee, ry\u017c, kasza, pilaw",
+  stew: "slow-cooked, thick, hearty, meat, vegetables, braised, simmered, one-pot, goulash, chili, ragout, casserole, comfort food, gulasz, bigos, potrawka, duszony",
   roast:
-    "oven-baked, meat, poultry, vegetables, whole, tender, roast chicken, pot roast, brisket, sunday roast, gravy, roasting, carved",
+    "oven-baked, meat, poultry, vegetables, whole, tender, roast chicken, pot roast, brisket, sunday roast, gravy, roasting, carved, pieczyste, pieczony, piecze\u0144, kurczak pieczony, schab",
   grill:
-    "barbecue, char, meat, vegetables, smoky, outdoor cooking, grilled, chargrilled, skewers, kebab, flame-grilled, BBQ sauce, grill marks",
+    "barbecue, char, meat, vegetables, smoky, outdoor cooking, grilled, chargrilled, skewers, kebab, flame-grilled, BBQ sauce, grill marks, grill, grillowany, szasz\u0142yk, kie\u0142basa z grilla",
   "stir-fry":
-    "wok, quick-cooked, vegetables, Asian, high heat, soy sauce, garlic, ginger, sesame oil, wok hei, noodles, beef stir-fry, chicken stir-fry",
+    "wok, quick-cooked, vegetables, Asian, high heat, soy sauce, garlic, ginger, sesame oil, wok hei, noodles, beef stir-fry, chicken stir-fry, sma\u017cony, na patelni",
   baked:
-    "oven, casserole, dish, cheese, golden, crispy, gratin, traybake, baked chicken, sheet pan, bubbling, crusty",
+    "oven, casserole, dish, cheese, golden, crispy, gratin, traybake, baked chicken, sheet pan, bubbling, crusty, zapiekanka, zapiekany, gratin, z piekarnika",
   pastry:
-    "dough, butter, flaky, sweet, croissant, tart, pie crust, puff pastry, filo, danish, shortcrust, choux, laminated dough, turnover",
+    "dough, butter, flaky, sweet, croissant, tart, pie crust, puff pastry, filo, danish, shortcrust, choux, laminated dough, turnover, ciasto, kruche, dro\u017cd\u017cowe, francuskie, p\u0105czki, rogaliki",
   dessert:
-    "sweet, cake, cookies, pudding, chocolate, fruit, ice cream, sugar, brownie, cheesecake, pie, tart, custard, mousse, caramel",
+    "sweet, cake, cookies, pudding, chocolate, fruit, ice cream, sugar, brownie, cheesecake, pie, tart, custard, mousse, caramel, deser, ciasto, ciastka, sernik, szarlotka, babka, makowiec, lody, czekolada, budyń",
   beverage:
-    "drink, liquid, coffee, tea, juice, smoothie, cocktail, mocktail, lemonade, latte, cocoa, shake, sparkling water",
+    "drink, liquid, coffee, tea, juice, smoothie, cocktail, mocktail, lemonade, latte, cocoa, shake, sparkling water, nap\u00f3j, kawa, herbata, sok, kompot, lemoniada, koktajl",
   preserves:
-    "jam, jelly, marmalade, pickle, pickled, fermented, canned, preserved, stored, chutney, relish, compote, confit, brine, cured",
+    "jam, jelly, marmalade, pickle, pickled, fermented, canned, preserved, stored, chutney, relish, compote, confit, brine, cured, przetwory, d\u017cem, marmolada, kiszone, kiszony, og\u00f3rki kiszone, kapusta kiszona, konfitura",
 } as const;
 
 /**

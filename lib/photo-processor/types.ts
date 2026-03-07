@@ -1,3 +1,4 @@
+import type { AppLanguage } from "@/lib/types/language";
 import type { DataUrl } from "@/lib/types/primitives";
 import type { OcrResult } from "./ocr-bridge/types";
 
@@ -26,6 +27,7 @@ export interface PhotoAdjustmentConfig {
   };
   ocr: {
     enabled: boolean;
+    language?: AppLanguage;
   };
 }
 

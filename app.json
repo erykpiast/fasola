@@ -42,7 +42,8 @@
             "deploymentTarget": "17.0"
           }
         }
-      ]
+      ],
+      "./plugins/withAutoSigning"
     ],
     "experiments": {
       "typedRoutes": true,

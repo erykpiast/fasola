@@ -14,7 +14,8 @@
       "appleTeamId": "SRBZTFXF42",
       "infoPlist": {
         "UIFileSharingEnabled": true,
-        "LSSupportsOpeningDocumentsInPlace": true
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "web": {
@@ -43,7 +44,10 @@
           }
         }
       ],
-      "./plugins/withAutoSigning"
+      "./plugins/withAutoSigning",
+      "expo-font",
+      "expo-localization",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

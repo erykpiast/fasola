@@ -1,0 +1,138 @@
+{
+  "emptyState": {
+    "title": "Brak przepisów",
+    "instruction": "Naciśnij przycisk poniżej, aby dodać pierwszy przepis"
+  },
+  "addRecipe": {
+    "button": "Dodaj przepis",
+    "camera": "Zrób zdjęcie",
+    "library": "Wybierz z biblioteki"
+  },
+  "recipeForm": {
+    "title": {
+      "label": "Tytuł",
+      "placeholder": "Nazwa przepisu"
+    },
+    "source": {
+      "label": "Źródło",
+      "placeholder": "URL lub nazwa książki"
+    },
+    "tags": {
+      "label": "Tagi",
+      "placeholder": "Dodaj tagi..."
+    },
+    "submit": "Wybierz książkę",
+    "submitEdit": "Zapisz zmiany",
+    "discardChanges": {
+      "title": "Odrzucić zmiany?",
+      "message": "Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?",
+      "cancel": "Anuluj",
+      "discard": "Odrzuć"
+    }
+  },
+  "recipeMetadata": {
+    "emptyState": "Brak dodatkowych szczegółów"
+  },
+  "search": {
+    "placeholder": "Szukaj przepisów...",
+    "selectedPill": {
+      "accessibilityLabel": "Wybrany tag #{{tag}}"
+    },
+    "suggestions": {
+      "accessibilityLabel_one": "#{{tag}}, {{countLabel}} przepis",
+      "accessibilityLabel_few": "#{{tag}}, {{countLabel}} przepisy",
+      "accessibilityLabel_many": "#{{tag}}, {{countLabel}} przepisów"
+    }
+  },
+  "accessibility": {
+    "close": "Zamknij",
+    "removeTag": "Usuń tag",
+    "back": "Wróć",
+    "delete": "Usuń przepis",
+    "confirm": "Potwierdź",
+    "moreOptions": "Więcej opcji"
+  },
+  "deleteRecipe": {
+    "title": "Usunąć przepis?",
+    "message": "Tej operacji nie można cofnąć.",
+    "cancel": "Anuluj",
+    "confirm": "Usuń"
+  },
+  "errors": {
+    "permissionDenied": "Odmówiono dostępu do kamery lub zdjęć",
+    "importFailed": "Nie udało się zaimportować przepisu",
+    "saveFailed": "Nie udało się zapisać przepisu",
+    "loadFailed": "Nie udało się wczytać przepisu",
+    "invalidTags": "Tagi muszą zaczynać się od # i nie mogą zawierać spacji"
+  },
+  "sourceSelector": {
+    "label": "Książka",
+    "placeholder": "Wybierz książkę",
+    "addNew": "Dodaj książkę",
+    "addNewTitle": "Nowa książka",
+    "addNewPlaceholder": "Wpisz tytuł książki"
+  },
+  "import": {
+    "confirmHint": "Potwierdzanie za {seconds}s..."
+  },
+  "library": {
+    "heading": "Twoje przepisy"
+  },
+  "menu": {
+    "manageBooks": "Twoje książki",
+    "about": "O aplikacji",
+    "settings": "Ustawienia"
+  },
+  "manageBooks": {
+    "title": "Twoje książki",
+    "addBook": "Dodaj książkę",
+    "emptyState": "Brak książek",
+    "recipeCount_one": "{{count}} przepis",
+    "recipeCount_few": "{{count}} przepisy",
+    "recipeCount_many": "{{count}} przepisów",
+    "back": "Wróć",
+    "editAction": "Edytuj",
+    "confirmEditAction": "Gotowe",
+    "setLanguageAction": "Język",
+    "deleteConfirmTitle": "Usunąć \u201E{{name}}\u201D?",
+    "deleteConfirmMessage": "Tej operacji nie można cofnąć. Wszystkie przepisy ({{count}}) zaimportowane z tej książki zostaną trwale usunięte.",
+    "deleteConfirmCancel": "Anuluj",
+    "deleteConfirmAction": "Usuń"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "uiLanguage": "Język interfejsu",
+    "ocrLanguage": "Język rozpoznawania tekstu",
+    "back": "Wróć"
+  },
+  "about": {
+    "title": "O fasoli",
+    "intro": "fasola to menedżer przepisów tworzony z pasją do oprogramowania, jedzenia i książek.",
+    "onDevice": "Twoje dane zostają na Twoim urządzeniu — bez chmury, bez kont.",
+    "openSource": "Aplikacja jest open-source.",
+    "githubLink": "Zobacz źródło na GitHubie",
+    "author": "Autor",
+    "authorEmail": "eryk.napierala@gmail.com",
+    "authorCopyright": "© 2026 Eryk Napierała",
+    "authorBio": "Twórca produktów z Wrocławia. Żonaty z entuzjastką gotowania, która miała dość zakładek z przepisami.",
+    "getHelp": "Pomoc",
+    "helpText1": "Masz pomysł na funkcję, znalazłeś błąd lub po prostu chcesz się przywitać? Chętnie usłyszę!",
+    "helpText2": "Wyślij mi e-mail!",
+    "helpCta": "Wyślij opinię"
+  },
+  "processing": {
+    "messages": {
+      "first": "Analizuję stronę...",
+      "m1": "Rozszyfrowuję pismo babci...",
+      "m2": "Czytam między wierszami...",
+      "m3": "Wypatruję sekretnego składnika...",
+      "m4": "Liczę szczypty soli...",
+      "m5": "Tłumaczę skróty kucharza...",
+      "m6": "Oddzielam ziarno od plew...",
+      "m7": "Przesiewam mąkę ze słów...",
+      "m8": "Smakuję literki...",
+      "m9": "Pozwalam słowom się zagotować...",
+      "m10": "Łowię nazwę przepisu..."
+    }
+  }
+}

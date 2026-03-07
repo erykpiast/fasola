@@ -2,8 +2,7 @@ import { Alert } from "@/lib/alert";
 import { RecipeImageDisplay } from "@/lib/components/atoms/RecipeImageDisplay";
 import { ZoomableImage } from "@/lib/components/atoms/ZoomableImage";
 import { useImageCoverSize } from "@/lib/hooks/useImageCoverSize";
-import { useTags } from "@/features/tags/context/TagsContext";
-import { resolveTagLabels } from "@/features/tags/utils/resolveRecipeTags";
+import { useLocalizedTagLabels } from "@/features/tags/hooks/useLocalizedTagLabels";
 import type { RecipeMetadataWrite } from "@/lib/repositories/types";
 import type { Recipe } from "@/lib/types/recipe";
 import { LiquidGlassButton } from "@/modules/liquid-glass";
@@ -34,12 +33,11 @@ export function EditRecipeForm({
   const theme = useTheme();
   const colors = getColors(theme);
   const { t } = useTranslation();
-  const { tagLookup } = useTags();
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const [isZoomed, setIsZoomed] = useState(false);
   const { coverSize, onImageLoad } = useImageCoverSize(width, width);
-  const resolvedInitialTags = resolveTagLabels(recipe.metadata.tagIds, tagLookup);
+  const resolvedInitialTags = useLocalizedTagLabels(recipe.metadata.tagIds);
   const { values, handleChange, handleSubmit, isDirty } = useRecipeForm({
     initialValues: {
       title: recipe.metadata.title,

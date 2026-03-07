@@ -3,6 +3,7 @@ import { ICloudSyncProvider } from "@/features/icloud-sync";
 import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext";
 import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
+import { PreferencesProvider } from "@/features/settings/context/PreferencesContext";
 import { SourcesProvider } from "@/features/sources/context/SourcesContext";
 import { TagsProvider } from "@/features/tags/context/TagsContext";
 import { Stack } from "expo-router";
@@ -24,8 +25,9 @@ export default function RootLayout(): JSX.Element {
   return (
     <GestureHandlerRootView style={styles.root}>
       <Suspense fallback={<View style={styles.suspenseFallback} />}>
-        <DebugProvider>
-          <SourcesProvider>
+        <PreferencesProvider>
+          <DebugProvider>
+            <SourcesProvider>
             <TagsProvider>
               <RecipesProvider>
                 <ICloudSyncProvider>
@@ -36,8 +38,9 @@ export default function RootLayout(): JSX.Element {
                 </ICloudSyncProvider>
               </RecipesProvider>
             </TagsProvider>
-          </SourcesProvider>
-        </DebugProvider>
+            </SourcesProvider>
+          </DebugProvider>
+        </PreferencesProvider>
       </Suspense>
     </GestureHandlerRootView>
   );

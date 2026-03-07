@@ -3,6 +3,7 @@
  * Extracts text from images using platform-specific OCR while passing through the image unchanged
  */
 
+import type { AppLanguage } from "@/lib/types/language";
 import type { DataUrl } from "@/lib/types/primitives";
 import { extractText } from "../../ocr-bridge";
 import type { OcrResult } from "../../ocr-bridge/types";
@@ -24,12 +25,13 @@ export interface TextRecognitionResult {
  * @returns Original image with OCR result
  */
 export async function processTextRecognition(
-  imageDataUrl: DataUrl
+  imageDataUrl: DataUrl,
+  language?: AppLanguage
 ): Promise<TextRecognitionResult> {
   try {
     console.log("[Text Recognition Pipeline] Extracting text from image");
 
-    const ocrResult = await extractText(imageDataUrl);
+    const ocrResult = await extractText(imageDataUrl, language);
 
     if (!ocrResult.success) {
       console.warn(

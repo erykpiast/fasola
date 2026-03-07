@@ -5,13 +5,16 @@
  */
 
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
+import { useSources } from "@/features/sources/context/SourcesContext";
 import { processPhoto } from "@/lib/photo-processor";
 import { DEFAULT_CONFIG } from "@/lib/photo-processor/types";
 import { loadImageAsDataUrl } from "@/lib/photo-processor/utils/loadImageAsDataUrl";
 import { recipeRepository } from "@/lib/repositories/recipes";
 import { storage } from "@/lib/storage";
 import { classifyText } from "@/lib/text-classifier";
+import type { AppLanguage } from "@/lib/types/language";
 import type { RecipeId } from "@/lib/types/primitives";
+import { isUrl } from "@/lib/utils/recipeValidation";
 import {
   createContext,
   useCallback,
@@ -46,6 +49,7 @@ export function BackgroundProcessingProvider({
   children: ReactNode;
 }): JSX.Element {
   const { updateProcessing, updateComplete } = useRecipes();
+  const { sources } = useSources();
   const [queue, setQueue] = useState<Array<RecipeId>>([]);
   const [currentlyProcessing, setCurrentlyProcessing] =
     useState<RecipeId | null>(null);
@@ -123,6 +127,16 @@ export function BackgroundProcessingProvider({
 
         const photoDataUrl = await loadImageAsDataUrl(photoUri);
 
+        // Look up book language for OCR
+        let ocrLanguage: AppLanguage = "en";
+        const sourceId = recipe.metadata.source;
+        if (sourceId && !isUrl(sourceId)) {
+          const source = sources.find((s) => s.id === sourceId);
+          if (source) {
+            ocrLanguage = source.language;
+          }
+        }
+
         updateProgress(recipeId, "geometry", 0);
 
         const result = await processPhoto(photoDataUrl, {
@@ -141,6 +155,7 @@ export function BackgroundProcessingProvider({
           },
           ocr: {
             enabled: true,
+            language: ocrLanguage,
           },
         });
 
@@ -218,7 +233,7 @@ export function BackgroundProcessingProvider({
         });
       }
     },
-    [updateProgress, updateProcessing, updateComplete]
+    [updateProgress, updateProcessing, updateComplete, sources]
   );
 
   useEffect(() => {

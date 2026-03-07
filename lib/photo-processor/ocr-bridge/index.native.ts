@@ -36,7 +36,8 @@ async function dumpImageToDisk(imageUri: DataUrl): Promise<void> {
  * @param imageUri - Data URL of the image to process
  * @returns OCR result with extracted text blocks
  */
-export async function extractText(imageUri: DataUrl): Promise<OcrResult> {
+// Language parameter accepted for API compatibility but native OCR auto-detects language
+export async function extractText(imageUri: DataUrl, _language?: string): Promise<OcrResult> {
   try {
     console.log("[OCR Bridge] Starting text extraction (native)");
 

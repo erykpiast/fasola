@@ -3,7 +3,7 @@
   "checkpoint_id": "6a867ae7543a",
   "strategy": "manual-commit",
   "branch": "chore/testflight_build",
-  "checkpoints_count": 3,
+  "checkpoints_count": 5,
   "files_touched": [
     "features/search/hooks/useAddButtonFocusTransition.ts",
     "lib/photo-processor/types/opencv.ts"
@@ -22,13 +22,20 @@
       "context": "/6a/867ae7543a/1/context.md",
       "content_hash": "/6a/867ae7543a/1/content_hash.txt",
       "prompt": "/6a/867ae7543a/1/prompt.txt"
+    },
+    {
+      "metadata": "/6a/867ae7543a/2/metadata.json",
+      "transcript": "/6a/867ae7543a/2/full.jsonl",
+      "context": "/6a/867ae7543a/2/context.md",
+      "content_hash": "/6a/867ae7543a/2/content_hash.txt",
+      "prompt": "/6a/867ae7543a/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 76,
-    "cache_creation_tokens": 35429,
-    "cache_read_tokens": 647217,
-    "output_tokens": 6313,
-    "api_call_count": 40
+    "input_tokens": 98,
+    "cache_creation_tokens": 48078,
+    "cache_read_tokens": 819531,
+    "output_tokens": 8287,
+    "api_call_count": 52
   }
 }

@@ -1,0 +1,70 @@
+How do I get private key RSA for the iOS devlopment certificate?
+
+---
+
+eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build) [1]> npx eas credentials
+Found eas-cli in your project dependencies.
+It's recommended to use the "cli.version" field in eas.json to enforce the eas-cli version for your project.
+Learn more: https://github.com/expo/eas-cli#enforcing-eas-cli-version-for-your-project
+
+You don't have the required permissions to perform this operation.
+
+This can sometimes happen if you are logged in as incorrect user.
+Run eas whoami to check the username you are logged in as.
+Run eas login to change the account.
+
+Original error message: Entity not authorized: AppEntity[783aa343-f1f6-4fda-9425-2f305a8aca3a] (viewer = RegularUserViewerContext[126a1a3e-dd54-43d8-9166-7f32d88e906f], action = READ, ruleIndex = -1)
+Request ID: b1fcb443-f58c-4543-9590-0f5e5bb0ac3d
+    Error: GraphQL request failed.
+
+---
+
+I'm logged to the only account I hace
+
+---
+
+Tool loaded.
+
+---
+
+Please update
+
+---
+
+Tool loaded.
+
+---
+
+eryknapierala
+eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build)> npx eas credentials
+Found eas-cli in your project dependencies.
+It's recommended to use the "cli.version" field in eas.json to enforce the eas-cli version for your project.
+Learn more: https://github.com/expo/eas-cli#enforcing-eas-cli-version-for-your-project
+
+You don't have the required permissions to perform this operation.
+
+This can sometimes happen if you are logged in as incorrect user.
+Run eas whoami to check the username you are logged in as.
+Run eas login to change the account.
+
+Original error message: Entity not authorized: AppEntity[783aa343-f1f6-4fda-9425-2f305a8aca3a] (viewer = RegularUserViewerContext[126a1a3e-dd54-43d8-9166-7f32d88e906f], action = READ, ruleIndex = -1)
+Request ID: 71725f53-b878-4536-a893-cc36e93db555
+    Error: GraphQL request failed.
+
+---
+
+Error: account:login command failed.
+eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-chore-testflight_build (chore/testflight_build) [1]> npx eas init
+Found eas-cli in your project dependencies.
+It's recommended to use the "cli.version" field in eas.json to enforce the eas-cli version for your project.
+Learn more: https://github.com/expo/eas-cli#enforcing-eas-cli-version-for-your-project
+
+✔ Project already linked (ID: 783aa343-f1f6-4fda-9425-2f305a8aca3a). To re-configure, remove the "extra.eas.projectId" field from your app config.
+
+---
+
+Can we change the bundle name from com.erykpiast.fasola to com.eryknapierala.fasola?
+
+---
+
+Yeah, there are no active installations yet. Let's commit that specific change separately as a "chore: rename the app ID to match the owner account"

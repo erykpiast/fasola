@@ -256,6 +256,10 @@ private struct LiquidGlassInputContent: View {
     shouldShowTags && !selectedTags.isEmpty && !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }
 
+  private var hasScrollableContent: Bool {
+    !selectedTags.isEmpty || !text.isEmpty
+  }
+
   private var shouldUseCapsuleShape: Bool {
     variant == "tags" || variant == "mixed"
   }
@@ -338,7 +342,7 @@ private struct LiquidGlassInputContent: View {
   private var inputContainer: some View {
     inputRow
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .padding(.horizontal, 8)
+      .padding(.horizontal, 16)
       .background {
         RoundedRectangle(cornerRadius: 24)
           .fill(.ultraThinMaterial)
@@ -348,96 +352,101 @@ private struct LiquidGlassInputContent: View {
   @ViewBuilder
   private var inlineContent: some View {
     if shouldShowTags || shouldShowTextField {
-      ScrollViewReader { scrollProxy in
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: 6) {
-            if shouldShowTags {
-              ForEach(selectedTags) { tag in
-                Button(action: {
-                  onTagPress(tag.id)
-                }) {
-                  Text(tag.label)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(
-                      shouldUseAccent
-                        ? accentPillTextColor
-                        : .primary
-                    )
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 4)
-                    .background(
-                      RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(
-                          shouldUseAccent
-                            ? accentPillBackgroundColor
-                            : Color(white: 0.82, opacity: 0.75)
-                        )
-                    )
+      GeometryReader { geometry in
+        ScrollViewReader { scrollProxy in
+          ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+              if shouldShowTags {
+                ForEach(selectedTags) { tag in
+                  Button(action: {
+                    onTagPress(tag.id)
+                  }) {
+                    Text(tag.label)
+                      .font(.system(size: 14, weight: .medium))
+                      .foregroundStyle(
+                        shouldUseAccent
+                          ? accentPillTextColor
+                          : .primary
+                      )
+                      .padding(.horizontal, 4)
+                      .padding(.vertical, 4)
+                      .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                          .fill(
+                            shouldUseAccent
+                              ? accentPillBackgroundColor
+                              : Color(white: 0.82, opacity: 0.75)
+                          )
+                      )
+                  }
+                  .buttonStyle(.plain)
+                  .accessibilityLabel(tag.accessibilityLabel ?? tag.label)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(tag.accessibilityLabel ?? tag.label)
+              }
+
+              if shouldShowTextField {
+                BackspaceAwareTextField(
+                  text: $text,
+                  placeholder: placeholder,
+                  returnKeyType: uiReturnKeyType,
+                  isFocused: Binding(
+                    get: {
+                      effectiveIsFocused
+                    },
+                    set: { newValue in
+                      if focusedOverride == nil {
+                        isTextInputFocused = newValue
+                      }
+                    }
+                  ),
+                  blurOnSubmit: blurOnSubmit,
+                  onFocus: onFocus,
+                  onBlur: onBlur,
+                  onSubmit: onSubmitEditing,
+                  onEmptyBackspace: {
+                    guard variant == "mixed", text.isEmpty, let lastTag = selectedTags.last else {
+                      return
+                    }
+
+                    onTagPress(lastTag.id)
+                  }
+                )
+                .frame(minWidth: 80, idealWidth: selectedTags.isEmpty ? geometry.size.width : 120)
+                .frame(height: 30)
+                .id("input-tail")
+              } else {
+                Color.clear
+                  .frame(width: 1, height: 1)
+                  .id("input-tail")
               }
             }
-
-            if shouldShowTextField {
-              BackspaceAwareTextField(
-                text: $text,
-                placeholder: placeholder,
-                returnKeyType: uiReturnKeyType,
-                isFocused: Binding(
-                  get: {
-                    effectiveIsFocused
-                  },
-                  set: { newValue in
-                    if focusedOverride == nil {
-                      isTextInputFocused = newValue
-                    }
-                  }
-                ),
-                blurOnSubmit: blurOnSubmit,
-                onFocus: onFocus,
-                onBlur: onBlur,
-                onSubmit: onSubmitEditing,
-                onEmptyBackspace: {
-                  guard variant == "mixed", text.isEmpty, let lastTag = selectedTags.last else {
-                    return
-                  }
-
-                  onTagPress(lastTag.id)
-                }
-              )
-              .frame(minWidth: 80, idealWidth: 120)
-              .frame(height: 30)
-              .id("input-tail")
-            } else {
-              Color.clear
-                .frame(width: 1, height: 1)
-                .id("input-tail")
+            .padding(.vertical, 2)
+          }
+          .onAppear {
+            if hasScrollableContent {
+              scrollInlineContentToTail(scrollProxy: scrollProxy, animated: false)
             }
           }
-          .padding(.vertical, 2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear {
-          scrollInlineContentToTail(scrollProxy: scrollProxy, animated: false)
-        }
-        .onChange(of: selectedTagIdSignature) { _, _ in
-          scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
-        }
-        .onChange(of: text) { _, _ in
-          scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
-        }
-        .onChange(of: isTextInputFocused) { _, focused in
-          if focused {
+          .onChange(of: selectedTagIdSignature) { _, _ in
             scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
           }
-        }
-        .onChange(of: focusedOverride) { _, focused in
-          if focused == true {
+          .onChange(of: text) { _, _ in
             scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
           }
+          .onChange(of: isTextInputFocused) { _, focused in
+            if focused && hasScrollableContent {
+              scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
+            }
+          }
+          .onChange(of: focusedOverride) { _, focused in
+            if focused == true && hasScrollableContent {
+              scrollInlineContentToTail(scrollProxy: scrollProxy, animated: true)
+            }
+          }
+          .frame(maxHeight: .infinity)
         }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 

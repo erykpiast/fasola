@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "1e37c1b4ca30",
+  "session_id": "2a48961a-8e44-4b74-8df1-f62932ab1b28",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-08T00:41:38.74684Z",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "3b8f353d003c",
+  "token_usage": {
+    "input_tokens": 66,
+    "cache_creation_tokens": 74474,
+    "cache_read_tokens": 1042840,
+    "output_tokens": 6641,
+    "api_call_count": 34
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-08T00:41:38.617657Z",
+    "agent_lines": 7,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 7,
+    "agent_percentage": 100
+  }
+}

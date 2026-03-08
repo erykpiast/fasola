@@ -1,4 +1,4 @@
-import { type JSX, useCallback, useRef } from "react";
+import { type JSX, useCallback, useRef, useState } from "react";
 import { type ViewStyle } from "react-native";
 import {
   ResumableZoom,
@@ -19,8 +19,10 @@ export function ZoomableImage({
   maxScale?: number;
 }): JSX.Element {
   const ref = useRef<ResumableZoomRefType>(null);
+  const [panEnabled, setPanEnabled] = useState(false);
 
   const handlePinchStart = useCallback((): void => {
+    setPanEnabled(true);
     onZoomChange?.(true);
   }, [onZoomChange]);
 
@@ -35,6 +37,9 @@ export function ZoomableImage({
     const state = ref.current?.getState();
     if (!state) return;
     const atRest = Math.abs(state.scale - minScale) < 0.01;
+    if (atRest) {
+      setPanEnabled(false);
+    }
     onZoomChange?.(!atRest);
   }, [onZoomChange, minScale]);
 
@@ -43,6 +48,7 @@ export function ZoomableImage({
       ref={ref}
       minScale={minScale}
       maxScale={maxScale}
+      panEnabled={panEnabled}
       style={{ ...style, overflow: "hidden" }}
       onPinchStart={handlePinchStart}
       onPanStart={handlePanStart}

@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "630e7c493b01",
+  "strategy": "manual-commit",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "lib/components/atoms/ZoomableImage.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/63/0e7c493b01/0/metadata.json",
+      "transcript": "/63/0e7c493b01/0/full.jsonl",
+      "context": "/63/0e7c493b01/0/context.md",
+      "content_hash": "/63/0e7c493b01/0/content_hash.txt",
+      "prompt": "/63/0e7c493b01/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 13401,
+    "cache_read_tokens": 126680,
+    "output_tokens": 1816,
+    "api_call_count": 6
+  }
+}

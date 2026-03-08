@@ -1,7 +1,6 @@
 {
   "emptyState": {
-    "title": "No recipes yet",
-    "instruction": "Tap the button below to add your first recipe"
+    "title": "Add your first recipe"
   },
   "addRecipe": {
     "button": "Add Recipe",

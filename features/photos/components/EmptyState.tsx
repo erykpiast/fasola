@@ -1,23 +1,54 @@
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { getColors } from "@/platform/theme/glassStyles";
 import { useTheme } from "@/platform/theme/useTheme";
-import { type JSX } from "react";
+import { LiquidGlassButton } from "liquid-glass";
+import { type JSX, useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
-export function EmptyState(): JSX.Element {
+type EmptyStateProps = {
+  onAddPress: () => void;
+  hiding?: boolean;
+};
+
+export function EmptyState({ onAddPress, hiding }: EmptyStateProps): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const colors = getColors(theme);
 
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withSpring(hiding ? 1 : 0, {
+      damping: 40,
+      stiffness: 200,
+    });
+  }, [hiding, progress]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ scale: 1 - progress.value * 0.2 }],
+  }));
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.text }]}>
-        {t("emptyState.title")}
-      </Text>
-      <Text style={[styles.arrow, { color: colors.text }]}>↓</Text>
-      <Text style={[styles.instruction, { color: colors.text }]}>
-        {t("emptyState.instruction")}
-      </Text>
+      <Animated.View style={[styles.innerContainer, animatedStyle]}>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t("emptyState.title")}
+        </Text>
+        <View>
+          <LiquidGlassButton
+            onPress={onAddPress}
+            systemImage="plus"
+            size={72}
+            accessibilityLabel={t("addRecipe.button")}
+          />
+        </View>
+      </Animated.View>
     </View>
   );
 }
@@ -29,18 +60,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 32,
   },
+  innerContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  arrow: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  instruction: {
-    fontSize: 16,
-    textAlign: "center",
-    opacity: 0.7,
+    fontSize: 20,
+    fontWeight: "400",
+    marginBottom: 24,
   },
 });

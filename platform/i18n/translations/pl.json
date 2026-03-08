@@ -1,7 +1,6 @@
 {
   "emptyState": {
-    "title": "Brak przepisów",
-    "instruction": "Naciśnij przycisk poniżej, aby dodać pierwszy przepis"
+    "title": "Dodaj swój pierwszy przepis"
   },
   "addRecipe": {
     "button": "Dodaj przepis",

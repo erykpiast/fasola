@@ -122,3 +122,24 @@ Please selectively commit all changes related to this bug as a fix
 
 No change. When I add a new book while importing the first recipe, the books is successfully added, the recipe as well, but the keyboard remains visible after I get redirected to the recipes list
 
+### Prompt 11
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is availabl...
+

@@ -115,7 +115,9 @@ function Content(): JSX.Element {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {recipes.length === 0 ? (
-        <EmptyState />
+        <Pressable style={styles.container} onPress={dismissSearchFocus}>
+          <EmptyState onAddPress={showPopover} hiding={shouldHideSearchBar} />
+        </Pressable>
       ) : (
         <RecipeGrid
           recipes={filteredRecipes}
@@ -146,42 +148,44 @@ function Content(): JSX.Element {
         />
       </Animated.View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoid}
-      >
-        <View style={styles.bottomBar}>
-          <View style={styles.searchBarWrapper}>
-            <SearchBar
-              key={key}
-              selectedTags={query.selectedTags}
-              freeText={query.freeText}
-              suggestionPrefix={query.suggestionPrefix}
-              allTags={tags}
-              onChangeFreeText={setFreeText}
-              onAddTagFromSuggestion={addTagFromSuggestion}
-              onRemoveSelectedTag={removeSelectedTag}
-              onClearQuery={clearQuery}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              blocked={shouldHideSearchBar}
-              isFocused={isFocused}
-            />
-          </View>
-          <Animated.View
-            style={[styles.addButtonOuterWrapper, buttonStyle, addButtonOuterStyle]}
-          >
+      {recipes.length > 0 && (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoid}
+        >
+          <View style={styles.bottomBar}>
+            <View style={styles.searchBarWrapper}>
+              <SearchBar
+                key={key}
+                selectedTags={query.selectedTags}
+                freeText={query.freeText}
+                suggestionPrefix={query.suggestionPrefix}
+                allTags={tags}
+                onChangeFreeText={setFreeText}
+                onAddTagFromSuggestion={addTagFromSuggestion}
+                onRemoveSelectedTag={removeSelectedTag}
+                onClearQuery={clearQuery}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                blocked={shouldHideSearchBar}
+                isFocused={isFocused}
+              />
+            </View>
             <Animated.View
-              style={[styles.addButtonWrapper, addButtonInnerStyle]}
-              pointerEvents={isAddButtonInteractive ? "auto" : "none"}
+              style={[styles.addButtonOuterWrapper, buttonStyle, addButtonOuterStyle]}
             >
-              <AddRecipeButton onPress={showPopover} />
+              <Animated.View
+                style={[styles.addButtonWrapper, addButtonInnerStyle]}
+                pointerEvents={isAddButtonInteractive ? "auto" : "none"}
+              >
+                <AddRecipeButton onPress={showPopover} />
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
+      )}
 
-      {/* Import popover (bottom trailing) */}
+      {/* Import popover */}
       <View
         style={[
           StyleSheet.absoluteFill,
@@ -194,6 +198,7 @@ function Content(): JSX.Element {
           visible={popoverVisible}
           options={importOptions}
           buttonSize={56}
+          anchor={recipes.length === 0 ? "center" : undefined}
           onSelect={handleImportOptionSelect}
           onDismiss={dismissPopover}
         />

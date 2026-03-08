@@ -19,19 +19,24 @@ export function LiquidGlassPopover({
   const offset = buttonOffset ?? DEFAULT_OFFSET;
 
   const anchorStyle =
-    anchor === "topTrailing"
+    anchor === "center"
       ? ({
-          justifyContent: "flex-start",
-          alignItems: "flex-end",
-          paddingTop: offset.y,
-          paddingRight: offset.x,
+          justifyContent: "center",
+          alignItems: "center",
         } as const)
-      : ({
-          justifyContent: "flex-end",
-          alignItems: "flex-end",
-          paddingBottom: offset.y,
-          paddingRight: offset.x,
-        } as const);
+      : anchor === "topTrailing"
+        ? ({
+            justifyContent: "flex-start",
+            alignItems: "flex-end",
+            paddingTop: offset.y,
+            paddingRight: offset.x,
+          } as const)
+        : ({
+            justifyContent: "flex-end",
+            alignItems: "flex-end",
+            paddingBottom: offset.y,
+            paddingRight: offset.x,
+          } as const);
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>

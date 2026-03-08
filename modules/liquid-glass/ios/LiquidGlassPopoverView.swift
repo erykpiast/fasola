@@ -255,7 +255,10 @@ struct LiquidGlassPopoverContent: View {
 
   @ViewBuilder
   private var anchoredLayout: some View {
-    if anchor == "topTrailing" {
+    if anchor == "center" {
+      morphingContainer
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else if anchor == "topTrailing" {
       VStack {
         HStack {
           Spacer()

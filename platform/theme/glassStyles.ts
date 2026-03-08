@@ -12,7 +12,7 @@ export const GLASS_BORDER_RADIUS = GLASS_INPUT_HEIGHT / 2;
 export const colors = {
   light: {
     background: "#F5F5F5",
-    text: "#6262a5",
+    text: "#000000",
     textSecondary: "rgba(0, 0, 0, 0.5)",
     separator: "rgba(0, 0, 0, 0.1)",
     glassBackground: "rgba(255, 255, 255, 0.7)",

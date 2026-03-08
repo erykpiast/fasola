@@ -1,0 +1,8 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Let's ensure that the swipe gesture on the recipe preview screen returns back to the recipes list. Today it moves the cropped image around. We need to support that kind of image navigation, but let's activate it only when the user tries to zoom with pinch. Without that, the swipe should act as a back button
+

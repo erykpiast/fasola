@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "1fc19339cb53",
+  "strategy": "manual-commit",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "platform/i18n/translations/pl.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1f/c19339cb53/0/metadata.json",
+      "transcript": "/1f/c19339cb53/0/full.jsonl",
+      "context": "/1f/c19339cb53/0/context.md",
+      "content_hash": "/1f/c19339cb53/0/content_hash.txt",
+      "prompt": "/1f/c19339cb53/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 101,
+    "cache_creation_tokens": 96089,
+    "cache_read_tokens": 2088188,
+    "output_tokens": 15700,
+    "api_call_count": 51
+  }
+}

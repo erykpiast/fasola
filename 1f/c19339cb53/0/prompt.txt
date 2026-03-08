@@ -1,0 +1,332 @@
+The input button cuts too much of a placeholder text while it has a lot of space on the right
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Commit as fix:
+
+---
+
+Create a git commit following the project's established style
+
+## Git Expert Integration
+For complex commit scenarios (merge commits, conflict resolution, commit history issues, interactive rebasing), consider using the Task tool with `git-expert` subagent for specialized git expertise.
+
+## Efficiency Note:
+This command intelligently reuses recent git:status results when available to avoid redundant operations. If you just ran /git:status, the commit process will be faster.
+
+When git conventions are already documented in CLAUDE.md/AGENTS.md, use them directly without verbose explanation.
+
+All git commands are combined into a single bash call for maximum speed.
+
+## Steps:
+1. Check if the previous message contains git:status results:
+   - Look for patterns like "Git Status Analysis", "Modified Files:", "Uncommitted Changes:"
+   - If found and recent (within last 2-3 messages): Reuse those results
+   - If not found or stale: Run a single combined git command:
+   !git --no-pager status --porcelain=v1 && echo "---STAT---" && git --no-pager diff --stat 2>/dev/null && echo "---DIFF---" && git --no-pager diff 2>/dev/null | head -2000 && echo "---LOG---" && git --no-pager log --oneline -5
+   - Note: Only skip git status if you're confident the working directory hasn't changed
+   - Note: Full diff is capped at 2000 lines to prevent context flooding. The stat summary above shows all changed files
+2. Review the diff output to verify:
+   - No sensitive information (passwords, API keys, tokens) in the changes
+   - No debugging code or console.log statements left in production code
+   - No temporary debugging scripts (test-*.js, debug-*.py, etc.) created by Claude Code
+   - No temporary files or outputs in inappropriate locations (move to project's temp directory or delete)
+   - All TODO/FIXME comments are addressed or intentionally left
+3. Use documented git commit conventions from CLAUDE.md/AGENTS.md
+   - If conventions are not documented, analyze recent commits and document them
+4. If the project uses ticket/task codes, ask the user for the relevant code if not clear from context
+5. Check if README.md or other documentation needs updating to reflect the changes (see "Documentation Updates" section below)
+6. Run tests and lint commands to ensure code quality (unless just ran before this command)
+7. Stage all relevant files (including any updated documentation)
+8. Create commit with appropriate message matching the project's conventions
+9. Verify commit succeeded - Report with ✅ success indicator
+10. Check if any post-commit hooks need to be considered (e.g., pushing to remote, creating PR)
+
+## Documentation Updates:
+Consider updating relevant documentation when committing changes:
+- README.md: New features, API changes, installation steps, usage examples
+- CHANGELOG.md: Notable changes, bug fixes, new features
+- API documentation: New endpoints, changed parameters, deprecated features
+- User guides: New workflows, updated procedures
+- Configuration docs: New settings, changed defaults
+
+## Commit Convention Documentation:
+Only when conventions are NOT already documented: Analyze the commit history and document the observed conventions in CLAUDE.md under a "Git Commit Conventions" section. Once documented, use them without verbose explanation.
+
+The documentation should capture whatever style the project uses, for example:
+- Simple descriptive messages: "Fix navigation bug"
+- Conventional commits: "feat(auth): add OAuth support"
+- Prefixed style: "[BUGFIX] Resolve memory leak in parser"
+- Task/ticket codes: "PROJ-123: Add user authentication"
+- JIRA integration: "ABC-456 Fix memory leak in parser"
+- GitHub issues: "#42 Update documentation"
+- Imperative mood: "Add user authentication"
+- Past tense: "Added user authentication"
+- Or any other project-specific convention
+
+Example CLAUDE.md section:
+```markdown
+## Git Commit Conventions
+Based on analysis of this project's git history:
+- Format: [observed format pattern]
+- Tense: [imperative/past/present]
+- Length: [typical subject line length]
+- Ticket codes: [if used, note the pattern like "PROJ-123:" or "ABC-456 "]
+- Other patterns: [any other observed conventions]
+
+Note: If ticket/task codes are used, always ask the user for the specific code rather than inventing one.
+```
+
+ARGUMENTS: fix: widen search input to prevent placeholder text truncation
+
+---
+
+Let's iterate on the Polish labels I selected. The last four don't sound good in Polish - even if they're correctly translated from English. Just don't sound natural.
+
+---
+
+Super!
+
+---
+
+Going back to the issue with text input - it's even worse now. We got back to the previous problem where the first letter was truncated. Now it's first five or so missing.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Works on the default  view, but it's still broken when the input is focused
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+› Executing expo-constants Pods/EXConstants » [CP-User] Generate app.config for prebuilt Constants.manifest
+› Compiling react-native-executorch Pods/react-native-executorch » ETInstaller.mm
+
+⚠️  (modules/liquid-glass/ios/LiquidGlassInputView.swift:260:5)
+
+  258 | 
+  259 |   private var hasScrollableContent: Bool {
+> 260 |     hasScrollableContent
+      |     ^ attempting to access 'hasScrollableContent' within its own getter
+  261 |   }
+  262 | 
+  263 |   private var shouldUseCapsuleShape: Bool {
+
+
+⚠️  (modules/liquid-glass/ios/LiquidGlassInputView.swift:260:5)
+
+  258 | 
+  259 |   private var hasScrollableContent: Bool {
+> 260 |     hasScrollableContent
+      |     ^ function call causes an infinite recursion
+  261 |   }
+  262 | 
+  263 |   private var shouldUseCapsuleShape: Bool {
+
+› Compiling expo-dev-launcher Pods/expo-dev-launcher » EXDevLauncherController.m
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+fix merge conflicts
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+fix merge conflicts
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are there related files that need the same changes?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Left padding of the text input with no icon is way too small. Or is it about the scroll?
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Now the vertical padding is broken v
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

@@ -3,7 +3,7 @@
   "checkpoint_id": "5280605817cf",
   "strategy": "manual-commit",
   "branch": "feat/language_pl",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
     "platform/theme/glassStyles.ts"
   ],
@@ -14,13 +14,20 @@
       "context": "/52/80605817cf/0/context.md",
       "content_hash": "/52/80605817cf/0/content_hash.txt",
       "prompt": "/52/80605817cf/0/prompt.txt"
+    },
+    {
+      "metadata": "/52/80605817cf/1/metadata.json",
+      "transcript": "/52/80605817cf/1/full.jsonl",
+      "context": "/52/80605817cf/1/context.md",
+      "content_hash": "/52/80605817cf/1/content_hash.txt",
+      "prompt": "/52/80605817cf/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 10,
-    "cache_creation_tokens": 58071,
-    "cache_read_tokens": 276036,
-    "output_tokens": 6969,
-    "api_call_count": 8
+    "input_tokens": 25,
+    "cache_creation_tokens": 64832,
+    "cache_read_tokens": 451584,
+    "output_tokens": 8042,
+    "api_call_count": 17
   }
 }

@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "5280605817cf",
+  "session_id": "fefb1056-9f7b-4102-8ffd-154108ecfa89",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-08T01:41:36.833146Z",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "platform/theme/glassStyles.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "84fa1d893919",
+  "token_usage": {
+    "input_tokens": 15,
+    "cache_creation_tokens": 6761,
+    "cache_read_tokens": 175548,
+    "output_tokens": 1073,
+    "api_call_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-08T01:41:36.824346Z",
+    "agent_lines": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1,
+    "agent_percentage": 100
+  }
+}

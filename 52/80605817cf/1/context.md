@@ -1,0 +1,33 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Change the main font color in the light theme to black
+
+### Prompt 2
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert su...
+
+### Prompt 3
+
+commit
+

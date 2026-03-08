@@ -3,9 +3,11 @@
   "checkpoint_id": "8e321db091d3",
   "strategy": "manual-commit",
   "branch": "feat/language_pl",
-  "checkpoints_count": 2,
+  "checkpoints_count": 4,
   "files_touched": [
-    "app/index.tsx"
+    "app/index.tsx",
+    "app/manage-books.tsx",
+    "features/recipe-form/components/EditRecipeForm.tsx"
   ],
   "sessions": [
     {
@@ -14,13 +16,20 @@
       "context": "/8e/321db091d3/0/context.md",
       "content_hash": "/8e/321db091d3/0/content_hash.txt",
       "prompt": "/8e/321db091d3/0/prompt.txt"
+    },
+    {
+      "metadata": "/8e/321db091d3/1/metadata.json",
+      "transcript": "/8e/321db091d3/1/full.jsonl",
+      "context": "/8e/321db091d3/1/context.md",
+      "content_hash": "/8e/321db091d3/1/content_hash.txt",
+      "prompt": "/8e/321db091d3/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 46,
-    "cache_creation_tokens": 53444,
-    "cache_read_tokens": 696007,
-    "output_tokens": 7098,
-    "api_call_count": 28
+    "input_tokens": 56,
+    "cache_creation_tokens": 59473,
+    "cache_read_tokens": 812441,
+    "output_tokens": 8401,
+    "api_call_count": 34
   }
 }

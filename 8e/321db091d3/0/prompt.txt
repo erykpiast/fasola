@@ -1,0 +1,116 @@
+Base directory for this skill: /Users/eryk.napierala/.claude/skills/ship
+
+# Ship
+
+Prepare code changes for a pull request using conversation context and current git state.
+
+## Process
+
+### Step 1: Assess Changes
+
+Run `git status` and `git diff` to understand all changes. Combine with conversation context about what was worked on to provide better descriptions.
+
+### Step 2: Propose Branch Name
+
+Follow the format: `{PREFIX}/{SHORT_NAME}`
+
+- `PREFIX` — the Linear ticket ID if available, otherwise a conventional commit type (`feat`, `fix`, `chore`)
+- `SHORT_NAME` — three to five words separated with `_`, describing the scope
+
+### Step 3: Draft Commit Message
+
+Use conventional commits with the appropriate scope. Always use present tense verbs.
+
+- The first line is a concise summary
+- The body describes high-level changes in detail
+- Avoid mentioning exact modules, files, or function names in the body
+
+**Example:**
+```
+feat(user): add SSO login capability
+
+Users can now sign in with their SSO provider, streamlining authentication
+and improving security for enterprise accounts.
+
+This change introduces backend logic to handle the SSO authentication
+flow, updates the user model to support SSO identities, and adds a new UI
+entry point for SSO login on the sign-in page.
+
+Tested with Okta and AzureAD providers. User provisioning and session
+handling confirmed.
+```
+
+### Step 4: Draft PR Title
+
+Set the PR title to exactly match the commit message header (first line).
+
+### Step 5: Draft PR Description
+
+Structure with three H2 headers:
+
+- **Why** — The motivation for the change. Ask the user if they didn't specify the reason during the conversation.
+- **What** — Exactly matches the commit message body.
+- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
+  - Create an H3 header for each scenario
+  - Each scenario contains precise manual steps as checkbox bullets
+  - Never include steps like "run tests" or "linting passes" — those belong in CI
+  - Example:
+    ### SSO Login
+    - [ ] Go to the login page
+    - [ ] Select the SSO option
+    - [ ] Authenticate with SSO
+    - [ ] Verify the dashboard is displayed
+
+### Step 6: Confirm and Execute
+
+Always present the proposed branch name, commit message, PR title, and PR description to the user **before** executing any git commands. Wait for explicit confirmation.
+
+When creating the PR, always create it as a **draft**.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run typecheck-project]: Running project-wide TypeScript validation...
+████ TypeScript Validation Failed ████
+
+TypeScript compilation errors must be fixed:
+
+  app/index.tsx(133,11): error TS2578: Unused '@ts-expect-error' directive.
+  app/index.tsx(173,13): error TS2578: Unused '@ts-expect-error' directive.
+  app/index.tsx(177,15): error TS2578: Unused '@ts-expect-error' directive.
+  features/search/components/SearchBar.tsx(138,8): error TS2578: Unused '@ts-expect-error' directive.
+  
+
+REQUIRED ACTIONS:
+1. Fix all TypeScript errors shown above
+2. Run 'npx tsc --noEmit' to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+Please re-check changes on this branch, some of what you mentioned is already in main
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

@@ -1,0 +1,1 @@
+There's a bug with the search input. When I add a tag, it instantly disappears because the input content is scrolled. Can be brought to visibility by swiping, but it's confusing for the user. We must break it when fixing the auto-scroll for variable text (when adding Polish translation support).

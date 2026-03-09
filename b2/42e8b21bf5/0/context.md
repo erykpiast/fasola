@@ -1,0 +1,29 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Let's make the "Add . your first recipe" hading a smaller text. Can be non-heading.
+
+### Prompt 2
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent i...
+

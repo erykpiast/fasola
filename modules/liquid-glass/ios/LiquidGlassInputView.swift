@@ -30,7 +30,7 @@ private let darkModeAccentPillTextColor = Color.white // #FFFFFF
 
 public final class LiquidGlassInputView: ExpoView {
   private let hostingController: UIHostingController<LiquidGlassInputContent>
-  
+
   private var value: String = ""
   private var label: String? = nil
   private var placeholder: String = ""
@@ -49,7 +49,7 @@ public final class LiquidGlassInputView: ExpoView {
   let onInputFocus = EventDispatcher()
   let onInputBlur = EventDispatcher()
   let onInputSubmit = EventDispatcher()
-  
+
   public required init(appContext: AppContext? = nil) {
     let content = LiquidGlassInputContent(
       value: value,
@@ -69,10 +69,10 @@ public final class LiquidGlassInputView: ExpoView {
       onBlur: { },
       onSubmitEditing: { }
     )
-    
+
     hostingController = UIHostingController(rootView: content)
     hostingController.view.backgroundColor = .clear
-    
+
     // Disable safe area and layout margin handling to prevent content offset
     if #available(iOS 16.4, *) {
       hostingController.safeAreaRegions = []
@@ -80,47 +80,47 @@ public final class LiquidGlassInputView: ExpoView {
     hostingController.view.insetsLayoutMarginsFromSafeArea = false
     hostingController.view.layoutMargins = .zero
     hostingController.view.directionalLayoutMargins = .zero
-    
+
     super.init(appContext: appContext)
-    
+
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
     addSubview(hostingController.view)
-    
+
     NSLayoutConstraint.activate([
       hostingController.view.topAnchor.constraint(equalTo: topAnchor),
       hostingController.view.leadingAnchor.constraint(equalTo: leadingAnchor),
       hostingController.view.trailingAnchor.constraint(equalTo: trailingAnchor),
       hostingController.view.bottomAnchor.constraint(equalTo: bottomAnchor)
     ])
-    
+
     updateContent()
   }
-  
+
   func setValue(_ newValue: String) {
     value = newValue
     updateContent()
   }
-  
+
   func setLabel(_ newLabel: String?) {
     label = newLabel
     updateContent()
   }
-  
+
   func setPlaceholder(_ newPlaceholder: String) {
     placeholder = newPlaceholder
     updateContent()
   }
-  
+
   func setLeadingSystemImage(_ image: String?) {
     leadingSystemImage = image
     updateContent()
   }
-  
+
   func setShowClearButton(_ show: Bool) {
     showClearButtonFlag = show
     updateContent()
   }
-  
+
   func setVariant(_ newVariant: String) {
     variant = newVariant
     updateContent()
@@ -160,7 +160,7 @@ public final class LiquidGlassInputView: ExpoView {
     blurOnSubmitFlag = blurOnSubmit
     updateContent()
   }
-  
+
   private func updateContent() {
     let content = LiquidGlassInputContent(
       value: value,
@@ -204,6 +204,7 @@ public final class LiquidGlassInputView: ExpoView {
         hostingController.didMove(toParent: parentVC)
       }
     } else {
+      hostingController.view.endEditing(true)
       hostingController.willMove(toParent: nil)
       hostingController.removeFromParent()
     }
@@ -239,9 +240,10 @@ private struct LiquidGlassInputContent: View {
   var onFocus: () -> Void
   var onBlur: () -> Void
   var onSubmitEditing: () -> Void
-  
+
   @State private var text: String = ""
   @State private var isTextInputFocused: Bool = false
+  @State private var hasAppliedInitialFocus: Bool = false
   @Environment(\.colorScheme) private var colorScheme
 
   private var shouldShowTags: Bool {
@@ -282,7 +284,7 @@ private struct LiquidGlassInputContent: View {
   private var effectiveIsFocused: Bool {
     focusedOverride ?? isTextInputFocused
   }
-  
+
   var body: some View {
     Group {
       if let labelText = label, !labelText.isEmpty, variant == "text" {
@@ -299,7 +301,8 @@ private struct LiquidGlassInputContent: View {
     }
     .onAppear {
       text = value
-      if autoFocus && focusedOverride == nil {
+      if autoFocus && focusedOverride == nil && !hasAppliedInitialFocus {
+        hasAppliedInitialFocus = true
         isTextInputFocused = true
       }
     }
@@ -540,17 +543,35 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
       uiView.text = text
     }
 
-    uiView.returnKeyType = returnKeyType
-    uiView.placeholder = placeholder
-    uiView.attributedPlaceholder = NSAttributedString(
-      string: placeholder,
-      attributes: [.foregroundColor: UIColor(white: 0.55, alpha: 1)]
-    )
+    if uiView.returnKeyType != returnKeyType {
+      uiView.returnKeyType = returnKeyType
+    }
+    if uiView.placeholder != placeholder {
+      uiView.placeholder = placeholder
+      uiView.attributedPlaceholder = NSAttributedString(
+        string: placeholder,
+        attributes: [.foregroundColor: UIColor(white: 0.55, alpha: 1)]
+      )
+    }
     uiView.onEmptyBackspace = onEmptyBackspace
 
-    if isFocused && !uiView.isFirstResponder {
+    // Keep coordinator's closures in sync with the latest values
+    context.coordinator.update(
+      text: $text,
+      isFocused: $isFocused,
+      blurOnSubmit: blurOnSubmit,
+      onFocus: onFocus,
+      onBlur: onBlur,
+      onSubmit: onSubmit
+    )
+
+    let isFirst = uiView.isFirstResponder
+    if !isFocused {
+      context.coordinator.didEndEditing = false
+    }
+    if isFocused && !isFirst && !context.coordinator.didEndEditing {
       uiView.becomeFirstResponder()
-    } else if !isFocused && uiView.isFirstResponder {
+    } else if !isFocused && isFirst {
       uiView.resignFirstResponder()
     }
   }
@@ -569,12 +590,31 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
   final class Coordinator: NSObject, UITextFieldDelegate {
     private var text: Binding<String>
     private var isFocused: Binding<Bool>
-    private let blurOnSubmit: Bool
-    private let onFocus: () -> Void
-    private let onBlur: () -> Void
-    private let onSubmit: () -> Void
+    private var blurOnSubmit: Bool
+    private var onFocus: () -> Void
+    private var onBlur: () -> Void
+    private var onSubmit: () -> Void
+    /// Set when editing ends to prevent updateUIView from re-focusing
+    /// before SwiftUI processes the isFocused binding change.
+    var didEndEditing: Bool = false
 
     init(
+      text: Binding<String>,
+      isFocused: Binding<Bool>,
+      blurOnSubmit: Bool,
+      onFocus: @escaping () -> Void,
+      onBlur: @escaping () -> Void,
+      onSubmit: @escaping () -> Void
+    ) {
+      self.text = text
+      self.isFocused = isFocused
+      self.blurOnSubmit = blurOnSubmit
+      self.onFocus = onFocus
+      self.onBlur = onBlur
+      self.onSubmit = onSubmit
+    }
+
+    func update(
       text: Binding<String>,
       isFocused: Binding<Bool>,
       blurOnSubmit: Bool,
@@ -596,6 +636,7 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
     }
 
     func textFieldDidBeginEditing(_ textField: UITextField) {
+      didEndEditing = false
       if !isFocused.wrappedValue {
         isFocused.wrappedValue = true
       }
@@ -603,6 +644,7 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
     }
 
     func textFieldDidEndEditing(_ textField: UITextField) {
+      didEndEditing = true
       if isFocused.wrappedValue {
         isFocused.wrappedValue = false
       }

@@ -1,0 +1,1703 @@
+There's a bug with keyboard not being dismissed after the user leaves the add new source text input in various flows - when there are no recipes and no books on the beginning or when new book is added after selecting "Add book" option in the source selector. Actually, what seems to be happening is that the keyboard disappears correctly for a blink and then quickly appears. What's the biggest problem - it cannot be easily dismissed by tapping the "Enter" button or tapping outside the keyboard area. Most likely the issue was introduced in some recent commits touching the @modules/liquid-glass/ios/LiquidGlassInputView.swift code, so feel free to revert different changed aspects and ask me to test. Investigate deeply before settling on a solution - many agents tried already and nothing worked.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+What do I need to do to test the changes? After npx expo run:ios --device it's the same bug, still. Can we add some logs in relevant places to help debug the issue?
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+These are all logs I got iOS Bundled 74ms node_modules/expo-router/entry.js (1 module)
+iOS Bundled 54ms node_modules/expo-router/entry.js (1 module)
+ LOG  [Storage] iCloud container URL: null (unavailable)
+ LOG  [Storage] iCloud container URL: null (unavailable)
+ LOG  [OpenCV Bridge] Starting OpenCV bridge initialization
+ LOG  [OpenCV Bridge] Bridge script loaded, waiting for OpenCV
+ LOG  [OpenCV Bridge] OpenCV script loaded, initializing
+ LOG  [OpenCV Bridge] cv object available, waiting for runtime initialization
+ LOG  [OpenCV Bridge] OpenCV runtime initialized
+ LOG  [OpenCV Bridge] OpenCV ready
+ LOG  [OpenCV Bridge] Native WebView ready
+ LOG  [OpenCV Bridge] Starting OpenCV bridge initialization
+ LOG  [OpenCV Bridge] Bridge script loaded, waiting for OpenCV
+ LOG  [OpenCV Bridge] OpenCV script loaded, initializing
+ LOG  [OpenCV Bridge] cv object available, waiting for runtime initialization
+ LOG  [OpenCV Bridge] OpenCV runtime initialized
+ LOG  [OpenCV Bridge] OpenCV ready
+ LOG  [OpenCV Bridge] Native WebView ready
+iOS Bundled 58ms node_modules/expo-router/entry.js (1 module)
+ LOG  [Storage] iCloud container URL: null (unavailable)
+ LOG  [OpenCV Bridge] Starting OpenCV bridge initialization
+ LOG  [OpenCV Bridge] Bridge script loaded, waiting for OpenCV
+ LOG  [OpenCV Bridge] OpenCV script loaded, initializing
+ LOG  [OpenCV Bridge] cv object available, waiting for runtime initialization
+ LOG  [OpenCV Bridge] OpenCV runtime initialized
+ LOG  [OpenCV Bridge] OpenCV ready
+ LOG  [OpenCV Bridge] Native WebView ready
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+ WARN  [Reanimated] Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.
+
+If you don't want to see this message, you can disable the `strict` mode. Refer to:
+https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration for more details.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+No logs displayed in the Console.app
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Analyze logs error    21:33:35.311574+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312170+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312184+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312225+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312237+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312289+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312302+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:33:35.312328+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:33:35.312339+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312350+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312361+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312371+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.314285+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:33:35.311563+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312160+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312177+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312218+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312232+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312284+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312297+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:33:35.312323+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:33:35.312334+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312345+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312355+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.312366+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:35.314273+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:33:35.332659+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:33:35.332679+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:33:35.347879+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:33:35.347867+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:33:36.246781+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:33:36.246767+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:33:38.719429+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.719538+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.719933+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.719990+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.719918+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720056+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.719980+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720185+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720220+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:38.720042+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720096+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720207+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:38.720398+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720423+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720448+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.720388+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720468+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.720415+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:38.720437+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.720459+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.720526+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.720606+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859616+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859725+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859745+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859761+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859847+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859875+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:38.859891+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859905+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859955+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:38.859605+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859967+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:38.859707+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859738+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859981+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:38.859755+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859838+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859868+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:38.859884+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859900+0100    fasola    [LGInput] updateContent value='t' autoFocus=false focusedOverride=nil
+error    21:33:38.859921+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:38.859962+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:38.859976+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060281+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060269+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060384+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060399+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060419+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060412+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060426+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060432+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060444+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060451+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060460+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.060465+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.060473+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060480+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060491+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060497+0100    fasola    [LGInput] updateContent value='te' autoFocus=false focusedOverride=nil
+error    21:33:39.060504+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.060509+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.060523+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.060518+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.060534+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.060529+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177469+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177532+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177561+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177592+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177635+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177679+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.177721+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177762+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177819+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.177856+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.177895+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.177457+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177514+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177551+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177573+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177618+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177660+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.177705+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177747+0100    fasola    [LGInput] updateContent value='tes' autoFocus=false focusedOverride=nil
+error    21:33:39.177799+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.177840+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.177879+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712804+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712791+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712847+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712855+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712882+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712888+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712968+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712985+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.712999+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713005+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713021+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.713013+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:39.713037+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713032+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713049+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713044+0100    fasola    [LGInput] updateContent value='test' autoFocus=false focusedOverride=nil
+error    21:33:39.713057+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:39.713062+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:39.713069+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:39.713076+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:39.713088+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:39.713083+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183890+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183880+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183898+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183904+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183917+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183912+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183943+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183938+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184003+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.183993+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184020+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:40.184015+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:33:40.184032+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184027+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184045+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184040+0100    fasola    [LGInput] updateContent value='test ' autoFocus=false focusedOverride=nil
+error    21:33:40.184056+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.184051+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.184067+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.184062+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.184078+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.184073+0100    fasola    [LGInput] updateContent value='test 2' autoFocus=false focusedOverride=nil
+error    21:33:40.705311+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:33:40.705316+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:33:40.709681+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:33:40.709769+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:33:40.709686+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:33:40.709774+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:33:40.754342+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:33:40.754348+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:33:40.770217+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+error    21:33:40.770224+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+error    21:33:57.792169+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792819+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792834+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792845+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792856+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792867+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792946+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792959+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792972+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792984+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:33:57.792995+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:33:57.793008+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.793713+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:33:57.792159+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792809+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792829+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792840+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792851+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792864+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792936+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792953+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792967+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.792979+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:33:57.792990+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:33:57.793003+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:33:57.793704+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:33:57.818070+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:33:57.818064+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:33:57.823033+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:33:57.823048+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:33:58.798501+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:33:58.798517+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:34:00.021768+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.021938+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.021961+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.021980+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.021995+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022006+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022020+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.021776+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.022034+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022047+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.021950+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.022062+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.021969+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:34:00.021986+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022077+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022000+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022011+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022027+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022039+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022053+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.022068+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.022083+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.153767+0100    fasola    [LGInput] .onChange(value) 'Tw' → 'T'
+error    21:34:00.153762+0100    fasola    [LGInput] .onChange(value) 'Tw' → 'T'
+error    21:34:00.357713+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357739+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357753+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357765+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357777+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357789+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357800+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357887+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357920+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.357934+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357948+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357724+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357747+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357758+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:00.357770+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357781+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357794+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357805+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357907+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357927+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.357940+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.357954+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.370918+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.370958+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.419653+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419682+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419696+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419708+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419718+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419730+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419742+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419753+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419764+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.419775+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419785+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.420766+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.419667+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419688+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419701+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.419713+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419723+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419735+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419747+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419758+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419769+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.419780+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.419790+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.420815+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.485527+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485595+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485631+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485644+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485655+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485666+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485677+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485687+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485698+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.485709+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485721+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.487440+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.485517+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485577+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485625+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.485639+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485650+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485661+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485671+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485682+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485693+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.485704+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.485716+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.487426+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.546875+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.546892+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.546933+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.546950+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.546962+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.546973+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547039+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547055+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547066+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.547077+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547089+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.546885+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.554012+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.546897+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.546941+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.546956+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.546967+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.546978+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547048+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547060+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547071+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.547082+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.547094+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.554020+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.650639+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650630+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650710+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650722+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650737+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650731+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.650743+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650748+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650762+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650757+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650769+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650774+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650785+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650780+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650796+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650791+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650804+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.650809+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.650815+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650820+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.650855+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.651956+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.650861+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.651990+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.713110+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713121+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713141+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713135+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713149+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713155+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.713160+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713172+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713165+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713185+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713179+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713196+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713190+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713247+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713268+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.713201+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713279+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713260+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713294+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713274+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.713284+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.713300+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.722290+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.722281+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.776235+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776223+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776242+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776247+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776261+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776254+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.776268+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776273+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776278+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776284+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776290+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776295+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776302+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776305+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776316+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776312+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776328+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.776324+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.776340+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776335+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776382+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.776376+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.787839+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.787849+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.838568+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838578+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838598+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838593+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838606+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838610+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.838618+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838623+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838629+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838634+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838644+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838649+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838655+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838660+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838666+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838671+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838723+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.838732+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.838742+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838747+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838754+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.838759+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.839771+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.839778+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.901076+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901087+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901099+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901106+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901118+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901113+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.901129+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901124+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901134+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901139+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901146+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901150+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901158+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901161+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901169+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901174+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901180+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.901185+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.901190+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901196+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901201+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.901206+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.904978+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.904983+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:00.963066+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963054+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963079+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963073+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963093+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963088+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:00.963144+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963138+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963155+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963150+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963222+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963213+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963234+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963229+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963247+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963242+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963258+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.963253+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:00.963315+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963263+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963347+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.963341+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:00.971146+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:00.971136+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.023896+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023924+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023947+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023938+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023961+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023956+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.023973+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.023967+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.023986+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.023981+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.023998+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.023993+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024008+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024003+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024029+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024023+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024039+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.024034+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.024045+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024050+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024096+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.024105+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.037997+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.038009+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.085957+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.085979+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.085994+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.086004+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086016+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086029+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086040+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086050+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086061+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.086071+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086082+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.087668+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.085967+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.085987+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.085999+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.086009+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086021+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086034+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086045+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086055+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086066+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.086076+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.086087+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.087677+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.152084+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152147+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152182+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152214+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152244+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152273+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152302+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152331+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152053+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152129+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152167+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.152199+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152230+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152261+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152290+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152318+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152405+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.152435+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152463+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.154392+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.152417+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.152447+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.152476+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.154401+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.217382+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217402+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217417+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217427+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217439+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217483+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217506+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217519+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217530+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.217541+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217551+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.221103+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.217371+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217396+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217411+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.217422+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217434+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217474+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217500+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217514+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217525+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.217536+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.217547+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.221096+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.278732+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278754+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278770+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278783+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278742+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278762+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278776+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.278839+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278851+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278863+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278876+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278887+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278898+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.278908+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278920+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278846+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.287794+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.278858+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278871+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278882+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278892+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.278903+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.278915+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.287782+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.341187+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341239+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341248+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341257+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341321+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341330+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341337+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341345+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341411+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.341479+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341491+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341171+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341233+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341245+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.341253+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341315+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341326+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341334+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341341+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341392+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.341470+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.341486+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.354175+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.354182+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.411540+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411557+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411550+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411570+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411564+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411581+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411575+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.411606+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411586+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411621+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411613+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411632+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411643+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411626+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411654+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.411637+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411665+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411648+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411676+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411659+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.411670+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.411681+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.431682+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.431691+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.482248+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482211+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482338+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482359+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482372+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482378+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.482386+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482391+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482403+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482398+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482418+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482413+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482429+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482424+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482441+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482436+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482453+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.482449+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.482465+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482460+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482476+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.482471+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.483392+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.483371+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.549406+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549427+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549415+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549441+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549433+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549453+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549446+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.549458+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549463+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549468+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549474+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549485+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549479+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549496+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549490+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549508+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.549501+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549518+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549511+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.549562+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549523+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.549568+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.554660+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.554666+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.613217+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613204+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613275+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613269+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613284+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613281+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.613291+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613289+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613300+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613296+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613370+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613358+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613388+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613382+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613395+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613400+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613413+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.613408+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.613420+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613425+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613432+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.613437+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.670399+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.670392+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.744045+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744092+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744102+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744134+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744143+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744199+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744208+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744215+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744259+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.744282+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744296+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.745239+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.744051+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744096+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744105+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.744138+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744147+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744203+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744211+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744220+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744271+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.744287+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.744302+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.745246+0100    fasola    [LGInput] .onChange(value) 'Tst' → 'Ts'
+error    21:34:01.816072+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816112+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816121+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816183+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816200+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816212+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816227+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816241+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816287+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.816298+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816066+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816312+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816107+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816117+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:01.816164+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816194+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816207+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816221+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816236+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816281+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:01.816293+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.816306+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:01.860781+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:01.860775+0100    fasola    [LGInput] .onChange(value) 'Ts' → 'Tst'
+error    21:34:02.762548+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762598+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762622+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762635+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762537+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762660+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762588+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762672+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762613+0100    fasola    [LGInput] updateContent value='Tst' autoFocus=false focusedOverride=nil
+error    21:34:02.762693+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762629+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762716+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762655+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762667+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762737+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:02.762689+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762758+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762711+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762778+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762732+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:02.762752+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:02.762773+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138426+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138492+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138504+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138513+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138597+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138626+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138639+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138655+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138669+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.138681+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138694+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138438+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138498+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138508+0100    fasola    [LGInput] updateContent value='Ts' autoFocus=false focusedOverride=nil
+error    21:34:03.138518+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138613+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138632+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138645+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138660+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138674+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.138686+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.138699+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762286+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762296+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762305+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762312+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762320+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762392+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762399+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762408+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762415+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.762729+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762279+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762294+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762301+0100    fasola    [LGInput] updateContent value='T' autoFocus=false focusedOverride=nil
+error    21:34:03.762310+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762317+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762386+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762396+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762403+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762412+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.762650+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762872+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.762942+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.922979+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923152+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923173+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923186+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923198+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923209+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923221+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923232+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923243+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.923254+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923264+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.922996+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923163+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923178+0100    fasola    [LGInput] updateContent value='Te' autoFocus=false focusedOverride=nil
+error    21:34:03.923192+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923203+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923214+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923226+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923237+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923248+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:03.923259+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:03.923269+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036104+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036281+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036298+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036310+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036325+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036339+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036350+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036361+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036374+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:04.036385+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036091+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036267+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036292+0100    fasola    [LGInput] updateContent value='Tes' autoFocus=false focusedOverride=nil
+error    21:34:04.036304+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036319+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036334+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036345+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036356+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036369+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:34:04.036380+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036442+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.036448+0100    fasola    [LGInput] updateContent value='Test' autoFocus=false focusedOverride=nil
+error    21:34:04.819027+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:34:04.819823+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:34:04.819022+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:34:04.819816+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:34:04.823002+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:34:04.822995+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:34:04.878535+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:34:04.878540+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:34:04.885752+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+error    21:34:04.885747+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   The user reported a keyboard dismissal bug in their React Native/Expo app (Fasola - a recipe photo management app). The keyboard briefly disappears then reappears after leaving the "add new source" text input in two flows: (1) when there are no recipes/books at the beginning, and (2) when a new book is added via the source selector. The keyboard cannot be dismissed by tapping Enter or tapping outside. The user suspects the issue was introduced in recent commits touching `LiquidGlassInputView.swift`. Many previous agents tried and failed to fix this. The user asked me to investigate deeply, propose fixes, add debug logging, and analyze the resulting logs.
+
+2. Key Technical Concepts:
+   - React Native / Expo with native iOS modules (ExpoModulesCore)
+   - SwiftUI inside UIHostingController embedded in a UIKit ExpoView
+   - UIViewRepresentable (BackspaceAwareTextField) wrapping a custom UITextField
+   - Focus management: @State isTextInputFocused, focusedOverride, effectiveIsFocused binding
+   - autoFocus prop handling via .onAppear
+   - Coordinator pattern with stale closure problem in UIViewRepresentable
+   - GeometryReader wrapping (added in commit fe945d9)
+   - React conditional rendering (LiquidGlassInput vs LiquidGlassSelect)
+   - os.Logger unified logging framework with privacy annotations
+
+3. Files and Code Sections:
+   - `/Users/eryk.napierala/Projects/fasola/modules/liquid-glass/ios/LiquidGlassInputView.swift`
+     - The core file with the bug. Contains LiquidGlassInputView (ExpoView class), LiquidGlassInputContent (SwiftUI View struct), BackspaceAwareTextField (UIViewRepresentable), DeletingAwareUITextField, and Coordinator.
+     - Changes made: Added `autoFocusConsumed` flag, `hasAppliedInitialFocus` @State, `endEditing(true)` in didMoveToWindow, Coordinator `update()` method, extensive debug logging with os.Logger.
+     - Key current state of focus handling:
+       ```swift
+       // updateUIView - THE PROBLEMATIC CODE
+       if isFocused && !uiView.isFirstResponder {
+         uiView.becomeFirstResponder()  // This re-focuses when it shouldn't
+       } else if !isFocused && uiView.isFirstResponder {
+         uiView.resignFirstResponder()
+       }
+       ```
+       ```swift
+       // Coordinator delegate methods
+       func textFieldDidEndEditing(_ textField: UITextField) {
+         // isFocused.wrappedValue is TRUE here when the bug occurs
+         if isFocused.wrappedValue { isFocused.wrappedValue = false }
+         onBlur()
+       }
+       ```
+
+   - `/Users/eryk.napierala/Projects/fasola/features/source-selector/components/SourceSelector.tsx`
+     - Contains the conditional rendering: `hasNoSources || isEditingNewSource ? <LiquidGlassInput autoFocus ... /> : <LiquidGlassSelect />`
+     - handleConfirmNewSource creates source, sets isEditingNewSource=false, unmounts input
+
+   - `/Users/eryk.napierala/Projects/fasola/app/manage-books.tsx`
+     - Second flow with the bug: isAddingBook state toggles LiquidGlassInput visibility
+
+   - `/Users/eryk.napierala/Projects/fasola/features/recipe-form/components/AddRecipeForm.tsx`
+     - Wraps SourceSelector, manages isEditingSource state
+
+   - `/Users/eryk.napierala/Projects/fasola/modules/liquid-glass/src/LiquidGlassInput.ios.tsx`
+     - TypeScript wrapper passing props to NativeLiquidGlassInputView
+
+   - `/Users/eryk.napierala/Projects/fasola/modules/liquid-glass/ios/LiquidGlassModule.swift`
+     - Expo module definition mapping props to native setters
+
+4. Errors and fixes:
+   - Initial fix attempt (autoFocusConsumed, hasAppliedInitialFocus, endEditing, Coordinator update) - didn't fix the bug. User confirmed "it's the same bug, still."
+   - print() logs not visible in Metro console - switched to NSLog
+   - NSLog logs not visible in Console.app - switched to os.Logger with .error level
+   - os.Logger build errors: "reference to property in closure requires explicit use of 'self'" - fixed by pre-computing values into local variables before logging
+   - os.Logger privacy redaction: dynamic strings show as `<private>` - added `privacy: .public` annotations
+
+5. Problem Solving:
+   The logs reveal the ROOT CAUSE clearly. The critical sequence at ~21:34:04.819:
+   ```
+   textFieldDidEndEditing isFocused.wrappedValue=true    ← field loses focus but binding still says focused
+   updateUIView → becomeFirstResponder                    ← SwiftUI re-evaluates, sees isFocused=true, RE-FOCUSES!
+   textFieldDidBeginEditing isFocused.wrappedValue=true   ← field is focused again, keyboard reappears
+   didMoveToWindow window=nil                             ← view is being removed (too late)
+   updateUIView → resignFirstResponder                    ← cleanup, but keyboard already popped back
+   ```
+   
+   Key findings from logs:
+   - NO `textFieldShouldReturn` log appears - the user is NOT pressing Done/Enter to submit. The form submission happens through a different path (possibly the confirm button), which unmounts the component.
+   - When the component is unmounting, `textFieldDidEndEditing` fires. At that moment, `isFocused.wrappedValue` is `true`.
+   - The `textFieldDidEndEditing` sets it to `false`, but before SwiftUI processes this state change, `updateUIView` runs with the old `isFocused=true` and calls `becomeFirstResponder()`, causing the keyboard to reappear.
+   - The `.onAppear` logs show `autoFocus=false` - confirming the autoFocusConsumed fix works, but autoFocus was NOT the root cause.
+   - There are TWO instances of every log (duplicate views), suggesting two LiquidGlassInputView instances exist simultaneously.
+   - Massive value oscillation in onChange(value) - values flip-flopping between lengths (e.g., 'Ts' ↔ 'Tst'), indicating a text synchronization issue between JS state and native @State.
+
+6. All user messages:
+   - "There's a bug with keyboard not being dismissed after the user leaves the add new source text input in various flows - when there are no recipes and no books on the beginning or when new book is added after selecting "Add book" option in the source selector. Actually, what seems to be happening is that the keyboard disappears correctly for a blink and then quickly appears. What's the biggest problem - it cannot be easily dismissed by tapping the "Enter" button or tapping outside the keyboard area. Most likely the issue was introduced in some recent commits touching the @modules/liquid-glass/ios/LiquidGlassInputView.swift code, so feel free to revert different changed aspects and ask me to test. Investigate deeply before settling on a solution - many agents tried already and nothing worked."
+   - "What do I need to do to test the changes? After npx expo run:ios --device it's the same bug, still. Can we add some logs in relevant places to help debug the issue?"
+   - "No logs displayed in the Console.app" (with screenshot showing empty Console.app filtered by LGInput)
+   - "Analyze logs [followed by extensive log output]" - the most recent request
+
+7. Pending Tasks:
+   - Analyze the logs (user's most recent explicit request) and identify the root cause
+   - Implement a proper fix based on the log analysis
+   - Remove debug logging after the fix is confirmed
+
+8. Current Work:
+   The user provided extensive debug logs and asked me to "Analyze logs". I need to analyze the log output and identify the root cause. The logs clearly show:
+   
+   At ~21:34:04.819:
+   ```
+   textFieldDidEndEditing isFocused.wrappedValue=true
+   updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+   textFieldDidBeginEditing isFocused.wrappedValue=true
+   didMoveToWindow window=nil variant=text
+   updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+   ```
+   
+   The root cause is NOT autoFocus. It's that during component unmounting, `textFieldDidEndEditing` fires while `isFocused` binding is still `true`. The SwiftUI state update from setting `isFocused=false` in the delegate hasn't been processed yet, so `updateUIView` sees the stale `isFocused=true` and calls `becomeFirstResponder()`, making the keyboard reappear right before the view is removed.
+
+9. Optional Next Step:
+   Present the log analysis findings to the user and implement a fix. The fix should address the actual root cause: `updateUIView` calling `becomeFirstResponder()` during the unmounting sequence. Possible approaches:
+   - Add a flag to prevent `becomeFirstResponder()` when the view is about to be removed
+   - Check `window != nil` in `updateUIView` before calling `becomeFirstResponder()`
+   - Defer `becomeFirstResponder()` to avoid the race condition
+   - In `textFieldDidEndEditing`, synchronously prevent re-focusing by marking the view as "ending editing"
+   
+   The user's exact request was: "Analyze logs" followed by the log dump.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/db0e816a-2545-41ae-869b-85f297194545.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Nothing visibly changed. Do you need more logs? error    21:56:56.680157+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682471+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682638+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682658+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:56:56.682674+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:56:56.682687+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682699+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682714+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682729+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682740+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682754+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682766+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.683553+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:56:56.685969+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:56:56.680145+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682454+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682621+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682651+0100    fasola    [LGInput] setAutoFocus(true) consumed=false
+error    21:56:56.682667+0100    fasola    [LGInput] updateContent value='' autoFocus=true focusedOverride=nil
+error    21:56:56.682682+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682694+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682708+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682723+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682737+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682749+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.682760+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:56:56.683543+0100    fasola    [LGInput] didMoveToWindow window=YES variant=text
+error    21:56:56.685961+0100    fasola    [LGInput] makeUIView (new UITextField created)
+error    21:56:56.690185+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:56:56.690207+0100    fasola    [LGInput] .onAppear autoFocus=false focusedOverride=nil hasAppliedInitialFocus=false variant=text
+error    21:56:59.187705+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:56:59.187726+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=false
+error    21:57:01.716331+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716319+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716358+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716348+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716408+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:01.716397+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:01.716425+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716418+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716439+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716433+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716450+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716445+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716501+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716492+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716517+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716512+0100    fasola    [LGInput] updateContent value='' autoFocus=false focusedOverride=nil
+error    21:57:01.716551+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.716563+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.716571+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.716576+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.716607+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.716615+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880341+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880304+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880369+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880465+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:01.880482+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880500+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880440+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880542+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880472+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:01.880559+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880574+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880490+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880593+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:01.880518+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880608+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:01.880552+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880621+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:01.880567+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880580+0100    fasola    [LGInput] updateContent value='X' autoFocus=false focusedOverride=nil
+error    21:57:01.880599+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:01.880614+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:01.880629+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061872+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061892+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061908+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:02.061923+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061939+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061970+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062165+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062180+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062195+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:02.062212+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:02.062231+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:02.061883+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061899+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061914+0100    fasola    [LGInput] setAutoFocus(true) consumed=true
+error    21:57:02.061929+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061959+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.061978+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062172+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062186+0100    fasola    [LGInput] updateContent value='Xx' autoFocus=false focusedOverride=nil
+error    21:57:02.062202+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:02.062221+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:02.062238+0100    fasola    [LGInput] updateContent value='Xxx' autoFocus=false focusedOverride=nil
+error    21:57:03.120559+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:57:03.120553+0100    fasola    [LGInput] textFieldDidEndEditing isFocused.wrappedValue=true
+error    21:57:03.127495+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:57:03.127382+0100    fasola    [LGInput] updateUIView → becomeFirstResponder (isFocused=true, isFirstResponder=false)
+error    21:57:03.129370+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:57:03.129364+0100    fasola    [LGInput] textFieldDidBeginEditing isFocused.wrappedValue=true
+error    21:57:03.161732+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:57:03.161737+0100    fasola    [LGInput] didMoveToWindow window=nil variant=text
+error    21:57:03.207226+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+error    21:57:03.207231+0100    fasola    [LGInput] updateUIView → resignFirstResponder (isFocused=false, isFirstResponder=true)
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+ts-Info.plist
+› Packaging react-native-gesture-handler Pods/RNGestureHandler » libRNGestureHandler.a
+› Preparing Pods/expo-dev-launcher-EXDevLauncher » ResourceBundle-EXDevLauncher-expo-dev-launcher-Info.plist
+
+❌  (modules/liquid-glass/ios/LiquidGlassInputView.swift:661:123)
+
+  659 |     func textFieldDidBeginEditing(_ textField: UITextField) {
+  660 |       let focused = self.isFocused.wrappedValue
+> 661 |       lglog.error("[LGInput] textFieldDidBeginEditing isFocused.wrappedValue=\(focused, privacy: .public) didEndEditing=\(didEndEditing, privacy: .public)")
+      |                                                                                                                           ^ reference to property 'didEndEditing' in closure requires explicit use of 'self' to make capture semantics explicit
+  662 |       didEndEditing = false
+  663 |       if !isFocused.wrappedValue {
+  664 |         isFocused.wrappedValue = true
+
+› Packaging react-native-svg Pods/RNSVG » libRNSVG.a
+› Compiling expo-dev-launcher Pods/expo-dev-launcher » EXDevLauncherController.m
+› Preparing expo-constants Pods/EXConstants-EXConstants » ResourceBundle-EXConstants-EXConstants-Info.plist
+› Packaging react-native-reanimated Pods/RNReanimated » libRNReanimated.a
+› Executing expo-constants Pods/EXConstants » [CP-User] Generate app.config for prebuilt Constants.manifest
+
+› 1 error(s), and 2 warning(s)
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Fixed! But autofocus broke completely
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+ts-Info.plist
+› Packaging react-native-gesture-handler Pods/RNGestureHandler » libRNGestureHandler.a
+› Preparing Pods/expo-dev-launcher-EXDevLauncher » ResourceBundle-EXDevLauncher-expo-dev-launcher-Info.plist
+
+❌  (modules/liquid-glass/ios/LiquidGlassInputView.swift:172:92)
+
+  170 |     let logValue = String(self.value.prefix(20))
+  171 |     let logOverride = String(describing: self.focusedOverride)
+> 172 |     lglog.error("[LGInput] updateContent value='\(logValue, privacy: .public)' autoFocus=\(autoFocusFlag, privacy: .public) focusedOverride=\(logOverride, privacy: .public)")
+      |                                                                                            ^ reference to property 'autoFocusFlag' in closure requires explicit use of 'self' to make capture semantics explicit
+  173 | 
+  174 |     let content = LiquidGlassInputContent(
+  175 |       value: value,
+
+› Compiling expo-dev-launcher Pods/expo-dev-launcher » EXDevLauncherController.m
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Great! Let's clean up logs now
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+# Simplify: Code Review and Cleanup
+
+Review all changed files for reuse, quality, and efficiency. Fix any issues found.
+
+## Phase 1: Identify Changes
+
+Run `git diff` (or `git diff HEAD` if there are staged changes) to see what changed. If there are no git changes, review the most recently modified files that the user mentioned or that you edited earlier in this conversation.
+
+## Phase 2: Launch Three Review Agents in Parallel
+
+Use the Agent tool to launch all three agents concurrently in a single message. Pass each agent the full diff so it has the complete context.
+
+### Agent 1: Code Reuse Review
+
+For each change:
+
+1. **Search for existing utilities and helpers** that could replace newly written code. Look for similar patterns elsewhere in the codebase — common locations are utility directories, shared modules, and files adjacent to the changed ones.
+2. **Flag any new function that duplicates existing functionality.** Suggest the existing function to use instead.
+3. **Flag any inline logic that could use an existing utility** — hand-rolled string manipulation, manual path handling, custom environment checks, ad-hoc type guards, and similar patterns are common candidates.
+
+### Agent 2: Code Quality Review
+
+Review the same changes for hacky patterns:
+
+1. **Redundant state**: state that duplicates existing state, cached values that could be derived, observers/effects that could be direct calls
+2. **Parameter sprawl**: adding new parameters to a function instead of generalizing or restructuring existing ones
+3. **Copy-paste with slight variation**: near-duplicate code blocks that should be unified with a shared abstraction
+4. **Leaky abstractions**: exposing internal details that should be encapsulated, or breaking existing abstraction boundaries
+5. **Stringly-typed code**: using raw strings where constants, enums (string unions), or branded types already exist in the codebase
+6. **Unnecessary JSX nesting**: wrapper Boxes/elements that add no layout value — check if inner component props (flexShrink, alignItems, etc.) already provide the needed behavior
+
+### Agent 3: Efficiency Review
+
+Review the same changes for efficiency:
+
+1. **Unnecessary work**: redundant computations, repeated file reads, duplicate network/API calls, N+1 patterns
+2. **Missed concurrency**: independent operations run sequentially when they could run in parallel
+3. **Hot-path bloat**: new blocking work added to startup or per-request/per-render hot paths
+4. **Unnecessary existence checks**: pre-checking file/resource existence before operating (TOCTOU anti-pattern) — operate directly and handle the error
+5. **Memory**: unbounded data structures, missing cleanup, event listener leaks
+6. **Overly broad operations**: reading entire files when only a portion is needed, loading all items when filtering for one
+
+## Phase 3: Fix Issues
+
+Wait for all three agents to complete. Aggregate their findings and fix each issue directly. If a finding is a false positive or not worth addressing, note it and move on — do not argue with the finding, just skip it.
+
+When done, briefly summarize what was fixed (or confirm the code was already clean).
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Base directory for this skill: /Users/eryk.napierala/.claude/skills/ship
+
+# Ship
+
+Prepare code changes for a pull request using conversation context and current git state.
+
+## Process
+
+### Step 1: Assess State
+
+Run these commands in parallel to understand the full context:
+
+- `git status` and `git diff` — understand all staged/unstaged/untracked changes
+- `gh pr view --json title,body,url,state 2>/dev/null` — check if a PR already exists for the current branch
+- `git log --oneline main..HEAD` — understand all commits on this branch
+
+Combine with conversation context about what was worked on.
+
+### Step 2: Determine Flow
+
+Based on the results from Step 1, follow one of two paths:
+
+- **No existing PR** → follow the **New PR** flow (Steps 3–7)
+- **Existing PR found** → follow the **Update PR** flow (Steps 8–10)
+
+---
+
+## New PR Flow
+
+### Step 3: Propose Branch Name
+
+Follow the format: `{PREFIX}/{SHORT_NAME}`
+
+- `PREFIX` — the Linear ticket ID if available, otherwise a conventional commit type (`feat`, `fix`, `chore`)
+- `SHORT_NAME` — three to five words separated with `_`, describing the scope
+
+Skip this step if already on a well-named feature branch.
+
+### Step 4: Draft Commit Message
+
+Use conventional commits with the appropriate scope. Always use present tense verbs.
+
+- The first line is a concise summary
+- The body describes high-level changes in detail
+- Avoid mentioning exact modules, files, or function names in the body
+
+**Example:**
+```
+feat(user): add SSO login capability
+
+Users can now sign in with their SSO provider, streamlining authentication
+and improving security for enterprise accounts.
+
+This change introduces backend logic to handle the SSO authentication
+flow, updates the user model to support SSO identities, and adds a new UI
+entry point for SSO login on the sign-in page.
+
+Tested with Okta and AzureAD providers. User provisioning and session
+handling confirmed.
+```
+
+Skip this step if there are no uncommitted changes.
+
+### Step 5: Draft PR Title
+
+Set the PR title to exactly match the commit message header (first line). If there are multiple commits and no new commit to make, summarize the branch's overall change.
+
+### Step 6: Draft PR Description
+
+Structure with three H2 headers:
+
+- **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
+- **What** — Exactly matches the commit message body. If multiple commits, summarize all changes on the branch.
+- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
+  - Create an H3 header for each scenario
+  - Each scenario contains precise manual steps as checkbox bullets
+  - Never include steps like "run tests" or "linting passes" — those belong in CI
+  - Example:
+    ### SSO Login
+    - [ ] Go to the login page
+    - [ ] Select the SSO option
+    - [ ] Authenticate with SSO
+    - [ ] Verify the dashboard is displayed
+
+### Step 7: Confirm and Execute
+
+Present the proposed branch name (if changing), commit message (if there are uncommitted changes), PR title, and PR description to the user **before** executing any git commands.
+
+Then ask: **"Create draft PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+When creating the PR, always create it as a **draft**.
+
+---
+
+## Update PR Flow
+
+### Step 8: Draft Commit Message
+
+If there are uncommitted changes, draft a commit message following the same conventions as Step 4.
+
+Skip this step if there are no uncommitted changes.
+
+### Step 9: Propose PR Updates
+
+Fetch the existing PR title and body. Based on the new commits (both already pushed and about to be pushed), propose:
+
+- **Updated PR title** — only if the scope of the PR has materially changed
+- **Updated PR description** — amend the What and Testing sections to reflect the new commits; preserve the existing Why section unless it's now inaccurate
+
+Show the existing and proposed versions side by side so the user can see what changed.
+
+### Step 10: Confirm and Execute
+
+Present the commit message (if applicable) and proposed PR description updates.
+
+Then ask: **"Commit, push, and update PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+Use `gh pr edit` to update the title and/or body.
+
+---
+
+yes

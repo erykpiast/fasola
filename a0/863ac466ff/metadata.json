@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "a0863ac466ff",
+  "strategy": "manual-commit",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a0/863ac466ff/0/metadata.json",
+      "transcript": "/a0/863ac466ff/0/full.jsonl",
+      "context": "/a0/863ac466ff/0/context.md",
+      "content_hash": "/a0/863ac466ff/0/content_hash.txt",
+      "prompt": "/a0/863ac466ff/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 8653,
+    "cache_read_tokens": 87872,
+    "output_tokens": 634,
+    "api_call_count": 5
+  }
+}

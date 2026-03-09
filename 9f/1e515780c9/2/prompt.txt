@@ -1,0 +1,83 @@
+Implement the following plan:
+
+# Plan: Update empty state heading + animate button on press
+
+## Context
+The empty list screen shows "No recipes yet" with a large + button. The user wants to change the heading to "Add your first recipe" and add a smooth scale-down + fade-out animation on the + button when it's pressed, so the popover appears over empty space.
+
+## Changes
+
+### 1. Update translations
+- **`platform/i18n/translations/en.json`**: Change `emptyState.title` from `"No recipes yet"` to `"Add your first recipe"`
+- **`platform/i18n/translations/pl.json`**: Change `emptyState.title` from `"Brak przepisów"` to `"Dodaj swój pierwszy przepis"`
+
+### 2. Animate the EmptyState when popover opens
+- **`features/photos/components/EmptyState.tsx`**:
+  - Add a `hiding` boolean prop driven by `popoverVisible || isImporting` from the parent
+  - Use `usePopoverTransition` (or equivalent spring animation) to animate scale (1→0.8) and opacity (1→0) when `hiding` is true
+  - Wrap the button (or entire container) in `Animated.View` with the animated style
+  - Reuse the existing spring config pattern (`damping: 40, stiffness: 200`)
+
+- **`app/index.tsx`**: Pass `shouldHideSearchBar` (already computed as `popoverVisible || isImporting`) to EmptyState as `hiding`
+
+## Verification
+- Run the app on iOS simulator
+- With no recipes, verify heading says "Add your first recipe"
+- Tap the + button → button should smoothly scale down and fade out → popover appears over empty space
+- Dismiss popover → button should smoothly animate back
+- Run `npx tsc --noEmit` and `npx expo lint` to check for errors
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/3952bf49-7fd8-41c1-bc44-a52c23d52ad4.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Did you clean up after making your changes work?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Let's remove the subheading below the button
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

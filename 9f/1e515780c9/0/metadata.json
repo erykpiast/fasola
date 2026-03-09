@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "9f1e515780c9",
+  "session_id": "5e52cce2-2361-4ee5-8053-026f2844d840",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-09T00:10:26.171938Z",
+  "branch": "feat/language_pl",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/index.tsx",
+    "features/photos/components/EmptyState.tsx",
+    "platform/i18n/translations/en.json",
+    "platform/i18n/translations/pl.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "7d0edb394349",
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 12660,
+    "cache_read_tokens": 99924,
+    "output_tokens": 495,
+    "api_call_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-09T00:10:26.149979Z",
+    "agent_lines": 0,
+    "human_added": 48,
+    "human_modified": 82,
+    "human_removed": 0,
+    "total_committed": 48,
+    "agent_percentage": 0
+  }
+}

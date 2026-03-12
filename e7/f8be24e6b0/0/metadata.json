@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "e7f8be24e6b0",
+  "session_id": "2767888c-be1d-4cdd-97a6-439f46a3ba96",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T22:52:56.265767Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".simple-task-master/tasks/7-when-adding-a-receipt-by-taking-a-photo-the-picture-that-loads-is-a-thumbnail-a-full-picture.md",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ZoomableImage.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "7a1a5ebe0476",
+  "token_usage": {
+    "input_tokens": 35,
+    "cache_creation_tokens": 34051,
+    "cache_read_tokens": 661211,
+    "output_tokens": 5562,
+    "api_call_count": 19
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T22:52:56.225135Z",
+    "agent_lines": 15,
+    "human_added": 0,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 16,
+    "agent_percentage": 93.75
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "e7f8be24e6b0",
+  "strategy": "manual-commit",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".simple-task-master/tasks/7-when-adding-a-receipt-by-taking-a-photo-the-picture-that-loads-is-a-thumbnail-a-full-picture.md",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipe-preview/components/RecipeViewScreen.tsx",
+    "lib/components/atoms/ZoomableImage.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e7/f8be24e6b0/0/metadata.json",
+      "transcript": "/e7/f8be24e6b0/0/full.jsonl",
+      "context": "/e7/f8be24e6b0/0/context.md",
+      "content_hash": "/e7/f8be24e6b0/0/content_hash.txt",
+      "prompt": "/e7/f8be24e6b0/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 35,
+    "cache_creation_tokens": 34051,
+    "cache_read_tokens": 661211,
+    "output_tokens": 5562,
+    "api_call_count": 19
+  }
+}

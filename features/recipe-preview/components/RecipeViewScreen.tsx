@@ -12,7 +12,9 @@ import type { RecipeId } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useRouter } from "expo-router";
 import { type JSX, useCallback, useEffect, useState } from "react";
+
 import { StyleSheet, useWindowDimensions, View } from "react-native";
+import type { SwipeDirection } from "react-native-zoom-toolkit";
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -41,6 +43,15 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
   const handleBack = useCallback((): void => {
     router.back();
   }, [router]);
+
+  const handleSwipe = useCallback(
+    (direction: SwipeDirection): void => {
+      if (direction === "right") {
+        router.back();
+      }
+    },
+    [router]
+  );
 
   const handleDelete = useCallback((): void => {
     Alert.alert(t("deleteRecipe.title"), t("deleteRecipe.message"), [
@@ -80,6 +91,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
       <ZoomableImage
         style={{ width, height }}
         onZoomChange={setIsZoomed}
+        onSwipe={handleSwipe}
       >
         <ProgressiveImage
           uri={recipe.photoUri}

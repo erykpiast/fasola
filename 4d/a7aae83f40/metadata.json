@@ -3,7 +3,7 @@
   "checkpoint_id": "4da7aae83f40",
   "strategy": "manual-commit",
   "branch": "chore/add_simple_task_master",
-  "checkpoints_count": 20,
+  "checkpoints_count": 21,
   "files_touched": [
     ".gitignore",
     ".simple-task-master/tasks/1-the-label-reciperecipes-under-the-book-title-isnt-translated-on-the-bookman-adwords-screen.md",
@@ -66,13 +66,20 @@
       "context": "/4d/a7aae83f40/6/context.md",
       "content_hash": "/4d/a7aae83f40/6/content_hash.txt",
       "prompt": "/4d/a7aae83f40/6/prompt.txt"
+    },
+    {
+      "metadata": "/4d/a7aae83f40/7/metadata.json",
+      "transcript": "/4d/a7aae83f40/7/full.jsonl",
+      "context": "/4d/a7aae83f40/7/context.md",
+      "content_hash": "/4d/a7aae83f40/7/content_hash.txt",
+      "prompt": "/4d/a7aae83f40/7/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 2653,
-    "cache_creation_tokens": 275657,
-    "cache_read_tokens": 3704086,
-    "output_tokens": 52839,
-    "api_call_count": 119
+    "input_tokens": 2665,
+    "cache_creation_tokens": 296460,
+    "cache_read_tokens": 3956802,
+    "output_tokens": 58504,
+    "api_call_count": 129
   }
 }

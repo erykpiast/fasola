@@ -18,7 +18,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 
@@ -79,16 +78,20 @@ export const SourceSelector = forwardRef<
     onInteraction?.();
   }, [value, sources, onInteraction]);
 
-  const handlePickerDone = useCallback(() => {
-    setPickerModalVisible(false);
-    if (tempValue === ADD_NEW_VALUE) {
-      setIsEditingNewSource(true);
-    } else if (tempValue) {
-      onValueChange(tempValue, false);
-    }
-  }, [tempValue, onValueChange]);
+  const handleNativePickerChange = useCallback(
+    (itemValue: string) => {
+      setTempValue(itemValue);
+      setPickerModalVisible(false);
+      if (itemValue === ADD_NEW_VALUE) {
+        setIsEditingNewSource(true);
+      } else if (itemValue) {
+        onValueChange(itemValue, false);
+      }
+    },
+    [onValueChange]
+  );
 
-  const handlePickerCancel = useCallback(() => {
+  const handlePickerClose = useCallback(() => {
     setPickerModalVisible(false);
     setTempValue(value);
   }, [value]);
@@ -201,12 +204,12 @@ export const SourceSelector = forwardRef<
         visible={pickerModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={handlePickerCancel}
+        onRequestClose={handlePickerClose}
       >
         <View style={styles.pickerModalOverlay}>
           <Pressable
             style={styles.pickerModalBackdrop}
-            onPress={handlePickerCancel}
+            onPress={handlePickerClose}
           />
           <View
             style={[
@@ -219,26 +222,9 @@ export const SourceSelector = forwardRef<
               },
             ]}
           >
-            <View style={styles.pickerToolbar}>
-              <Pressable onPress={handlePickerCancel}>
-                <Text style={styles.pickerToolbarButton}>
-                  {t("recipeForm.discardChanges.cancel")}
-                </Text>
-              </Pressable>
-              <Pressable onPress={handlePickerDone}>
-                <Text
-                  style={[
-                    styles.pickerToolbarButton,
-                    styles.pickerToolbarButtonDone,
-                  ]}
-                >
-                  {t("recipeForm.submit")}
-                </Text>
-              </Pressable>
-            </View>
             <Picker
               selectedValue={tempValue}
-              onValueChange={setTempValue}
+              onValueChange={handleNativePickerChange}
               style={styles.pickerWheel}
               itemStyle={themeColors.pickerItem}
             >
@@ -314,22 +300,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     overflow: "hidden",
-  },
-  pickerToolbar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(128, 128, 128, 0.3)",
-  },
-  pickerToolbarButton: {
-    fontSize: 17,
-    color: "#007AFF",
-  },
-  pickerToolbarButtonDone: {
-    fontWeight: "600",
   },
   pickerWheel: {
     height: 216,

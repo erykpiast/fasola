@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "a92a02e94c54",
+  "strategy": "manual-commit",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".simple-task-master/tasks/10-when-adding-a-recipe-from-the-camera-the-confirm-button-doesnt-work-util-the-user-selects-a-differen.md",
+    ".simple-task-master/tasks/11-the-photo-preview-when-adding-the-recipe-shouldnt-be-stretched-to-a-cover-but-show-the-full-photo-to.md",
+    "lib/components/atoms/SkeletonBlock.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a9/2a02e94c54/0/metadata.json",
+      "transcript": "/a9/2a02e94c54/0/full.jsonl",
+      "context": "/a9/2a02e94c54/0/context.md",
+      "content_hash": "/a9/2a02e94c54/0/content_hash.txt",
+      "prompt": "/a9/2a02e94c54/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 31,
+    "cache_creation_tokens": 53644,
+    "cache_read_tokens": 531348,
+    "output_tokens": 5950,
+    "api_call_count": 17
+  }
+}

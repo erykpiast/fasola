@@ -44,3 +44,6 @@ yarn-error.*
 lib/photo-processor/opencv-webview-bridge.bundle.js
 lib/photo-processor/*.bundle.js
 lib/photo-processor/*.bundle.map
+
+# Task expansion logs
+.simple-task-master/logs/

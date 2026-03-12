@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "4da7aae83f40",
+  "session_id": "54680cc6-7b5c-4243-b750-9c81ae4a142d",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T21:50:07.992148Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "a02b3c43a42f",
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 63403,
+    "cache_read_tokens": 439403,
+    "output_tokens": 9350,
+    "api_call_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T21:50:07.906171Z",
+    "agent_lines": 68,
+    "human_added": 776,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 844,
+    "agent_percentage": 8.056872037914692
+  }
+}

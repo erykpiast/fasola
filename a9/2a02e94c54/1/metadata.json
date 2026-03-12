@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "a92a02e94c54",
+  "session_id": "817c226e-1f2b-46ba-81ec-9b4c4ff28c44",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T23:28:13.92897Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".simple-task-master/tasks/10-when-adding-a-recipe-from-the-camera-the-confirm-button-doesnt-work-util-the-user-selects-a-differen.md",
+    ".simple-task-master/tasks/11-the-photo-preview-when-adding-the-recipe-shouldnt-be-stretched-to-a-cover-but-show-the-full-photo-to.md",
+    "lib/components/atoms/SkeletonBlock.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "ff78776c328c",
+  "checkpoint_transcript_start": 37,
+  "transcript_lines_at_start": 37,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T23:28:13.902632Z",
+    "agent_lines": 153,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 153,
+    "agent_percentage": 100
+  }
+}

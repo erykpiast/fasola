@@ -1,0 +1,31 @@
+You are analyzing a task for a React Native/Expo recipe photo management app called Fasola.
+
+Read the following task file and then explore the codebase to understand the issue deeply.
+
+<task-file path=".simple-task-master/tasks/10-when-adding-a-recipe-from-the-camera-the-confirm-button-doesnt-work-util-the-user-selects-a-differen.md">
+---
+schema: 1
+id: 10
+title: When adding a recipe from the camera, the confirm button doesn't work util the user selects a different book - the default doesn't work, while it does for a photo taken from the library
+status: pending
+created: "2026-03-12T22:44:47.958Z"
+updated: "2026-03-12T22:44:47.958Z"
+tags:
+  - ux
+  - bug
+dependencies: []
+---
+
+</task-file>
+
+Your job:
+1. Read the task file above to understand the issue
+2. Explore the codebase to find all relevant files, components, and patterns related to this task
+3. Think about what the issue means specifically in this codebase
+4. Plan a concrete solution
+
+Output ONLY the implementation plan as markdown. No frontmatter, no preamble, no "Here is the plan" intro. Start directly with the content. Structure it with:
+- **Relevant Files**: List the key files involved with brief notes
+- **Analysis**: What's happening now and what needs to change
+- **Steps**: Numbered implementation steps with specific code-level details
+- **Testing**: How to verify the fix works

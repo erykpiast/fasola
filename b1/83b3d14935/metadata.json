@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "b183b3d14935",
+  "strategy": "manual-commit",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".simple-task-master/tasks/9-when-processing-and-we-dont-know-the-title-and-the-tags-yet-we-should-show-some-skeleton-ui-instead-.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b1/83b3d14935/0/metadata.json",
+      "transcript": "/b1/83b3d14935/0/full.jsonl",
+      "context": "/b1/83b3d14935/0/context.md",
+      "content_hash": "/b1/83b3d14935/0/content_hash.txt",
+      "prompt": "/b1/83b3d14935/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 24709,
+    "cache_read_tokens": 452022,
+    "output_tokens": 3429,
+    "api_call_count": 15
+  }
+}

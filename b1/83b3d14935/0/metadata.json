@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "b183b3d14935",
+  "session_id": "28baafc8-9724-4149-9828-e8c7bd5b46d9",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T22:17:53.59503Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".simple-task-master/tasks/9-when-processing-and-we-dont-know-the-title-and-the-tags-yet-we-should-show-some-skeleton-ui-instead-.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "7c61cfb734be",
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 24709,
+    "cache_read_tokens": 452022,
+    "output_tokens": 3429,
+    "api_call_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T22:17:53.564995Z",
+    "agent_lines": 63,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 63,
+    "agent_percentage": 100
+  }
+}

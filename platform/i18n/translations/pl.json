@@ -40,7 +40,8 @@
     "suggestions": {
       "accessibilityLabel_one": "#{{tag}}, {{countLabel}} przepis",
       "accessibilityLabel_few": "#{{tag}}, {{countLabel}} przepisy",
-      "accessibilityLabel_many": "#{{tag}}, {{countLabel}} przepisów"
+      "accessibilityLabel_many": "#{{tag}}, {{countLabel}} przepisów",
+      "accessibilityLabel_other": "#{{tag}}, {{countLabel}} przepisów"
     }
   },
   "accessibility": {
@@ -89,6 +90,7 @@
     "recipeCount_one": "{{count}} przepis",
     "recipeCount_few": "{{count}} przepisy",
     "recipeCount_many": "{{count}} przepisów",
+    "recipeCount_other": "{{count}} przepisów",
     "back": "Wróć",
     "editAction": "Edytuj",
     "confirmEditAction": "Gotowe",

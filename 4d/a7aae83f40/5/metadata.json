@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "4da7aae83f40",
+  "session_id": "a60b3234-9afc-4b54-91b9-32c8592dbf11",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T21:50:08.391429Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 8,
+  "files_touched": [
+    ".gitignore",
+    "scripts/expand-tasks.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "a02ad19e6d5c",
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 36529,
+    "cache_read_tokens": 943417,
+    "output_tokens": 7002,
+    "api_call_count": 34
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T21:50:08.318229Z",
+    "agent_lines": 116,
+    "human_added": 728,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 844,
+    "agent_percentage": 13.744075829383887
+  }
+}

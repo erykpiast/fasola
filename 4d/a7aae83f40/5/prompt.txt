@@ -1,0 +1,156 @@
+Implement the following plan:
+
+# Plan: Task Detail Expansion Script
+
+## Context
+The Simple Task Master has 8 task files in `.simple-task-master/tasks/` with brief descriptions. We need a script that spawns a Claude Code session for each task to analyze the codebase and write a detailed implementation plan back into the task file.
+
+## Approach
+Create a bash script `scripts/expand-tasks.sh` that:
+
+1. Iterates over all `.md` files in `.simple-task-master/tasks/`
+2. For each task file, spawns a Claude Code session using `claude -p` (print mode) with `--dangerously-skip-permissions`
+3. The prompt instructs Claude to:
+   - Read the task file to understand the issue
+   - Explore the codebase to find relevant files and patterns
+   - Think about what the issue means specifically in this codebase
+   - Plan the solution
+   - Output **ONLY** the implementation plan as markdown (no frontmatter, no original body)
+4. The script **preserves the original file entirely** and appends the plan output under a `## Implementation Plan` section
+5. Runs tasks in parallel (background processes) with a concurrency limit
+
+## File Structure Preservation
+
+Task files have this structure:
+```
+---
+frontmatter (YAML)
+---
+
+Original body text (user's notes)
+```
+
+The script will:
+- Read the original file completely
+- Strip any existing `## Implementation Plan` section (for re-runs/idempotency)
+- Append `\n\n## Implementation Plan\n\n` + Claude's output
+- This way frontmatter, status, tags, dependencies, and original description are **never touched**
+
+## Key Details
+
+- **Claude flags**: `-p` (non-interactive print mode), `--dangerously-skip-permissions` (no approval prompts for read-only exploration)
+- **Allowed tools**: `--tools "Read,Grep,Glob,Bash(ls:*),Bash(find:*),Agent"` — read-only tools only, no Edit/Write
+- **Model**: Default model, overridable via `CLAUDE_MODEL` env var
+- **Output handling**: Claude outputs ONLY the plan text; script appends it to the preserved original file
+- **Concurrency**: Run up to 3 tasks in parallel to balance speed vs API limits
+- **Idempotency**: If re-run, strips previous `## Implementation Plan` before appending new one
+- **Safety**: The script only modifies task files in `.simple-task-master/tasks/`, never codebase files
+
+## Files to Create
+- `scripts/expand-tasks.sh` - The main script
+
+## Verification
+- Run `bash scripts/expand-tasks.sh` and verify task files get detailed plans appended
+- Check that frontmatter is preserved
+- Check that no codebase files were modified
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/ffc171aa-fece-4a33-bf66-bd1fdee26c3b.jsonl
+
+---
+
+What we also should do is update the status of each task after deploying is done so the status becomes something like Planned instead of Pending. The script should only pick up pending tasks. It's fine that this script updates that manually. Parsing the YAML structure doesn't have to be done by the planning model.
+
+---
+
+./scripts/expand-tasks.sh: line 105: wait: -n: invalid option
+wait: usage: wait [n]
+[START] 1-the-label-reciperecipes-under-the-book-title-isnt-translated-on-the-bookman-adwords-screen.md                           
+[START] 2-the-recipe-preview-enable-moving-the-photo-sideways-with-one-finger-even-when-the-photo-isnt-zoomed-.md
+[START] 3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md
+sed: 2: "/^\n*$/{$d;N;ba}
+": unexpected EOF (pending }'s)
+sed: 2: "/^\n*$/{$d;N;ba}
+": unexpected EOF (pending }'s)
+sed: 2: "/^\n*$/{$d;N;ba}
+": unexpected EOF (pending }'s)
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Let's write the error log to some file - the script is failing today and we don't see why
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you update all the places that depend on what you changed?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Let's analyze the error logs now
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

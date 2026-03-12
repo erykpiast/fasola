@@ -1,0 +1,32 @@
+You are analyzing a task for a React Native/Expo recipe photo management app called Fasola.
+
+Read the following task file and then explore the codebase to understand the issue deeply.
+
+<task-file path=".simple-task-master/tasks/6-in-the-source-selector-the-add-book-option-when-it-is-clicked-should-trigger-the-adding-book-form-so.md">
+---
+schema: 1
+id: 6
+title: In the source selector the add book option, when it is clicked, should trigger the adding book form so the user doesn't need to confirm the selection.
+status: pending
+created: "2026-03-09T22:54:11.371Z"
+updated: "2026-03-09T22:54:11.371Z"
+tags:
+  - ux
+dependencies: []
+---
+
+It's unclear for the user what they should do when selecting that option. Maybe clicking on any option should confirm the choice?
+
+</task-file>
+
+Your job:
+1. Read the task file above to understand the issue
+2. Explore the codebase to find all relevant files, components, and patterns related to this task
+3. Think about what the issue means specifically in this codebase
+4. Plan a concrete solution
+
+Output ONLY the implementation plan as markdown. No frontmatter, no preamble, no "Here is the plan" intro. Start directly with the content. Structure it with:
+- **Relevant Files**: List the key files involved with brief notes
+- **Analysis**: What's happening now and what needs to change
+- **Steps**: Numbered implementation steps with specific code-level details
+- **Testing**: How to verify the fix works

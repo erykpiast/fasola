@@ -3,7 +3,7 @@
   "checkpoint_id": "aae82c66fff4",
   "strategy": "manual-commit",
   "branch": "chore/add_simple_task_master",
-  "checkpoints_count": 3,
+  "checkpoints_count": 4,
   "files_touched": [
     ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md",
     "features/recipe-preview/components/MetadataOverlay.tsx",
@@ -23,13 +23,20 @@
       "context": "/aa/e82c66fff4/1/context.md",
       "content_hash": "/aa/e82c66fff4/1/content_hash.txt",
       "prompt": "/aa/e82c66fff4/1/prompt.txt"
+    },
+    {
+      "metadata": "/aa/e82c66fff4/2/metadata.json",
+      "transcript": "/aa/e82c66fff4/2/full.jsonl",
+      "context": "/aa/e82c66fff4/2/context.md",
+      "content_hash": "/aa/e82c66fff4/2/content_hash.txt",
+      "prompt": "/aa/e82c66fff4/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 215,
-    "cache_creation_tokens": 35083,
-    "cache_read_tokens": 536993,
-    "output_tokens": 5224,
-    "api_call_count": 19
+    "input_tokens": 755,
+    "cache_creation_tokens": 64813,
+    "cache_read_tokens": 634663,
+    "output_tokens": 7122,
+    "api_call_count": 24
   }
 }

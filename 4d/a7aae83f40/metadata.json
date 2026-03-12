@@ -3,12 +3,19 @@
   "checkpoint_id": "4da7aae83f40",
   "strategy": "manual-commit",
   "branch": "chore/add_simple_task_master",
-  "checkpoints_count": 3,
+  "checkpoints_count": 10,
   "files_touched": [
     ".gitignore",
     ".simple-task-master/tasks/1-the-label-reciperecipes-under-the-book-title-isnt-translated-on-the-bookman-adwords-screen.md",
+    ".simple-task-master/tasks/2-the-recipe-preview-enable-moving-the-photo-sideways-with-one-finger-even-when-the-photo-isnt-zoomed-.md",
     ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md",
-    ".simple-task-master/tasks/4-page-dewarping-doesnt-really-work-for-any-photos.md"
+    ".simple-task-master/tasks/4-page-dewarping-doesnt-really-work-for-any-photos.md",
+    ".simple-task-master/tasks/5-improve-title-selection-from-the-recognized-text.md",
+    ".simple-task-master/tasks/6-in-the-source-selector-the-add-book-option-when-it-is-clicked-should-trigger-the-adding-book-form-so.md",
+    ".simple-task-master/tasks/7-when-adding-a-receipt-by-taking-a-photo-the-picture-that-loads-is-a-thumbnail-a-full-picture.md",
+    ".simple-task-master/tasks/8-moving-the-photo-on-preview-or-on-the-edit-screen-should-allow-showing-the-very-top-of-the-photo.md",
+    "platform/i18n/config.ts",
+    "scripts/expand-tasks.py"
   ],
   "sessions": [
     {
@@ -31,13 +38,20 @@
       "context": "/4d/a7aae83f40/2/context.md",
       "content_hash": "/4d/a7aae83f40/2/content_hash.txt",
       "prompt": "/4d/a7aae83f40/2/prompt.txt"
+    },
+    {
+      "metadata": "/4d/a7aae83f40/3/metadata.json",
+      "transcript": "/4d/a7aae83f40/3/full.jsonl",
+      "context": "/4d/a7aae83f40/3/context.md",
+      "content_hash": "/4d/a7aae83f40/3/content_hash.txt",
+      "prompt": "/4d/a7aae83f40/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 720,
-    "cache_creation_tokens": 122936,
-    "cache_read_tokens": 717132,
-    "output_tokens": 15249,
-    "api_call_count": 22
+    "input_tokens": 775,
+    "cache_creation_tokens": 161116,
+    "cache_read_tokens": 2161474,
+    "output_tokens": 24094,
+    "api_call_count": 63
   }
 }

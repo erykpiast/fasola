@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "4da7aae83f40",
+  "session_id": "08a362f0-f166-4972-80df-c84f01019c70",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T21:50:07.816619Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    ".simple-task-master/tasks/1-the-label-reciperecipes-under-the-book-title-isnt-translated-on-the-bookman-adwords-screen.md",
+    ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md",
+    ".simple-task-master/tasks/4-page-dewarping-doesnt-really-work-for-any-photos.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "766c208c1b64",
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 35314,
+    "cache_read_tokens": 238369,
+    "output_tokens": 3609,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T21:50:07.735637Z",
+    "agent_lines": 290,
+    "human_added": 552,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 843,
+    "agent_percentage": 34.400948991696325
+  }
+}

@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { type JSX, useCallback, useEffect, useState } from "react";
 
 import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SwipeDirection } from "react-native-zoom-toolkit";
 import Animated, {
   useAnimatedStyle,
@@ -50,7 +51,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         router.back();
       }
     },
-    [router]
+    [router],
   );
 
   const handleDelete = useCallback((): void => {
@@ -72,6 +73,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
 
   const [isZoomed, setIsZoomed] = useState(false);
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { coverSize, onImageLoad } = useImageCoverSize(width, height);
 
   const overlayStyle = useAnimatedStyle(() => ({
@@ -93,12 +95,14 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         onZoomChange={setIsZoomed}
         onSwipe={handleSwipe}
       >
-        <ProgressiveImage
-          uri={recipe.photoUri}
-          thumbnailUri={recipe.thumbnailUri}
-          style={coverSize ?? { width, height }}
-          onLoad={onImageLoad}
-        />
+        <View style={{ paddingTop: insets.top }}>
+          <ProgressiveImage
+            uri={recipe.photoUri}
+            thumbnailUri={recipe.thumbnailUri}
+            style={coverSize ?? { width, height }}
+            onLoad={onImageLoad}
+          />
+        </View>
       </ZoomableImage>
       <Animated.View
         style={[styles.overlay, overlayStyle]}

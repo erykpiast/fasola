@@ -5,6 +5,7 @@ import type { RecipeMetadata } from "@/lib/types/recipe";
 import { LinearGradient } from "expo-linear-gradient";
 import { type JSX } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function MetadataOverlay({
   metadata,
@@ -17,6 +18,7 @@ export function MetadataOverlay({
   onPress?: () => void;
   disabled?: boolean;
 }): JSX.Element | null {
+  const insets = useSafeAreaInsets();
   const { displayName: sourceDisplayName } = useSourceName(metadata.source);
   const tagLabels = useLocalizedTagLabels(metadata.tagIds);
   const hasTitle = !!metadata.title;
@@ -31,7 +33,7 @@ export function MetadataOverlay({
     <LinearGradient
       colors={["rgba(0,0,0, 1)", "rgba(0,0,0,0.6)", "transparent"]}
       locations={[0, 0.6, 1]}
-      style={styles.gradient}
+      style={[styles.gradient, { paddingTop: insets.top + 24 }]}
       pointerEvents="box-none"
     >
       <Pressable
@@ -81,7 +83,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingTop: 80,
     paddingBottom: 80,
   },
   pressable: {

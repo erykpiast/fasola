@@ -13,6 +13,7 @@ export function ZoomableImage({
   onSwipe,
   minScale = 1,
   maxScale = 5,
+  panMode = "friction",
 }: {
   children: JSX.Element;
   style?: ViewStyle;
@@ -20,6 +21,7 @@ export function ZoomableImage({
   onSwipe?: (direction: SwipeDirection) => void;
   minScale?: number;
   maxScale?: number;
+  panMode?: "clamp" | "free" | "friction";
 }): JSX.Element {
   const ref = useRef<ResumableZoomRefType>(null);
 
@@ -47,6 +49,7 @@ export function ZoomableImage({
       minScale={minScale}
       maxScale={maxScale}
       panEnabled={true}
+      panMode={panMode}
       style={{ ...style, overflow: "hidden" }}
       onPinchStart={handlePinchStart}
       onPanStart={handlePanStart}

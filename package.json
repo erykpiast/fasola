@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "15.1.1",
+    "@formatjs/intl-pluralrules": "6.2.3",
     "@huggingface/transformers": "3.8.1",
     "@nozbe/microfuzz": "1.0.0",
     "@react-native-async-storage/async-storage": "2.2.0",

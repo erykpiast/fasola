@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "aae82c66fff4",
+  "session_id": "28baafc8-9724-4149-9828-e8c7bd5b46d9",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-12T22:11:10.989819Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md",
+    "features/recipe-preview/components/MetadataOverlay.tsx",
+    "features/recipe-preview/components/RecipeViewScreen.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "7c61cfb734be",
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 24709,
+    "cache_read_tokens": 452022,
+    "output_tokens": 3429,
+    "api_call_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-12T22:11:10.959284Z",
+    "agent_lines": 41,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 41,
+    "agent_percentage": 100
+  }
+}

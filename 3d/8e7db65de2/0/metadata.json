@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "3d8e7db65de2",
+  "session_id": "f1b85bcd-7364-4329-b7a8-a44c23e69a2d",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-13T22:06:19.642231Z",
+  "branch": "chore/add_simple_task_master",
+  "checkpoints_count": 8,
+  "files_touched": [
+    ".simple-task-master/tasks/5-improve-title-selection-from-the-recognized-text.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "2964de65fd84",
+  "token_usage": {
+    "input_tokens": 92,
+    "cache_creation_tokens": 127788,
+    "cache_read_tokens": 5594729,
+    "output_tokens": 65151,
+    "api_call_count": 64
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-13T22:06:19.494742Z",
+    "agent_lines": 59,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 59,
+    "agent_percentage": 100
+  }
+}

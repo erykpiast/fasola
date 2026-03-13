@@ -2,7 +2,7 @@
 schema: 1
 id: 3
 title: Click on the receipt name and the tags should open the edit screen.
-status: planned
+status: done
 created: "2026-03-09T22:51:07.174Z"
 updated: "2026-03-09T22:51:07.174Z"
 tags:

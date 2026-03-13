@@ -29,12 +29,14 @@ export function AddRecipeForm({
   const { t } = useTranslation();
   const sourceSelectorRef = useRef<SourceSelectorRef>(null);
   const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleEditingChange = useCallback((editing: boolean) => {
     setIsEditingSource(editing);
   }, []);
 
   const handleClose = useCallback(() => {
+    if (isConfirming) return;
     if (isEditingSource) {
       const cancelled = sourceSelectorRef.current?.cancelEdit();
       if (cancelled) return;
@@ -61,18 +63,21 @@ export function AddRecipeForm({
         },
       ]
     );
-  }, [isEditingSource, t]);
+  }, [isConfirming, isEditingSource, t]);
 
   const handleConfirm = useCallback(async () => {
+    if (isConfirming) return;
     if (isEditingSource) {
       const confirmed = await sourceSelectorRef.current?.confirmNewSource();
       if (!confirmed) return;
+      setIsConfirming(true);
       onConfirm(confirmed);
       return;
     }
     if (!source) return;
+    setIsConfirming(true);
     onConfirm();
-  }, [isEditingSource, source, onConfirm]);
+  }, [isConfirming, isEditingSource, source, onConfirm]);
 
   return (
     <KeyboardAvoidingView
@@ -87,19 +92,26 @@ export function AddRecipeForm({
         />
         <View style={styles.processingBottomBar}>
           <LiquidGlassButton
+            disabled={isConfirming}
             onPress={handleClose}
             accessibilityLabel={t("accessibility.close")}
             systemImage="xmark"
           />
-          <SourceSelector
-            ref={sourceSelectorRef}
-            value={source}
-            onValueChange={onSourceChange}
-            onEditingChange={handleEditingChange}
-          />
+          <View
+            pointerEvents={isConfirming ? "none" : "auto"}
+            style={[styles.sourceSelectorWrapper, isConfirming && styles.disabled]}
+          >
+            <SourceSelector
+              ref={sourceSelectorRef}
+              value={source}
+              onValueChange={onSourceChange}
+              onEditingChange={handleEditingChange}
+            />
+          </View>
           <ConfirmButton
             onConfirm={handleConfirm}
             disabled={!isEditingSource && !source}
+            loading={isConfirming}
           />
         </View>
       </View>
@@ -139,5 +151,12 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingBottom: 27,
+  },
+  sourceSelectorWrapper: {
+    flexGrow: 1,
+    flexShrink: 0,
+  },
+  disabled: {
+    opacity: 0.4,
   },
 });

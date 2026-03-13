@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { type JSX } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import type { LiquidGlassButtonProps } from "./LiquidGlassButton.types";
 
 const SF_SYMBOL_TO_IONICON: Record<string, string> = {
@@ -21,6 +21,8 @@ export function LiquidGlassButton({
   accessibilityRole = "button",
   fillProgress = 0,
   fillColor,
+  loading = false,
+  disabled = false,
 }: LiquidGlassButtonProps): JSX.Element {
   const iconName = SF_SYMBOL_TO_IONICON[systemImage] ?? systemImage;
   const resolvedFillColor = fillColor ?? tintColor ?? "#007AFF";
@@ -28,9 +30,10 @@ export function LiquidGlassButton({
   return (
     <Pressable
       onPress={onPress}
+      disabled={loading || disabled}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}
-      style={[styles.container, { width: size, height: size }, style]}
+      style={[styles.container, { width: size, height: size, opacity: disabled ? 0.4 : 1 }, style]}
     >
       {fillProgress > 0 && (
         <View
@@ -43,11 +46,15 @@ export function LiquidGlassButton({
           ]}
         />
       )}
-      <Ionicons
-        name={iconName as keyof typeof Ionicons.glyphMap}
-        size={size * 0.5}
-        color={tintColor ?? "#007AFF"}
-      />
+      {loading ? (
+        <ActivityIndicator size="small" color={tintColor ?? "#007AFF"} />
+      ) : (
+        <Ionicons
+          name={iconName as keyof typeof Ionicons.glyphMap}
+          size={size * 0.5}
+          color={tintColor ?? "#007AFF"}
+        />
+      )}
     </Pressable>
   );
 }

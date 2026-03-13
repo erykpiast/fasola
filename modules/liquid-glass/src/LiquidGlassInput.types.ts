@@ -28,4 +28,5 @@ export type LiquidGlassInputProps = {
   blurOnSubmit?: boolean;
   multiline?: boolean;
   maxLength?: number;
+  disabled?: boolean;
 };

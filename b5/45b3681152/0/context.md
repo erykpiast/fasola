@@ -50,3 +50,24 @@ Looks right. The missing dependency was @formatjs/intl-pluralrules. You should b
 
 yes
 
+### Prompt 6
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** T...
+

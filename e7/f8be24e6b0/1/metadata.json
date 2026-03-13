@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "e7f8be24e6b0",
+  "session_id": "7ac49480-4312-46c6-a90b-8dffaf15fb8d",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-13T23:43:33.980671Z",
+  "branch": "fix/image_panning",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "features/recipe-preview/components/MetadataOverlay.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "8e3eed6e9ad4",
+  "checkpoint_transcript_start": 104,
+  "transcript_lines_at_start": 104,
+  "token_usage": {
+    "input_tokens": 8,
+    "cache_creation_tokens": 6022,
+    "cache_read_tokens": 372994,
+    "output_tokens": 2678,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-13T23:43:33.938128Z",
+    "agent_lines": 4,
+    "human_added": 31,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 35,
+    "agent_percentage": 11.428571428571429
+  }
+}

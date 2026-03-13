@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "b545b3681152",
+  "strategy": "manual-commit",
+  "branch": "chore/task_management_setup",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".simple-task-master/tasks/3-click-on-the-receipt-name-and-the-tags-should-open-the-edit-screen.md",
+    ".simple-task-master/tasks/7-when-adding-a-receipt-by-taking-a-photo-the-picture-that-loads-is-a-thumbnail-a-full-picture.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b5/45b3681152/0/metadata.json",
+      "transcript": "/b5/45b3681152/0/full.jsonl",
+      "context": "/b5/45b3681152/0/context.md",
+      "content_hash": "/b5/45b3681152/0/content_hash.txt",
+      "prompt": "/b5/45b3681152/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 20,
+    "cache_creation_tokens": 34466,
+    "cache_read_tokens": 455514,
+    "output_tokens": 8467,
+    "api_call_count": 14
+  }
+}

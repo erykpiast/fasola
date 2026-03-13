@@ -198,7 +198,7 @@ function Content(): JSX.Element {
           visible={popoverVisible}
           options={importOptions}
           buttonSize={56}
-          anchor={recipes.length === 0 ? "center" : undefined}
+          anchor={recipes.length === 0 ? "center" : "bottomTrailing"}
           onSelect={handleImportOptionSelect}
           onDismiss={dismissPopover}
         />

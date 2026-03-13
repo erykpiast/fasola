@@ -12,9 +12,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AddRecipeScreen(): JSX.Element {
   const theme = useTheme();
   const { uri } = useLocalSearchParams<{ uri: PhotoUri }>();
-  const [source, setSource] = useState<SourceId>("");
+  const { touchSource, getLastUsed } = useSources();
+  const [source, setSource] = useState<SourceId>(() => {
+    const lastUsed = getLastUsed();
+    return lastUsed ? lastUsed.id : "";
+  });
   const { savePending } = useRecipes();
-  const { touchSource } = useSources();
   const { addToQueue } = useBackgroundProcessing();
 
   const handleConfirm = useCallback(
@@ -25,9 +28,9 @@ export default function AddRecipeScreen(): JSX.Element {
       }
 
       const recipe = await savePending(uri, effectiveSource);
-      await touchSource(effectiveSource);
       addToQueue(recipe.id);
-      router.replace("/");
+      router.back();
+      touchSource(effectiveSource);
     },
     [uri, source, savePending, touchSource, addToQueue]
   );

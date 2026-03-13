@@ -42,6 +42,7 @@ public final class LiquidGlassInputView: ExpoView {
   private var focusedOverride: Bool? = nil
   private var returnKeyType: String = "done"
   private var blurOnSubmitFlag: Bool = true
+  private var isDisabled: Bool = false
 
   let onChangeText = EventDispatcher()
   let onClear = EventDispatcher()
@@ -62,6 +63,7 @@ public final class LiquidGlassInputView: ExpoView {
       autoFocus: autoFocusFlag,
       returnKeyType: returnKeyType,
       blurOnSubmit: blurOnSubmitFlag,
+      isDisabled: false,
       onChangeText: { _ in },
       onClear: { },
       onTagPress: { _ in },
@@ -156,6 +158,11 @@ public final class LiquidGlassInputView: ExpoView {
     updateContent()
   }
 
+  func setIsDisabled(_ disabled: Bool) {
+    isDisabled = disabled
+    updateContent()
+  }
+
   func setBlurOnSubmit(_ blurOnSubmit: Bool) {
     blurOnSubmitFlag = blurOnSubmit
     updateContent()
@@ -174,6 +181,7 @@ public final class LiquidGlassInputView: ExpoView {
       focusedOverride: focusedOverride,
       returnKeyType: returnKeyType,
       blurOnSubmit: blurOnSubmitFlag,
+      isDisabled: isDisabled,
       onChangeText: { [weak self] text in
         self?.onChangeText(["text": text])
       },
@@ -234,6 +242,7 @@ private struct LiquidGlassInputContent: View {
   var focusedOverride: Bool?
   var returnKeyType: String
   var blurOnSubmit: Bool
+  var isDisabled: Bool
   var onChangeText: (String) -> Void
   var onClear: () -> Void
   var onTagPress: (String) -> Void
@@ -311,6 +320,8 @@ private struct LiquidGlassInputContent: View {
         text = newValue
       }
     }
+    .disabled(isDisabled)
+    .opacity(isDisabled ? 0.4 : 1.0)
   }
 
   @ViewBuilder

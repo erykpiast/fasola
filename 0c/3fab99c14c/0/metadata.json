@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "0c3fab99c14c",
+  "session_id": "6fb8c79a-824c-4169-bc28-7a7a2e5a39ad",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-13T23:25:36.924886Z",
+  "branch": "fix/ux_polish_import_flow",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "app/index.tsx",
+    "app/recipe/add.tsx",
+    "features/recipe-form/components/AddRecipeForm.tsx",
+    "features/recipe-import/components/ConfirmButton.tsx",
+    "modules/liquid-glass/ios/LiquidGlassButtonView.swift",
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/src/LiquidGlassButton.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassButton.tsx",
+    "modules/liquid-glass/src/LiquidGlassButton.types.ts",
+    "modules/liquid-glass/src/LiquidGlassInput.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.types.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "0d956cffe210",
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 55705,
+    "cache_read_tokens": 422298,
+    "output_tokens": 3822,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-13T23:25:36.86161Z",
+    "agent_lines": 129,
+    "human_added": 80,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 209,
+    "agent_percentage": 61.72248803827751
+  }
+}

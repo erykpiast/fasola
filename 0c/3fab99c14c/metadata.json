@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "0c3fab99c14c",
+  "strategy": "manual-commit",
+  "branch": "fix/ux_polish_import_flow",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "app/index.tsx",
+    "app/recipe/add.tsx",
+    "features/recipe-form/components/AddRecipeForm.tsx",
+    "features/recipe-import/components/ConfirmButton.tsx",
+    "modules/liquid-glass/ios/LiquidGlassButtonView.swift",
+    "modules/liquid-glass/ios/LiquidGlassInputView.swift",
+    "modules/liquid-glass/ios/LiquidGlassModule.swift",
+    "modules/liquid-glass/src/LiquidGlassButton.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassButton.tsx",
+    "modules/liquid-glass/src/LiquidGlassButton.types.ts",
+    "modules/liquid-glass/src/LiquidGlassInput.ios.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.tsx",
+    "modules/liquid-glass/src/LiquidGlassInput.types.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0c/3fab99c14c/0/metadata.json",
+      "transcript": "/0c/3fab99c14c/0/full.jsonl",
+      "context": "/0c/3fab99c14c/0/context.md",
+      "content_hash": "/0c/3fab99c14c/0/content_hash.txt",
+      "prompt": "/0c/3fab99c14c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 55705,
+    "cache_read_tokens": 422298,
+    "output_tokens": 3822,
+    "api_call_count": 14
+  }
+}

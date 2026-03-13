@@ -1,3 +1,4 @@
+import { SkeletonBlock } from "@/lib/components/atoms/SkeletonBlock";
 import { useSourceName } from "@/features/sources/hooks/useSourceName";
 import { useLocalizedTagLabels } from "@/features/tags/hooks/useLocalizedTagLabels";
 import type { RecipeMetadata } from "@/lib/types/recipe";
@@ -7,8 +8,10 @@ import { StyleSheet, Text, View } from "react-native";
 
 export function MetadataOverlay({
   metadata,
+  isProcessing,
 }: {
   metadata: RecipeMetadata;
+  isProcessing?: boolean;
 }): JSX.Element | null {
   const { displayName: sourceDisplayName } = useSourceName(metadata.source);
   const tagLabels = useLocalizedTagLabels(metadata.tagIds);
@@ -16,7 +19,7 @@ export function MetadataOverlay({
   const hasSource = !!sourceDisplayName;
   const hasTags = tagLabels.length > 0;
 
-  if (!hasTitle && !hasSource && !hasTags) {
+  if (!hasTitle && !hasSource && !hasTags && !isProcessing) {
     return null;
   }
 
@@ -26,23 +29,32 @@ export function MetadataOverlay({
       locations={[0, 0.6, 1]}
       style={styles.gradient}
     >
-      {hasTitle && (
+      {hasTitle ? (
         <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
           {metadata.title}
         </Text>
-      )}
-      {hasSource && (
+      ) : isProcessing ? (
+        <SkeletonBlock width="65%" height={28} style={{ marginBottom: 4 }} />
+      ) : null}
+      {hasSource ? (
         <Text style={styles.source} numberOfLines={1} ellipsizeMode="tail">
           {sourceDisplayName}
         </Text>
-      )}
-      {hasTags && (
+      ) : null}
+      {hasTags ? (
         <View style={styles.tagsContainer}>
           <Text style={styles.tags} numberOfLines={1} ellipsizeMode="tail">
             {tagLabels.join("  ")}
           </Text>
         </View>
-      )}
+      ) : isProcessing ? (
+        <View style={styles.tagsContainer}>
+          <SkeletonBlock width={80} height={14} />
+          <SkeletonBlock width={60} height={14} style={{ marginLeft: 8 }} />
+          <SkeletonBlock width={70} height={14} style={{ marginLeft: 8 }} />
+          <SkeletonBlock width={90} height={14} style={{ marginLeft: 8 }} />
+        </View>
+      ) : null}
     </LinearGradient>
   );
 }

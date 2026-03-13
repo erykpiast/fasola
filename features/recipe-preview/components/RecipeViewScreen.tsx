@@ -93,7 +93,10 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
         pointerEvents={isZoomed ? "none" : "box-none"}
       >
         <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-          <MetadataOverlay metadata={recipe.metadata} />
+          <MetadataOverlay
+            metadata={recipe.metadata}
+            isProcessing={isProcessing}
+          />
           {isProcessing && <ProcessingIndicator />}
           <DebugVisualization />
         </View>

@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "5179ff72d7ce",
+  "session_id": "55a9817d-cdfe-4e95-89b3-9acaa31b4a43",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T14:38:13.229729Z",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "tools/title-loop/docs/1-404c596/improvement-plan.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "07473a75a588",
+  "checkpoint_transcript_start": 38,
+  "transcript_lines_at_start": 38,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T14:38:13.20982Z",
+    "agent_lines": 261,
+    "human_added": 148,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 409,
+    "agent_percentage": 63.81418092909536
+  }
+}

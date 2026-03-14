@@ -29,7 +29,8 @@ MAX_ITERATIONS = 20
 ACCURACY_THRESHOLD = 0.95  # "close to 100%"
 SYNTHETIC_COUNT = 100
 CLAUDE_TIMEOUT = 900  # 15 minutes per Claude invocation
-CLAUDE_STALL_TIMEOUT = 60  # kill if no output for 60 seconds
+CLAUDE_STALL_TIMEOUT = 60  # kill if no output for N seconds (default)
+CLAUDE_STALL_TIMEOUT_BY_MODEL = {"opus": 180, "sonnet": 60, "haiku": 60}
 CLAUDE_MAX_RETRIES = 3  # max retries per stage on stall/failure
 EXTRACT_TIMEOUT = 120  # 2 minutes per file extraction
 
@@ -397,6 +398,7 @@ def _run_claude_once(
     thread.start()
 
     # Live display loop
+    stall_timeout = CLAUDE_STALL_TIMEOUT_BY_MODEL.get(model, CLAUDE_STALL_TIMEOUT)
     stalled = False
     try:
         while not reader_done.is_set():
@@ -407,10 +409,10 @@ def _run_claude_once(
                 proc.kill()
                 break
 
-            # Stall detection: no output for CLAUDE_STALL_TIMEOUT seconds
+            # Stall detection: no output for stall_timeout seconds
             with lock:
                 silence = time.time() - last_activity
-            if silence > CLAUDE_STALL_TIMEOUT:
+            if silence > stall_timeout:
                 stalled = True
                 proc.kill()
                 break
@@ -464,7 +466,7 @@ def _run_claude_once(
 
     # Status line and error handling
     if stalled:
-        msg = f"Claude ({model}) stalled (no output for {CLAUDE_STALL_TIMEOUT}s) at {elapsed:.0f}s"
+        msg = f"Claude ({model}) stalled (no output for {stall_timeout}s) at {elapsed:.0f}s"
         print(f"\n  {msg}")
         raise ClaudeStallError(msg)
     elif proc.returncode == 0:
@@ -623,13 +625,25 @@ def phase_plan(iter_dir: Path, iteration: int) -> None:
     log_dir = iter_dir / "logs"
     prompt = f"""Read the feedback at {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md
 and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+Also read previous iteration docs in tools/title-loop/docs/ to understand what has been tried.
 
-Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
-Be creative with the approach but respect these constraints:
-- Algorithm must run on a mobile device
+Your job: propose changes that fix every failure. Think creatively and ambitiously.
+
+Hard constraints:
+- Must run on a mobile device (React Native / Expo)
 - Total title extraction must complete under 10 seconds
-- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
-- Changes should be in lib/text-classifier/title-extractor.ts and related files
+- Changes land in lib/text-classifier/ and related files
+
+Everything else is open for debate. The current approach (MiniLM embeddings + heuristic scoring)
+is one option, but you are free to propose alternatives if they'd work better:
+- Different embedding model or similarity strategy
+- Replacing embeddings entirely with a rule-based or hybrid approach
+- Restructuring the pipeline (e.g., two-pass, re-ranking, candidate merging)
+- Changing how candidates are generated, filtered, or deduplicated
+- Any other approach that solves the failures within the hard constraints
+
+Don't be incremental for the sake of it — if the feedback reveals a fundamental design flaw,
+propose a fundamental fix. But also don't change things that already work well.
 
 Before writing any files, briefly outline your key proposed changes (2-3 sentences per failure)
 so you can think through the approach first.

@@ -160,9 +160,11 @@ function wordCount(text: string): number {
  * Build candidate strings from lines: single lines plus multi-line joins (2-3 consecutive).
  * Skips initial burst of short garbled lines. Scans all remaining lines. Caps at 25.
  */
+export type CandidateOrigin = "single" | "2-line" | "3-line";
+
 function buildCandidates(
   lines: Array<string>
-): Array<{ text: string; position: number }> {
+): Array<{ text: string; position: number; origin: CandidateOrigin }> {
   const nonEmptyLines: Array<{ text: string; index: number }> = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -173,7 +175,7 @@ function buildCandidates(
   }
 
   const burstEnd = findBurstEnd(nonEmptyLines);
-  const candidates: Array<{ text: string; position: number }> = [];
+  const candidates: Array<{ text: string; position: number; origin: CandidateOrigin }> = [];
   const seen = new Set<string>();
 
   for (let i = burstEnd; i < nonEmptyLines.length; i++) {
@@ -184,7 +186,7 @@ function buildCandidates(
       const norm = line.text.toLowerCase();
       if (!seen.has(norm)) {
         seen.add(norm);
-        candidates.push({ text: line.text, position: line.index });
+        candidates.push({ text: line.text, position: line.index, origin: "single" });
       }
     }
 
@@ -195,7 +197,7 @@ function buildCandidates(
         const norm = joined2.toLowerCase();
         if (!seen.has(norm)) {
           seen.add(norm);
-          candidates.push({ text: joined2, position: line.index });
+          candidates.push({ text: joined2, position: line.index, origin: "2-line" });
         }
       }
     }
@@ -207,7 +209,7 @@ function buildCandidates(
         const norm = joined3.toLowerCase();
         if (!seen.has(norm)) {
           seen.add(norm);
-          candidates.push({ text: joined3, position: line.index });
+          candidates.push({ text: joined3, position: line.index, origin: "3-line" });
         }
       }
     }
@@ -267,7 +269,7 @@ export async function extractTitleWithEmbeddings(
     cachedNoiseRefEmbedding = await embed(NOISE_REFERENCE);
   }
 
-  // Find the first ALL_CAPS candidate with ≥2 words where every significant word has ≥4 alpha letters.
+  // Find ALL_CAPS candidates with ≥2 words where every significant word has ≥4 alpha letters.
   // Insignificant tokens (≤1 alpha letter: "/", "&", "+", ":", "D)", etc.) are filtered before
   // the check so that multi-line joins with continuation punctuation still qualify.
   const isStructuralHeading = (c: { text: string }): boolean => {
@@ -275,15 +277,52 @@ export async function extractTitleWithEmbeddings(
     const sigWords = c.text.trim().split(/\s+/).filter((w) => w.replace(/[^A-Z]/g, "").length > 1);
     return sigWords.length >= 2 && sigWords.every((w) => w.replace(/[^A-Z]/g, "").length >= 4);
   };
-  const baseHeading = candidates.find(isStructuralHeading);
-  // When the initial heading has a continuation on the next line introduced by a punctuation token
-  // (/, &, +, :, or parenthesis), prefer the longer 2-line join as the complete heading.
-  // E.g. "SAFFRON WHEAT BUNS WITH QUARK" + "/ COTTAGE CHEESE (VARIATION D)" → prefers the join.
+
+  // Pass 1: compute rawScore for all candidates (embedding quality signal)
+  const rawScored: Array<{ text: string; position: number; origin: CandidateOrigin; rawScore: number; embedding: Array<number> }> = [];
+  for (const candidate of candidates) {
+    const embedding = await embed(candidate.text);
+    const titleSim = cosineSimilarity(embedding, cachedTitleRefEmbedding);
+    const headerSim = cosineSimilarity(embedding, cachedHeaderRefEmbedding);
+    const noiseSim = cosineSimilarity(embedding, cachedNoiseRefEmbedding);
+    const rawScore = titleSim - Math.max(headerSim, noiseSim);
+    rawScored.push({ text: candidate.text, position: candidate.position, origin: candidate.origin, rawScore, embedding });
+  }
+
+  // Select baseHeading by embedding quality (rawScore), not position.
+  // This prevents OCR-garbled fragments from claiming the structural heading slot.
+  const structuralCandidates = rawScored.filter((s) => isStructuralHeading(s));
+
+  // Penalize structural headings with truncated OCR words:
+  // if "FRON" appears and another heading has "SAFFRON", "FRON" is likely garbled.
+  for (const sc of structuralCandidates) {
+    const sigWords = sc.text.split(/\s+/).filter((w) => w.replace(/[^A-Z]/g, "").length >= 4);
+    for (const other of structuralCandidates) {
+      if (other === sc) continue;
+      const otherSigWords = other.text.split(/\s+/).filter((w) => w.replace(/[^A-Z]/g, "").length >= 4);
+      const hasTruncation = sigWords.some((w) =>
+        otherSigWords.some((ow) => ow !== w && ow.length > w.length && ow.endsWith(w))
+      );
+      if (hasTruncation) {
+        sc.rawScore -= 0.15;
+        break;
+      }
+    }
+  }
+
+  const bestStructural = structuralCandidates.length > 0
+    ? structuralCandidates.reduce((a, b) => a.rawScore > b.rawScore ? a : b)
+    : null;
+  const baseHeading = bestStructural ?? undefined;
+
+  // When the best structural heading has a continuation on the next line introduced by a
+  // punctuation token (/, &, +, :, or parenthesis), prefer the longer 2-line join as the
+  // complete heading. E.g. "SAFFRON WHEAT BUNS WITH QUARK" + "/ COTTAGE CHEESE (VARIATION D)".
   // Guard: the remainder after the prefix must start with a continuation character to avoid
   // merging two separate consecutive recipe titles (FINNISH MILK FLATBREADS stays separate
   // from FINNISH POTATO FLATBREADS because "FINNISH" does not start with a continuation token).
   const firstStructuralHeading = baseHeading && (
-    candidates.find((c) => {
+    rawScored.find((c) => {
       if (!isStructuralHeading(c)) return false;
       const hLower = baseHeading.text.toLowerCase();
       const cLower = c.text.toLowerCase();
@@ -291,45 +330,39 @@ export async function extractTitleWithEmbeddings(
     }) ?? baseHeading
   );
 
-  const scored: Array<{ text: string; position: number; score: number; rawScore: number; baseScore: number }> = [];
-
-  for (const candidate of candidates) {
-    const embedding = await embed(candidate.text);
-    const titleSim = cosineSimilarity(embedding, cachedTitleRefEmbedding);
-    const headerSim = cosineSimilarity(embedding, cachedHeaderRefEmbedding);
-    const noiseSim = cosineSimilarity(embedding, cachedNoiseRefEmbedding);
-    const rawScore = titleSim - Math.max(headerSim, noiseSim);
-
+  // Pass 2: apply bonuses
+  const scored: Array<{ text: string; position: number; origin: CandidateOrigin; score: number; rawScore: number; baseScore: number; thresholdScore: number }> = rawScored.map((rs) => {
     // Position factor: multiplicative tiebreaker — amplifies existing signal, doesn't replace it
-    const relativePosition = candidate.position / lines.length;
+    const relativePosition = rs.position / lines.length;
     const positionFactor = relativePosition < 0.5
       ? 1.0 + 0.12 * (1 - relativePosition * 2)
       : 1.0;
 
     // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings
-    const allCapsBonus = isAllCaps(candidate.text) && candidate.text.replace(/[^a-zA-Z]/g, "").length >= 4
+    const allCapsBonus = isAllCaps(rs.text) && rs.text.replace(/[^a-zA-Z]/g, "").length >= 4
       ? 0.08
       : 0;
 
-    // Structural heading bonus: first clean ALL_CAPS heading is almost always the recipe title
-    const structuralBonus =
-      firstStructuralHeading && candidate === firstStructuralHeading ? 0.10 : 0;
+    // Structural heading bonus: best ALL_CAPS heading (or its continuation join) is almost always the recipe title
+    const structuralBonus = firstStructuralHeading && rs.text === firstStructuralHeading.text ? 0.10 : 0;
 
-    // baseScore excludes position factor — used for threshold so position boost on the first
-    // title doesn't inflate the bar and exclude valid later titles on multi-recipe pages
-    const baseScore = rawScore + allCapsBonus + structuralBonus;
-    const score = rawScore * positionFactor + allCapsBonus + structuralBonus;
-    scored.push({ text: candidate.text, position: candidate.position, score, rawScore, baseScore });
-  }
+    // thresholdScore excludes structural bonus so the bonus doesn't inflate the threshold
+    // and prevent equally-valid structural headings from passing on multi-recipe pages.
+    const thresholdScore = rs.rawScore + allCapsBonus;
+    // baseScore excludes position factor — used for diagnostics and ranking
+    const baseScore = rs.rawScore + allCapsBonus + structuralBonus;
+    const score = rs.rawScore * positionFactor + allCapsBonus + structuralBonus;
+    return { text: rs.text, position: rs.position, origin: rs.origin, score, rawScore: rs.rawScore, baseScore, thresholdScore };
+  });
 
   if (scored.length === 0) {
     return undefined;
   }
 
-  // Use position-free baseScore for threshold so position boost on the first title doesn't
-  // inflate the bar and exclude valid later titles on multi-recipe pages.
-  const bestBaseScore = Math.max(...scored.map((s) => s.baseScore));
-  const threshold = Math.max(0.08, bestBaseScore * 0.7);
+  // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate
+  // the threshold and block equally-valid headings on multi-recipe pages.
+  const bestThresholdScore = Math.max(...scored.map((s) => s.thresholdScore));
+  const threshold = Math.max(0.08, bestThresholdScore * 0.7);
 
   // Filter candidates above threshold
   let selected = scored.filter((s) => s.score >= threshold);
@@ -348,6 +381,27 @@ export async function extractTitleWithEmbeddings(
       const sLower = s.text.toLowerCase();
       // Remove s if it is a space-delimited prefix of the structural heading
       return !fshLower.startsWith(sLower + " ");
+    });
+  }
+
+  // Protect continuation joins: when a multi-line join survived the threshold and its second
+  // part starts with a continuation character, remove the single-line prefix so the dedup
+  // "shorter wins" rule doesn't destroy the complete join.
+  // E.g. "Baked Eggs with Feta, Harissa Tomato Sauce" is removed when
+  // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" also survived (continuation: &).
+  // Safety: only fires for joins whose continuation starts with /&+:( — digit continuations
+  // like "Pierogi Ruskie 200g mąki" are NOT protected, so dedup correctly keeps the shorter form.
+  const survivingJoins = selected.filter((s) => s.origin === "2-line" || s.origin === "3-line");
+  if (survivingJoins.length > 0) {
+    selected = selected.filter((s) => {
+      if (s.origin !== "single") return true;
+      const sLower = s.text.toLowerCase();
+      return !survivingJoins.some((j) => {
+        const jLower = j.text.toLowerCase();
+        if (!jLower.startsWith(sLower + " ")) return false;
+        const remainder = jLower.slice(sLower.length + 1);
+        return /^[/&+:(]/.test(remainder);
+      });
     });
   }
 

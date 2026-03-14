@@ -4,10 +4,8 @@ import {
   ActivityIndicator,
   Animated,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from "react-native";
-import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
 const ROTATING_KEYS = [
   "m1",
@@ -24,29 +22,6 @@ const ROTATING_KEYS = [
 
 const INTERVAL_MS = 3000;
 const FADE_DURATION_MS = 500;
-
-const ELLIPSE_WIDTH_RATIO = 0.8;
-const ELLIPSE_HEIGHT = 300;
-
-function VignetteOverlay(): JSX.Element {
-  const { width, height } = useWindowDimensions();
-  const cx = width / 2;
-  const cy = height / 2;
-  const rx = (width * ELLIPSE_WIDTH_RATIO) / 2;
-  const ry = ELLIPSE_HEIGHT / 2;
-
-  return (
-    <Svg style={StyleSheet.absoluteFill}>
-      <Defs>
-        <RadialGradient id="vignette" cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0" stopColor="black" stopOpacity="0.7" />
-          <Stop offset="1" stopColor="black" stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="url(#vignette)" />
-    </Svg>
-  );
-}
 
 function shuffle<T>(array: Array<T>): Array<T> {
   const result = [...array];
@@ -90,7 +65,6 @@ export function ProcessingIndicator(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <VignetteOverlay />
       <ActivityIndicator size="large" color="white" />
       <Animated.Text style={[styles.text, { opacity }]}>{message}</Animated.Text>
     </View>
@@ -99,11 +73,8 @@ export function ProcessingIndicator(): JSX.Element {
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     gap: 16,

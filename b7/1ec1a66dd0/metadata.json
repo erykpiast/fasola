@@ -103,6 +103,13 @@
       "context": "",
       "content_hash": "/b7/1ec1a66dd0/13/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/b7/1ec1a66dd0/14/metadata.json",
+      "transcript": "/b7/1ec1a66dd0/14/full.jsonl",
+      "context": "/b7/1ec1a66dd0/14/context.md",
+      "content_hash": "/b7/1ec1a66dd0/14/content_hash.txt",
+      "prompt": "/b7/1ec1a66dd0/14/prompt.txt"
     }
   ],
   "token_usage": {

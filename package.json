@@ -9,6 +9,7 @@
     "ios": "./scripts/ios-dev-build.sh",
     "web": "expo start --web",
     "lint": "expo lint",
+    "test": "npx vitest run --globals",
     "test-classifier": "npx tsx lib/text-classifier/cli.ts"
   },
   "dependencies": {

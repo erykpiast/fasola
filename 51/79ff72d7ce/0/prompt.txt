@@ -1,0 +1,28 @@
+Analyze the title extraction failures below. Read each failing input file
+and the current implementation at lib/text-classifier/title-extractor.ts.
+
+Write your analysis to tools/title-loop/docs/1-404c596/feedback.md explaining:
+1. What patterns the algorithm fails on
+2. Why each specific failure occurred
+3. Common themes across failures
+
+Do NOT modify any code files. Only write the feedback.md file.
+
+Failures:
+- File: /Users/eryk.napierala/Projects/fasola/tools/title-loop/input/ARAYES SHRAK.real.txt
+  Expected: 'ARAYES SHRAK'
+  Got: 'pepper + MAKES 8 ARAYES'
+- File: /Users/eryk.napierala/Projects/fasola/tools/title-loop/input/Baked Eggs with Feta, Harissa Tomato Sauce & Coriander.real.txt
+  Expected: 'Baked Eggs with Feta, Harissa Tomato Sauce & Coriander'
+  Got: 'Baked Eggs with Feta, Harissa Tomato Sauce + SERVES *'
+- File: /Users/eryk.napierala/Projects/fasola/tools/title-loop/input/FINNISH MILK FLATBREADS + FINNISH POTATO FLATBREADS.real.txt
+  Expected: 'FINNISH MILK FLATBREADS + FINNISH POTATO FLATBREADS'
+  Got: 'DAT FLATBREADS + butter + ng sheet with baking'
+- File: /Users/eryk.napierala/Projects/fasola/tools/title-loop/input/OVERNIGHT STRAIGHT PIZZA DOUGH.real.txt
+  Expected: 'OVERNIGHT STRAIGHT PIZZA DOUGH'
+  Got: 'or anytime over the next 2 days. + Fine sea salt'
+- File: /Users/eryk.napierala/Projects/fasola/tools/title-loop/input/SAFFRON WHEAT BUNS WITH QUARK : COTTAGE CHEESE (VARIATION D).real.txt
+  Expected: 'SAFFRON WHEAT BUNS WITH QUARK : COTTAGE CHEESE (VARIATION D)'
+  Got: 'ssekart + The + favoured by'
+
+Results file: tools/title-loop/docs/1-404c596/results.txt

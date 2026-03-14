@@ -1,0 +1,201 @@
+Read the feedback at @./tools/title-loop/docs/4-4ecc581/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+
+Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
+Be creative with the approach but respect these constraints:
+- Algorithm must run on a mobile device
+- Total title extraction must complete under 10 seconds
+- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
+- Changes should be in lib/text-classifier/title-extractor.ts and related files
+
+Write a detailed improvement plan to {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.
+
+---
+
+[Request interrupted by user]
+
+---
+
+Read the feedback at @./tools/title-loop/docs/4-4ecc581/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+
+Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
+Be creative with the approach but respect these constraints:
+- Algorithm must run on a mobile device
+- Total title extraction must complete under 10 seconds
+- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
+- Changes should be in lib/text-classifier/title-extractor.ts and related files
+
+Write a detailed improvement plan to @./tools/title-loop/docs/4-4ecc581/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.
+
+---
+
+Okay - see that you've been able to run the plan in the interactive mode, but when launched via script, the model times out (or the script says so). Why?
+
+---
+
+option 3
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Commit the improvement you made initially in the same way the script would do it and create the commited file
+
+---
+
+Planning improvements with Claude (Opus)...
+  Running Claude (opus)...                                                                                                                                                          149s
+
+  Now I have a thorough understanding of all three failures and the current code. Let me outline my key proposed changes:
+  **Failure 1 (Baked Eggs):** The 2-line join is the correct answer but dedup's "shorter wins" rule kills it because line 1 alone is a valid substring. Fix: before dedup, detect join
+  **Failure 2 (Finnish Flatbreads):** The structural bonus (+0.10) is exclusive to `firstStructuralHeading`, inflating `bestBaseScore` and raising the threshold above what the second
+  **Failure 3 (Saffron Wheat Buns):** A garbled OCR fragment (`FRON WHEAT BUNS`) hijacks `firstStructuralHeading`, gets the +0.10 bonus, and the real title is killed by both the infl
+  Let me write the detailed improvement plan.
+
+  Claude (opus) stalled (no output for 60s) at 149s
+  Retrying (1/3)...
+  Running Claude (opus)...                                                                                                                                                          159s
+
+  **Failure 3 (Saffron Buns — garbled OCR artifact wins):** Two compounding issues. (a) `baseHeading` is selected by position (first match), letting OCR garbage claim the slot. Fix: 
+  Now I have the full picture. Let me outline the key changes before writing the plan:
+  **Failure 1 (Baked Eggs — empty result):** The dedup "shorter wins" rule kills the correct 2-line join because the first line alone is a valid substring. Fix: generalize the existi
+  **Failure 2 (Finnish Flatbreads — only first title):** The threshold is computed from `bestBaseScore` which includes `structuralBonus` (+0.10), inflating the bar. The cleanest fix:
+  **Failure 3 (Saffron Buns — garbled OCR artifact wins):** Two compounding issues. (a) `baseHeading` is selected by position (first match), letting OCR garbage claim the slot. Fix: 
+
+  Claude (opus) stalled (no output for 60s) at 159s
+  Retrying (2/3)...
+  Running Claude (opus)...                                                                                                                                                           66s
+
+  Let me start by reading the feedback and the current implementation.Let me also check previous iteration docs and the test fixtures to
+  Let me start by reading the feedback and the current implementation.Let me also check previous iteration docs and the test fixtures to understand the patterns
+  Let me start by reading the feedback and the current implementation.Let me also check previous iteration docs and the test fixtures to understand the patterns better
+  Let me start by reading the feedback and the current implementation.Let me also check previous iteration docs and the test fixtures to understand the patterns better.
+  Let me also check previous iteration docs and the test fixtures to understand the patterns better.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Should your solution be applied elsewhere for consistency?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Make the improvement plan prompt more creative. The current constraint of using MiniLLM may be too limiting? I'd like to consider all solutions that may work, even course-change solutions if needed.
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Does the implementation actually do what it claims, or just return hardcoded values?
+
+**Code Quality:**
+• Is every piece of code still serving a clear purpose?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Also, seems that 60s for Sonnet is too low, let's increase to 120 Executing improvements with Claude (Sonnet)...
+  Running Claude (sonnet)...                                                                                                                                                        266s
+
+  **Change 1** — `origin` field on candidates (`"single" | "2-line" | "3-line"`) propagated through `rawScored` and `scored`. Enables Change 2.
+  **Change 2** — Continuation join protection inserted before the dedup block. When a multi-line join survives threshold and its continuation starts with `/&+:(`, the single-line pre
+  **Change 3** — New `thresholdScore = rawScore + allCapsBonus` field (no structural bonus). Threshold now uses `bestThresholdScore × 0.7` instead of `bestBaseScore × 0.7`. The struc
+  **Change 4** — 2-pass scoring: Pass 1 computes `rawScore` for all candidates, then `baseHeading` is selected by highest `rawScore` among structural candidates (not first positional
+  **Change 5** — OCR truncation penalty: if a structural candidate has a significant word that is a suffix of another structural candidate's word (e.g., `FRON` ← `SAFFRON`), its `raw
+
+  Claude (sonnet) stalled (no output for 60s) at 266s
+  Retrying (1/3)...
+  Running Claude (sonnet)...
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you stub out functionality with placeholder messages instead of real logic?
+
+**Code Quality:**
+• Are you using different patterns than the existing code uses?
+
+**Integration & Refactoring:**
+• Did you leave any temporary workarounds or hacks?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

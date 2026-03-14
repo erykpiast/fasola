@@ -51,6 +51,13 @@
       "context": "/db/d2dffdc186/4/context.md",
       "content_hash": "/db/d2dffdc186/4/content_hash.txt",
       "prompt": "/db/d2dffdc186/4/prompt.txt"
+    },
+    {
+      "metadata": "/db/d2dffdc186/5/metadata.json",
+      "transcript": "/db/d2dffdc186/5/full.jsonl",
+      "context": "/db/d2dffdc186/5/context.md",
+      "content_hash": "/db/d2dffdc186/5/content_hash.txt",
+      "prompt": "/db/d2dffdc186/5/prompt.txt"
     }
   ],
   "token_usage": {

@@ -1,0 +1,110 @@
+Implement the following plan:
+
+# Improve title extraction: burst detection + full scan + multi-title
+
+## Context
+
+The current `extractTitleWithEmbeddings` scans only the first ~10 non-empty lines. Real cookbook OCR pages often start with a burst of short garbled lines from a partially visible adjacent page, pushing real titles out of the window. Pages can also contain multiple recipes.
+
+## Approach
+
+1. Detect and skip the initial burst of short/garbled lines
+2. Scan all remaining lines for candidates (with smart cap to limit embed calls)
+3. Return multiple titles joined with " + "
+
+## File: `lib/text-classifier/title-extractor.ts`
+
+### Step 1: Add burst detection
+
+A "burst" = consecutive short lines (< 20 chars) at the start of the text. Skip them to find where real content begins.
+
+```
+function findBurstEnd(lines: Array<{text: string}>): number
+```
+
+Walk lines from the start. While a line is short (< 20 chars), keep going. Stop when we hit a line >= 20 chars. Return that index as the starting point for candidate generation.
+
+Edge case: if the very first line is long, burst length is 0 (no burst).
+
+### Step 2: Replace `buildCandidates` — full scan after burst
+
+After skipping the burst, scan ALL remaining non-empty lines. For each line that passes hard filters:
+- Single-line candidate
+- 2-line join (if joined length ≤ 80)
+- 3-line join (if joined length ≤ 80)
+
+Track `position` (original line index) for sorting at the end.
+
+### Step 3: Prioritize candidates, cap at ~25
+
+If more candidates than 25, prioritize:
+1. ALL_CAPS lines (strong cookbook title signal)
+2. Short lines (≤ 5 words)
+
+Deduplicate by normalized text, slice to 25.
+
+### Step 4: Add noise reference embedding
+
+Add `NOISE_REFERENCE = "page number, table of contents, book footer, garbled text"` as a third cached reference.
+
+Score: `titleSim - max(headerSim, noiseSim)` — no position bonus (unreliable with full scan).
+
+### Step 5: Multi-title selection
+
+Instead of returning single best:
+1. Filter to `score >= max(0.05, bestScore * 0.6)` — absolute floor + relative threshold
+2. Deduplicate: if one title is substring of another, keep the longer one
+3. Cap at 3 titles
+4. Sort by document position (reading order)
+5. Join with `" + "`
+
+### Step 6: Update `_resetEmbeddingCacheForTests`
+
+Reset `cachedNoiseRefEmbedding` too.
+
+## File: `lib/text-classifier/__tests__/title-extractor.test.ts`
+
+- Update mock to handle `NOISE_REFERENCE` → `[0, 0, 1]` (orthogonal)
+- Add test: burst of short lines at start is skipped, title found after
+- Add test: two titles deep in text → returns "Title A + Title B"
+- Add test: single-recipe page still returns one title (regression)
+- Existing tests should still pass (burst detection is a no-op when first line is long)
+
+## Unchanged
+
+- `extractTitle` heuristic fallback — untouched
+- Function signature: `(text: string, embed: EmbedFn) => Promise<string | undefined>`
+- All integration files (native, web, worker, cli) — no changes needed
+
+## Verification
+
+1. `npx tsc --noEmit`
+2. `npm test`
+3. Manual: paste the real OCR text from the cookbook page into a file, run `npx tsx lib/text-classifier/cli.ts test.txt --method=both`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/eryk.napierala/.claude/projects/-Users-eryk-napierala-Projects-fasola/ac2a7ca7-073b-45aa-b594-c0c9f455bc65.jsonl
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Should you consolidate similar functions that now exist?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.

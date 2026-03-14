@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "7dd6d1e0d086",
+  "session_id": "098ea6d3-f295-4048-b3e3-5fac0115c989",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T10:35:46.372042Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".simple-task-master/tasks/12-core-extracttitlewithembeddings-in-title-extractorts.md",
+    ".simple-task-master/tasks/13-native-integrate-semantic-title-in-indexnativets.md",
+    ".simple-task-master/tasks/14-worker-integrate-semantic-title-in-workerts.md",
+    ".simple-task-master/tasks/15-web-integrate-semantic-title-in-indexwebts.md",
+    ".simple-task-master/tasks/16-cli-use-semantic-title-in-clits.md",
+    ".simple-task-master/tasks/17-tests-title-extractortestts.md",
+    "features/background-processing/context/BackgroundProcessingContext.tsx",
+    "lib/text-classifier/__tests__/title-extractor.test.ts",
+    "lib/text-classifier/index.native.ts",
+    "lib/text-classifier/index.web.ts",
+    "lib/text-classifier/title-extractor.ts",
+    "lib/text-classifier/worker.ts",
+    "lib/utils/__tests__/recipeValidation.test.ts",
+    "package.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "3c5c5a310259",
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 55370,
+    "cache_read_tokens": 574900,
+    "output_tokens": 16480,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T10:35:46.334671Z",
+    "agent_lines": 548,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 548,
+    "agent_percentage": 100
+  }
+}

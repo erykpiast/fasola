@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "7dd6d1e0d086",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".simple-task-master/tasks/12-core-extracttitlewithembeddings-in-title-extractorts.md",
+    ".simple-task-master/tasks/13-native-integrate-semantic-title-in-indexnativets.md",
+    ".simple-task-master/tasks/14-worker-integrate-semantic-title-in-workerts.md",
+    ".simple-task-master/tasks/15-web-integrate-semantic-title-in-indexwebts.md",
+    ".simple-task-master/tasks/16-cli-use-semantic-title-in-clits.md",
+    ".simple-task-master/tasks/17-tests-title-extractortestts.md",
+    "features/background-processing/context/BackgroundProcessingContext.tsx",
+    "lib/text-classifier/__tests__/title-extractor.test.ts",
+    "lib/text-classifier/index.native.ts",
+    "lib/text-classifier/index.web.ts",
+    "lib/text-classifier/title-extractor.ts",
+    "lib/text-classifier/worker.ts",
+    "lib/utils/__tests__/recipeValidation.test.ts",
+    "package.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7d/d6d1e0d086/0/metadata.json",
+      "transcript": "/7d/d6d1e0d086/0/full.jsonl",
+      "context": "/7d/d6d1e0d086/0/context.md",
+      "content_hash": "/7d/d6d1e0d086/0/content_hash.txt",
+      "prompt": "/7d/d6d1e0d086/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 55370,
+    "cache_read_tokens": 574900,
+    "output_tokens": 16480,
+    "api_call_count": 14
+  }
+}

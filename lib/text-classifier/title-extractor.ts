@@ -304,7 +304,7 @@ export async function extractTitleWithEmbeddings(
         otherSigWords.some((ow) => ow !== w && ow.length > w.length && ow.endsWith(w))
       );
       if (hasTruncation) {
-        sc.rawScore -= 0.15;
+        sc.rawScore = -1.0;  // Hard disqualification — truncated OCR artifact
         break;
       }
     }
@@ -396,12 +396,25 @@ export async function extractTitleWithEmbeddings(
     selected = selected.filter((s) => {
       if (s.origin !== "single") return true;
       const sLower = s.text.toLowerCase();
-      return !survivingJoins.some((j) => {
+      // Remove PREFIX singles: "Baked Eggs with Feta, Harissa Tomato Sauce" when
+      // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" survived
+      const isPrefixOfJoin = survivingJoins.some((j) => {
         const jLower = j.text.toLowerCase();
         if (!jLower.startsWith(sLower + " ")) return false;
         const remainder = jLower.slice(sLower.length + 1);
         return /^[/&+:(]/.test(remainder);
       });
+      if (isPrefixOfJoin) return false;
+      // Remove SUFFIX singles: "& Coriander" when
+      // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" survived
+      const isSuffixOfJoin = survivingJoins.some((j) => {
+        const jLower = j.text.toLowerCase();
+        if (!jLower.endsWith(" " + sLower)) return false;
+        // Only remove if the suffix starts with a continuation character
+        return /^[/&+:(]/.test(sLower);
+      });
+      if (isSuffixOfJoin) return false;
+      return true;
     });
   }
 

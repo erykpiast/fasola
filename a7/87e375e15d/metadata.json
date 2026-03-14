@@ -5,6 +5,15 @@
   "branch": "feat/title_extraction_loop",
   "checkpoints_count": 1,
   "files_touched": [
+    "lib/text-classifier/__tests__/title-extractor.test.ts",
+    "lib/text-classifier/title-extractor.ts",
+    "tools/title-loop/docs/2-072e8fb/committed",
+    "tools/title-loop/docs/3-a5a0dca/feedback.md",
+    "tools/title-loop/docs/3-a5a0dca/improvement-plan.md",
+    "tools/title-loop/docs/3-a5a0dca/logs/analyze.log",
+    "tools/title-loop/docs/3-a5a0dca/logs/execute.log",
+    "tools/title-loop/docs/3-a5a0dca/logs/plan.log",
+    "tools/title-loop/docs/3-a5a0dca/results.txt",
     "tools/title-loop/docs/iter.txt"
   ],
   "sessions": [
@@ -14,6 +23,13 @@
       "context": "/a7/87e375e15d/0/context.md",
       "content_hash": "/a7/87e375e15d/0/content_hash.txt",
       "prompt": "/a7/87e375e15d/0/prompt.txt"
+    },
+    {
+      "metadata": "/a7/87e375e15d/1/metadata.json",
+      "transcript": "/a7/87e375e15d/1/full.jsonl",
+      "context": "/a7/87e375e15d/1/context.md",
+      "content_hash": "/a7/87e375e15d/1/content_hash.txt",
+      "prompt": "/a7/87e375e15d/1/prompt.txt"
     }
   ],
   "token_usage": {

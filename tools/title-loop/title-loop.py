@@ -30,7 +30,7 @@ ACCURACY_THRESHOLD = 0.95  # "close to 100%"
 SYNTHETIC_COUNT = 100
 CLAUDE_TIMEOUT = 900  # 15 minutes per Claude invocation
 CLAUDE_STALL_TIMEOUT = 60  # kill if no output for N seconds (default)
-CLAUDE_STALL_TIMEOUT_BY_MODEL = {"opus": 180, "sonnet": 60, "haiku": 60}
+CLAUDE_STALL_TIMEOUT_BY_MODEL = {"opus": 180, "sonnet": 120, "haiku": 60}
 CLAUDE_MAX_RETRIES = 3  # max retries per stage on stall/failure
 EXTRACT_TIMEOUT = 120  # 2 minutes per file extraction
 
@@ -42,7 +42,6 @@ EXTRACT_SCRIPT = LOOP_DIR / "extract-title.ts"
 ITER_LOG = DOCS_DIR / "iter.txt"
 
 # Number of recent output lines to show in live display
-DISPLAY_LINES = 5
 
 
 # --- Resume state detection ---
@@ -115,6 +114,11 @@ def normalize(s: str) -> str:
     return " ".join(s.lower().split())
 
 
+def normalize_separators(s: str) -> str:
+    """Normalize filesystem-substituted characters (: replaces / in filenames)."""
+    return s.replace(":", "/")
+
+
 def titles_match(extracted: str, expected: str) -> bool:
     """
     Binary match: does the extracted title contain all expected title parts?
@@ -122,8 +126,8 @@ def titles_match(extracted: str, expected: str) -> bool:
     """
     if not extracted:
         return False
-    extracted_norm = normalize(extracted)
-    expected_parts = [normalize(p) for p in expected.split("+")]
+    extracted_norm = normalize_separators(normalize(extracted))
+    expected_parts = [normalize_separators(normalize(p)) for p in expected.split("+")]
     return all(part in extracted_norm for part in expected_parts)
 
 
@@ -257,29 +261,18 @@ def _clear_display(height: int) -> None:
         sys.stdout.write(f"\033[{height}A")
 
 
-def _render_display(model: str, elapsed: float, recent_lines: list[str]) -> int:
-    """Render the live display block. Returns number of lines written."""
+def _render_display(model: str, elapsed: float,
+                    input_tokens: int = 0, output_tokens: int = 0) -> int:
+    """Render the live display line. Returns number of lines written."""
     term_width = shutil.get_terminal_size().columns
 
-    # Header with timer
     header = f"  Running Claude ({model})..."
-    timer = f"{elapsed:.0f}s"
-    padding = max(1, term_width - len(header) - len(timer))
-    sys.stdout.write(f"{header}{' ' * padding}{timer}\n")
-
-    # Last N lines of output
-    show = recent_lines[-DISPLAY_LINES:]
-    lines_written = 1
-    if show:
-        sys.stdout.write("\n")
-        lines_written += 1
-        for line in show:
-            truncated = line[:term_width - 4]
-            sys.stdout.write(f"\033[2K  {truncated}\n")
-            lines_written += 1
+    stats = f"\u2191 {input_tokens:,} | \u2193 {output_tokens:,} | {elapsed:.0f}s"
+    padding = max(1, term_width - len(header) - len(stats))
+    sys.stdout.write(f"{header}{' ' * padding}{stats}\n")
 
     sys.stdout.flush()
-    return lines_written
+    return 1
 
 
 class ClaudeStallError(RuntimeError):
@@ -318,12 +311,12 @@ def _run_claude_once(
 
     start = time.time()
     raw_lines: list[str] = []  # raw NDJSON lines for logging
-    recent_lines: list[str] = []  # display lines (last N assistant text lines)
     result_text = ""  # final result extracted from stream
-    text_buffer: list[str] = []  # accumulates text deltas for current message
+    input_tokens = 0  # running count from message_start usage
+    output_tokens = 0  # running count from message_delta usage
+    last_token_change = time.time()  # tracks last time token counts changed
     display_height = 0
     reader_done = threading.Event()
-    last_activity = time.time()  # tracks last time we received any output
     lock = threading.Lock()
 
     proc = subprocess.Popen(
@@ -344,11 +337,9 @@ def _run_claude_once(
 
     # Read and parse stream-json stdout in background
     def reader():
-        nonlocal result_text, last_activity
+        nonlocal result_text, input_tokens, output_tokens, last_token_change
         try:
             for line in proc.stdout:
-                with lock:
-                    last_activity = time.time()
                 raw_lines.append(line)
                 stripped = line.strip()
                 if not stripped:
@@ -360,33 +351,27 @@ def _run_claude_once(
 
                 etype = event.get("type", "")
 
-                # Real-time text deltas
                 if etype == "stream_event":
                     nested = event.get("event", {})
-                    if nested.get("type") == "content_block_delta":
-                        delta = nested.get("delta", {})
-                        if delta.get("type") == "text_delta":
-                            chunk = delta.get("text", "")
-                            text_buffer.append(chunk)
-                            # Split accumulated text into display lines
-                            full = "".join(text_buffer)
-                            lines = full.split("\n")
-                            for dl in lines:
-                                dl = dl.strip()
-                                if dl:
-                                    recent_lines.append(dl)
-
-                # Complete assistant message (tool use boundaries)
-                elif etype == "assistant":
-                    msg = event.get("message", {})
-                    content = msg.get("content", [])
-                    for block in content:
-                        if block.get("type") == "text":
-                            text = block.get("text", "")
-                            for dl in text.split("\n"):
-                                dl = dl.strip()
-                                if dl:
-                                    recent_lines.append(dl)
+                    ntype = nested.get("type", "")
+                    # Track input tokens from message_start
+                    if ntype == "message_start":
+                        usage = nested.get("message", {}).get("usage", {})
+                        added = (usage.get("input_tokens", 0)
+                                 + usage.get("cache_creation_input_tokens", 0)
+                                 + usage.get("cache_read_input_tokens", 0))
+                        if added:
+                            with lock:
+                                input_tokens += added
+                                last_token_change = time.time()
+                    # Track output tokens from message_delta
+                    elif ntype == "message_delta":
+                        usage = nested.get("usage", {})
+                        tok = usage.get("output_tokens", 0)
+                        if tok:
+                            with lock:
+                                output_tokens += tok
+                                last_token_change = time.time()
 
                 # Final result
                 elif etype == "result":
@@ -409,23 +394,23 @@ def _run_claude_once(
                 proc.kill()
                 break
 
-            # Stall detection: no output for stall_timeout seconds
+            # Stall detection: no token traffic for stall_timeout seconds
             with lock:
-                silence = time.time() - last_activity
+                silence = time.time() - last_token_change
             if silence > stall_timeout:
                 stalled = True
                 proc.kill()
                 break
 
             _clear_display(display_height)
-            display_height = _render_display(model, elapsed, recent_lines)
+            display_height = _render_display(model, elapsed, input_tokens, output_tokens)
 
             reader_done.wait(timeout=1.0)
 
         # Final display update
         elapsed = time.time() - start
         _clear_display(display_height)
-        display_height = _render_display(model, elapsed, recent_lines)
+        display_height = _render_display(model, elapsed, input_tokens, output_tokens)
 
     except KeyboardInterrupt:
         proc.kill()

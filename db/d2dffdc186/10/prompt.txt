@@ -1,0 +1,33 @@
+Read the feedback at tools/title-loop/docs/6-8a6c985/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+Also read previous iteration docs in tools/title-loop/docs/ to understand what has been tried.
+
+Your job: propose changes that fix every failure. Think creatively and ambitiously.
+
+Hard constraints:
+- Must run on a mobile device (React Native / Expo)
+- Total title extraction must complete under 10 seconds
+- Changes land in lib/text-classifier/ and related files
+
+Everything else is open for debate. The current approach (MiniLM embeddings + heuristic scoring)
+is one option, but you are free to propose alternatives if they'd work better:
+- Different embedding model or similarity strategy
+- Replacing embeddings entirely with a rule-based or hybrid approach
+- Restructuring the pipeline (e.g., two-pass, re-ranking, candidate merging)
+- Changing how candidates are generated, filtered, or deduplicated
+- Any other approach that solves the failures within the hard constraints
+
+Don't be incremental for the sake of it — if the feedback reveals a fundamental design flaw,
+propose a fundamental fix. But also don't change things that already work well.
+
+Before writing any files, briefly outline your key proposed changes (2-3 sentences per failure)
+so you can think through the approach first.
+
+Then write a detailed improvement plan to tools/title-loop/docs/6-8a6c985/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.

@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "11b19dd464c8",
+  "session_id": "55a9817d-cdfe-4e95-89b3-9acaa31b4a43",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T14:36:43.265887Z",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tools/title-loop/title-loop.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "07473a75a588",
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 22925,
+    "cache_read_tokens": 224429,
+    "output_tokens": 6772,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T14:36:43.240817Z",
+    "agent_lines": 0,
+    "human_added": 3,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3,
+    "agent_percentage": 0
+  }
+}

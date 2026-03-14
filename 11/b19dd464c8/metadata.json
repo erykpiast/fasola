@@ -3,7 +3,7 @@
   "checkpoint_id": "11b19dd464c8",
   "strategy": "manual-commit",
   "branch": "feat/title_extraction_loop",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "tools/title-loop/title-loop.py"
   ],
@@ -14,13 +14,20 @@
       "context": "/11/b19dd464c8/0/context.md",
       "content_hash": "/11/b19dd464c8/0/content_hash.txt",
       "prompt": "/11/b19dd464c8/0/prompt.txt"
+    },
+    {
+      "metadata": "/11/b19dd464c8/1/metadata.json",
+      "transcript": "/11/b19dd464c8/1/full.jsonl",
+      "context": "/11/b19dd464c8/1/context.md",
+      "content_hash": "/11/b19dd464c8/1/content_hash.txt",
+      "prompt": "/11/b19dd464c8/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 20,
-    "cache_creation_tokens": 56694,
-    "cache_read_tokens": 695298,
-    "output_tokens": 16877,
-    "api_call_count": 16
+    "input_tokens": 30,
+    "cache_creation_tokens": 79619,
+    "cache_read_tokens": 919727,
+    "output_tokens": 23649,
+    "api_call_count": 24
   }
 }

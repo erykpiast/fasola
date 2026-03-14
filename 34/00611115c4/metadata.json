@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "3400611115c4",
+  "strategy": "manual-commit",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "tools/title-loop/docs/1-404c596/committed",
+    "tools/title-loop/title-loop.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/34/00611115c4/0/metadata.json",
+      "transcript": "/34/00611115c4/0/full.jsonl",
+      "context": "/34/00611115c4/0/context.md",
+      "content_hash": "/34/00611115c4/0/content_hash.txt",
+      "prompt": "/34/00611115c4/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}

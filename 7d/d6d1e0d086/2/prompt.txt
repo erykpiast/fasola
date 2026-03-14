@@ -1,0 +1,456 @@
+# Implement Specification
+
+Implement the specification at: @.simple-task-master/tasks/5-improve-title-selection-from-the-recognized-text.md
+
+!claudekit status stm
+
+## Pre-Execution Checks
+
+1. **Check Task Management**:
+   - If STM shows "Available but not initialized" → Run `stm init` first, then `/spec:decompose` to create tasks
+   - If STM shows "Available and initialized" → Use STM for tasks
+   - If STM shows "Not installed" → Use TodoWrite instead
+
+2. **Verify Specification**:
+   - Confirm spec file exists and is complete
+   - Check that required tools are available
+   - Stop if anything is missing or unclear
+
+## Implementation Process
+
+### 1. Analyze Specification
+
+Read the specification to understand:
+- What components need to be built
+- Dependencies between components
+- Testing requirements
+- Success criteria
+
+### 2. Load or Create Tasks
+
+**Using STM** (if available):
+```bash
+stm list --status pending -f json
+```
+
+**Using TodoWrite** (fallback):
+Create tasks for each component in the specification
+
+### 3. Implementation Workflow
+
+For each task, follow this cycle:
+
+**Available Agents:**
+- [0/1] Listing agents
+✔ Completed 1 steps in 17ms
+
+Agents:
+────────────────────────────────────────────────────────────────────────────────
+  build:
+    vite-expert                    [global]      6.2k tokens
+    webpack-expert                 [embedded]    6.0k tokens
+  linting:
+    linting-expert                 [global]      3.9k tokens
+  general:
+    code-review-expert             [global]      3.5k tokens
+    git-expert                     [global]      4.1k tokens
+    oracle                         [global]      2.2k tokens
+    refactoring-expert             [global]      3.0k tokens
+    research-expert                [global]      2.0k tokens
+    triage-expert                  [global]      3.7k tokens
+  tools:
+    code-search                    [global]      1.2k tokens
+    documentation-expert           [global]      3.6k tokens
+  database:
+    database-expert                [global]      2.9k tokens
+    postgres-expert                [global]      6.9k tokens
+    mongodb-expert                 [embedded]    6.2k tokens
+    kafka-expert                   [embedded]    4.9k tokens
+  testing:
+    playwright-expert              [global]      5.6k tokens
+    testing-expert                 [global]      4.7k tokens
+    vitest-testing-expert          [global]      3.2k tokens
+    jest-testing-expert            [embedded]    6.5k tokens
+  framework:
+    nextjs-expert                  [global]      4.6k tokens
+    react-expert                   [global]      3.2k tokens
+    react-performance-expert       [global]      7.0k tokens
+    typescript-build-expert        [global]      4.3k tokens
+    typescript-expert              [global]      3.7k tokens
+    typescript-type-expert         [global]      5.7k tokens
+    ai-sdk-expert                  [embedded]    4.9k tokens
+    loopback-expert                [embedded]    5.3k tokens
+    nestjs-expert                  [embedded]    5.3k tokens
+    nodejs-expert                  [embedded]    7.0k tokens
+  frontend:
+    accessibility-expert           [global]      4.8k tokens
+    css-styling-expert             [global]      4.6k tokens
+  devops:
+    docker-expert                  [global]      3.5k tokens
+    github-actions-expert          [global]      3.8k tokens
+    cli-expert                     [embedded]    6.2k tokens
+    devops-expert                  [embedded]    5.6k tokens
+
+#### Step 1: Implement
+
+Launch appropriate specialist agent:
+
+```
+Task tool:
+- description: "Implement [component name]"  
+- subagent_type: [choose specialist that matches the task]
+- prompt: |
+    First run: stm show [task-id]
+    This will give you the full task details and requirements.
+    
+    Then implement the component based on those requirements.
+    Follow project code style and add error handling.
+    Report back when complete.
+```
+
+#### Step 2: Write Tests
+
+Launch testing expert:
+
+```
+Task tool:
+- description: "Write tests for [component]"
+- subagent_type: testing-expert [or jest/vitest-testing-expert]
+- prompt: |
+    First run: stm show [task-id]
+    
+    Write comprehensive tests for the implemented component.
+    Cover edge cases and aim for >80% coverage.
+    Report back when complete.
+```
+
+Then run tests to verify they pass.
+
+#### Step 3: Code Review (Required)
+
+**Important:** Always run code review to verify both quality AND completeness. Task cannot be marked done without passing both.
+
+Launch code review expert:
+
+```
+Task tool:
+- description: "Review [component]"
+- subagent_type: code-review-expert
+- prompt: |
+    First run: stm show [task-id]
+    
+    Review implementation for BOTH:
+    1. COMPLETENESS - Are all requirements from the task fully implemented?
+    2. QUALITY - Code quality, security, error handling, test coverage
+    
+    Categorize any issues as: CRITICAL, IMPORTANT, or MINOR.
+    Report if implementation is COMPLETE or INCOMPLETE.
+    Report back with findings.
+```
+
+#### Step 4: Fix Issues & Complete Implementation
+
+If code review found the implementation INCOMPLETE or has CRITICAL issues:
+
+1. Launch specialist to complete/fix:
+   ```
+   Task tool:
+   - description: "Complete/fix [component]"
+   - subagent_type: [specialist matching the task]
+   - prompt: |
+       First run: stm show [task-id]
+       
+       Address these items from code review:
+       - Missing requirements: [list any incomplete items]
+       - Critical issues: [list any critical issues]
+       
+       Update tests if needed.
+       Report back when complete.
+   ```
+
+2. Re-run tests to verify fixes
+
+3. Re-review to confirm both COMPLETE and quality standards met
+
+4. Only when implementation is COMPLETE and all critical issues fixed:
+   - If using STM: `stm update [task-id] --status done`
+   - If using TodoWrite: Mark task as completed
+
+#### Step 5: Commit Changes
+
+Create atomic commit following project conventions:
+```bash
+git add [files]
+git commit -m "[follow project's commit convention]"
+```
+
+### 4. Track Progress
+
+Monitor implementation progress:
+
+**Using STM:**
+```bash
+stm list --pretty              # View all tasks
+stm list --status pending      # Pending tasks
+stm list --status in-progress  # Active tasks
+stm list --status done         # Completed tasks
+```
+
+**Using TodoWrite:**
+Track tasks in the session with status indicators.
+
+### 5. Complete Implementation
+
+Implementation is complete when:
+- All tasks are COMPLETE (all requirements implemented)
+- All tasks pass quality review (no critical issues)
+- All tests passing
+- Documentation updated
+
+## If Issues Arise
+
+If any agent encounters problems:
+1. Identify the specific issue
+2. Launch appropriate specialist to resolve
+3. Or request user assistance if blocked
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you create a mock implementation just to pass tests instead of real functionality?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.0 [39m[90m/Users/eryk.napierala/Projects/fasola[39m
+  
+   [32m✓[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m27 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 5[2mms[22m[39m
+         [32m✓[39m returns true for valid tags[32m 1[2mms[22m[39m
+         [32m✓[39m returns false for tags without # prefix[32m 0[2mms[22m[39m
+         [32m✓[39m returns false for tags with spaces[32m 0[2mms[22m[39m
+         [32m✓[39m adds # prefix if missing[32m 0[2mms[22m[39m
+         [32m✓[39m keeps # prefix if present[32m 0[2mms[22m[39m
+         [32m✓[39m trims whitespace[32m 0[2mms[22m[39m
+         [32m✓[39m returns null for tags with spaces[32m 0[2mms[22m[39m
+         [32m✓[39m returns null for empty string[32m 0[2mms[22m[39m
+         [32m✓[39m parses comma-separated tags[32m 0[2mms[22m[39m
+         [32m✓[39m parses space-separated tags[32m 0[2mms[22m[39m
+         [32m✓[39m parses mixed comma and space separated tags[32m 0[2mms[22m[39m
+         [32m✓[39m adds # prefix to tags without it[32m 0[2mms[22m[39m
+  [31m       [31m×[31m filters out tags with spaces[39m[32m 2[2mms[22m[39m
+         [32m✓[39m returns empty array for empty string[32m 0[2mms[22m[39m
+         [32m✓[39m handles multiple spaces and commas[32m 0[2mms[22m[39m
+         [32m✓[39m returns true for valid tags array[32m 0[2mms[22m[39m
+         [32m✓[39m returns false if any tag is missing # prefix[32m 0[2mms[22m[39m
+         [32m✓[39m returns false if any tag contains spaces[32m 0[2mms[22m[39m
+         [32m✓[39m returns true for empty array[32m 0[2mms[22m[39m
+         [32m✓[39m returns true for http URLs[32m 0[2mms[22m[39m
+         [32m✓[39m returns true for https URLs[32m 0[2mms[22m[39m
+         [32m✓[39m returns false for non-URL strings[32m 0[2mms[22m[39m
+         [32m✓[39m extracts hostname from http URL[32m 0[2mms[22m[39m
+         [32m✓[39m extracts hostname from https URL[32m 0[2mms[22m[39m
+         [32m✓[39m extracts hostname with subdomain[32m 1[2mms[22m[39m
+         [32m✓[39m returns null for non-URL strings[32m 0[2mms[22m[39m
+         [32m✓[39m returns null for invalid URLs[32m 0[2mms[22m[39m
+  
+  [2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m41 passed[39m[22m[90m (42)[39m
+  [2m   Start at [22m 01:46:10
+  [2m   Duration [22m 360ms[2m (transform 40ms, setup 0ms, import 53ms, tests 10ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m > [22mrecipeValidation[2m > [22mparseTags[2m > [22mfilters out tags with spaces
+  [31m[1mAssertionError[22m: expected [ '#food', '#invalid', '#tag', …(1) ] to deeply equal [ '#food', '#pasta' ][39m
+  
+  [32m- Expected[39m
+  [31m+ Received[39m
+  
+  [2m  [[22m
+  [2m    "#food",[22m
+  [31m+   "#invalid",[39m
+  [31m+   "#tag",[39m
+  [2m    "#pasta",[22m
+  [2m  ][22m
+  
+  [36m [2m❯[22m lib/utils/__tests__/recipeValidation.test.ts:[2m88:53[22m[39m
+      [90m 86|[39m
+      [90m 87|[39m     [34mit[39m([32m"filters out tags with spaces"[39m[33m,[39m () [33m=>[39m {
+      [90m 88|[39m       [34mexpect[39m([34mparseTags[39m([32m"food, invalid tag, pasta"[39m))[33m.[39m[34mtoEqual[39m([
+      [90m   |[39m                                                     [31m^[39m
+      [90m 89|[39m         [32m"#food"[39m[33m,[39m
+      [90m 90|[39m         [32m"#pasta"[39m[33m,[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+let's print the full OCRed text to console
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+There are two recipes on this page and a small part of a page next to it is visible, too. The recognized text is: ingrediens
+lablespoony
+filled
+with
+until
+chedo
+work coumer
+into balls.
+18% inch thick
+medium hea
+you cook.
+each other
+wel to prevent be:
+down complici
+cach falbread aid
+le corners inoi
+with sorrel
+BREADS
+region of Sau-
+it's more like a
+the oven. Often
+al with Egg But
+ious.
+ey groats
+Es together in
+e overnight.
+:00°/400°F/
+with baking
+buttermill
+until con-
+bined. You don't need to use a stand mixer for this
+dough. Use your hands to spread the dough out
+onto the prepared baking sheet and bake for about
+20 minutes, or until it has a nice colour.
+For image see page 171
+FINNISH MILK FLATBREADS
+Maitorieska (Finland)
+Originally this milk-and-barley based flatbread was
+most common in the Finnish region of Ostroboth-
+nia, but today can be found pretty much across the
+whole country. Eat it fresh with some butter on the
+side and a glass of milk to drink next to it.
+Preparation and cooking time: 1 hour
+Makes: 8-10 pieces
+500 ml/17 fl oz (2 cups plus 2 tablespoons) milk
+7g/0.24 oz (½ tablespoon) salt
+500g/1 lb 2 oz (3 cups) barley flour
+60 g/2¼ 0z (½ cup) plain (all-purpose) flour
+butter, to serve
+Preheat the oven to at least 250°C/480°F/Gas
+Mark 9, up to 350°C/660°F/highest gas mark if
+you can.
+Mix all of the ingredients together in a bowl. The
+dough should be quite firm.
+Divide the dough into 8-10 equal pieces. Knead
+the individual pieces by hand for a little while,
+then shape them into round flatbreads using your
+hands. They should be about 1cm/½ inch thick.
+Put the flatbreads on a baking sheet and prick
+them all over with a fork. Bake for 8-10 minutes,
+depending on how hot the oven is. Serve warm
+with butter.
+FINNISH POTATO FLATBREADS
+Perunarieska (Finland)
+This soft
+and
+quite thick Finnish potato flat-
+bread is often eaten warm with some salty butter
+spread on top. Perfect to make if you have leftover
+mashed potatoes.
+Preparation and cooking time: 30 minutes
+Makes: 10 flatbreads
+5 g/0.20 oz (1 teaspoon) salt
+1 egg
+180 g/6½ oz (1½ cups) plain
+(all-purpose) flour
+250g/9 oz (1 cup) leftover mashed potatoes
+butter, to serve
+Preheat the oven to 250°C/480°F/Gas Mark 9 and
+line a baking sheet with baking (parchment) paper.
+Add the salt, egg and flour to the mashed
+pota-
+toes in a bowl and mix until it is a smooth dough.
+Divide the dough into 1o equal pieces and flatten
+them with your hands into quite thin, round breads.
+Put the breads on the prepared baking sheet and
+bake for 8-to minutes, or until the breads are nicely
+golden. Enjoy them warm from the oven with butter.
+For image see page 171
+175 Recipes / Flatbreads. What algorithm or technique could help find these titles among other text?
+
+---
+
+Good title from messy OCR. Multiple titles can be handled as simply as joining them with plus, like "FINNISH MILK FLATBREADS + FINNISH POTATO FLATBREADS"
+
+---
+
+explain what exactly we do with embeddings
+
+---
+
+Let's try the embeddings, but do some pre-filter. We should recognize the burst of very short lines at the beginning (text from the adjacent page) and ignore them. Then, scanning first 10 lines still makes sense.  What's important - a title can span 2-3 lines, we should create embeddings from that.

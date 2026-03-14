@@ -1,0 +1,79 @@
+Read the feedback at @./tools/title-loop/docs/4-4ecc581/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+
+Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
+Be creative with the approach but respect these constraints:
+- Algorithm must run on a mobile device
+- Total title extraction must complete under 10 seconds
+- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
+- Changes should be in lib/text-classifier/title-extractor.ts and related files
+
+Write a detailed improvement plan to {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.
+
+---
+
+[Request interrupted by user]
+
+---
+
+Read the feedback at @./tools/title-loop/docs/4-4ecc581/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+
+Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
+Be creative with the approach but respect these constraints:
+- Algorithm must run on a mobile device
+- Total title extraction must complete under 10 seconds
+- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
+- Changes should be in lib/text-classifier/title-extractor.ts and related files
+
+Write a detailed improvement plan to @./tools/title-loop/docs/4-4ecc581/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.
+
+---
+
+Okay - see that you've been able to run the plan in the interactive mode, but when launched via script, the model times out (or the script says so). Why?
+
+---
+
+option 3
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you finish what you started or leave work half-done?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Should you extract the new functionality into cleaner abstractions?
+
+**Codebase Consistency:**
+• Are you following the same patterns used elsewhere in the codebase?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Commit the improvement you made initially in the same way the script would do it and create the commited file

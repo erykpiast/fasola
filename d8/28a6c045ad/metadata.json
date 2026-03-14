@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "d828a6c045ad",
+  "strategy": "manual-commit",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "lib/text-classifier/title-extractor.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d8/28a6c045ad/0/metadata.json",
+      "transcript": "/d8/28a6c045ad/0/full.jsonl",
+      "context": "/d8/28a6c045ad/0/context.md",
+      "content_hash": "/d8/28a6c045ad/0/content_hash.txt",
+      "prompt": "/d8/28a6c045ad/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 23,
+    "cache_creation_tokens": 19792,
+    "cache_read_tokens": 1716262,
+    "output_tokens": 7737,
+    "api_call_count": 16
+  }
+}

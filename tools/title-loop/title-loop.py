@@ -631,7 +631,10 @@ Be creative with the approach but respect these constraints:
 - Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
 - Changes should be in lib/text-classifier/title-extractor.ts and related files
 
-Write a detailed improvement plan to {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
+Before writing any files, briefly outline your key proposed changes (2-3 sentences per failure)
+so you can think through the approach first.
+
+Then write a detailed improvement plan to {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
 that includes:
 1. Root cause analysis for each failure pattern
 2. Specific code changes with before/after examples

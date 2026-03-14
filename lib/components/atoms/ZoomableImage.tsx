@@ -1,28 +1,31 @@
-import { type JSX, useCallback, useRef, useState } from "react";
+import { type JSX, useCallback, useRef } from "react";
 import { type ViewStyle } from "react-native";
 import {
   ResumableZoom,
   type ResumableZoomRefType,
+  type SwipeDirection,
 } from "react-native-zoom-toolkit";
 
 export function ZoomableImage({
   children,
   style,
   onZoomChange,
+  onSwipe,
   minScale = 1,
   maxScale = 5,
+  panMode = "friction",
 }: {
   children: JSX.Element;
   style?: ViewStyle;
   onZoomChange?: (isZoomed: boolean) => void;
+  onSwipe?: (direction: SwipeDirection) => void;
   minScale?: number;
   maxScale?: number;
+  panMode?: "clamp" | "free" | "friction";
 }): JSX.Element {
   const ref = useRef<ResumableZoomRefType>(null);
-  const [panEnabled, setPanEnabled] = useState(false);
 
   const handlePinchStart = useCallback((): void => {
-    setPanEnabled(true);
     onZoomChange?.(true);
   }, [onZoomChange]);
 
@@ -37,9 +40,6 @@ export function ZoomableImage({
     const state = ref.current?.getState();
     if (!state) return;
     const atRest = Math.abs(state.scale - minScale) < 0.01;
-    if (atRest) {
-      setPanEnabled(false);
-    }
     onZoomChange?.(!atRest);
   }, [onZoomChange, minScale]);
 
@@ -48,11 +48,13 @@ export function ZoomableImage({
       ref={ref}
       minScale={minScale}
       maxScale={maxScale}
-      panEnabled={panEnabled}
+      panEnabled={true}
+      panMode={panMode}
       style={{ ...style, overflow: "hidden" }}
       onPinchStart={handlePinchStart}
       onPanStart={handlePanStart}
       onGestureEnd={handleGestureEnd}
+      onSwipe={onSwipe}
     >
       {children}
     </ResumableZoom>

@@ -37,6 +37,8 @@ public final class LiquidGlassButtonView: ExpoView {
   private var imageTintColor: UIColor?
   private var fillColor: UIColor?
   private var fillProgress: CGFloat = 0
+  private var isLoading: Bool = false
+  private var isDisabled: Bool = false
 
   let onButtonPress = EventDispatcher()
 
@@ -52,6 +54,8 @@ public final class LiquidGlassButtonView: ExpoView {
       tintColor: nil,
       fillColor: nil,
       fillProgress: 0,
+      isLoading: false,
+      isDisabled: false,
       onPress: { }
     )
 
@@ -154,6 +158,16 @@ public final class LiquidGlassButtonView: ExpoView {
     updateContent()
   }
 
+  func setIsLoading(_ loading: Bool) {
+    isLoading = loading
+    updateContent()
+  }
+
+  func setIsDisabled(_ disabled: Bool) {
+    isDisabled = disabled
+    updateContent()
+  }
+
   private func updateContent() {
     let baseImageSize = buttonSize / glassPaddingRatio
     let fontSize = baseImageSize / glassPaddingRatio
@@ -166,6 +180,8 @@ public final class LiquidGlassButtonView: ExpoView {
       tintColor: imageTintColor,
       fillColor: fillColor,
       fillProgress: fillProgress,
+      isLoading: isLoading,
+      isDisabled: isDisabled,
       onPress: { [weak self] in
         self?.onButtonPress()
       }
@@ -183,6 +199,8 @@ struct LiquidGlassButtonContent: View {
   var tintColor: UIColor?
   var fillColor: UIColor?
   var fillProgress: CGFloat
+  var isLoading: Bool
+  var isDisabled: Bool
   var onPress: () -> Void
 
   private var resolvedFillColor: Color {
@@ -207,6 +225,22 @@ struct LiquidGlassButtonContent: View {
     .allowsHitTesting(false)
   }
 
+  private var iconContent: some View {
+    Group {
+      if isLoading {
+        ProgressView()
+          .progressViewStyle(.circular)
+          .tint(tintColor.map { Color($0) } ?? .primary)
+      } else {
+        Image(systemName: systemImage)
+          .font(.system(size: fontSize * imageScale))
+          .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
+      }
+    }
+    .frame(width: imageSize, height: imageSize)
+    .animation(.easeInOut(duration: 0.3), value: isLoading)
+  }
+
   var body: some View {
     GeometryReader { geometry in
       if #available(iOS 26.0, *) {
@@ -215,14 +249,13 @@ struct LiquidGlassButtonContent: View {
             if fillProgress > 0 {
               fillOverlay(diameter: imageSize)
             }
-            Image(systemName: systemImage)
-              .font(.system(size: fontSize * imageScale))
-              .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
-              .frame(width: imageSize, height: imageSize)
+            iconContent
           }
         }
         .buttonBorderShape(.circle)
         .buttonStyle(.glass)
+        .disabled(isLoading || isDisabled)
+        .opacity(isDisabled ? 0.4 : 1.0)
         .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
       } else {
         Button(action: onPress) {
@@ -230,10 +263,7 @@ struct LiquidGlassButtonContent: View {
             if fillProgress > 0 {
               fillOverlay(diameter: imageSize)
             }
-            Image(systemName: systemImage)
-              .font(.system(size: fontSize * imageScale))
-              .foregroundStyle(tintColor.map { Color($0) } ?? .primary)
-              .frame(width: imageSize, height: imageSize)
+            iconContent
           }
         }
         .background {
@@ -241,6 +271,8 @@ struct LiquidGlassButtonContent: View {
             .fill(.ultraThinMaterial)
         }
         .buttonStyle(.plain)
+        .disabled(isLoading || isDisabled)
+        .opacity(isDisabled ? 0.4 : 1.0)
         .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
       }
     }

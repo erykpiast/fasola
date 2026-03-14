@@ -21,6 +21,7 @@ export function LiquidGlassInput({
   blurOnSubmit,
   multiline,
   maxLength,
+  disabled = false,
 }: LiquidGlassInputProps): JSX.Element {
   const shouldShowTags = variant === "tags" || variant === "mixed";
   const shouldShowTextInput = variant === "text" || variant === "mixed";
@@ -30,10 +31,11 @@ export function LiquidGlassInput({
 
   return (
     <View
+      pointerEvents={disabled ? "none" : "auto"}
       style={[
         styles.container,
         shouldUseAccent && styles.containerAccented,
-        { height },
+        { height, opacity: disabled ? 0.4 : 1 },
         style,
       ]}
     >

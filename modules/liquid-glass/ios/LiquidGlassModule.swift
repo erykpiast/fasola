@@ -35,6 +35,14 @@ public final class LiquidGlassModule: Module {
         view.setFillProgress(progress)
       }
 
+      Prop("isLoading") { (view, isLoading: Bool) in
+        view.setIsLoading(isLoading)
+      }
+
+      Prop("isDisabled") { (view, isDisabled: Bool) in
+        view.setIsDisabled(isDisabled)
+      }
+
       Events("onButtonPress")
     }
     
@@ -82,6 +90,10 @@ public final class LiquidGlassModule: Module {
 
       Prop("blurOnSubmit") { (view, blurOnSubmit: Bool) in
         view.setBlurOnSubmit(blurOnSubmit)
+      }
+
+      Prop("isDisabled") { (view, isDisabled: Bool) in
+        view.setIsDisabled(isDisabled)
       }
 
       Events("onChangeText", "onClear", "onTagPress", "onInputFocus", "onInputBlur", "onInputSubmit")

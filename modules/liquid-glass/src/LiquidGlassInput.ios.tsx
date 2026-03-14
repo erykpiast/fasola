@@ -28,6 +28,7 @@ export function LiquidGlassInput({
   isFocused,
   style,
   maxLength,
+  disabled = false,
 }: LiquidGlassInputProps): JSX.Element {
   const handleChangeText = useCallback(
     (event: { nativeEvent: { text: string } }) => {
@@ -85,6 +86,7 @@ export function LiquidGlassInput({
       onInputSubmit={handleSubmitEditing}
       onInputFocus={handleFocus}
       onInputBlur={handleBlur}
+      isDisabled={disabled}
       style={[styles.container, { height }, style]}
     />
   );

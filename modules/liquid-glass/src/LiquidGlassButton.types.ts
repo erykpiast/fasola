@@ -11,4 +11,6 @@ export type LiquidGlassButtonProps = {
   accessibilityRole?: "button" | "link";
   fillProgress?: number;
   fillColor?: string;
+  loading?: boolean;
+  disabled?: boolean;
 };

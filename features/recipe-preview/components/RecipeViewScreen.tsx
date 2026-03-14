@@ -12,7 +12,10 @@ import type { RecipeId } from "@/lib/types/primitives";
 import { useTranslation } from "@/platform/i18n/useTranslation";
 import { useRouter } from "expo-router";
 import { type JSX, useCallback, useEffect, useState } from "react";
+
 import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { SwipeDirection } from "react-native-zoom-toolkit";
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -42,6 +45,15 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
     router.back();
   }, [router]);
 
+  const handleSwipe = useCallback(
+    (direction: SwipeDirection): void => {
+      if (direction === "right") {
+        router.back();
+      }
+    },
+    [router],
+  );
+
   const handleDelete = useCallback((): void => {
     Alert.alert(t("deleteRecipe.title"), t("deleteRecipe.message"), [
       {
@@ -61,6 +73,7 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
 
   const [isZoomed, setIsZoomed] = useState(false);
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { coverSize, onImageLoad } = useImageCoverSize(width, height);
 
   const overlayStyle = useAnimatedStyle(() => ({
@@ -80,20 +93,28 @@ export function RecipeViewScreen({ id }: { id: RecipeId }): JSX.Element | null {
       <ZoomableImage
         style={{ width, height }}
         onZoomChange={setIsZoomed}
+        onSwipe={handleSwipe}
       >
-        <ProgressiveImage
-          uri={recipe.photoUri}
-          thumbnailUri={recipe.thumbnailUri}
-          style={coverSize ?? { width, height }}
-          onLoad={onImageLoad}
-        />
+        <View style={{ paddingTop: insets.top }}>
+          <ProgressiveImage
+            uri={recipe.photoUri}
+            thumbnailUri={recipe.thumbnailUri}
+            style={coverSize ?? { width, height }}
+            onLoad={onImageLoad}
+          />
+        </View>
       </ZoomableImage>
       <Animated.View
         style={[styles.overlay, overlayStyle]}
         pointerEvents={isZoomed ? "none" : "box-none"}
       >
+        <MetadataOverlay
+          metadata={recipe.metadata}
+          isProcessing={isProcessing}
+          onPress={handleEdit}
+          disabled={!isReady}
+        />
         <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-          <MetadataOverlay metadata={recipe.metadata} />
           {isProcessing && <ProcessingIndicator />}
           <DebugVisualization />
         </View>

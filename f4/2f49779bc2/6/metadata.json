@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "f42f49779bc2",
+  "session_id": "6d2414da-f1a0-424c-ae76-2fb9360f64f4",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T21:04:35.153375Z",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "tools/title-loop/title-loop.py",
+    "tools/title-loop/docs/3-a5a0dca/committed",
+    "tools/title-loop/docs/4-4ecc581/feedback.md",
+    "tools/title-loop/docs/4-4ecc581/improvement-plan.md",
+    "tools/title-loop/docs/4-4ecc581/logs/analyze.log",
+    "tools/title-loop/docs/4-4ecc581/logs/plan.log",
+    "tools/title-loop/docs/4-4ecc581/results.txt",
+    "tools/title-loop/docs/iter.txt"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "563c499d73cf",
+  "checkpoint_transcript_start": 9,
+  "transcript_lines_at_start": 9,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T21:04:35.138512Z",
+    "agent_lines": 8004,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 8004,
+    "agent_percentage": 100
+  }
+}

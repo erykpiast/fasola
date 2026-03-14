@@ -1,0 +1,18 @@
+Read the feedback at tools/title-loop/docs/4-4ecc581/feedback.md
+and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
+
+Propose specific, concrete changes to improve the title extraction algorithm's accuracy.
+Be creative with the approach but respect these constraints:
+- Algorithm must run on a mobile device
+- Total title extraction must complete under 10 seconds
+- Must use MiniLM embeddings (Xenova/all-MiniLM-L6-v2)
+- Changes should be in lib/text-classifier/title-extractor.ts and related files
+
+Write a detailed improvement plan to tools/title-loop/docs/4-4ecc581/improvement-plan.md
+that includes:
+1. Root cause analysis for each failure pattern
+2. Specific code changes with before/after examples
+3. New or modified heuristics, scoring adjustments, or pipeline changes
+4. Expected impact on accuracy
+
+Do NOT modify any code files. Only write the improvement-plan.md file.

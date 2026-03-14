@@ -1,0 +1,19 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "33acde5a33ac",
+  "strategy": "manual-commit",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "lib/text-classifier/cli.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/33/acde5a33ac/0/metadata.json",
+      "transcript": "/33/acde5a33ac/0/full.jsonl",
+      "context": "",
+      "content_hash": "/33/acde5a33ac/0/content_hash.txt",
+      "prompt": ""
+    }
+  ]
+}

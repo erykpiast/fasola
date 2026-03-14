@@ -3,7 +3,7 @@
   "checkpoint_id": "a787e375e15d",
   "strategy": "manual-commit",
   "branch": "feat/title_extraction_loop",
-  "checkpoints_count": 1,
+  "checkpoints_count": 5,
   "files_touched": [
     "lib/text-classifier/__tests__/title-extractor.test.ts",
     "lib/text-classifier/title-extractor.ts",
@@ -30,13 +30,20 @@
       "context": "/a7/87e375e15d/1/context.md",
       "content_hash": "/a7/87e375e15d/1/content_hash.txt",
       "prompt": "/a7/87e375e15d/1/prompt.txt"
+    },
+    {
+      "metadata": "/a7/87e375e15d/2/metadata.json",
+      "transcript": "/a7/87e375e15d/2/full.jsonl",
+      "context": "/a7/87e375e15d/2/context.md",
+      "content_hash": "/a7/87e375e15d/2/content_hash.txt",
+      "prompt": "/a7/87e375e15d/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 18,
-    "cache_creation_tokens": 49953,
-    "cache_read_tokens": 485831,
-    "output_tokens": 25887,
-    "api_call_count": 12
+    "input_tokens": 1330,
+    "cache_creation_tokens": 684006,
+    "cache_read_tokens": 17271621,
+    "output_tokens": 118500,
+    "api_call_count": 231
   }
 }

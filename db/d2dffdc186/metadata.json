@@ -128,6 +128,13 @@
       "context": "/db/d2dffdc186/15/context.md",
       "content_hash": "/db/d2dffdc186/15/content_hash.txt",
       "prompt": "/db/d2dffdc186/15/prompt.txt"
+    },
+    {
+      "metadata": "/db/d2dffdc186/16/metadata.json",
+      "transcript": "/db/d2dffdc186/16/full.jsonl",
+      "context": "/db/d2dffdc186/16/context.md",
+      "content_hash": "/db/d2dffdc186/16/content_hash.txt",
+      "prompt": "/db/d2dffdc186/16/prompt.txt"
     }
   ],
   "token_usage": {

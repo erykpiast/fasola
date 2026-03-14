@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "5179ff72d7ce",
+  "session_id": "2dfe4e57-4c6d-4672-8c3a-2b91f8df8589",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T14:38:13.163962Z",
+  "branch": "feat/title_extraction_loop",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "lib/text-classifier/title-extractor.ts",
+    "tools/title-loop/docs/1-404c596/feedback.md",
+    "tools/title-loop/docs/1-404c596/improvement-plan.md",
+    "tools/title-loop/docs/1-404c596/results.txt",
+    "tools/title-loop/docs/iter.txt"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "c9f06665432a",
+  "checkpoint_transcript_start": 645,
+  "transcript_lines_at_start": 645,
+  "token_usage": {
+    "input_tokens": 26,
+    "cache_creation_tokens": 103960,
+    "cache_read_tokens": 1658638,
+    "output_tokens": 3207,
+    "api_call_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T14:38:12.992008Z",
+    "agent_lines": 409,
+    "human_added": 3,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 412,
+    "agent_percentage": 99.27184466019418
+  }
+}

@@ -268,20 +268,28 @@ export async function extractTitleWithEmbeddings(
   }
 
   // Find the first ALL_CAPS candidate with ≥2 words where every significant word has ≥4 alpha letters.
-  // This structural signal identifies the first clean recipe title heading in cookbook scans.
   // Insignificant tokens (≤1 alpha letter: "/", "&", "+", ":", "D)", etc.) are filtered before
   // the check so that multi-line joins with continuation punctuation still qualify.
-  const firstStructuralHeading = candidates.find((c) => {
+  const isStructuralHeading = (c: { text: string }): boolean => {
     if (!isAllCaps(c.text) || wordCount(c.text) < 2) return false;
-    const significantWords = c.text
-      .trim()
-      .split(/\s+/)
-      .filter((w) => w.replace(/[^A-Z]/g, "").length > 1);
-    return (
-      significantWords.length >= 2 &&
-      significantWords.every((w) => w.replace(/[^A-Z]/g, "").length >= 4)
-    );
-  });
+    const sigWords = c.text.trim().split(/\s+/).filter((w) => w.replace(/[^A-Z]/g, "").length > 1);
+    return sigWords.length >= 2 && sigWords.every((w) => w.replace(/[^A-Z]/g, "").length >= 4);
+  };
+  const baseHeading = candidates.find(isStructuralHeading);
+  // When the initial heading has a continuation on the next line introduced by a punctuation token
+  // (/, &, +, :, or parenthesis), prefer the longer 2-line join as the complete heading.
+  // E.g. "SAFFRON WHEAT BUNS WITH QUARK" + "/ COTTAGE CHEESE (VARIATION D)" → prefers the join.
+  // Guard: the remainder after the prefix must start with a continuation character to avoid
+  // merging two separate consecutive recipe titles (FINNISH MILK FLATBREADS stays separate
+  // from FINNISH POTATO FLATBREADS because "FINNISH" does not start with a continuation token).
+  const firstStructuralHeading = baseHeading && (
+    candidates.find((c) => {
+      if (!isStructuralHeading(c)) return false;
+      const hLower = baseHeading.text.toLowerCase();
+      const cLower = c.text.toLowerCase();
+      return cLower.startsWith(hLower + " ") && /^[/&+:(]/.test(cLower.slice(hLower.length + 1));
+    }) ?? baseHeading
+  );
 
   const scored: Array<{ text: string; position: number; score: number; rawScore: number; baseScore: number }> = [];
 
@@ -326,9 +334,28 @@ export async function extractTitleWithEmbeddings(
   // Filter candidates above threshold
   let selected = scored.filter((s) => s.score >= threshold);
 
+  // Remove word-boundary prefixes of firstStructuralHeading when the heading itself survived
+  // the threshold. Cases:
+  //   ARAYES case:  firstStructuralHeading = "ARAYES SHRAK" (2-word join qualifies; "ARAYES"
+  //     alone = 1 word, so it never qualified). Filter removes "ARAYES" so dedup keeps the join.
+  //   SAFFRON case: baseHeading was the partial line; continuation logic above upgraded
+  //     firstStructuralHeading to the full join. Filter removes the partial so dedup keeps join.
+  // Safety: only fires when the complete heading itself is in selected (passed the threshold).
+  if (firstStructuralHeading && selected.some((s) => s.text === firstStructuralHeading.text)) {
+    const fshLower = firstStructuralHeading.text.toLowerCase();
+    selected = selected.filter((s) => {
+      if (s.text === firstStructuralHeading.text) return true;
+      const sLower = s.text.toLowerCase();
+      // Remove s if it is a space-delimited prefix of the structural heading
+      return !fshLower.startsWith(sLower + " ");
+    });
+  }
+
   // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one.
   // DO NOT CHANGE THIS LOGIC — it has been incorrectly "improved" by the title-loop 5 times.
   // The tests require shorter wins: "Pierogi Ruskie" over "Pierogi Ruskie 200g mąki 3 ziemniaki".
+  // The pre-filter above handles the conflicting case (structural heading prefix removal) so that
+  // the incomplete prefix line is never present here when the complete join is in selected.
   selected = selected.filter((a) => {
     const aLower = a.text.toLowerCase();
     return !selected.some(

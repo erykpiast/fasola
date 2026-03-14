@@ -192,4 +192,22 @@ describe("extractTitleWithEmbeddings", () => {
     const result = await extractTitleWithEmbeddings(text, embed);
     expect(result).toBe("Tomato Soup");
   });
+
+  it("keeps 2-word ALL_CAPS join over its single-word prefix (ARAYES-type)", async () => {
+    // "ARAYES" alone is 1 word → never qualifies as firstStructuralHeading.
+    // "ARAYES SHRAK" qualifies → pre-filter removes "ARAYES" so dedup keeps the join.
+    const embed = createMockEmbed(["arayes"], ["ingredients"]);
+    const text = "ARAYES\nSHRAK\nIngredients\n2 cups flour";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("ARAYES SHRAK");
+  });
+
+  it("extends ALL_CAPS structural heading when next line starts with continuation token (SAFFRON-type)", async () => {
+    // "TITLE FIRST PART" qualifies as structural heading; continuation upgrades it to the join.
+    // Pre-filter then removes the partial so dedup keeps the complete join.
+    const embed = createMockEmbed(["title first part"], ["ingredients"]);
+    const text = "TITLE FIRST PART\n/ SECOND PART\nIngredients\n1 cup flour";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("TITLE FIRST PART / SECOND PART");
+  });
 });

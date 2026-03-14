@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "986e3ecf4cfc",
+  "session_id": "b4240f99-5d2e-405b-9c89-141fd51efbb5",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-14T00:27:49.973227Z",
+  "branch": "fix/simplify_processing_overlay",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "features/recipe-preview/components/ProcessingIndicator.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "4c88220ca929",
+  "token_usage": {
+    "input_tokens": 52,
+    "cache_creation_tokens": 25243,
+    "cache_read_tokens": 840995,
+    "output_tokens": 5952,
+    "api_call_count": 29
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-14T00:27:49.919114Z",
+    "agent_lines": 0,
+    "human_added": 2,
+    "human_modified": 3,
+    "human_removed": 0,
+    "total_committed": 2,
+    "agent_percentage": 0
+  }
+}

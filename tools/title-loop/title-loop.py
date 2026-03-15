@@ -27,7 +27,6 @@ from pathlib import Path
 # --- Configuration ---
 MAX_ITERATIONS = 20
 ACCURACY_THRESHOLD = 0.95  # "close to 100%"
-SYNTHETIC_COUNT = 100
 CLAUDE_TIMEOUT = 900  # 15 minutes per Claude invocation
 CLAUDE_STALL_TIMEOUT = 60  # kill if no output for N seconds (default)
 CLAUDE_STALL_TIMEOUT_BY_MODEL = {"opus": 180, "sonnet": 120, "haiku": 60}
@@ -110,8 +109,8 @@ def determine_resume_phase(iteration: int) -> str:
 # --- Core helpers ---
 
 def normalize(s: str) -> str:
-    """Normalize whitespace and case for comparison."""
-    return " ".join(s.lower().split())
+    """Normalize whitespace, hyphens, and case for comparison."""
+    return " ".join(s.lower().replace("-", " ").split())
 
 
 def normalize_separators(s: str) -> str:
@@ -119,15 +118,33 @@ def normalize_separators(s: str) -> str:
     return s.replace(":", "/")
 
 
+# Map stripped ASCII to Polish diacritics for fuzzy filename matching.
+# Generated filenames often drop diacritics (e.g., "Zaby" for "Żaby").
+_POLISH_DIACRITICS = str.maketrans(
+    "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ",
+    "acelnoszzACELNOSZZ",
+)
+
+
+def _strip_diacritics(s: str) -> str:
+    """Strip Polish diacritics to ASCII equivalents."""
+    return s.translate(_POLISH_DIACRITICS)
+
+
 def titles_match(extracted: str, expected: str) -> bool:
     """
     Binary match: does the extracted title contain all expected title parts?
     Expected may contain multiple titles separated by '+'.
+    Normalizes hyphens→spaces and strips Polish diacritics for robustness
+    against generated filenames that use kebab-case or drop diacritics.
     """
     if not extracted:
         return False
-    extracted_norm = normalize_separators(normalize(extracted))
-    expected_parts = [normalize_separators(normalize(p)) for p in expected.split("+")]
+    extracted_norm = _strip_diacritics(normalize_separators(normalize(extracted)))
+    expected_parts = [
+        _strip_diacritics(normalize_separators(normalize(p)))
+        for p in expected.split("+")
+    ]
     return all(part in extracted_norm for part in expected_parts)
 
 
@@ -529,8 +546,13 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
 
     # If real accuracy is high enough, test on generated data too
     if real_accuracy >= ACCURACY_THRESHOLD:
-        print(f"\nGenerating {SYNTHETIC_COUNT} synthetic OCR files...")
-        generate_synthetic_data(iteration, log_dir=log_dir)
+        existing_gen = sorted(glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt")))
+        if existing_gen:
+            print(f"\nFound {len(existing_gen)} existing synthetic files for iteration {iteration}, skipping generation.")
+        else:
+            total = sum(sum(b.values()) for b in SYNTHETIC_BATCHES)
+            print(f"\nGenerating {total} synthetic OCR files in {len(SYNTHETIC_BATCHES)} batches...")
+            generate_synthetic_data(iteration, log_dir=log_dir)
 
         print(f"\nEvaluating generated files...")
         gen_files = sorted(glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt")))
@@ -571,38 +593,126 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
     return iter_dir, effective_accuracy, all_results
 
 
+# Each batch specifies how many files of each OCR pattern to generate.
+# Pattern keys: spillover, split_title, metadata_prefix, ocr_corruption,
+#               multilang, narrative, compound, simple
+SYNTHETIC_BATCHES = [
+    # Batch 1-3: spillover-heavy (15 files total)
+    {"spillover": 5, "ocr_corruption": 3, "simple": 2},
+    {"spillover": 5, "narrative": 3, "simple": 2},
+    {"spillover": 5, "metadata_prefix": 3, "split_title": 2},
+    # Batch 4-6: split titles + metadata (15+10 files)
+    {"split_title": 5, "metadata_prefix": 3, "ocr_corruption": 2},
+    {"split_title": 4, "narrative": 4, "simple": 2},
+    {"split_title": 4, "metadata_prefix": 4, "ocr_corruption": 2},
+    # Batch 7-8: corruption + narrative (20+15 files)
+    {"ocr_corruption": 5, "narrative": 3, "simple": 2},
+    {"ocr_corruption": 5, "narrative": 3, "compound": 2},
+    # Batch 9: multilang + compound (5+5 files)
+    {"multilang": 5, "compound": 3, "simple": 2},
+    # Batch 10: simple baseline
+    {"simple": 5, "ocr_corruption": 3, "narrative": 2},
+]
+
+_PATTERN_DESCRIPTIONS = {
+    "spillover": (
+        "PAGE SPILLOVER: Start with 10-50 lines of corrupted text from a PREVIOUS recipe "
+        "before the actual title. Include partial measurements ('½ cup plus ı tablespoon'), "
+        "broken words ('nto a loured work counter'), garbled temperatures ('225°C/435-VI0..'). "
+        "The real title only appears after this garbage block. Make these files 40-60 lines."
+    ),
+    "split_title": (
+        "MULTI-LINE SPLIT TITLE: The recipe title is split across 2-4 lines, 1-2 words per line. "
+        "Examples: 'ARAYES' / 'SHRAK' on separate lines, or 'Baked Eggs with Feta, Harissa "
+        "Tomato Sauce' / '& Coriander' split mid-phrase."
+    ),
+    "metadata_prefix": (
+        "METADATA PREFIX: Category or serving info appears on line(s) just before the title. "
+        "Examples: 'Lato | Dania główne', '/ Jesień / Zupy', 'DLA 4 OSÓB', "
+        "'PRZYGOTOWANIE 10 MIN', 'GOTOWANIE 30 MIN'."
+    ),
+    "ocr_corruption": (
+        "OCR CHARACTER CORRUPTION: Misrecognized characters throughout the file. "
+        "Examples: 'só1' for 'sól' (digit for letter), 'ı' (dotless i) for 'l', "
+        "hyphenation artifacts ('centy-metrowe', 'gorg-onzol'), garbage tokens ('UuIw'). "
+        "Apply to both Polish and English text."
+    ),
+    "multilang": (
+        "MULTI-LANGUAGE VARIANT TITLE: Polish title on line 1, English variant on line 2, "
+        "optionally another script on line 3. Example: 'Faszerowana papryka' / 'PAPRIKA GYERAN-JJIM'."
+    ),
+    "narrative": (
+        "NARRATIVE INTRO: Include 3-7 lines of prose cooking story or recipe introduction "
+        "between the title and the structured ingredient list."
+    ),
+    "compound": (
+        "COMPOUND/COMPLEX TITLE: Multiple recipes or variations in one title. "
+        "Examples: 'FINNISH MILK FLATBREADS + FINNISH POTATO FLATBREADS', "
+        "'SAFFRON WHEAT BUNS WITH QUARK : COTTAGE CHEESE (VARIATION D)'."
+    ),
+    "simple": (
+        "SIMPLE with basic OCR noise: stray numbers, page headers, broken words at line edges. "
+        "Title may appear after a page number or section header."
+    ),
+}
+
+
 def generate_synthetic_data(iteration: int, log_dir: Path) -> None:
-    """Generate synthetic OCR data using Claude Code."""
+    """Generate synthetic OCR data using Claude Code in small batches."""
     real_files = glob.glob(str(INPUT_DIR / "*.real.txt"))
     existing_titles = [extract_expected_title(f) for f in real_files]
     titles_list = ", ".join(existing_titles)
 
-    prompt = f"""Generate {SYNTHETIC_COUNT} realistic fake OCR recipe text files.
+    # Collect already-generated titles across batches to avoid duplicates
+    generated_titles: list[str] = []
 
-Each file should simulate real OCR output from a scanned cookbook page. Include typical
-OCR artifacts: slightly misrecognized characters, broken line wraps, page numbers,
-headers/footers, section labels.
+    for batch_idx, batch_spec in enumerate(SYNTHETIC_BATCHES, 1):
+        batch_count = sum(batch_spec.values())
 
-Save each file to: tools/title-loop/input/{{RECIPE_TITLE}}.generated.{iteration}.txt
+        # Build pattern instructions for this batch
+        pattern_lines = []
+        for pattern, count in batch_spec.items():
+            desc = _PATTERN_DESCRIPTIONS[pattern]
+            pattern_lines.append(f"- {count} files with {pattern.upper()}: {desc}")
+        patterns_block = "\n".join(pattern_lines)
 
-The recipe title in the filename must EXACTLY match the main title as it appears in the
-generated text content (case-insensitive matching is fine, but the words must match).
+        avoid_titles = titles_list
+        if generated_titles:
+            avoid_titles += ", " + ", ".join(generated_titles)
 
-Requirements:
-- Mix of English and Polish recipes (roughly 60/40)
-- Variety: soups, mains, desserts, salads, appetizers, breads, drinks, preserves
-- Include multi-word titles (2-5 words), some single-word titles
-- Include OCR noise: garbled short lines at top/bottom, stray numbers, broken words
-- Some files should have the title after noise/headers (not first line)
-- Vary title position: top, after page number, after section header, mid-page
-- Some should have section headers like INGREDIENTS, SKŁADNIKI before or near the title
-- Generate DIFFERENT recipes than these existing ones: {titles_list}
-- Each file should be 15-40 lines long
+        prompt = f"""Generate exactly {batch_count} realistic fake OCR recipe text files.
 
-Generate all {SYNTHETIC_COUNT} files. Work through them systematically."""
+Each file simulates real OCR output from a scanned cookbook page. Save each file to:
+tools/title-loop/input/{{RECIPE_TITLE}}.generated.{iteration}.txt
 
-    run_claude(prompt, model="haiku", log_path=log_dir / "generate.log")
+FILENAME RULES (critical):
+- RECIPE_TITLE must use SPACES, not hyphens or underscores
+  (e.g., "Apple Crumble.generated.{iteration}.txt", NOT "apple-crumble.generated.{iteration}.txt")
+- Preserve Polish diacritics in filenames (e.g., "Żurek.generated.{iteration}.txt")
+- The filename title must EXACTLY match the main title in the text content (case-insensitive OK)
 
+RECIPE MIX: ~60% English, ~40% Polish. Variety of categories (soups, mains, desserts, salads,
+appetizers, breads, drinks, preserves). Mix of multi-word titles (2-5 words) and single-word.
+
+Generate DIFFERENT recipes than these existing ones: {avoid_titles}
+
+PATTERN REQUIREMENTS for this batch:
+{patterns_block}
+
+FILE LENGTH: 15-60 lines. Spillover files should be longer (40-60 lines).
+
+Generate all {batch_count} files now."""
+
+        print(f"  Batch {batch_idx}/{len(SYNTHETIC_BATCHES)} ({batch_count} files: "
+              f"{', '.join(f'{v} {k}' for k, v in batch_spec.items())})...")
+        run_claude(prompt, model="haiku", log_path=log_dir / f"generate-{batch_idx}.log")
+
+        # Track what was generated so far
+        gen_files = glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt"))
+        generated_titles = [extract_expected_title(f) for f in gen_files]
+
+
+MAX_ANALYZE_FAILURES = 20  # cap files Sonnet reads to control token usage
 
 def phase_analyze(iter_dir: Path, results: list[dict]) -> None:
     """Analyze extraction failures with Claude (Sonnet)."""
@@ -612,10 +722,25 @@ def phase_analyze(iter_dir: Path, results: list[dict]) -> None:
         (iter_dir / "feedback.md").write_text("No failures to analyze — all extractions matched.\n")
         return
 
+    # Prioritize real files over generated ones, then cap total
+    real_failures = [r for r in failures if ".real." in r["file"]]
+    gen_failures = [r for r in failures if ".generated." in r["file"]]
+    remaining = MAX_ANALYZE_FAILURES - len(real_failures)
+    sampled = real_failures + gen_failures[:max(0, remaining)]
+    skipped = len(failures) - len(sampled)
+
     failure_details = "\n".join(
         f"- File: {r['file']}\n  Expected: '{r['expected']}'\n  Got: '{r['extracted']}'"
-        for r in failures
+        for r in sampled
     )
+
+    summary_note = ""
+    if skipped > 0:
+        summary_note = (
+            f"\n\nNOTE: {skipped} additional failures were omitted to keep context manageable. "
+            f"Total failures: {len(failures)} ({len(real_failures)} real, {len(gen_failures)} generated). "
+            f"Focus your analysis on the {len(sampled)} files listed above — they are representative."
+        )
 
     prompt = f"""Analyze the title extraction failures below. Read each failing input file
 and the current implementation at lib/text-classifier/title-extractor.ts.
@@ -627,8 +752,8 @@ Write your analysis to {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md explaini
 
 Do NOT modify any code files. Only write the feedback.md file.
 
-Failures:
-{failure_details}
+Failures ({len(sampled)} of {len(failures)} total):
+{failure_details}{summary_note}
 
 Results file: {iter_dir.relative_to(PROJECT_ROOT)}/results.txt"""
 

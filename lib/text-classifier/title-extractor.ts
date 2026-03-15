@@ -36,6 +36,27 @@ const MEASUREMENT_PATTERNS = [
   "handful",
 ];
 
+/**
+ * Patterns that identify recipe metadata lines (not titles)
+ */
+const METADATA_PATTERNS = [
+  /^(SERVES?|MAKES?|YIELDS?)\b/i,
+  /^(PREP(ARATION)?|COOK(ING)?|PROOF|RISING|FERMENTATION|REST(ING)?)\s*(AND\s*)?(COOK(ING)?)?\s*TIME/i,
+  /^SAMPLE\s+SCHEDULE\b/i,
+  /^BULK\s+FERMENTATION\b/i,
+  /^(THIS\s+RECIPE\s+)?MAKES\b/i,
+];
+
+/**
+ * Single-word non-title words — standalone OCR fragments unlikely to be recipe titles
+ */
+const NON_TITLE_WORDS = new Set([
+  "the", "and", "for", "but", "not", "you", "all", "can", "are", "was",
+  "has", "his", "her", "its", "our", "who", "how", "may", "new", "now",
+  "old", "see", "way", "did", "get", "let", "say", "she", "too", "use",
+  "buns", "with",
+]);
+
 function looksLikeIngredient(line: string): boolean {
   const lowerLine = line.toLowerCase();
   return MEASUREMENT_PATTERNS.some((pattern) => lowerLine.includes(pattern));
@@ -50,26 +71,60 @@ function isAllCaps(line: string): boolean {
   return letters.length > 0 && letters === letters.toUpperCase();
 }
 
+function looksLikeMetadata(text: string): boolean {
+  return METADATA_PATTERNS.some((pattern) => pattern.test(text.trim()));
+}
+
+function isLikelyGarbled(text: string): boolean {
+  const letters = text.replace(/[^a-zA-Z]/g, "");
+  if (letters.length < 2) return true;
+
+  // Check vowel ratio — English/Polish text typically has 30–50% vowels
+  const vowels = letters.replace(/[^aeiouAEIOUyYąęóĄĘÓ]/g, "").length;
+  const vowelRatio = vowels / letters.length;
+  if (vowelRatio < 0.15 || vowelRatio > 0.85) return true;
+
+  // Single orphaned word ≤3 letters that isn't a common word
+  const words = text.trim().split(/\s+/);
+  const COMMON_SHORT = new Set([
+    "the", "and", "for", "but", "not", "you", "all", "can", "had", "her",
+    "was", "one", "our", "out", "are", "has", "his", "how", "its", "may",
+    "new", "now", "old", "see", "way", "who", "did", "get", "let", "say",
+    "she", "too", "use",
+  ]);
+  if (words.length === 1 && letters.length <= 3 && !COMMON_SHORT.has(text.trim().toLowerCase())) {
+    return true;
+  }
+
+  // Line starts with lowercase and is a short sentence fragment — OCR corruption indicator
+  if (text.length < 25 && /^[a-z]/.test(text.trim()) && !text.trim().endsWith(".")) {
+    return true;
+  }
+
+  return false;
+}
+
 function passesHardFilters(text: string): boolean {
   if (text.length < 3 || text.length > 80) return false;
   if (looksLikeIngredient(text)) return false;
   if (startsWithNumber(text)) return false;
+  if (looksLikeMetadata(text)) return false;
+  if (isLikelyGarbled(text)) return false;
+  // Single-word non-title fragments
+  const words = text.trim().split(/\s+/);
+  if (words.length === 1 && NON_TITLE_WORDS.has(text.trim().toLowerCase())) return false;
   return true;
 }
 
 /**
- * Detect initial burst of short/garbled lines (< 20 chars).
- * Returns the index of the first line >= 20 chars.
+ * Detect initial burst of short garbled lines.
+ * Returns the index of the first non-garbled or long line.
  */
 function findBurstEnd(lines: Array<{ text: string }>): number {
   let i = 0;
-  while (i < lines.length && lines[i].text.length < 20) {
+  while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text)) {
     i++;
   }
-  // No long line found — no burst to detect
-  if (i >= lines.length) return 0;
-  // Need at least 3 consecutive short lines to count as a real burst
-  if (i < 3) return 0;
   return i;
 }
 
@@ -79,7 +134,7 @@ function wordCount(text: string): number {
 
 /**
  * Build candidate strings from lines: single lines plus multi-line joins (2-3 consecutive).
- * Skips initial burst of short lines. Scans all remaining lines. Caps at 25.
+ * Skips initial burst of short garbled lines. Scans all remaining lines. Caps at 25.
  */
 function buildCandidates(
   lines: Array<string>
@@ -134,7 +189,8 @@ function buildCandidates(
     }
   }
 
-  // If more than 25, prioritize ALL_CAPS and short lines
+  // Pre-filter to 25 before embedding calls: prefer ALL_CAPS and short candidates.
+  // Position-based scoring handles final ranking.
   if (candidates.length > 25) {
     const prioritized = candidates.slice().sort((a, b) => {
       const aAllCaps = isAllCaps(a.text) ? 0 : 1;
@@ -194,8 +250,20 @@ export async function extractTitleWithEmbeddings(
     const titleSim = cosineSimilarity(embedding, cachedTitleRefEmbedding);
     const headerSim = cosineSimilarity(embedding, cachedHeaderRefEmbedding);
     const noiseSim = cosineSimilarity(embedding, cachedNoiseRefEmbedding);
-    const score = titleSim - Math.max(headerSim, noiseSim);
+    const rawScore = titleSim - Math.max(headerSim, noiseSim);
 
+    // Position bonus: up to +0.15 for candidates in the first half of the document
+    const relativePosition = candidate.position / lines.length;
+    const positionBonus = relativePosition < 0.5
+      ? 0.15 * (1 - relativePosition * 2)
+      : 0;
+
+    // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings
+    const allCapsBonus = isAllCaps(candidate.text) && candidate.text.replace(/[^a-zA-Z]/g, "").length >= 4
+      ? 0.08
+      : 0;
+
+    const score = rawScore + positionBonus + allCapsBonus;
     scored.push({ text: candidate.text, position: candidate.position, score });
   }
 
@@ -204,7 +272,7 @@ export async function extractTitleWithEmbeddings(
   }
 
   const bestScore = Math.max(...scored.map((s) => s.score));
-  const threshold = Math.max(0.05, bestScore * 0.6);
+  const threshold = Math.max(0.08, bestScore * 0.8);
 
   // Filter candidates above threshold
   let selected = scored.filter((s) => s.score >= threshold);
@@ -219,6 +287,20 @@ export async function extractTitleWithEmbeddings(
         b.text.length < a.text.length
     );
   });
+
+  // Multi-title guard: only join multiple candidates with "+" when there is
+  // structural evidence of a multi-recipe page (≥2 ALL_CAPS headings).
+  // A single ALL_CAPS title among mixed-case survivors is a single-recipe page —
+  // collapse to the highest-scoring candidate.
+  // Zero ALL_CAPS survivors → mixed-case multi-title page → keep all.
+  if (selected.length > 1) {
+    const allCapsSelected = selected.filter((s) => isAllCaps(s.text));
+    if (allCapsSelected.length >= 2) {
+      selected = allCapsSelected;
+    } else if (allCapsSelected.length === 1) {
+      selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
+    }
+  }
 
   // Cap at 3, sort by document position
   selected.sort((a, b) => a.position - b.position);

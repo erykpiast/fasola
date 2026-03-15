@@ -106,10 +106,38 @@ const SECTION_LABELS = new Set([
   "ingredients", "directions", "instructions", "method", "preparation",
   "steps", "notes", "tip", "tips", "variations", "variation",
   "garnish", "topping", "toppings", "frosting", "filling",
-  // Polish (stored without diacritics for OCR resilience)
+  // Polish — recipe section labels (stored without diacritics for OCR resilience)
   "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
   "wykonanie", "wskazowki", "podpowiedz", "warianty",
-  "sos", "nadzienie", "polewa", "lukier", "ciasto",
+  "sos", "nadzienie", "polewa", "lukier", "ciasto",  // ciasto = dough/pastry base (recipe-internal section AND chapter label)
+  // Polish — recipe-book chapter/category labels (food groups, meal types)
+  "warzywa",          // vegetables
+  "mieso",            // meat (mięso)
+  "miesa",            // meats (mięsa)
+  "ryby",             // fish
+  "owoce morza",      // seafood
+  "zupy",             // soups
+  "salatki",          // salads (sałatki)
+  "desery",           // desserts
+  "napoje",           // drinks
+  "pieczywo",         // bread/baked goods
+  "przekaski",        // appetizers/snacks
+  "sniadania",        // breakfasts (śniadania)
+  "obiady",           // dinners/lunches
+  "kolacje",          // suppers
+  "makarony",         // pasta dishes
+  "kasza",            // groats/grains
+  "kasze",            // groats/grains (plural)
+  "dania glowne",     // main courses (dania główne)
+  "przystawki",       // starters
+  "dodatki",          // side dishes
+  "przetwory",        // preserves
+  "wypieki",          // baked goods
+  "ciasta",           // cakes (plural)
+  "ciastka",          // cookies
+  "torty",            // layer cakes
+  "placki",           // pancakes/flatbreads
+  "koktajle",         // cocktails/smoothies
 ]);
 
 function isSectionLabel(text: string): boolean {
@@ -495,9 +523,11 @@ export async function extractTitleWithEmbeddings(
       ? 1.0 + 0.12 * (1 - relativePosition * 2)
       : 1.0;
 
-    // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings
+    // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings.
+    // Single-word ALL_CAPS terms are overwhelmingly section/category labels, not recipe titles;
+    // real recipe titles in ALL_CAPS are almost always multi-word. Reduce the bonus for single words.
     const allCapsBonus = isAllCaps(rs.text) && rs.text.replace(/[^a-zA-Z]/g, "").length >= 4
-      ? 0.08
+      ? (wordCount(rs.text) >= 2 ? 0.08 : 0.03)
       : 0;
 
     // Structural heading bonus: best ALL_CAPS heading (or its continuation join) is almost always the recipe title
@@ -735,7 +765,26 @@ export async function extractTitleWithEmbeddings(
         selected = allCapsSelected;
       }
     } else if (allCapsSelected.length === 1) {
-      selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
+      const theCapCandidate = allCapsSelected[0];
+      // Use non-empty line count so the 75% threshold is consistent regardless of blank-line density.
+      const nonEmptyCount = lines.filter((l) => l.trim().length > 0).length;
+      const capRelPos = theCapCandidate.position / Math.max(nonEmptyCount, 1);
+      // If the sole ALL_CAPS candidate is in the last 25% of the document,
+      // it's likely a category footer, not a title. Prefer the best earlier candidate.
+      if (capRelPos > 0.75) {
+        const earlierCandidates = selected.filter(
+          (s) => s.position / Math.max(nonEmptyCount, 1) <= 0.75
+        );
+        if (earlierCandidates.length > 0) {
+          selected = [earlierCandidates.reduce((a, b) => (a.score > b.score ? a : b))];
+        } else {
+          // All candidates are in the last 25% — no positional basis to prefer one over another;
+          // fall back to score, accepting that the guard cannot help here.
+          selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
+        }
+      } else {
+        selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
+      }
     }
   }
 

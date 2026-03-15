@@ -279,7 +279,7 @@ function passesHardFilters(text: string): boolean {
   if (words.length === 1 && NON_TITLE_WORDS.has(text.trim().toLowerCase())) return false;
   // Lines with ≥8 words are almost certainly body text, not titles.
   // Exception: multi-title compounds with " + ", " : ", or " & " separators are allowed.
-  if (words.length >= 8 && !/ [+:&] /.test(text)) return false;
+  if (words.length >= 8 && !/ [+:&/] /.test(text)) return false;
   return true;
 }
 

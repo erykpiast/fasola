@@ -381,17 +381,35 @@ export async function extractTitleWithEmbeddings(
   }
 
   // --- Pre-threshold bilingual title detection ---
-  // When a mixed-case candidate at position 0 is followed by a single ALL_CAPS
-  // candidate at position ≤ 2 in the FULL scored pool, this is a bilingual recipe
-  // page (e.g., Polish title + ALL_CAPS Korean romanization). Suppress the ALL_CAPS
-  // candidate before computing threshold so its bonuses don't inflate the threshold
-  // beyond the mixed-case title's reach.
+  // When a mixed-case candidate at position 0 is followed by an ALL_CAPS candidate
+  // at position ≤ 2 that is semantically similar to it, this is a bilingual recipe
+  // page (e.g., Polish title + ALL_CAPS Korean romanization). Suppress confirmed
+  // translation candidates before computing threshold so their bonuses don't inflate
+  // the threshold beyond the mixed-case title's reach.
+  // Note: we check position ≤ 2 (local proximity), not global ALL_CAPS count, so
+  // section headers later in the document (SKŁADNIKI, WARZYWA, etc.) are irrelevant.
   let scoredForThreshold = scored;
   const prePos0 = scored.find((s) => s.position === 0 && !isAllCaps(s.text));
-  const preAllCaps = scored.filter((s) => isAllCaps(s.text));
-  if (prePos0 && preAllCaps.length === 1 && preAllCaps[0].position <= 2) {
-    const capsLower = preAllCaps[0].text.toLowerCase();
-    scoredForThreshold = scored.filter((s) => !s.text.toLowerCase().startsWith(capsLower));
+  if (prePos0) {
+    const nearbyAllCaps = scored.filter(
+      (s) => isAllCaps(s.text) && s.position >= 1 && s.position <= 2
+    );
+    const pos0Embedding = rawScored.find((r) => r.text === prePos0.text)?.embedding;
+    if (pos0Embedding && nearbyAllCaps.length > 0) {
+      const translationCandidates = nearbyAllCaps.filter((cap) => {
+        const capEmbedding = rawScored.find((r) => r.text === cap.text)?.embedding;
+        if (!capEmbedding) return false;
+        return cosineSimilarity(pos0Embedding, capEmbedding) > 0.4;
+      });
+      if (translationCandidates.length > 0) {
+        // Also suppress multi-line joins that start with the translation text
+        // (e.g. "PAPRIKA GYERAN-JJIM Ingredients" starts with "PAPRIKA GYERAN-JJIM")
+        scoredForThreshold = scored.filter((s) => {
+          const sLower = s.text.toLowerCase();
+          return !translationCandidates.some((t) => sLower.startsWith(t.text.toLowerCase()));
+        });
+      }
+    }
   }
 
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate

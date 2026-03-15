@@ -92,23 +92,28 @@ function startsWithNumber(line: string): boolean {
   return /^\s*(?:[-•*]\s*)?\d/.test(line);
 }
 
+function stripDiacritics(text: string): string {
+  return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+}
+
 /**
  * Known recipe section labels — these are structural headers, not recipe titles.
- * Matched case-insensitively after trimming and stripping trailing punctuation (colon, period).
+ * Matched case-insensitively after trimming, stripping trailing punctuation, and stripping diacritics.
+ * Polish entries are stored without diacritics for OCR resilience (e.g. "SKLADNIKI" matches "składniki").
  */
 const SECTION_LABELS = new Set([
   // English
   "ingredients", "directions", "instructions", "method", "preparation",
   "steps", "notes", "tip", "tips", "variations", "variation",
   "garnish", "topping", "toppings", "frosting", "filling",
-  // Polish
-  "składniki", "przygotowanie", "sposób przygotowania", "sposób wykonania",
-  "wykonanie", "wskazówki", "podpowiedź", "warianty",
+  // Polish (stored without diacritics for OCR resilience)
+  "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
+  "wykonanie", "wskazowki", "podpowiedz", "warianty",
   "sos", "nadzienie", "polewa", "lukier", "ciasto",
 ]);
 
 function isSectionLabel(text: string): boolean {
-  const normalized = text.trim().replace(/[:.]$/, "").toLowerCase();
+  const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
   return SECTION_LABELS.has(normalized);
 }
 
@@ -473,7 +478,7 @@ export async function extractTitleWithEmbeddings(
   // Guard: the remainder after the prefix must start with a continuation character to avoid
   // merging two separate consecutive recipe titles (FINNISH MILK FLATBREADS stays separate
   // from FINNISH POTATO FLATBREADS because "FINNISH" does not start with a continuation token).
-  const firstStructuralHeading = baseHeading && (
+  let firstStructuralHeading = baseHeading && (
     rawScored.find((c) => {
       if (!isStructuralHeading(c)) return false;
       const hLower = baseHeading.text.toLowerCase();
@@ -519,6 +524,7 @@ export async function extractTitleWithEmbeddings(
   // the threshold beyond the mixed-case title's reach.
   // Note: we check position ≤ 2 (local proximity), not global ALL_CAPS count, so
   // section headers later in the document (SKŁADNIKI, WARZYWA, etc.) are irrelevant.
+  let translationCandidates: typeof scored = [];
   let scoredForThreshold = scored;
   const prePos0 = scored.find((s) => s.position === 0 && !isAllCaps(s.text));
   if (prePos0) {
@@ -526,8 +532,6 @@ export async function extractTitleWithEmbeddings(
       (s) => isAllCaps(s.text) && s.position >= 1 && s.position <= 2 && s.origin === "single"
     );
     const pos0Embedding = rawScored.find((r) => r.text === prePos0.text)?.embedding;
-
-    let translationCandidates: typeof nearbyAllCaps = [];
 
     // Method 1: embedding similarity (works for related languages)
     if (pos0Embedding && nearbyAllCaps.length > 0) {
@@ -554,13 +558,49 @@ export async function extractTitleWithEmbeddings(
     }
 
     if (translationCandidates.length > 0) {
-      // Also suppress multi-line joins that start with the translation text
-      // (e.g. "PAPRIKA GYERAN-JJIM Ingredients" starts with "PAPRIKA GYERAN-JJIM")
+      // Suppress standalone translations and any multi-line joins that embed the translation
+      // as a suffix or substring (e.g. "Smażona zielona fasolka GREEN BEANS BORKEUM" ends with
+      // the translation; "Title GREEN BEANS BORKEUM 그린빈" includes it as a substring).
       scoredForThreshold = scored.filter((s) => {
         const sLower = s.text.toLowerCase();
-        return !translationCandidates.some((t) => sLower.startsWith(t.text.toLowerCase()));
+        return !translationCandidates.some((t) => {
+          const tLower = t.text.toLowerCase();
+          return sLower.startsWith(tLower) ||
+                 sLower.endsWith(" " + tLower) ||
+                 sLower.includes(" " + tLower);
+        });
       });
     }
+  }
+
+  // Fix 2: If the structural heading was identified as a bilingual translation, reassign it.
+  // This prevents the translation's ALL_CAPS bonus from inflating the threshold and ensures
+  // the fallback path in scored also uses the correct heading.
+  if (
+    translationCandidates.length > 0 &&
+    firstStructuralHeading &&
+    translationCandidates.some((t) => t.text === firstStructuralHeading!.text)
+  ) {
+    const nonTranslationStructural = structuralCandidates.filter(
+      (sc) => !translationCandidates.some((t) => t.text === sc.text)
+    );
+    const newHeading = nonTranslationStructural.length > 0
+      ? nonTranslationStructural.reduce((a, b) => a.rawScore > b.rawScore ? a : b)
+      : undefined;
+
+    // Patch scored array: remove old structural bonus, apply new one
+    for (const s of scored) {
+      if (s.text === firstStructuralHeading.text) {
+        s.score -= 0.10;
+        s.baseScore -= 0.10;
+      }
+      if (newHeading && s.text === newHeading.text) {
+        s.score += 0.10;
+        s.baseScore += 0.10;
+      }
+    }
+    // Update reference for downstream prefix-removal logic
+    firstStructuralHeading = newHeading ?? undefined;
   }
 
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate

@@ -175,11 +175,32 @@ function buildCandidates(
   }
 
   const burstEnd = findBurstEnd(nonEmptyLines);
+
+  // Pre-merge continuation lines: a line starting with /&+:( is never a standalone title.
+  // Merge it into the preceding line so the complete title enters the pool as a single candidate,
+  // avoiding the fragile chain of conditions required by the downstream join survival logic.
+  // Limitation: only one continuation line per preceding line is merged. Titles split across
+  // three or more lines with continuation tokens (rare in practice) are not handled here —
+  // the downstream 2-line and 3-line join candidates cover those cases instead.
+  const mergedLines: Array<{ text: string; index: number }> = [];
+  for (let i = burstEnd; i < nonEmptyLines.length; i++) {
+    const line = nonEmptyLines[i];
+    if (i + 1 < nonEmptyLines.length) {
+      const nextText = nonEmptyLines[i + 1].text;
+      if (/^[/&+:(]/.test(nextText)) {
+        mergedLines.push({ text: `${line.text} ${nextText}`, index: line.index });
+        i++;
+        continue;
+      }
+    }
+    mergedLines.push(line);
+  }
+
   const candidates: Array<{ text: string; position: number; origin: CandidateOrigin }> = [];
   const seen = new Set<string>();
 
-  for (let i = burstEnd; i < nonEmptyLines.length; i++) {
-    const line = nonEmptyLines[i];
+  for (let i = 0; i < mergedLines.length; i++) {
+    const line = mergedLines[i];
 
     // Single line
     if (passesHardFilters(line.text)) {
@@ -191,8 +212,8 @@ function buildCandidates(
     }
 
     // 2-line join
-    if (i + 1 < nonEmptyLines.length) {
-      const joined2 = `${line.text} ${nonEmptyLines[i + 1].text}`;
+    if (i + 1 < mergedLines.length) {
+      const joined2 = `${line.text} ${mergedLines[i + 1].text}`;
       if (passesHardFilters(joined2)) {
         const norm = joined2.toLowerCase();
         if (!seen.has(norm)) {
@@ -203,8 +224,8 @@ function buildCandidates(
     }
 
     // 3-line join
-    if (i + 2 < nonEmptyLines.length) {
-      const joined3 = `${line.text} ${nonEmptyLines[i + 1].text} ${nonEmptyLines[i + 2].text}`;
+    if (i + 2 < mergedLines.length) {
+      const joined3 = `${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`;
       if (passesHardFilters(joined3)) {
         const norm = joined3.toLowerCase();
         if (!seen.has(norm)) {
@@ -384,11 +405,13 @@ export async function extractTitleWithEmbeddings(
     });
   }
 
-  // Protect continuation joins: when a multi-line join survived the threshold and its second
-  // part starts with a continuation character, remove the single-line prefix so the dedup
-  // "shorter wins" rule doesn't destroy the complete join.
-  // E.g. "Baked Eggs with Feta, Harissa Tomato Sauce" is removed when
-  // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" also survived (continuation: &).
+  // Protect continuation joins: when a multi-line join (2-line or 3-line) survived the threshold
+  // and its second part starts with a continuation character, remove the single-line prefix/suffix
+  // so the dedup "shorter wins" rule doesn't destroy the complete join.
+  // Note: the pre-merge step above already handles the common Baked Eggs case (&/continuation
+  // on next line) by turning it into a single candidate — this block covers the rarer case where
+  // a continuation-character join was generated as a 2-line/3-line candidate and the prefix
+  // single also survived threshold independently (e.g. from a different code path or OCR layout).
   // Safety: only fires for joins whose continuation starts with /&+:( — digit continuations
   // like "Pierogi Ruskie 200g mąki" are NOT protected, so dedup correctly keeps the shorter form.
   const survivingJoins = selected.filter((s) => s.origin === "2-line" || s.origin === "3-line");
@@ -396,8 +419,7 @@ export async function extractTitleWithEmbeddings(
     selected = selected.filter((s) => {
       if (s.origin !== "single") return true;
       const sLower = s.text.toLowerCase();
-      // Remove PREFIX singles: "Baked Eggs with Feta, Harissa Tomato Sauce" when
-      // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" survived
+      // Remove PREFIX singles whose continuation join also survived
       const isPrefixOfJoin = survivingJoins.some((j) => {
         const jLower = j.text.toLowerCase();
         if (!jLower.startsWith(sLower + " ")) return false;
@@ -405,8 +427,7 @@ export async function extractTitleWithEmbeddings(
         return /^[/&+:(]/.test(remainder);
       });
       if (isPrefixOfJoin) return false;
-      // Remove SUFFIX singles: "& Coriander" when
-      // "Baked Eggs with Feta, Harissa Tomato Sauce & Coriander" survived
+      // Remove SUFFIX singles (e.g. "& Coriander") whose parent join also survived
       const isSuffixOfJoin = survivingJoins.some((j) => {
         const jLower = j.text.toLowerCase();
         if (!jLower.endsWith(" " + sLower)) return false;
@@ -433,6 +454,30 @@ export async function extractTitleWithEmbeddings(
     );
   });
 
+  // First-line mixed-case title protection:
+  // When a mixed-case title at position 0 has a reasonable score and the only ALL_CAPS
+  // candidate is at position ≤ 2 (i.e. within the first two non-empty document lines,
+  // allowing for one blank line between title and subtitle), treat the ALL_CAPS line as a
+  // subtitle/transliteration and prefer the first-line title. This handles bilingual cookbooks
+  // where the primary-language title precedes an ALL_CAPS romanization.
+  // Placement: runs AFTER dedup (so both candidates were already compared for substring overlap)
+  // but BEFORE the multi-title guard (so the guard never sees the removed subtitle as a
+  // candidate that could collapse the selection to the wrong winner).
+  // Safety: allCapsCandidates.length === 1 ensures the guard never fires on genuine multi-recipe
+  // pages (which have ≥ 2 ALL_CAPS headings).
+  if (selected.length >= 1) {
+    const pos0 = selected.find((s) => s.position === 0 && !isAllCaps(s.text));
+    const allCapsCandidates = selected.filter((s) => isAllCaps(s.text));
+    if (
+      pos0 &&
+      allCapsCandidates.length === 1 &&
+      allCapsCandidates[0].position <= 2 &&
+      pos0.score >= threshold
+    ) {
+      selected = selected.filter((s) => s !== allCapsCandidates[0]);
+    }
+  }
+
   // Multi-title guard: only join multiple candidates with "+" when there is
   // structural evidence of a multi-recipe page (≥2 ALL_CAPS headings).
   // A single ALL_CAPS title among mixed-case survivors is a single-recipe page —
@@ -441,7 +486,22 @@ export async function extractTitleWithEmbeddings(
   if (selected.length > 1) {
     const allCapsSelected = selected.filter((s) => isAllCaps(s.text));
     if (allCapsSelected.length >= 2) {
-      selected = allCapsSelected;
+      // Check whether non-first ALL_CAPS headings are section headers within one recipe
+      // (followed immediately by ingredient-like content) rather than separate recipe titles.
+      // A multi-recipe page has body text between titles; a single-recipe page has
+      // ingredient lines immediately after each section heading.
+      const sortedCaps = [...allCapsSelected].sort((a, b) => a.position - b.position);
+      const isSubHeader = sortedCaps.slice(1).every((cap) => {
+        const nextLines = lines.slice(cap.position + 1, cap.position + 3);
+        return nextLines.some(
+          (l) => looksLikeIngredient(l.trim()) || /^\s*\d/.test(l.trim())
+        );
+      });
+      if (isSubHeader) {
+        selected = [sortedCaps[0]];
+      } else {
+        selected = allCapsSelected;
+      }
     } else if (allCapsSelected.length === 1) {
       selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
     }

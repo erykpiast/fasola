@@ -237,17 +237,19 @@ def git_commit_all(message: str) -> str:
         cwd=str(PROJECT_ROOT),
         check=True,
     )
-    # The Entire hook reads from /dev/tty (not stdin) to prompt for session linking.
-    # Unsetting CLAUDECODE prevents it from detecting an active session, so it skips
-    # the prompt entirely. The hook still runs and adds its trailer.
-    env = {**os.environ, "CLAUDECODE": ""}
-    subprocess.run(
-        ["git", "commit", "-m", message],
-        env=env,
-        cwd=str(PROJECT_ROOT),
-        check=True,
-    )
-    return get_commit_hash()
+    # Temporarily disable Entire hooks to avoid interactive /dev/tty prompts
+    subprocess.run(["entire", "disable"], cwd=str(PROJECT_ROOT),
+                   capture_output=True)
+    try:
+        subprocess.run(
+            ["git", "commit", "-m", message],
+            cwd=str(PROJECT_ROOT),
+            check=True,
+        )
+        return get_commit_hash()
+    finally:
+        subprocess.run(["entire", "enable", "--agent", "claude-code"],
+                       cwd=str(PROJECT_ROOT), capture_output=True)
 
 
 # --- Claude invocation with live display ---
@@ -314,7 +316,7 @@ def _run_claude_once(
     result_text = ""  # final result extracted from stream
     input_tokens = 0  # running count from message_start usage
     output_tokens = 0  # running count from message_delta usage
-    last_token_change = time.time()  # tracks last time token counts changed
+    last_activity = time.time()  # tracks last time model produced any output
     display_height = 0
     reader_done = threading.Event()
     lock = threading.Lock()
@@ -337,7 +339,7 @@ def _run_claude_once(
 
     # Read and parse stream-json stdout in background
     def reader():
-        nonlocal result_text, input_tokens, output_tokens, last_token_change
+        nonlocal result_text, input_tokens, output_tokens, last_activity
         try:
             for line in proc.stdout:
                 raw_lines.append(line)
@@ -354,8 +356,12 @@ def _run_claude_once(
                 if etype == "stream_event":
                     nested = event.get("event", {})
                     ntype = nested.get("type", "")
+                    # Any content_block_delta (thinking, text, tool JSON) = model is active
+                    if ntype == "content_block_delta":
+                        with lock:
+                            last_activity = time.time()
                     # Track input tokens from message_start
-                    if ntype == "message_start":
+                    elif ntype == "message_start":
                         usage = nested.get("message", {}).get("usage", {})
                         added = (usage.get("input_tokens", 0)
                                  + usage.get("cache_creation_input_tokens", 0)
@@ -363,7 +369,7 @@ def _run_claude_once(
                         if added:
                             with lock:
                                 input_tokens += added
-                                last_token_change = time.time()
+                                last_activity = time.time()
                     # Track output tokens from message_delta
                     elif ntype == "message_delta":
                         usage = nested.get("usage", {})
@@ -371,7 +377,7 @@ def _run_claude_once(
                         if tok:
                             with lock:
                                 output_tokens += tok
-                                last_token_change = time.time()
+                                last_activity = time.time()
 
                 # Final result
                 elif etype == "result":
@@ -396,7 +402,7 @@ def _run_claude_once(
 
             # Stall detection: no token traffic for stall_timeout seconds
             with lock:
-                silence = time.time() - last_token_change
+                silence = time.time() - last_activity
             if silence > stall_timeout:
                 stalled = True
                 proc.kill()

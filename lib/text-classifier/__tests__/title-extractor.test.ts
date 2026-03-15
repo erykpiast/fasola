@@ -210,4 +210,77 @@ describe("extractTitleWithEmbeddings", () => {
     const result = await extractTitleWithEmbeddings(text, embed);
     expect(result).toBe("TITLE FIRST PART / SECOND PART");
   });
+
+  it("pre-merges continuation line starting with & into preceding line (Baked Eggs type)", async () => {
+    // "& Coriander" starts with & so it's merged into the preceding line before candidate
+    // generation — the complete title enters the pool as a single candidate.
+    const embed = createMockEmbed(
+      ["baked eggs with feta"],
+      ["ingredients"]
+    );
+    const text =
+      "Baked Eggs with Feta, Harissa Tomato Sauce\n& Coriander\nIngredients\n2 eggs";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("Baked Eggs with Feta, Harissa Tomato Sauce & Coriander");
+  });
+
+  it("does not pre-merge second line that lacks a continuation character (ARAYES-type safety)", async () => {
+    // "SHRAK" does not start with /&+:( so it is NOT pre-merged.
+    // The existing structural heading join logic handles it instead.
+    const embed = createMockEmbed(["arayes"], ["ingredients"]);
+    const text = "ARAYES\nSHRAK\nIngredients\n2 cups flour";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("ARAYES SHRAK");
+  });
+
+  it("returns only the first ALL_CAPS heading when subsequent ALL_CAPS headings are section headers followed by ingredients (CHLEBEK type)", async () => {
+    // WARZYWA I BOCZEK is immediately followed by ingredient lines (numbers) →
+    // it's a section header, not a second recipe title. Keep only CHLEBEK Z WARZYWAMI I BOCZKIEM.
+    const embed = createMockEmbed(
+      ["chlebek z warzywami i boczkiem", "warzywa i boczek"],
+      []
+    );
+    const text = [
+      "CHLEBEK Z WARZYWAMI I BOCZKIEM",
+      "WARZYWA I BOCZEK",
+      "500 g strączków zielonego groszku",
+      "1 żółta papryka",
+      "CHLEBEK",
+      "500 g mąki",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("CHLEBEK Z WARZYWAMI I BOCZKIEM");
+  });
+
+  it("returns both ALL_CAPS titles when headings are NOT followed by ingredient lines (FINNISH-type)", async () => {
+    // POTATO FLATBREADS is followed by body text, not ingredients →
+    // these are two separate recipe titles on a multi-recipe page.
+    const embed = createMockEmbed(
+      ["milk flatbreads", "potato flatbreads"],
+      []
+    );
+    const text = [
+      "MILK FLATBREADS",
+      "Mix flour with milk and knead",
+      "Cook on a dry skillet",
+      "POTATO FLATBREADS",
+      "Boil potatoes until tender",
+      "Mash well before mixing",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("MILK FLATBREADS + POTATO FLATBREADS");
+  });
+
+  it("prefers mixed-case title at position 0 over ALL_CAPS subtitle at position 1 (bilingual page)", async () => {
+    // "Faszerowana papryka" is the Polish title at position 0 (mixed-case).
+    // "PAPRIKA GYERAN-JJIM" is an ALL_CAPS romanization at position 1 — treated as subtitle.
+    const embed = createMockEmbed(
+      ["faszerowana papryka", "paprika gyeran"],
+      []
+    );
+    const text =
+      "Faszerowana papryka\nPAPRIKA GYERAN-JJIM\nIngredients\n200g peppers";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("Faszerowana papryka");
+  });
 });

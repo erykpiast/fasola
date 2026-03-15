@@ -6,6 +6,7 @@
 import { pipeline } from "@huggingface/transformers";
 import { classifyWithEmbeddings, type LabelEmbedding } from "./embeddings";
 import type { ClassificationCategory } from "./index.d";
+import { extractTitleWithEmbeddings } from "./title-extractor";
 import {
   ALL_CATEGORY_KEYS,
   ALL_CUISINE_KEYS,
@@ -25,6 +26,7 @@ interface ClassificationResponse {
   type: "classification-result";
   requestId: string;
   success: boolean;
+  title?: string;
   suggestions?: Array<{
     tag: string;
     confidence: number;
@@ -45,34 +47,59 @@ interface EmbeddingOutput {
   data: Float32Array | Array<number>;
 }
 
+interface ModelProgress {
+  status?: string;
+  loaded?: number;
+  total?: number;
+}
+
+/**
+ * Callable embedder from Transformers.js pipeline.
+ * The actual return type of pipeline("feature-extraction", ...) is a complex union;
+ * this interface captures the shape we actually use.
+ */
+interface FeatureEmbedder {
+  (
+    text: string,
+    options: { pooling: "mean"; normalize: true }
+  ): Promise<EmbeddingOutput>;
+}
+
+async function embedText(
+  embedder: FeatureEmbedder,
+  text: string
+): Promise<Array<number>> {
+  const output = await embedder(text, {
+    pooling: "mean",
+    normalize: true,
+  });
+  return Array.from(output.data);
+}
+
 /**
  * Singleton pattern for lazy model loading and label embeddings caching
  */
 class EmbedderSingleton {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static instance: any = null;
+  static instance: FeatureEmbedder | null = null;
   static labelEmbeddings: Array<LabelEmbedding> | null = null;
 
   static async getInstance(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    progressCallback?: (progress: any) => void
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any> {
+    progressCallback?: (progress: ModelProgress) => void
+  ): Promise<FeatureEmbedder> {
     if (!this.instance) {
       console.log("[Classification Worker] Loading MiniLM model...");
-      this.instance = await pipeline(
+      this.instance = (await pipeline(
         "feature-extraction",
         "Xenova/all-MiniLM-L6-v2",
         { progress_callback: progressCallback }
-      );
+      )) as unknown as FeatureEmbedder;
       console.log("[Classification Worker] MiniLM model loaded");
     }
     return this.instance;
   }
 
   static async getLabelEmbeddings(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    embedder: any,
+    embedder: FeatureEmbedder,
     progressCallback?: (phase: string, message: string) => void
   ): Promise<Array<LabelEmbedding>> {
     if (this.labelEmbeddings) {
@@ -86,29 +113,15 @@ class EmbedderSingleton {
 
     for (const key of ALL_SEASON_KEYS) {
       const description = SEASON_LABELS[key];
-      const output = (await embedder(description, {
-        pooling: "mean",
-        normalize: true,
-      })) as EmbeddingOutput;
-      embeddings.push({
-        key,
-        category: "season",
-        embedding: Array.from(output.data),
-      });
+      const embedding = await embedText(embedder, description);
+      embeddings.push({ key, category: "season", embedding });
     }
 
     progressCallback?.("Computing Embeddings", "Embedding cuisine labels...");
     for (const key of ALL_CUISINE_KEYS) {
       const description = CUISINE_LABELS[key];
-      const output = (await embedder(description, {
-        pooling: "mean",
-        normalize: true,
-      })) as EmbeddingOutput;
-      embeddings.push({
-        key,
-        category: "cuisine",
-        embedding: Array.from(output.data),
-      });
+      const embedding = await embedText(embedder, description);
+      embeddings.push({ key, category: "cuisine", embedding });
     }
 
     progressCallback?.(
@@ -117,15 +130,8 @@ class EmbedderSingleton {
     );
     for (const key of ALL_CATEGORY_KEYS) {
       const description = CATEGORY_LABELS[key];
-      const output = (await embedder(description, {
-        pooling: "mean",
-        normalize: true,
-      })) as EmbeddingOutput;
-      embeddings.push({
-        key,
-        category: "food-category",
-        embedding: Array.from(output.data),
-      });
+      const embedding = await embedText(embedder, description);
+      embeddings.push({ key, category: "food-category", embedding });
     }
 
     this.labelEmbeddings = embeddings;
@@ -140,20 +146,13 @@ class EmbedderSingleton {
  * Generate text embedding and classify
  */
 async function generateEmbeddingAndClassify(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  embedder: any,
+  embedder: FeatureEmbedder,
   text: string,
   labelEmbeddings: Array<LabelEmbedding>
 ): Promise<
   Array<{ tag: string; confidence: number; category: ClassificationCategory }>
 > {
-  const output = (await embedder(text, {
-    pooling: "mean",
-    normalize: true,
-  })) as EmbeddingOutput;
-  const textEmbedding: Array<number> = Array.from(output.data);
-
-  // Use shared classification function
+  const textEmbedding = await embedText(embedder, text);
   return classifyWithEmbeddings(textEmbedding, labelEmbeddings);
 }
 
@@ -170,8 +169,7 @@ async function runClassification(
     console.log("[Classification Worker] Starting classification");
 
     const embedder = await EmbedderSingleton.getInstance(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (progress: any) => {
+      (progress: ModelProgress) => {
         const progressMsg: ProgressMessage = {
           type: "progress",
           requestId,
@@ -195,6 +193,11 @@ async function runClassification(
       }
     );
 
+    // Extract title using embeddings
+    const embed = async (t: string): Promise<Array<number>> =>
+      embedText(embedder, t);
+    const title = await extractTitleWithEmbeddings(text, embed);
+
     const suggestions = await generateEmbeddingAndClassify(
       embedder,
       text,
@@ -205,6 +208,7 @@ async function runClassification(
       type: "classification-result",
       requestId,
       success: true,
+      title,
       suggestions,
       processingTimeMs: Date.now() - startTime,
     };

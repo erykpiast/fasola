@@ -18,6 +18,7 @@ interface ClassificationResponse {
   type: "classification-result";
   requestId: string;
   success: boolean;
+  title?: string;
   suggestions?: Array<TagSuggestion>;
   error?: string;
   processingTimeMs?: number;
@@ -74,7 +75,7 @@ function initializeWorker(): void {
           pendingRequests.delete(response.requestId);
           if (response.success && response.suggestions) {
             pending.resolve({
-              title: undefined, // Title is extracted on main thread
+              title: response.title,
               suggestions: response.suggestions,
               processingTimeMs: response.processingTimeMs || 0,
             });
@@ -183,13 +184,9 @@ export async function classifyText(
   const startTime = Date.now();
 
   try {
-    // Extract title first (synchronous, fast)
-    const title = extractTitle(text);
-
     // Use TF-IDF if requested
     if (method === "tfidf") {
-      const result = classifyWithTfIdfMethod(text);
-      return { ...result, title };
+      return classifyWithTfIdfMethod(text);
     }
 
     // Use embeddings (default)
@@ -198,22 +195,22 @@ export async function classifyText(
       initializeWorker();
     }
 
-    // If worker is available, classify
+    // If worker is available, classify (worker also extracts semantic title)
     if (worker && workerReady) {
       const result = await classifyWithWorker(text);
       return {
-        title,
+        title: result.title ?? extractTitle(text),
         suggestions: result.suggestions,
         processingTimeMs: Date.now() - startTime,
       };
     }
 
-    // Worker not available, return title only
+    // Worker not available, fall back to heuristic title only
     console.warn(
       "[Text Classifier] Worker not available, returning title only"
     );
     return {
-      title,
+      title: extractTitle(text),
       suggestions: [],
       processingTimeMs: Date.now() - startTime,
     };

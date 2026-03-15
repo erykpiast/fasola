@@ -172,6 +172,9 @@ export function BackgroundProcessingProvider({
 
         let classificationResult;
         if (result.ocrResult?.text) {
+          console.log(
+            `[Background Processing] OCR text for ${recipeId}:\n${result.ocrResult.text}`
+          );
           updateProgress(recipeId, "classification", 90);
 
           try {

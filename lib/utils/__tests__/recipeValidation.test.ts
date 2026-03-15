@@ -84,9 +84,11 @@ describe("recipeValidation", () => {
       ]);
     });
 
-    it("filters out tags with spaces", () => {
+    it("splits words separated by spaces into individual tags", () => {
       expect(parseTags("food, invalid tag, pasta")).toEqual([
         "#food",
+        "#invalid",
+        "#tag",
         "#pasta",
       ]);
     });

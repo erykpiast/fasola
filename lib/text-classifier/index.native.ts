@@ -22,7 +22,10 @@ import {
   SEASON_LABELS,
 } from "./labels";
 import { classifyWithTfIdf } from "./tfidf";
-import { extractTitle } from "./title-extractor";
+import {
+  extractTitle,
+  extractTitleWithEmbeddings,
+} from "./title-extractor";
 
 /**
  * Singleton pattern for model and label embeddings
@@ -90,6 +93,17 @@ class EmbeddingsManager {
     }
   }
 
+  static async forward(text: string): Promise<Array<number>> {
+    await this.initialize();
+
+    if (!this.instance) {
+      throw new Error("Failed to initialize embeddings");
+    }
+
+    const raw = await this.instance.forward(text);
+    return Array.from(raw);
+  }
+
   static async classify(text: string): Promise<Array<TagSuggestion>> {
     await this.initialize();
 
@@ -151,7 +165,10 @@ async function classifyWithEmbeddingsMethod(
   const startTime = Date.now();
 
   try {
-    const title = extractTitle(text);
+    const title = await extractTitleWithEmbeddings(
+      text,
+      EmbeddingsManager.forward.bind(EmbeddingsManager)
+    );
     const allSuggestions = await EmbeddingsManager.classify(text);
 
     // Sort by confidence

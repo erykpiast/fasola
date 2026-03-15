@@ -6,9 +6,13 @@
  * Usage: npx tsx lib/text-classifier/cli.ts <text-file-path> [--method=embeddings|tfidf|both]
  */
 
-import { pipeline } from "@huggingface/transformers";
 import { readFileSync } from "fs";
 import { classifyWithEmbeddings, type LabelEmbedding } from "./embeddings";
+import {
+  embedText,
+  loadEmbedder,
+  type FeatureEmbedder,
+} from "./embedder";
 import type { ClassificationCategory } from "./index.d";
 import {
   ALL_CATEGORY_KEYS,
@@ -19,7 +23,10 @@ import {
   SEASON_LABELS,
 } from "./labels";
 import { classifyWithTfIdf } from "./tfidf";
-import { extractTitle } from "./title-extractor";
+import {
+  extractTitle,
+  extractTitleWithEmbeddings,
+} from "./title-extractor";
 
 interface TagSuggestion {
   tag: string;
@@ -27,71 +34,38 @@ interface TagSuggestion {
   category: ClassificationCategory;
 }
 
-interface EmbeddingOutput {
-  data: Float32Array | Array<number>;
-}
-
 async function computeLabelEmbeddings(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  embedder: any
+  embedder: FeatureEmbedder
 ): Promise<Array<LabelEmbedding>> {
   const labelEmbeddings: Array<LabelEmbedding> = [];
 
   for (const key of ALL_SEASON_KEYS) {
     const description = SEASON_LABELS[key];
-    const output = (await embedder(description, {
-      pooling: "mean",
-      normalize: true,
-    })) as EmbeddingOutput;
-    labelEmbeddings.push({
-      key,
-      category: "season",
-      embedding: Array.from(output.data),
-    });
+    const embedding = await embedText(embedder, description);
+    labelEmbeddings.push({ key, category: "season", embedding });
   }
 
   for (const key of ALL_CUISINE_KEYS) {
     const description = CUISINE_LABELS[key];
-    const output = (await embedder(description, {
-      pooling: "mean",
-      normalize: true,
-    })) as EmbeddingOutput;
-    labelEmbeddings.push({
-      key,
-      category: "cuisine",
-      embedding: Array.from(output.data),
-    });
+    const embedding = await embedText(embedder, description);
+    labelEmbeddings.push({ key, category: "cuisine", embedding });
   }
 
   for (const key of ALL_CATEGORY_KEYS) {
     const description = CATEGORY_LABELS[key];
-    const output = (await embedder(description, {
-      pooling: "mean",
-      normalize: true,
-    })) as EmbeddingOutput;
-    labelEmbeddings.push({
-      key,
-      category: "food-category",
-      embedding: Array.from(output.data),
-    });
+    const embedding = await embedText(embedder, description);
+    labelEmbeddings.push({ key, category: "food-category", embedding });
   }
 
   return labelEmbeddings;
 }
 
 async function generateEmbeddingAndClassify(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  embedder: any,
+  embedder: FeatureEmbedder,
   text: string,
   labelEmbeddings: Array<LabelEmbedding>
 ): Promise<Array<TagSuggestion>> {
-  const output = (await embedder(text, {
-    pooling: "mean",
-    normalize: true,
-  })) as EmbeddingOutput;
-  const textEmbedding: Array<number> = Array.from(output.data);
-
-  // Use shared classification function
+  const textEmbedding = await embedText(embedder, text);
   return classifyWithEmbeddings(textEmbedding, labelEmbeddings);
 }
 
@@ -157,10 +131,33 @@ async function runTfIdfClassification(text: string): Promise<void> {
   console.log();
 }
 
+async function loadEmbedderWithProgress(): Promise<FeatureEmbedder> {
+  console.log("Loading MiniLM embedding model (this may take a moment)...");
+  const embedder = await loadEmbedder((progress) => {
+    if (
+      progress.status === "progress" &&
+      progress.loaded &&
+      progress.total
+    ) {
+      const percent = Math.round((progress.loaded / progress.total) * 100);
+      process.stdout.write(`\rDownloading: ${percent}%`);
+    } else if (progress.status === "done") {
+      process.stdout.write("\rDownload complete!\n");
+    }
+  });
+
+  console.log("Model loaded!");
+  console.log();
+  return embedder;
+}
+
 /**
  * Run embeddings classification
  */
-async function runEmbeddingsClassification(text: string): Promise<void> {
+async function runEmbeddingsClassification(
+  text: string,
+  existingEmbedder?: FeatureEmbedder
+): Promise<void> {
   const startTime = Date.now();
 
   console.log("=".repeat(60));
@@ -168,32 +165,14 @@ async function runEmbeddingsClassification(text: string): Promise<void> {
   console.log("=".repeat(60));
   console.log();
 
-  console.log("Loading MiniLM embedding model (this may take a moment)...");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const embedder: any = await pipeline(
-    "feature-extraction",
-    "Xenova/all-MiniLM-L6-v2",
-    {
-      progress_callback: (progress: {
-        status?: string;
-        loaded?: number;
-        total?: number;
-      }) => {
-        if (
-          progress.status === "progress" &&
-          progress.loaded &&
-          progress.total
-        ) {
-          const percent = Math.round((progress.loaded / progress.total) * 100);
-          process.stdout.write(`\rDownloading: ${percent}%`);
-        } else if (progress.status === "done") {
-          process.stdout.write("\rDownload complete!\n");
-        }
-      },
-    }
-  );
+  const embedder = existingEmbedder ?? (await loadEmbedderWithProgress());
 
-  console.log("Model loaded!");
+  // Extract semantic title
+  const embed = async (t: string): Promise<Array<number>> =>
+    embedText(embedder, t);
+  console.log("Extracting semantic title...");
+  const semanticTitle = await extractTitleWithEmbeddings(text, embed);
+  console.log(`Semantic Title: ${semanticTitle || "(none found)"}`);
   console.log();
 
   console.log("Computing label embeddings...");
@@ -227,10 +206,18 @@ async function runBothMethods(text: string): Promise<void> {
   console.log("=".repeat(60));
   console.log();
 
-  // Extract title
-  console.log("Extracting title...");
-  const title = extractTitle(text);
-  console.log(`Title: ${title || "(none found)"}`);
+  // Extract heuristic title
+  console.log("Extracting title (heuristic)...");
+  const heuristicTitle = extractTitle(text);
+  console.log(`Heuristic Title: ${heuristicTitle || "(none found)"}`);
+
+  // Extract semantic title
+  const embedder = await loadEmbedderWithProgress();
+  const embed = async (t: string): Promise<Array<number>> =>
+    embedText(embedder, t);
+  console.log("Extracting title (semantic)...");
+  const semanticTitle = await extractTitleWithEmbeddings(text, embed);
+  console.log(`Semantic Title:  ${semanticTitle || "(none found)"}`);
   console.log();
   console.log();
 
@@ -240,8 +227,8 @@ async function runBothMethods(text: string): Promise<void> {
   console.log();
   console.log();
 
-  // Run Embeddings
-  await runEmbeddingsClassification(text);
+  // Run Embeddings (reuse already-loaded embedder)
+  await runEmbeddingsClassification(text, embedder);
 }
 
 /**
@@ -293,7 +280,6 @@ async function main(): Promise<void> {
     if (method === "both") {
       await runBothMethods(text);
     } else if (method === "tfidf") {
-      // Extract title first
       console.log("Extracting title...");
       const title = extractTitle(text);
       console.log(`Title: ${title || "(none found)"}`);
@@ -302,11 +288,6 @@ async function main(): Promise<void> {
       await runTfIdfClassification(text);
     } else {
       // embeddings
-      console.log("Extracting title...");
-      const title = extractTitle(text);
-      console.log(`Title: ${title || "(none found)"}`);
-      console.log();
-      console.log();
       await runEmbeddingsClassification(text);
     }
   } catch (error) {

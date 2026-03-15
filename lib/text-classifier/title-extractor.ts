@@ -65,6 +65,10 @@ const METADATA_PATTERNS = [
   // regardless of OCR-corrupted prefix (catches PRZYGOTOWANTE, GOTOMANTE, etc.)
   /\b\d+\s*MIN\b/i,
   /\b\d+\s*GODZ/i,
+  // Season/category indicators
+  /^SEZON\s*:/i,
+  /^KATEGORIA\s*:/i,
+  /^RODZAJ\s*:/i,
 ];
 
 /**
@@ -145,6 +149,26 @@ function isSectionLabel(text: string): boolean {
   return SECTION_LABELS.has(normalized);
 }
 
+/**
+ * Recipe-internal section labels that should ALWAYS block multi-line joins,
+ * even when the combined word count is ≥ 3.
+ * Category labels ("zupy", "placki", etc.) are NOT in this set — they can
+ * legitimately start a multi-word recipe title like "Zupy Zimowe Warzywne".
+ */
+const ALWAYS_BLOCK_JOIN_LABELS = new Set([
+  "ingredients", "directions", "instructions", "method", "preparation",
+  "steps", "notes", "tip", "tips", "variations", "variation",
+  "garnish", "topping", "toppings", "frosting", "filling",
+  "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
+  "wykonanie", "wskazowki", "podpowiedz", "warianty",
+  "sos", "nadzienie", "polewa", "lukier", "ciasto",
+]);
+
+function isAlwaysBlockJoinLabel(text: string): boolean {
+  const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
+  return ALWAYS_BLOCK_JOIN_LABELS.has(normalized);
+}
+
 function isAllCaps(line: string): boolean {
   const letters = line.replace(/[^a-zA-Z]/g, "");
   return letters.length > 0 && letters === letters.toUpperCase();
@@ -171,7 +195,9 @@ function isLikelyGarbled(text: string): boolean {
     "new", "now", "old", "see", "way", "who", "did", "get", "let", "say",
     "she", "too", "use",
   ]);
-  if (words.length === 1 && letters.length <= 3 && !COMMON_SHORT.has(text.trim().toLowerCase())) {
+  // Count all Unicode letters (not just ASCII) so Polish words like "Żur" (3 letters) pass
+  const unicodeLetters = text.trim().replace(/[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, "");
+  if (words.length === 1 && unicodeLetters.length <= 3 && !COMMON_SHORT.has(text.trim().toLowerCase())) {
     return true;
   }
 
@@ -197,7 +223,8 @@ function isLikelyGarbled(text: string): boolean {
     const commonShort2 = new Set([
       "a", "i", "of", "or", "to", "in", "on", "is", "it", "an",
       "as", "at", "by", "do", "go", "if", "no", "so", "up", "we",
-      "w", "z",  // Polish prepositions
+      "w", "z",   // Polish prepositions (basic)
+      "ze", "bo", "na", "ni", "po", "ku", "od", "za", "co",  // Polish prepositions (extended)
     ]);
     const hasGarbledWord = words.some(
       (w) =>
@@ -213,12 +240,21 @@ function isLikelyGarbled(text: string): boolean {
   return false;
 }
 
+const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool|remove|place|combine|whisk|knead|roll|spread|brush|slice|chop|dice|mince|drain|rinse|peel|grate|melt|simmer|boil|fry|sauté|saute|roast|grill|broil|steam|let|set|transfer|serve|garnish|arrange|sprinkle|season|preheat|cover|uncover|reduce|bring|toss|cut|trim|shape|form)\b/i;
+
+function looksLikeCookingInstruction(text: string): boolean {
+  const words = text.trim().split(/\s+/);
+  if (words.length < 4) return false;  // Instructions are multi-word sentences
+  return COOKING_INSTRUCTION_STARTS.test(text.trim());
+}
+
 function passesHardFilters(text: string): boolean {
   if (text.length < 3 || text.length > 80) return false;
   if (looksLikeIngredient(text)) return false;
   if (startsWithNumber(text)) return false;
   if (looksLikeMetadata(text)) return false;
   if (isLikelyGarbled(text)) return false;
+  if (looksLikeCookingInstruction(text)) return false;
   // Pipe-separated lines are book category/chapter headers, not recipe titles
   if (text.includes(" | ")) return false;
   // Slash-separated breadcrumbs (e.g., "/ Jesien / Zupy") are navigation, not titles
@@ -244,7 +280,37 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
   while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text)) {
     i++;
   }
+  // Skip long instruction-like prologues: if 5+ consecutive lines look like cooking instructions,
+  // skip them to find the actual title region.
+  if (i === 0) {
+    let j = 0;
+    while (j < lines.length && looksLikeCookingInstruction(lines[j].text)) {
+      j++;
+    }
+    if (j >= 5) {
+      i = j;
+    }
+  }
   return i;
+}
+
+function stripParentheticalGloss(text: string): string {
+  // Strip trailing English-gloss parentheticals from ALL_CAPS titles.
+  // e.g. "PIEROGI RUSKIE (Boiled Dumplings with Potato and Cheese)" → "PIEROGI RUSKIE"
+  // Keep if parenthetical is ALL_CAPS (variation/subtitle in same language).
+  // Keep if both base and paren are mixed-case (both are part of the title).
+  const match = text.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (!match) return text;
+  const [, base, paren] = match;
+  if (isAllCaps(paren)) return text;
+  if (!isAllCaps(base) && !isAllCaps(paren)) return text;
+  return base.trim();
+}
+
+function stripPageNumber(text: string): string {
+  // "34  Berry Jam" → "Berry Jam" (2+ spaces distinguishes from "2 eggs")
+  const match = text.match(/^\d{1,3}\s{2,}(.+)$/);
+  return match ? match[1] : text;
 }
 
 function wordCount(text: string): number {
@@ -355,19 +421,23 @@ function buildCandidates(
     // Skip metadata continuation fragments
     if (metadataContinuationPositions.has(line.index)) continue;
 
-    // Single line
-    if (passesHardFilters(line.text)) {
-      const norm = line.text.toLowerCase();
+    // Single line — strip page-number prefixes and parenthetical glosses before scoring
+    const singleText = stripParentheticalGloss(stripPageNumber(line.text));
+    if (passesHardFilters(singleText)) {
+      const norm = singleText.toLowerCase();
       if (!seen.has(norm)) {
         seen.add(norm);
-        candidates.push({ text: line.text, position: line.index, origin: "single" });
+        candidates.push({ text: singleText, position: line.index, origin: "single" });
       }
     }
 
-    // 2-line join — skip if first line is a section label (prevents "INGREDIENTS TITLE" joins)
-    if (i + 1 < mergedLines.length && !isSectionLabel(line.text)) {
+    // 2-line join — skip if first line is a section label AND join would be ≤2 words
+    // (a section label followed by modifiers is likely a recipe title, not a category header)
+    if (i + 1 < mergedLines.length) {
       const joined2 = `${line.text} ${mergedLines[i + 1].text}`;
-      if (passesHardFilters(joined2)) {
+      const shouldBlock2 = isSectionLabel(line.text) &&
+        (wordCount(joined2) <= 2 || isAlwaysBlockJoinLabel(line.text));
+      if (!shouldBlock2 && passesHardFilters(joined2)) {
         const norm = joined2.toLowerCase();
         if (!seen.has(norm)) {
           seen.add(norm);
@@ -376,10 +446,12 @@ function buildCandidates(
       }
     }
 
-    // 3-line join — skip if first line is a section label
-    if (i + 2 < mergedLines.length && !isSectionLabel(line.text)) {
+    // 3-line join — skip if first line is a section label AND join would be ≤2 words
+    if (i + 2 < mergedLines.length) {
       const joined3 = `${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`;
-      if (passesHardFilters(joined3)) {
+      const shouldBlock3 = isSectionLabel(line.text) &&
+        (wordCount(joined3) <= 2 || isAlwaysBlockJoinLabel(line.text));
+      if (!shouldBlock3 && passesHardFilters(joined3)) {
         const norm = joined3.toLowerCase();
         if (!seen.has(norm)) {
           seen.add(norm);
@@ -724,6 +796,44 @@ export async function extractTitleWithEmbeddings(
     );
     return !hasLongerParent;
   });
+
+  // Protect multi-line joins from being destroyed by their own component singles.
+  // When "Lamb Stew" (2-line join) survives AND both "Lamb" and "Stew" (singles) also survive,
+  // the join is the intended title — remove the singles.
+  const joinsToProtect = selected.filter((s) => s.origin === "2-line" || s.origin === "3-line");
+  if (joinsToProtect.length > 0) {
+    const singlesToRemove = new Set<string>();
+    for (const join of joinsToProtect) {
+      const joinWords = join.text.split(/\s+/);
+      const componentSingles = selected.filter(
+        (s) => s.origin === "single" && joinWords.some((w) => s.text.toLowerCase() === w.toLowerCase())
+      );
+      if (componentSingles.length >= Math.min(joinWords.length, 2)) {
+        componentSingles.forEach((s) => singlesToRemove.add(s.text));
+      }
+    }
+    if (singlesToRemove.size > 0) {
+      selected = selected.filter((s) => s.origin !== "single" || !singlesToRemove.has(s.text));
+    }
+  }
+
+  // Protect position-0 compound titles from distant sub-section headers.
+  // When a position-0 compound title is longer and contains a shorter candidate
+  // that appears > 10 lines later, remove the distant candidate so the dedup
+  // (shorter-wins rule) doesn't destroy the compound title.
+  const pos0Compounds = selected.filter((s) => s.position === 0);
+  if (pos0Compounds.length > 0) {
+    selected = selected.filter((s) => {
+      if (s.position === 0) return true;
+      const sLower = s.text.toLowerCase();
+      return !pos0Compounds.some(
+        (p0) =>
+          p0.position + 10 < s.position &&
+          s.text.length < p0.text.length &&
+          p0.text.toLowerCase().includes(sLower)
+      );
+    });
+  }
 
   // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one.
   // DO NOT CHANGE THIS LOGIC — it has been incorrectly "improved" by the title-loop 5 times.

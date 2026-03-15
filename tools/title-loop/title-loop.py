@@ -712,8 +712,6 @@ Generate all {batch_count} files now."""
         generated_titles = [extract_expected_title(f) for f in gen_files]
 
 
-MAX_ANALYZE_FAILURES = 20  # cap files Sonnet reads to control token usage
-
 def phase_analyze(iter_dir: Path, results: list[dict]) -> None:
     """Analyze extraction failures with Claude (Sonnet)."""
     log_dir = iter_dir / "logs"
@@ -722,40 +720,27 @@ def phase_analyze(iter_dir: Path, results: list[dict]) -> None:
         (iter_dir / "feedback.md").write_text("No failures to analyze — all extractions matched.\n")
         return
 
-    # Prioritize real files over generated ones, then cap total
-    real_failures = [r for r in failures if ".real." in r["file"]]
-    gen_failures = [r for r in failures if ".generated." in r["file"]]
-    remaining = MAX_ANALYZE_FAILURES - len(real_failures)
-    sampled = real_failures + gen_failures[:max(0, remaining)]
-    skipped = len(failures) - len(sampled)
+    real_failures = sum(1 for r in failures if ".real." in r["file"])
+    gen_failures = sum(1 for r in failures if ".generated." in r["file"])
 
-    failure_details = "\n".join(
-        f"- File: {r['file']}\n  Expected: '{r['expected']}'\n  Got: '{r['extracted']}'"
-        for r in sampled
-    )
+    prompt = f"""Analyze title extraction failures for this iteration.
 
-    summary_note = ""
-    if skipped > 0:
-        summary_note = (
-            f"\n\nNOTE: {skipped} additional failures were omitted to keep context manageable. "
-            f"Total failures: {len(failures)} ({len(real_failures)} real, {len(gen_failures)} generated). "
-            f"Focus your analysis on the {len(sampled)} files listed above — they are representative."
-        )
+Read the results file at {iter_dir.relative_to(PROJECT_ROOT)}/results.txt — lines ending
+with "no" are failures. There are {len(failures)} failures ({real_failures} real, {gen_failures} generated).
 
-    prompt = f"""Analyze the title extraction failures below. Read each failing input file
-and the current implementation at lib/text-classifier/title-extractor.ts.
+Read the current implementation at lib/text-classifier/title-extractor.ts.
+
+Then investigate the failures: grep for patterns across failing input files in
+tools/title-loop/input/ to identify common themes. Read a representative sample of
+failing files (prioritize .real.txt files, then pick diverse .generated.*.txt files)
+to understand what the extractor struggles with.
 
 Write your analysis to {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md explaining:
-1. What patterns the algorithm fails on
-2. Why each specific failure occurred
-3. Common themes across failures
+1. Common failure patterns (group failures by root cause, not individually)
+2. Why the current algorithm fails on each pattern
+3. Which patterns affect real files vs only generated files
 
-Do NOT modify any code files. Only write the feedback.md file.
-
-Failures ({len(sampled)} of {len(failures)} total):
-{failure_details}{summary_note}
-
-Results file: {iter_dir.relative_to(PROJECT_ROOT)}/results.txt"""
+Do NOT modify any code files. Only write the feedback.md file."""
 
     run_claude(prompt, model="sonnet", log_path=log_dir / "analyze.log")
 

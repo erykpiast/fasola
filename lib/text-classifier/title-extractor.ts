@@ -45,6 +45,13 @@ const METADATA_PATTERNS = [
   /^SAMPLE\s+SCHEDULE\b/i,
   /^BULK\s+FERMENTATION\b/i,
   /^(THIS\s+RECIPE\s+)?MAKES\b/i,
+  // Polish serving-size patterns: "NA 3 PAPRYKI", "NA OKOŁO 1 KG", "DLA 4 OSÓB"
+  /^NA\s+(\d|OKOŁO)\b/i,
+  /^DLA\s+\d/i,
+  // Time-unit metadata: any line containing "N MIN" or "N GODZ" is prep/cook/rest time,
+  // regardless of OCR-corrupted prefix (catches PRZYGOTOWANTE, GOTOMANTE, etc.)
+  /\b\d+\s*MIN\b/i,
+  /\b\d+\s*GODZ/i,
 ];
 
 /**
@@ -332,7 +339,18 @@ export async function extractTitleWithEmbeddings(
   }
 
   const bestStructural = structuralCandidates.length > 0
-    ? structuralCandidates.reduce((a, b) => a.rawScore > b.rawScore ? a : b)
+    ? structuralCandidates.reduce((a, b) => {
+        const scoreDiff = a.rawScore - b.rawScore;
+        if (Math.abs(scoreDiff) > 0.03) return scoreDiff > 0 ? a : b;
+        // Tiebreak: single-line origin beats multi-line joins (avoids conflating two separate headings)
+        if (a.origin === "single" && b.origin !== "single") return a;
+        if (b.origin === "single" && a.origin !== "single") return b;
+        // Tiebreak: more words (more specific) → better
+        const wcDiff = wordCount(b.text) - wordCount(a.text);
+        if (wcDiff !== 0) return wcDiff > 0 ? b : a;
+        // Tiebreak: earlier position → better
+        return a.position < b.position ? a : b;
+      })
     : null;
   const baseHeading = bestStructural ?? undefined;
 
@@ -480,6 +498,29 @@ export async function extractTitleWithEmbeddings(
       return true;
     });
   }
+
+  // Pre-dedup: remove sub-section headers that are substrings of other surviving candidates.
+  // A sub-section header is an ALL_CAPS candidate followed by ingredient-like lines in the source.
+  // Example: "CHLEBEK" (bread section header, followed by "500 g mąki") is a substring of
+  // "CHLEBEK Z WARZYWAMI I BOCZKIEM" (the real title). Without this filter, dedup kills the title.
+  selected = selected.filter((candidate) => {
+    if (!isAllCaps(candidate.text)) return true;
+    // Check if this candidate is immediately followed by ingredient-like content
+    const nextSourceLines = lines.slice(candidate.position + 1, candidate.position + 2);
+    const followedByIngredients = nextSourceLines.some(
+      (l) => looksLikeIngredient(l.trim()) || startsWithNumber(l.trim())
+    );
+    if (!followedByIngredients) return true;
+    // Only remove if a longer candidate contains this one as a substring
+    const candidateLower = candidate.text.toLowerCase();
+    const hasLongerParent = selected.some(
+      (other) =>
+        other !== candidate &&
+        other.text.length > candidate.text.length &&
+        other.text.toLowerCase().includes(candidateLower)
+    );
+    return !hasLongerParent;
+  });
 
   // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one.
   // DO NOT CHANGE THIS LOGIC — it has been incorrectly "improved" by the title-loop 5 times.

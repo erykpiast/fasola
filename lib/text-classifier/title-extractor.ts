@@ -57,6 +57,10 @@ const METADATA_PATTERNS = [
   // Polish serving-size patterns: "NA 3 PAPRYKI", "NA OKOŁO 1 KG", "DLA 4 OSÓB"
   /^NA\s+(\d|OKOŁO)\b/i,
   /^DLA\s+\d/i,
+  // OCR-resilient: "DLA" + any token + serving-unit word (handles DLA & OSOB, DLA § OSOB, etc.)
+  /^DLA\s+\S+\s+OSOB/i,
+  // OCR-resilient: "DLA" + single non-alphanumeric char (common digit→symbol OCR error)
+  /^DLA\s+[^a-zA-Z0-9\s]\s/i,
   // Time-unit metadata: any line containing "N MIN" or "N GODZ" is prep/cook/rest time,
   // regardless of OCR-corrupted prefix (catches PRZYGOTOWANTE, GOTOMANTE, etc.)
   /\b\d+\s*MIN\b/i,
@@ -138,6 +142,12 @@ function isLikelyGarbled(text: string): boolean {
     return true;
   }
 
+  // Single word with internal lowercase→uppercase transition — OCR noise (e.g., "UuIw", "aBC")
+  // No recipe title uses this pattern as a standalone single-word candidate.
+  if (words.length === 1 && /[a-z][A-Z]/.test(text.trim())) {
+    return true;
+  }
+
   // Recipe titles never start with a lowercase letter
   if (/^[a-z]/.test(text.trim())) {
     return true;
@@ -178,6 +188,10 @@ function passesHardFilters(text: string): boolean {
   if (isLikelyGarbled(text)) return false;
   // Pipe-separated lines are book category/chapter headers, not recipe titles
   if (text.includes(" | ")) return false;
+  // Slash-separated breadcrumbs (e.g., "/ Jesien / Zupy") are navigation, not titles
+  // Only filter when 2+ slashes are present — single-slash lines like
+  // "TITLE / SUBTITLE" are legitimate continuation-merged titles
+  if ((text.match(/\//g) || []).length >= 2) return false;
   // Bullet-list items (ingredients or instruction steps) are never titles
   if (/^\s*[-•*]\s/.test(text)) return false;
   // Known recipe section labels are structural headers, not titles
@@ -291,8 +305,22 @@ function buildCandidates(
   const candidates: Array<{ text: string; position: number; origin: CandidateOrigin }> = [];
   const seen = new Set<string>();
 
+  // Build a set of positions to skip: short ALL_CAPS lines immediately following metadata
+  const metadataContinuationPositions = new Set<number>();
+  for (let i = 0; i < mergedLines.length - 1; i++) {
+    if (looksLikeMetadata(mergedLines[i].text)) {
+      const next = mergedLines[i + 1];
+      if (isAllCaps(next.text) && wordCount(next.text) <= 2 && next.text.length <= 15) {
+        metadataContinuationPositions.add(next.index);
+      }
+    }
+  }
+
   for (let i = 0; i < mergedLines.length; i++) {
     const line = mergedLines[i];
+
+    // Skip metadata continuation fragments
+    if (metadataContinuationPositions.has(line.index)) continue;
 
     // Single line
     if (passesHardFilters(line.text)) {

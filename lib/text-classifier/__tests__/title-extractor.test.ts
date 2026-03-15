@@ -350,6 +350,20 @@ describe("extractTitleWithEmbeddings", () => {
     expect(result).toBe("THREE WORD LINE");
   });
 
+  it("filters OCR-corrupted serving size 'DLA & OSOB' so mixed-case title wins", async () => {
+    // "DLA & OSOB" is OCR-corrupted Polish "DLA 4 OSÓB" (for 4 people) — metadata, not a title.
+    // The expanded DLA pattern matches even when the digit is corrupted to a symbol.
+    const embed = createMockEmbed(["smażona zielona fasolka"], []);
+    const text = [
+      "Smażona zielona fasolka",
+      "DLA & OSOB",
+      "200g fasolki",
+      "1 cebula",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("Smażona zielona fasolka");
+  });
+
   it("layout-based bilingual detection suppresses ALL_CAPS romanization with no word overlap", async () => {
     // Mixed-case title at position 0 (≥2 words) + ALL_CAPS candidate at position 1 with no
     // words in common → layout guard fires and suppresses the ALL_CAPS candidate.

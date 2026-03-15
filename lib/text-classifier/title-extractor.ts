@@ -380,13 +380,37 @@ export async function extractTitleWithEmbeddings(
     return undefined;
   }
 
+  // --- Pre-threshold bilingual title detection ---
+  // When a mixed-case candidate at position 0 is followed by a single ALL_CAPS
+  // candidate at position ≤ 2 in the FULL scored pool, this is a bilingual recipe
+  // page (e.g., Polish title + ALL_CAPS Korean romanization). Suppress the ALL_CAPS
+  // candidate before computing threshold so its bonuses don't inflate the threshold
+  // beyond the mixed-case title's reach.
+  let scoredForThreshold = scored;
+  const prePos0 = scored.find((s) => s.position === 0 && !isAllCaps(s.text));
+  const preAllCaps = scored.filter((s) => isAllCaps(s.text));
+  if (prePos0 && preAllCaps.length === 1 && preAllCaps[0].position <= 2) {
+    const capsLower = preAllCaps[0].text.toLowerCase();
+    scoredForThreshold = scored.filter((s) => !s.text.toLowerCase().startsWith(capsLower));
+  }
+
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate
   // the threshold and block equally-valid headings on multi-recipe pages.
-  const bestThresholdScore = Math.max(...scored.map((s) => s.thresholdScore));
+  const bestThresholdScore = Math.max(...scoredForThreshold.map((s) => s.thresholdScore));
   const threshold = Math.max(0.08, bestThresholdScore * 0.7);
 
   // Filter candidates above threshold
-  let selected = scored.filter((s) => s.score >= threshold);
+  let selected = scoredForThreshold.filter((s) => s.score >= threshold);
+
+  // Empty-pool fallback: when threshold filtering discards every candidate,
+  // the hard filters' structural verdict should not be overruled by weak
+  // embedding differentiation. Return the best positional candidate.
+  if (selected.length === 0 && scored.length > 0) {
+    const fallback = scored
+      .slice()
+      .sort((a, b) => a.position - b.position || b.score - a.score);
+    selected = [fallback[0]];
+  }
 
   // Remove word-boundary prefixes of firstStructuralHeading when the heading itself survived
   // the threshold. Cases:
@@ -453,30 +477,6 @@ export async function extractTitleWithEmbeddings(
         b.text.length < a.text.length
     );
   });
-
-  // First-line mixed-case title protection:
-  // When a mixed-case title at position 0 has a reasonable score and the only ALL_CAPS
-  // candidate is at position ≤ 2 (i.e. within the first two non-empty document lines,
-  // allowing for one blank line between title and subtitle), treat the ALL_CAPS line as a
-  // subtitle/transliteration and prefer the first-line title. This handles bilingual cookbooks
-  // where the primary-language title precedes an ALL_CAPS romanization.
-  // Placement: runs AFTER dedup (so both candidates were already compared for substring overlap)
-  // but BEFORE the multi-title guard (so the guard never sees the removed subtitle as a
-  // candidate that could collapse the selection to the wrong winner).
-  // Safety: allCapsCandidates.length === 1 ensures the guard never fires on genuine multi-recipe
-  // pages (which have ≥ 2 ALL_CAPS headings).
-  if (selected.length >= 1) {
-    const pos0 = selected.find((s) => s.position === 0 && !isAllCaps(s.text));
-    const allCapsCandidates = selected.filter((s) => isAllCaps(s.text));
-    if (
-      pos0 &&
-      allCapsCandidates.length === 1 &&
-      allCapsCandidates[0].position <= 2 &&
-      pos0.score >= threshold
-    ) {
-      selected = selected.filter((s) => s !== allCapsCandidates[0]);
-    }
-  }
 
   // Multi-title guard: only join multiple candidates with "+" when there is
   // structural evidence of a multi-recipe page (≥2 ALL_CAPS headings).

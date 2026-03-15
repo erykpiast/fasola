@@ -242,10 +242,19 @@ function isLikelyGarbled(text: string): boolean {
 
 const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool|remove|place|combine|whisk|knead|roll|spread|brush|slice|chop|dice|mince|drain|rinse|peel|grate|melt|simmer|boil|fry|sauté|saute|roast|grill|broil|steam|let|set|transfer|serve|garnish|arrange|sprinkle|season|preheat|cover|uncover|reduce|bring|toss|cut|trim|shape|form)\b/i;
 
+// Polish imperative cooking verbs (with OCR-resilient forms — no diacritics required).
+// These cover the most common recipe instruction starters. Includes common OCR-corrupted
+// forms (e.g., "Smaż" → "Smaz", "Dodaj" → "Dodaj").
+// Note: only verbs that NEVER start a recipe title. "Piecz" (bake) is excluded because
+// "Pieczeń" (roast) and "Pieczarki" (mushrooms) share the prefix.
+const POLISH_COOKING_INSTRUCTION_STARTS = /^(podawaj|dodaj|dodawaj|sma[zż]|gotuj|odced[zź]|wymieszaj|mieszaj|wlej|nalej|przygotuj|zagotuj|pokr[oó]j|obierz|wrzuc|wrzuć|usma[zż]|podsma[zż]|prze[lł][oó][zż]|zblenduj|ubij|roztrzepaj|rozprowad[zź]|wyrob|zamieszaj|posyp|polej|odstaw|na[lł][oó][zż]|przykryj|odkryj|wstaw|zdejmij|ods[aą]cz|rozgrzej|posiekaj|zetrzyj|wy[lł][oó][zż]|wyjmij|ukr[oó]j|przekr[oó]j|formuj|ugniataj|rozwałkuj)\b/i;
+
 function looksLikeCookingInstruction(text: string): boolean {
   const words = text.trim().split(/\s+/);
   if (words.length < 4) return false;  // Instructions are multi-word sentences
-  return COOKING_INSTRUCTION_STARTS.test(text.trim());
+  if (COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
+  if (POLISH_COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
+  return false;
 }
 
 function passesHardFilters(text: string): boolean {
@@ -268,6 +277,9 @@ function passesHardFilters(text: string): boolean {
   // Single-word non-title fragments
   const words = text.trim().split(/\s+/);
   if (words.length === 1 && NON_TITLE_WORDS.has(text.trim().toLowerCase())) return false;
+  // Lines with ≥8 words are almost certainly body text, not titles.
+  // Exception: multi-title compounds with " + ", " : ", or " & " separators are allowed.
+  if (words.length >= 8 && !/ [+:&] /.test(text)) return false;
   return true;
 }
 
@@ -854,7 +866,9 @@ export async function extractTitleWithEmbeddings(
   // structural evidence of a multi-recipe page (≥2 ALL_CAPS headings).
   // A single ALL_CAPS title among mixed-case survivors is a single-recipe page —
   // collapse to the highest-scoring candidate.
-  // Zero ALL_CAPS survivors → mixed-case multi-title page → keep all.
+  // Zero ALL_CAPS survivors → apply positional tiebreak only when candidates are
+  // spread far apart (>10 lines), which indicates body-text leakage. Closely-
+  // positioned candidates are likely genuine multi-recipe content.
   if (selected.length > 1) {
     const allCapsSelected = selected.filter((s) => isAllCaps(s.text));
     if (allCapsSelected.length >= 2) {
@@ -895,6 +909,27 @@ export async function extractTitleWithEmbeddings(
       } else {
         selected = [selected.reduce((a, b) => (a.score > b.score ? a : b))];
       }
+    } else {
+      // Zero ALL_CAPS survivors → mixed-case page.
+      // If all survivors are closely positioned (within 10 lines of each other), keep them all —
+      // they're likely genuine multi-recipe content on a single page.
+      // If any survivor is far from the earliest, apply a positional tiebreak: the real title
+      // is almost always the earliest candidate; distant survivors are likely body-text leakage.
+      selected.sort((a, b) => a.position - b.position);
+      const earliest = selected[0];
+      const farthest = selected[selected.length - 1];
+      if (farthest.position - earliest.position > 10) {
+        // Large span → body-text leakage. Collapse to one: prefer the highest-scoring
+        // candidate within 3 positions of the earliest (position tolerance for OCR gaps),
+        // falling back to the earliest itself if none score higher.
+        const closeCompetitors = selected.filter(
+          (s) => s.position <= earliest.position + 3 && s.score > earliest.score
+        );
+        selected = closeCompetitors.length > 0
+          ? [closeCompetitors.reduce((a, b) => (a.score > b.score ? a : b))]
+          : [earliest];
+      }
+      // Span ≤ 10 → all survivors are closely positioned; fall through keeping all.
     }
   }
 

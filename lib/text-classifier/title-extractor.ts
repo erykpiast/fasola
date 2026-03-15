@@ -18,14 +18,15 @@ const NOISE_REFERENCE =
  * Measurement units commonly found in ingredient lists
  */
 const MEASUREMENT_PATTERNS = [
+  // English
   "cup",
   "cups",
   "tbsp",
   "tsp",
   "tablespoon",
   "teaspoon",
-  "oz",
-  "lb",
+  // "oz" and "lb" are matched with word boundaries in looksLikeIngredient
+  // to avoid false positives ("oz" in "mozzarella", "lb" in "albacore")
   "gram",
   "grams",
   "kg",
@@ -34,6 +35,14 @@ const MEASUREMENT_PATTERNS = [
   "pinch",
   "dash",
   "handful",
+  // Polish
+  "łyżka", "łyżki", "łyżek",           // tablespoon(s)
+  "łyżeczka", "łyżeczki", "łyżeczek",   // teaspoon(s)
+  "szklanka", "szklanki", "szklanek",    // cup(s)
+  "szczypta",                            // pinch
+  "garść",                               // handful
+  "opakowanie", "opakowania",            // package(s)
+  "plasterek", "plasterki",             // slice(s)
 ];
 
 /**
@@ -66,11 +75,37 @@ const NON_TITLE_WORDS = new Set([
 
 function looksLikeIngredient(line: string): boolean {
   const lowerLine = line.toLowerCase();
-  return MEASUREMENT_PATTERNS.some((pattern) => lowerLine.includes(pattern));
+  if (MEASUREMENT_PATTERNS.some((pattern) => lowerLine.includes(pattern))) return true;
+  // Compact metric: "100g", "50ml", "250g" — digit immediately followed by g/ml/kg
+  if (/\b\d+\s*(?:g|ml|kg)\b/i.test(line)) return true;
+  // "to taste" / "do smaku" — qualitative ingredient with no unit
+  if (/\bto taste\b/i.test(line) || /\bdo smaku\b/i.test(line)) return true;
+  return false;
 }
 
 function startsWithNumber(line: string): boolean {
-  return /^\s*\d/.test(line);
+  // Match lines starting with a digit, or bullet-then-digit (e.g., "- 2 jajka")
+  return /^\s*(?:[-•*]\s*)?\d/.test(line);
+}
+
+/**
+ * Known recipe section labels — these are structural headers, not recipe titles.
+ * Matched case-insensitively after trimming and stripping trailing punctuation (colon, period).
+ */
+const SECTION_LABELS = new Set([
+  // English
+  "ingredients", "directions", "instructions", "method", "preparation",
+  "steps", "notes", "tip", "tips", "variations", "variation",
+  "garnish", "topping", "toppings", "frosting", "filling",
+  // Polish
+  "składniki", "przygotowanie", "sposób przygotowania", "sposób wykonania",
+  "wykonanie", "wskazówki", "podpowiedź", "warianty",
+  "sos", "nadzienie", "polewa", "lukier", "ciasto",
+]);
+
+function isSectionLabel(text: string): boolean {
+  const normalized = text.trim().replace(/[:.]$/, "").toLowerCase();
+  return SECTION_LABELS.has(normalized);
 }
 
 function isAllCaps(line: string): boolean {
@@ -143,6 +178,10 @@ function passesHardFilters(text: string): boolean {
   if (isLikelyGarbled(text)) return false;
   // Pipe-separated lines are book category/chapter headers, not recipe titles
   if (text.includes(" | ")) return false;
+  // Bullet-list items (ingredients or instruction steps) are never titles
+  if (/^\s*[-•*]\s/.test(text)) return false;
+  // Known recipe section labels are structural headers, not titles
+  if (isSectionLabel(text)) return false;
   // Single-word non-title fragments
   const words = text.trim().split(/\s+/);
   if (words.length === 1 && NON_TITLE_WORDS.has(text.trim().toLowerCase())) return false;
@@ -220,8 +259,8 @@ function buildCandidates(
       }
     }
 
-    // 2-line join
-    if (i + 1 < mergedLines.length) {
+    // 2-line join — skip if first line is a section label (prevents "INGREDIENTS TITLE" joins)
+    if (i + 1 < mergedLines.length && !isSectionLabel(line.text)) {
       const joined2 = `${line.text} ${mergedLines[i + 1].text}`;
       if (passesHardFilters(joined2)) {
         const norm = joined2.toLowerCase();
@@ -232,8 +271,8 @@ function buildCandidates(
       }
     }
 
-    // 3-line join
-    if (i + 2 < mergedLines.length) {
+    // 3-line join — skip if first line is a section label
+    if (i + 2 < mergedLines.length && !isSectionLabel(line.text)) {
       const joined3 = `${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`;
       if (passesHardFilters(joined3)) {
         const norm = joined3.toLowerCase();

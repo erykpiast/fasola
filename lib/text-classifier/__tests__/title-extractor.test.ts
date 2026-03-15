@@ -271,6 +271,27 @@ describe("extractTitleWithEmbeddings", () => {
     expect(result).toBe("MILK FLATBREADS + POTATO FLATBREADS");
   });
 
+  it("filters bullet-list lines so real title wins", async () => {
+    const embed = createMockEmbed(["mozzarella sticks"], []);
+    const text = "MOZZARELLA STICKS\n- 2 tbsp sugar\n- Salt to taste";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("MOZZARELLA STICKS");
+  });
+
+  it("filters INGREDIENTS section label so real ALL_CAPS title wins", async () => {
+    const embed = createMockEmbed(["mozzarella sticks"], []);
+    const text = "INGREDIENTS\nMOZZARELLA STICKS\n- 2 tbsp sugar";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("MOZZARELLA STICKS");
+  });
+
+  it("filters compact metric ingredient lines so real title wins", async () => {
+    const embed = createMockEmbed(["barszcz czerwony"], []);
+    const text = "BARSZCZ CZERWONY\n100g buraków\n50ml bulionu";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("BARSZCZ CZERWONY");
+  });
+
   it("prefers mixed-case title at position 0 over ALL_CAPS subtitle at position 1 (bilingual page)", async () => {
     // "Faszerowana papryka" is the Polish title at position 0 (mixed-case).
     // "PAPRIKA GYERAN-JJIM" is an ALL_CAPS romanization at position 1 — treated as subtitle.

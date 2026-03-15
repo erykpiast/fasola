@@ -47,3 +47,6 @@ lib/photo-processor/*.bundle.map
 
 # Task expansion logs
 .simple-task-master/logs/
+
+# Python
+__pycache__

@@ -224,6 +224,50 @@ function buildCandidates(
 
   const burstEnd = findBurstEnd(nonEmptyLines);
 
+  // Pre-merge consecutive short ALL_CAPS lines (OCR-fragmented headings).
+  // When a sequence of 2+ ALL_CAPS lines each has ≤2 words and ≤25 chars, they are
+  // almost certainly OCR fragments of a single heading. Merge them into one line so
+  // the complete title enters the candidate pool without hitting the 3-line join ceiling.
+  const capsCoalesced: Array<{ text: string; index: number }> = [];
+  let ci = burstEnd;
+  while (ci < nonEmptyLines.length) {
+    const line = nonEmptyLines[ci];
+    if (
+      isAllCaps(line.text) &&
+      wordCount(line.text) <= 2 &&
+      line.text.length <= 25 &&
+      !isSectionLabel(line.text) &&
+      !looksLikeMetadata(line.text)
+    ) {
+      let merged = line.text;
+      const startIndex = line.index;
+      let j = ci + 1;
+      while (j < nonEmptyLines.length) {
+        const next = nonEmptyLines[j];
+        if (
+          isAllCaps(next.text) &&
+          wordCount(next.text) <= 2 &&
+          next.text.length <= 25 &&
+          !isSectionLabel(next.text) &&
+          !looksLikeMetadata(next.text) &&
+          (merged + " " + next.text).length <= 80
+        ) {
+          merged += " " + next.text;
+          j++;
+        } else {
+          break;
+        }
+      }
+      if (j > ci + 1) {
+        capsCoalesced.push({ text: merged, index: startIndex });
+        ci = j;
+        continue;
+      }
+    }
+    capsCoalesced.push(line);
+    ci++;
+  }
+
   // Pre-merge continuation lines: a line starting with /&+:( is never a standalone title.
   // Merge it into the preceding line so the complete title enters the pool as a single candidate,
   // avoiding the fragile chain of conditions required by the downstream join survival logic.
@@ -231,10 +275,10 @@ function buildCandidates(
   // three or more lines with continuation tokens (rare in practice) are not handled here —
   // the downstream 2-line and 3-line join candidates cover those cases instead.
   const mergedLines: Array<{ text: string; index: number }> = [];
-  for (let i = burstEnd; i < nonEmptyLines.length; i++) {
-    const line = nonEmptyLines[i];
-    if (i + 1 < nonEmptyLines.length) {
-      const nextText = nonEmptyLines[i + 1].text;
+  for (let i = 0; i < capsCoalesced.length; i++) {
+    const line = capsCoalesced[i];
+    if (i + 1 < capsCoalesced.length) {
+      const nextText = capsCoalesced[i + 1].text;
       if (/^[/&+:(]/.test(nextText)) {
         mergedLines.push({ text: `${line.text} ${nextText}`, index: line.index });
         i++;
@@ -451,23 +495,43 @@ export async function extractTitleWithEmbeddings(
   const prePos0 = scored.find((s) => s.position === 0 && !isAllCaps(s.text));
   if (prePos0) {
     const nearbyAllCaps = scored.filter(
-      (s) => isAllCaps(s.text) && s.position >= 1 && s.position <= 2
+      (s) => isAllCaps(s.text) && s.position >= 1 && s.position <= 2 && s.origin === "single"
     );
     const pos0Embedding = rawScored.find((r) => r.text === prePos0.text)?.embedding;
+
+    let translationCandidates: typeof nearbyAllCaps = [];
+
+    // Method 1: embedding similarity (works for related languages)
     if (pos0Embedding && nearbyAllCaps.length > 0) {
-      const translationCandidates = nearbyAllCaps.filter((cap) => {
+      translationCandidates = nearbyAllCaps.filter((cap) => {
         const capEmbedding = rawScored.find((r) => r.text === cap.text)?.embedding;
         if (!capEmbedding) return false;
         return cosineSimilarity(pos0Embedding, capEmbedding) > 0.4;
       });
-      if (translationCandidates.length > 0) {
-        // Also suppress multi-line joins that start with the translation text
-        // (e.g. "PAPRIKA GYERAN-JJIM Ingredients" starts with "PAPRIKA GYERAN-JJIM")
-        scoredForThreshold = scored.filter((s) => {
-          const sLower = s.text.toLowerCase();
-          return !translationCandidates.some((t) => sLower.startsWith(t.text.toLowerCase()));
-        });
-      }
+    }
+
+    // Method 2: layout-based detection (cross-lingual fallback).
+    // When embedding similarity is insufficient (e.g. Polish ↔ Korean romanization),
+    // detect bilingual layout by position and word overlap:
+    // mixed-case ≥2 words at pos 0 + ALL_CAPS ≥2 words at pos 1-2 with no shared words.
+    if (translationCandidates.length === 0 && wordCount(prePos0.text) >= 2) {
+      const pos0Words = new Set(
+        prePos0.text.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
+      );
+      translationCandidates = nearbyAllCaps.filter((cap) => {
+        if (wordCount(cap.text) < 2) return false;
+        const capWords = cap.text.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+        return !capWords.some((w) => pos0Words.has(w));
+      });
+    }
+
+    if (translationCandidates.length > 0) {
+      // Also suppress multi-line joins that start with the translation text
+      // (e.g. "PAPRIKA GYERAN-JJIM Ingredients" starts with "PAPRIKA GYERAN-JJIM")
+      scoredForThreshold = scored.filter((s) => {
+        const sLower = s.text.toLowerCase();
+        return !translationCandidates.some((t) => sLower.startsWith(t.text.toLowerCase()));
+      });
     }
   }
 

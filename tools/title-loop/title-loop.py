@@ -503,14 +503,26 @@ def run_claude(
 
 # --- Iteration phases ---
 
-def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dict]]:
-    """Run evaluation, write results, log accuracy. Returns (iter_dir, accuracy, results)."""
-    print(f"\nEvaluating real input files...")
+def check_real_accuracy() -> tuple[float, list[dict]]:
+    """Evaluate real input files and return (accuracy, results)."""
     real_files = sorted(glob.glob(str(INPUT_DIR / "*.real.txt")))
     print(f"  Found {len(real_files)} real files")
     real_results = evaluate_files(real_files)
     real_accuracy = compute_accuracy(real_results)
-    print(f"\n  Real accuracy: {real_accuracy:.1%} ({sum(1 for r in real_results if r['match'])}/{len(real_results)})")
+    real_pass = sum(1 for r in real_results if r["match"])
+    print(f"\n  Real accuracy: {real_accuracy:.1%} ({real_pass}/{len(real_files)})")
+    return real_accuracy, real_results
+
+
+def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dict]]:
+    """Run evaluation, write results, log accuracy. Returns (iter_dir, accuracy, results).
+
+    The returned accuracy only meets ACCURACY_THRESHOLD when BOTH the real
+    examples AND the combined (real + synthetic) score are above the threshold.
+    This prevents synthetic examples from masking regressions on real data.
+    """
+    print(f"\nEvaluating real input files...")
+    real_accuracy, real_results = check_real_accuracy()
 
     gen_results: list[dict] = []
     combined_accuracy = real_accuracy
@@ -534,9 +546,21 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
     all_results = real_results + gen_results
     print(f"\n  Combined accuracy: {combined_accuracy:.1%}")
 
-    # Log iteration accuracy
+    # Gate: real accuracy must independently meet the threshold.
+    # If combined is above target but real is below, use real accuracy as the
+    # effective score so the loop continues iterating.
+    effective_accuracy = min(real_accuracy, combined_accuracy)
+    if combined_accuracy >= ACCURACY_THRESHOLD and real_accuracy < ACCURACY_THRESHOLD:
+        print(f"  WARNING: Combined accuracy meets threshold but real accuracy "
+              f"({real_accuracy:.1%}) does not — continuing iteration.")
+
+    # Log iteration accuracy — first number is always the effective (gated) score
+    # so that get_logged_accuracy / determine_resume_phase see the right value.
     with open(ITER_LOG, "a") as f:
-        f.write(f"{iteration} - {combined_accuracy:.1%}\n")
+        if gen_results:
+            f.write(f"{iteration} - {effective_accuracy:.1%} (combined: {combined_accuracy:.1%}, real: {real_accuracy:.1%})\n")
+        else:
+            f.write(f"{iteration} - {real_accuracy:.1%}\n")
 
     # Create iteration directory and write results
     commit_hash = get_commit_hash()
@@ -544,7 +568,7 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
     write_results(iter_dir, all_results)
     print(f"  Results written to {iter_dir.relative_to(PROJECT_ROOT)}")
 
-    return iter_dir, combined_accuracy, all_results
+    return iter_dir, effective_accuracy, all_results
 
 
 def generate_synthetic_data(iteration: int, log_dir: Path) -> None:
@@ -743,8 +767,14 @@ def main() -> None:
         if last_phase == "done":
             accuracy = get_logged_accuracy(last_logged)
             if accuracy is not None and accuracy >= ACCURACY_THRESHOLD:
-                print(f"Iteration {last_logged} already reached target accuracy ({accuracy:.1%}). Nothing to do.")
-                return
+                # Re-check real examples before declaring victory — code may
+                # have changed since the logged accuracy was recorded.
+                print(f"Iteration {last_logged} logged {accuracy:.1%}. Re-checking real examples...")
+                real_accuracy, _ = check_real_accuracy()
+                if real_accuracy >= ACCURACY_THRESHOLD:
+                    print(f"  Real examples still passing. Nothing to do.")
+                    return
+                print(f"  Real accuracy regressed — continuing with new iteration.")
             start_iteration = last_logged + 1
         else:
             start_iteration = last_logged

@@ -304,4 +304,62 @@ describe("extractTitleWithEmbeddings", () => {
     const result = await extractTitleWithEmbeddings(text, embed);
     expect(result).toBe("Faszerowana papryka");
   });
+
+  it("merges 4 consecutive short ALL_CAPS lines into one title (LABANEH-type)", async () => {
+    // Each OCR line is ≤2 words and ≤25 chars — the short-caps merge pass coalesces them.
+    const embed = createMockEmbed(["labaneh"], []);
+    const text = [
+      "LABANEH",
+      "BALLS",
+      "WITH NIGELLA",
+      "SEEDS",
+      "Essential to blending the flavours together",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("LABANEH BALLS WITH NIGELLA SEEDS");
+  });
+
+  it("short-caps merge breaks at a section label, preventing spurious joins", async () => {
+    // WORD ONE and WORD TWO are short ALL_CAPS, but INGREDIENTS (section label) sits between
+    // them and breaks the run — they should NOT be merged into "WORD ONE WORD TWO".
+    const embed = createMockEmbed(["word one"], []);
+    const text = [
+      "WORD ONE",
+      "INGREDIENTS",
+      "WORD TWO",
+      "Some body text here to fill the page",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    // WORD ONE wins (title word); WORD TWO is a separate candidate but scores lower.
+    // The key assertion: no "WORD ONE INGREDIENTS WORD TWO" merged result.
+    expect(result).toBe("WORD ONE");
+  });
+
+  it("short-caps merge does not fire when a line exceeds 2 words", async () => {
+    // "THREE WORD LINE" has 3 words — above the ≤2 limit — so it is never the start of a merge run.
+    const embed = createMockEmbed(["three word line"], []);
+    const text = [
+      "THREE WORD LINE",
+      "ANOTHER LINE",
+      "Body text follows here",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    // Candidates are generated individually; no spurious merge of the two lines by the caps pass.
+    // "THREE WORD LINE ANOTHER LINE" may appear as a downstream 2-line join candidate but
+    // "THREE WORD LINE" wins as the structural heading (more words, higher rawScore from title word).
+    expect(result).toBe("THREE WORD LINE");
+  });
+
+  it("layout-based bilingual detection suppresses ALL_CAPS romanization with no word overlap", async () => {
+    // Mixed-case title at position 0 (≥2 words) + ALL_CAPS candidate at position 1 with no
+    // words in common → layout guard fires and suppresses the ALL_CAPS candidate.
+    const embed = createMockEmbed(["mixed case title", "all caps different"], []);
+    const text = [
+      "Mixed Case Title",
+      "ALL CAPS DIFFERENT",
+      "Body text that fills the rest of the page",
+    ].join("\n");
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("Mixed Case Title");
+  });
 });

@@ -96,9 +96,33 @@ function isLikelyGarbled(text: string): boolean {
     return true;
   }
 
-  // Line starts with lowercase and is a short sentence fragment — OCR corruption indicator
-  if (text.length < 25 && /^[a-z]/.test(text.trim()) && !text.trim().endsWith(".")) {
+  // Recipe titles never start with a lowercase letter
+  if (/^[a-z]/.test(text.trim())) {
     return true;
+  }
+
+  // Mid-text sentence boundary (". " followed by a letter) — body text fragment spliced from multiple sentences
+  const trimmed = text.trim();
+  if (/\.\s+[a-zA-Z]/.test(trimmed) && !trimmed.endsWith(")")) {
+    return true;
+  }
+
+  // Multi-word candidate containing a garbled OCR fragment: a short lowercase word that isn't a known short word
+  if (words.length >= 2) {
+    const commonShort2 = new Set([
+      "a", "i", "of", "or", "to", "in", "on", "is", "it", "an",
+      "as", "at", "by", "do", "go", "if", "no", "so", "up", "we",
+      "w", "z",  // Polish prepositions
+    ]);
+    const hasGarbledWord = words.some(
+      (w) =>
+        /^[a-z]/.test(w) &&
+        w.replace(/[^a-z]/g, "").length <= 2 &&
+        !commonShort2.has(w.toLowerCase())
+    );
+    if (hasGarbledWord) {
+      return true;
+    }
   }
 
   return false;
@@ -243,7 +267,23 @@ export async function extractTitleWithEmbeddings(
     cachedNoiseRefEmbedding = await embed(NOISE_REFERENCE);
   }
 
-  const scored: Array<{ text: string; position: number; score: number }> = [];
+  // Find the first ALL_CAPS candidate with ≥2 words where every significant word has ≥4 alpha letters.
+  // This structural signal identifies the first clean recipe title heading in cookbook scans.
+  // Insignificant tokens (≤1 alpha letter: "/", "&", "+", ":", "D)", etc.) are filtered before
+  // the check so that multi-line joins with continuation punctuation still qualify.
+  const firstStructuralHeading = candidates.find((c) => {
+    if (!isAllCaps(c.text) || wordCount(c.text) < 2) return false;
+    const significantWords = c.text
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.replace(/[^A-Z]/g, "").length > 1);
+    return (
+      significantWords.length >= 2 &&
+      significantWords.every((w) => w.replace(/[^A-Z]/g, "").length >= 4)
+    );
+  });
+
+  const scored: Array<{ text: string; position: number; score: number; rawScore: number; baseScore: number }> = [];
 
   for (const candidate of candidates) {
     const embedding = await embed(candidate.text);
@@ -252,32 +292,43 @@ export async function extractTitleWithEmbeddings(
     const noiseSim = cosineSimilarity(embedding, cachedNoiseRefEmbedding);
     const rawScore = titleSim - Math.max(headerSim, noiseSim);
 
-    // Position bonus: up to +0.15 for candidates in the first half of the document
+    // Position factor: multiplicative tiebreaker — amplifies existing signal, doesn't replace it
     const relativePosition = candidate.position / lines.length;
-    const positionBonus = relativePosition < 0.5
-      ? 0.15 * (1 - relativePosition * 2)
-      : 0;
+    const positionFactor = relativePosition < 0.5
+      ? 1.0 + 0.12 * (1 - relativePosition * 2)
+      : 1.0;
 
     // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings
     const allCapsBonus = isAllCaps(candidate.text) && candidate.text.replace(/[^a-zA-Z]/g, "").length >= 4
       ? 0.08
       : 0;
 
-    const score = rawScore + positionBonus + allCapsBonus;
-    scored.push({ text: candidate.text, position: candidate.position, score });
+    // Structural heading bonus: first clean ALL_CAPS heading is almost always the recipe title
+    const structuralBonus =
+      firstStructuralHeading && candidate === firstStructuralHeading ? 0.10 : 0;
+
+    // baseScore excludes position factor — used for threshold so position boost on the first
+    // title doesn't inflate the bar and exclude valid later titles on multi-recipe pages
+    const baseScore = rawScore + allCapsBonus + structuralBonus;
+    const score = rawScore * positionFactor + allCapsBonus + structuralBonus;
+    scored.push({ text: candidate.text, position: candidate.position, score, rawScore, baseScore });
   }
 
   if (scored.length === 0) {
     return undefined;
   }
 
-  const bestScore = Math.max(...scored.map((s) => s.score));
-  const threshold = Math.max(0.08, bestScore * 0.8);
+  // Use position-free baseScore for threshold so position boost on the first title doesn't
+  // inflate the bar and exclude valid later titles on multi-recipe pages.
+  const bestBaseScore = Math.max(...scored.map((s) => s.baseScore));
+  const threshold = Math.max(0.08, bestBaseScore * 0.7);
 
   // Filter candidates above threshold
   let selected = scored.filter((s) => s.score >= threshold);
 
-  // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one
+  // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one.
+  // DO NOT CHANGE THIS LOGIC — it has been incorrectly "improved" by the title-loop 5 times.
+  // The tests require shorter wins: "Pierogi Ruskie" over "Pierogi Ruskie 200g mąki 3 ziemniaki".
   selected = selected.filter((a) => {
     const aLower = a.text.toLowerCase();
     return !selected.some(

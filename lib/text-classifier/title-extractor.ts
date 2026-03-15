@@ -141,6 +141,8 @@ function passesHardFilters(text: string): boolean {
   if (startsWithNumber(text)) return false;
   if (looksLikeMetadata(text)) return false;
   if (isLikelyGarbled(text)) return false;
+  // Pipe-separated lines are book category/chapter headers, not recipe titles
+  if (text.includes(" | ")) return false;
   // Single-word non-title fragments
   const words = text.trim().split(/\s+/);
   if (words.length === 1 && NON_TITLE_WORDS.has(text.trim().toLowerCase())) return false;
@@ -513,9 +515,9 @@ export async function extractTitleWithEmbeddings(
     if (!followedByIngredients) return true;
     // Only remove if a longer candidate contains this one as a substring
     const candidateLower = candidate.text.toLowerCase();
-    const hasLongerParent = selected.some(
+    const hasLongerParent = rawScored.some(
       (other) =>
-        other !== candidate &&
+        other.text !== candidate.text &&
         other.text.length > candidate.text.length &&
         other.text.toLowerCase().includes(candidateLower)
     );

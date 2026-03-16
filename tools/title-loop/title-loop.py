@@ -28,7 +28,7 @@ from pathlib import Path
 # --- Configuration ---
 MAX_ITERATIONS = 40
 ACCURACY_THRESHOLD = 0.95  # "close to 100%"
-CLAUDE_TIMEOUT = 900  # 15 minutes per Claude invocation
+CLAUDE_TIMEOUT = 3600  # 60 minutes hard cap (stall detector handles inactivity)
 CLAUDE_STALL_TIMEOUT = 60  # kill if no output for N seconds (default)
 CLAUDE_STALL_TIMEOUT_BY_MODEL = {"opus": 180, "sonnet": 120, "haiku": 60}
 CLAUDE_MAX_RETRIES = 3  # max retries per stage on stall/failure
@@ -159,7 +159,7 @@ def titles_match(extracted: str, expected: str) -> bool:
 def extract_expected_title(filename: str) -> str:
     """Extract expected title from filename like 'Tomato Soup.real.txt'."""
     name = Path(filename).name
-    cleaned = re.sub(r"\.(real|generated\.\d+)\.txt$", "", name)
+    cleaned = re.sub(r"\.(real|generated)\.txt$", "", name)
     if cleaned == name:
         raise ValueError(f"Unrecognized filename format: {filename!r}")
     return cleaned
@@ -565,16 +565,16 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
 
     # If real accuracy is high enough, test on generated data too
     if real_accuracy >= ACCURACY_THRESHOLD:
-        existing_gen = sorted(glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt")))
+        existing_gen = sorted(glob.glob(str(INPUT_DIR / "*.generated.txt")))
         if existing_gen:
-            print(f"\nFound {len(existing_gen)} existing synthetic files for iteration {iteration}, skipping generation.")
+            print(f"\nFound {len(existing_gen)} existing synthetic files, skipping generation.")
         else:
             total = sum(sum(b.values()) for b in SYNTHETIC_BATCHES)
             print(f"\nGenerating {total} synthetic OCR files in {len(SYNTHETIC_BATCHES)} batches...")
-            generate_synthetic_data(iteration, log_dir=log_dir)
+            generate_synthetic_data(log_dir=log_dir)
 
         print(f"\nEvaluating generated files...")
-        gen_files = sorted(glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt")))
+        gen_files = sorted(glob.glob(str(INPUT_DIR / "*.generated.txt")))
         print(f"  Found {len(gen_files)} generated files")
         if gen_files:
             gen_results = evaluate_files(gen_files)
@@ -676,7 +676,7 @@ _PATTERN_DESCRIPTIONS = {
 }
 
 
-def generate_synthetic_data(iteration: int, log_dir: Path) -> None:
+def generate_synthetic_data(log_dir: Path) -> None:
     """Generate synthetic OCR data using Claude Code in small batches."""
     real_files = glob.glob(str(INPUT_DIR / "*.real.txt"))
     existing_titles = [extract_expected_title(f) for f in real_files]
@@ -702,12 +702,12 @@ def generate_synthetic_data(iteration: int, log_dir: Path) -> None:
         prompt = f"""Generate exactly {batch_count} realistic fake OCR recipe text files.
 
 Each file simulates real OCR output from a scanned cookbook page. Save each file to:
-tools/title-loop/input/{{RECIPE_TITLE}}.generated.{iteration}.txt
+tools/title-loop/input/{{RECIPE_TITLE}}.generated.txt
 
 FILENAME RULES (critical):
 - RECIPE_TITLE must use SPACES, not hyphens or underscores
-  (e.g., "Apple Crumble.generated.{iteration}.txt", NOT "apple-crumble.generated.{iteration}.txt")
-- Preserve Polish diacritics in filenames (e.g., "Żurek.generated.{iteration}.txt")
+  (e.g., "Apple Crumble.generated.txt", NOT "apple-crumble.generated.txt")
+- Preserve Polish diacritics in filenames (e.g., "Żurek.generated.txt")
 - The filename title must EXACTLY match the main title in the text content (case-insensitive OK)
 
 RECIPE MIX: ~60% English, ~40% Polish. Variety of categories (soups, mains, desserts, salads,
@@ -727,7 +727,7 @@ Generate all {batch_count} files now."""
         run_claude(prompt, model="haiku", log_path=log_dir / f"generate-{batch_idx}.log")
 
         # Track what was generated so far
-        gen_files = glob.glob(str(INPUT_DIR / f"*.generated.{iteration}.txt"))
+        gen_files = glob.glob(str(INPUT_DIR / "*.generated.txt"))
         generated_titles = [extract_expected_title(f) for f in gen_files]
 
 
@@ -737,8 +737,8 @@ def _find_input_file(expected: str) -> Path | None:
     real = INPUT_DIR / f"{expected}.real.txt"
     if real.exists():
         return real
-    # Try generated files (any iteration)
-    gen_matches = sorted(INPUT_DIR.glob(f"{expected}.generated.*.txt"))
+    # Try generated file
+    gen_matches = sorted(INPUT_DIR.glob(f"{expected}.generated.txt"))
     return gen_matches[0] if gen_matches else None
 
 

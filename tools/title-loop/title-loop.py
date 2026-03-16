@@ -22,10 +22,11 @@ import subprocess
 import sys
 import threading
 import time
+import unicodedata
 from pathlib import Path
 
 # --- Configuration ---
-MAX_ITERATIONS = 20
+MAX_ITERATIONS = 40
 ACCURACY_THRESHOLD = 0.95  # "close to 100%"
 CLAUDE_TIMEOUT = 900  # 15 minutes per Claude invocation
 CLAUDE_STALL_TIMEOUT = 60  # kill if no output for N seconds (default)
@@ -109,7 +110,9 @@ def determine_resume_phase(iteration: int) -> str:
 # --- Core helpers ---
 
 def normalize(s: str) -> str:
-    """Normalize whitespace, hyphens, and case for comparison."""
+    """Normalize whitespace, hyphens, case, and Unicode form for comparison."""
+    s = unicodedata.normalize("NFC", s)
+    s = s.replace("\u00a0", " ").replace("\ufeff", "")  # NBSP, BOM
     return " ".join(s.lower().replace("-", " ").split())
 
 
@@ -131,18 +134,23 @@ def _strip_diacritics(s: str) -> str:
     return s.translate(_POLISH_DIACRITICS)
 
 
+def _ocr_normalize(s: str) -> str:
+    """Normalize common OCR character substitutions."""
+    return s.replace("0", "o").replace("1", "i").replace("\u20ac", "e")
+
+
 def titles_match(extracted: str, expected: str) -> bool:
     """
     Binary match: does the extracted title contain all expected title parts?
     Expected may contain multiple titles separated by '+'.
-    Normalizes hyphens→spaces and strips Polish diacritics for robustness
-    against generated filenames that use kebab-case or drop diacritics.
+    Normalizes hyphens→spaces, strips Polish diacritics, and applies OCR
+    character substitution normalization for robustness.
     """
     if not extracted:
         return False
-    extracted_norm = _strip_diacritics(normalize_separators(normalize(extracted)))
+    extracted_norm = _ocr_normalize(_strip_diacritics(normalize_separators(normalize(extracted))))
     expected_parts = [
-        _strip_diacritics(normalize_separators(normalize(p)))
+        _ocr_normalize(_strip_diacritics(normalize_separators(normalize(p))))
         for p in expected.split("+")
     ]
     return all(part in extracted_norm for part in expected_parts)
@@ -202,12 +210,13 @@ def compute_accuracy(results: list[dict]) -> float:
 
 
 def write_results(iter_dir: Path, results: list[dict]) -> None:
-    """Write results.txt with one line per file."""
+    """Write results.txt with one line per file, including extracted title."""
     iter_dir.mkdir(parents=True, exist_ok=True)
     with open(iter_dir / "results.txt", "w") as f:
         for r in results:
             status = "yes" if r["match"] else "no"
-            f.write(f"{r['expected']} - {status}\n")
+            extracted = r.get("extracted", "")
+            f.write(f"{r['expected']} | {extracted} - {status}\n")
 
 
 def load_results_from_file(iter_dir: Path) -> list[dict]:
@@ -217,18 +226,28 @@ def load_results_from_file(iter_dir: Path) -> list[dict]:
     if not results_path.exists():
         return results
     for line in results_path.read_text().strip().splitlines():
-        m = re.match(r"^(.+) - (yes|no)$", line)
+        # New format: "expected | extracted - yes/no"
+        m = re.match(r"^(.+?) \| (.*?) - (yes|no)$", line)
         if m:
             expected = m.group(1)
+            extracted = m.group(2).strip() or "(empty)"
+            match = m.group(3) == "yes"
+        else:
+            # Legacy format: "expected - yes/no"
+            m = re.match(r"^(.+) - (yes|no)$", line)
+            if not m:
+                continue
+            expected = m.group(1)
+            extracted = "(unknown)"
             match = m.group(2) == "yes"
-            real_file = INPUT_DIR / f"{expected}.real.txt"
-            file_path = str(real_file) if real_file.exists() else f"(input file for '{expected}')"
-            results.append({
-                "file": file_path,
-                "expected": expected,
-                "extracted": "(from previous evaluation)",
-                "match": match,
-            })
+        real_file = INPUT_DIR / f"{expected}.real.txt"
+        file_path = str(real_file) if real_file.exists() else f"(input file for '{expected}')"
+        results.append({
+            "file": file_path,
+            "expected": expected,
+            "extracted": extracted,
+            "match": match,
+        })
     return results
 
 
@@ -712,35 +731,97 @@ Generate all {batch_count} files now."""
         generated_titles = [extract_expected_title(f) for f in gen_files]
 
 
+def _find_input_file(expected: str) -> Path | None:
+    """Find the input file for an expected title (real or any generated version)."""
+    # Try real file first
+    real = INPUT_DIR / f"{expected}.real.txt"
+    if real.exists():
+        return real
+    # Try generated files (any iteration)
+    gen_matches = sorted(INPUT_DIR.glob(f"{expected}.generated.*.txt"))
+    return gen_matches[0] if gen_matches else None
+
+
+def build_failure_digest(failures: list[dict], max_head_lines: int = 6) -> str:
+    """Build a pre-extracted digest of all failures with first N lines of each input file.
+
+    This eliminates the need for the analysis agent to read individual files,
+    dramatically reducing tool calls and context window usage.
+
+    If the extracted title is missing (legacy results), runs the extractor on-the-fly.
+    """
+    sections = []
+    for r in failures:
+        expected = r["expected"]
+        extracted = r.get("extracted", "(unknown)")
+        file_type = "real" if ".real." in r.get("file", "") else "generated"
+
+        # Find the input file
+        input_file = _find_input_file(expected)
+
+        # If extracted title is missing, run extractor on-the-fly
+        if extracted in ("(unknown)", "(from previous evaluation)") and input_file:
+            print(f"  Extracting title for: {expected}")
+            extracted = run_extraction(str(input_file)) or "(empty)"
+
+        # Read first N lines of input file
+        if input_file and input_file.exists():
+            try:
+                lines = input_file.read_text(encoding="utf-8").splitlines()
+                head = "\n".join(lines[:max_head_lines])
+                if len(lines) > max_head_lines:
+                    head += f"\n... ({len(lines) - max_head_lines} more lines)"
+            except Exception:
+                head = "(could not read file)"
+        else:
+            head = "(input file not found)"
+
+        sections.append(
+            f"### {expected} [{file_type}]\n"
+            f"Expected: {expected}\n"
+            f"Extracted: {extracted}\n"
+            f"First {max_head_lines} lines of input:\n```\n{head}\n```\n"
+        )
+    return "\n".join(sections)
+
+
 def phase_analyze(iter_dir: Path, results: list[dict]) -> None:
-    """Analyze extraction failures with Claude (Sonnet)."""
+    """Analyze extraction failures with Claude (Sonnet).
+
+    Pre-builds a failure digest with extracted titles and input file heads
+    so the analysis agent doesn't need to read individual files via tool calls.
+    """
     log_dir = iter_dir / "logs"
     failures = [r for r in results if not r["match"]]
     if not failures:
         (iter_dir / "feedback.md").write_text("No failures to analyze — all extractions matched.\n")
         return
 
-    real_failures = sum(1 for r in failures if ".real." in r["file"])
-    gen_failures = sum(1 for r in failures if ".generated." in r["file"])
+    real_failures = [r for r in failures if ".real." in r.get("file", "")]
+    gen_failures = [r for r in failures if ".generated." in r.get("file", "")]
+
+    digest = build_failure_digest(failures)
 
     prompt = f"""Analyze title extraction failures for this iteration.
 
-Read the results file at {iter_dir.relative_to(PROJECT_ROOT)}/results.txt — lines ending
-with "no" are failures. There are {len(failures)} failures ({real_failures} real, {gen_failures} generated).
+There are {len(failures)} failures ({len(real_failures)} real, {len(gen_failures)} generated).
 
-Read the current implementation at lib/text-classifier/title-extractor.ts.
+## Failure digest
 
-Then investigate the failures: grep for patterns across failing input files in
-tools/title-loop/input/ to identify common themes. Read a representative sample of
-failing files (prioritize .real.txt files, then pick diverse .generated.*.txt files)
-to understand what the extractor struggles with.
+Below is every failure with the expected title, the actually-extracted title, and the
+first lines of the input file. Use this to identify patterns — do NOT read individual
+input files, the results file, or the algorithm source code. Everything you need is below.
 
-Write your analysis to {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md explaining:
+{digest}
+
+## Task
+
+Write your analysis DIRECTLY to {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md explaining:
 1. Common failure patterns (group failures by root cause, not individually)
-2. Why the current algorithm fails on each pattern
+2. For each pattern: what the extractor returned vs what was expected, and why
 3. Which patterns affect real files vs only generated files
 
-Do NOT modify any code files. Only write the feedback.md file."""
+Do NOT read any other files. Do NOT modify any code files. Only write the feedback.md file."""
 
     run_claude(prompt, model="sonnet", log_path=log_dir / "analyze.log")
 

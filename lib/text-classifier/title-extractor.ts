@@ -69,6 +69,10 @@ const METADATA_PATTERNS = [
   /^SEZON\s*:/i,
   /^KATEGORIA\s*:/i,
   /^RODZAJ\s*:/i,
+  /^PORCJI\s*:/i,       // Polish serving count
+  /^PORTIONS?\s*:/i,    // English serving count
+  /^CZ[ĘE]Ś[ĆC]\s*\d/i,   // CZĘŚĆ 1: ... (Polish "Part 1:")
+  /^PART\s+\d/i,             // PART 1: ... (English)
 ];
 
 /**
@@ -110,10 +114,19 @@ const SECTION_LABELS = new Set([
   "ingredients", "directions", "instructions", "method", "preparation",
   "steps", "notes", "tip", "tips", "variations", "variation",
   "garnish", "topping", "toppings", "frosting", "filling",
+  "serving suggestion", "serving suggestions", "serving",
+  "glaze", "for the sauce", "for the filling", "for the dough",
+  "for the topping", "for the glaze", "for the pasta dough",
+  "for the pasta", "for the crust",
   // Polish — recipe section labels (stored without diacritics for OCR resilience)
   "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
   "wykonanie", "wskazowki", "podpowiedz", "warianty",
   "sos", "nadzienie", "polewa", "lukier", "ciasto",  // ciasto = dough/pastry base (recipe-internal section AND chapter label)
+  "instrukcje",       // instructions
+  "uwagi",            // notes/remarks
+  "notatki",          // notes
+  "podawanie",        // serving
+  "przechowywanie",   // storage
   // Polish — recipe-book chapter/category labels (food groups, meal types)
   "warzywa",          // vegetables
   "mieso",            // meat (mięso)
@@ -159,6 +172,8 @@ const ALWAYS_BLOCK_JOIN_LABELS = new Set([
   "ingredients", "directions", "instructions", "method", "preparation",
   "steps", "notes", "tip", "tips", "variations", "variation",
   "garnish", "topping", "toppings", "frosting", "filling",
+  "serving suggestion", "serving suggestions", "serving",
+  "glaze", "instrukcje", "uwagi", "notatki", "podawanie", "przechowywanie",
   "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
   "wykonanie", "wskazowki", "podpowiedz", "warianty",
   "sos", "nadzienie", "polewa", "lukier", "ciasto",
@@ -185,7 +200,7 @@ function isLikelyGarbled(text: string): boolean {
   // Check vowel ratio — English/Polish text typically has 30–50% vowels
   const vowels = letters.replace(/[^aeiouAEIOUyYąęóĄĘÓ]/g, "").length;
   const vowelRatio = vowels / letters.length;
-  if (vowelRatio < 0.15 || vowelRatio > 0.85) return true;
+  if (vowelRatio < 0.10 || vowelRatio > 0.85) return true;
 
   // Single orphaned word ≤3 letters that isn't a common word
   const words = text.trim().split(/\s+/);
@@ -266,12 +281,18 @@ function passesHardFilters(text: string): boolean {
   if (looksLikeCookingInstruction(text)) return false;
   // Pipe-separated lines are book category/chapter headers, not recipe titles
   if (text.includes(" | ")) return false;
+  // Trailing page number (e.g. "VEGETABLE SIDES                         145")
+  if (/\s{3,}\d{1,4}\s*$/.test(text)) return false;
   // Slash-separated breadcrumbs (e.g., "/ Jesien / Zupy") are navigation, not titles
   // Only filter when 2+ slashes are present — single-slash lines like
   // "TITLE / SUBTITLE" are legitimate continuation-merged titles
   if ((text.match(/\//g) || []).length >= 2) return false;
   // Bullet-list items (ingredients or instruction steps) are never titles
   if (/^\s*[-•*]\s/.test(text)) return false;
+  // "For the sauce:", "For the filling:" etc. are sub-section headers
+  if (/^For the\s+/i.test(text) && /:\s*$/.test(text)) return false;
+  // Square-bracket category tags (e.g., "[CLASSIC FALL SOUPS]")
+  if (/^\[.*\]$/.test(text.trim())) return false;
   // Known recipe section labels are structural headers, not titles
   if (isSectionLabel(text)) return false;
   // Single-word non-title fragments
@@ -289,7 +310,7 @@ function passesHardFilters(text: string): boolean {
  */
 function findBurstEnd(lines: Array<{ text: string }>): number {
   let i = 0;
-  while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text)) {
+  while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text) && !isAllCaps(lines[i].text)) {
     i++;
   }
   // Skip long instruction-like prologues: if 5+ consecutive lines look like cooking instructions,
@@ -302,6 +323,23 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
     if (j >= 5) {
       i = j;
     }
+  }
+  // Skip prose prologues: mid-recipe body text before the actual title.
+  // If 3+ consecutive lines look like running body text (lowercase start, continuation,
+  // or sentence-ending with many words), skip them.
+  if (i === 0) {
+    let j = 0;
+    while (j < lines.length) {
+      const t = lines[j].text;
+      const isBodyText = (
+        /^[a-ząćęłńóśźż]/.test(t) ||
+        t.endsWith(",") ||
+        (t.endsWith(".") && wordCount(t) > 4)
+      ) && wordCount(t) >= 4;
+      if (isBodyText) j++;
+      else break;
+    }
+    if (j >= 3) i = j;
   }
   return i;
 }
@@ -717,6 +755,21 @@ export async function extractTitleWithEmbeddings(
     firstStructuralHeading = newHeading ?? undefined;
   }
 
+  // Subtitle suppression: when a short mixed-case title at position 0 is followed by a
+  // longer mixed-case candidate at position 1-2, the longer one is a subtitle/translation.
+  // Apply a penalty so the primary title (position 0) wins.
+  const pos0Primary = scored.find((s) => s.position === 0 && !isAllCaps(s.text) && wordCount(s.text) <= 5);
+  if (pos0Primary) {
+    const subtitleCandidates = scored.filter((s) =>
+      s.position >= 1 && s.position <= 2 &&
+      !isAllCaps(s.text) &&
+      wordCount(s.text) > wordCount(pos0Primary.text) + 2
+    );
+    for (const sub of subtitleCandidates) {
+      sub.score -= 0.15;
+    }
+  }
+
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate
   // the threshold and block equally-valid headings on multi-recipe pages.
   const bestThresholdScore = Math.max(...scoredForThreshold.map((s) => s.thresholdScore));
@@ -941,7 +994,21 @@ export async function extractTitleWithEmbeddings(
     return undefined;
   }
 
-  return selected.map((s) => s.text).join(" + ");
+  const result = selected.map((s) => s.text.normalize("NFC").trim()).join(" + ");
+
+  // Compound variant: "A : B" where both sides share the same first word → return only A.
+  // This handles pages with "TITLE VARIANT1 : TITLE VARIANT2" where only the first is wanted.
+  const colonMatch = result.match(/^(.+?)\s*:\s*(.+)$/);
+  if (colonMatch) {
+    const [, first, second] = colonMatch;
+    const firstWord = first.trim().toLowerCase().split(/\s+/)[0];
+    const secondWord = second.trim().toLowerCase().split(/\s+/)[0];
+    if (firstWord && firstWord === secondWord) {
+      return first.trim().normalize("NFC");
+    }
+  }
+
+  return result;
 }
 
 /**

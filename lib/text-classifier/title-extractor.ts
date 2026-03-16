@@ -4,6 +4,7 @@
  */
 
 import { cosineSimilarity } from "./embeddings";
+import { FOOD_DICTIONARY } from "./food-dictionary";
 
 export type EmbedFn = (text: string) => Promise<Array<number>>;
 
@@ -73,6 +74,8 @@ const METADATA_PATTERNS = [
   /^PORTIONS?\s*:/i,    // English serving count
   /^CZ[ĘE]Ś[ĆC]\s*\d/i,   // CZĘŚĆ 1: ... (Polish "Part 1:")
   /^PART\s+\d/i,             // PART 1: ... (English)
+  /^MAIN\s+RECIPE\s*:/i,    // "MAIN RECIPE: ..." structural prefix lines
+  /^--\s*\w/,               // "--VARIATION:", "--WERSJA NOWOCZESNA" sub-section headers
 ];
 
 /**
@@ -207,6 +210,12 @@ function isLikelyGarbled(text: string): boolean {
   const letters = text.replace(/[^a-zA-Z]/g, "");
   if (letters.length < 2) return true;
 
+  // Pipe embedded in words = OCR artifact (e.g., "Sp|aszcz", "pa|ką")
+  if (/[a-zA-ZÀ-ÿа-яА-Я]\|[a-zA-ZÀ-ÿа-яА-Я]/.test(text)) return true;
+
+  // Mixed Latin + Cyrillic = OCR corruption
+  if (/[а-яА-ЯёЁіІїЇєЄґҐ]/.test(text) && /[a-zA-Z]/.test(text)) return true;
+
   // Check vowel ratio — English/Polish text typically has 30–50% vowels
   const vowels = letters.replace(/[^aeiouAEIOUyYąęóĄĘÓ]/g, "").length;
   const vowelRatio = vowels / letters.length;
@@ -265,7 +274,7 @@ function isLikelyGarbled(text: string): boolean {
   return false;
 }
 
-const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool|remove|place|combine|whisk|knead|roll|spread|brush|slice|chop|dice|mince|drain|rinse|peel|grate|melt|simmer|boil|fry|sauté|saute|roast|grill|broil|steam|let|set|transfer|serve|garnish|arrange|sprinkle|season|preheat|cover|uncover|reduce|bring|toss|cut|trim|shape|form)\b/i;
+const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool|remove|place|combine|whisk|knead|roll|spread|brush|slice|chop|dice|mince|drain|rinse|peel|grate|melt|simmer|boil|fry|sauté|saute|roast|grill|broil|steam|let|set|transfer|serve|garnish|arrange|sprinkle|season|preheat|cover|uncover|reduce|bring|toss|cut|trim|shape|form|scatter|score|pat|rub|skim|strain|heat|discard|rest|marinate|wrap|flip|turn|layer|stuff|drizzle|squeeze|zest|soak|thaw|freeze|chill|warm|toast|crush|pound|crack|break|separate|weigh|measure|sift|dust|coat|dip|dredge|baste|debone|butterfly|truss|shred|puree|blend|process|pulse|whip|cream|proof|rise|punch|divide|portion|assemble)\b/i;
 
 // Polish imperative cooking verbs (with OCR-resilient forms — no diacritics required).
 // These cover the most common recipe instruction starters. Includes common OCR-corrupted
@@ -280,6 +289,20 @@ function looksLikeCookingInstruction(text: string): boolean {
   if (COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
   if (POLISH_COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
   return false;
+}
+
+/**
+ * Detect pages where the OCR capture starts mid-recipe with no title present.
+ * Returns true if the first 3 non-empty lines are all ingredients or cooking instructions.
+ */
+function isTitleAbsentPage(lines: Array<string>): boolean {
+  const nonEmptyLines = lines.map(l => l.trim()).filter(l => l.length > 0);
+
+  if (nonEmptyLines.length < 3) return false;
+
+  const first3 = nonEmptyLines.slice(0, 3);
+
+  return first3.every(line => looksLikeIngredient(line) || looksLikeCookingInstruction(line));
 }
 
 function passesHardFilters(text: string): boolean {
@@ -464,6 +487,7 @@ function buildCandidates(
           wordCount(next.text) <= 2 &&
           next.text.length <= 25 &&
           !isSectionLabel(next.text) &&
+          !isSectionLabel(repairOcrText(next.text)) &&
           !looksLikeMetadata(next.text) &&
           (merged + " " + next.text).length <= 80
         ) {
@@ -524,7 +548,7 @@ function buildCandidates(
     if (metadataContinuationPositions.has(line.index)) continue;
 
     // Single line — strip page-number prefixes and parenthetical glosses before scoring
-    const singleText = stripParentheticalGloss(stripPageNumber(line.text));
+    const singleText = repairOcrText(stripParentheticalGloss(stripPageNumber(line.text)));
     if (passesHardFilters(singleText)) {
       const norm = singleText.toLowerCase();
       if (!seen.has(norm)) {
@@ -536,7 +560,7 @@ function buildCandidates(
     // 2-line join — skip if first line is a section label AND join would be ≤2 words
     // (a section label followed by modifiers is likely a recipe title, not a category header)
     if (i + 1 < mergedLines.length) {
-      const joined2 = `${line.text} ${mergedLines[i + 1].text}`;
+      const joined2 = repairOcrText(`${line.text} ${mergedLines[i + 1].text}`);
       const shouldBlock2 = isSectionLabel(line.text) &&
         (wordCount(joined2) <= 2 || isAlwaysBlockJoinLabel(line.text));
       if (!shouldBlock2 && passesHardFilters(joined2)) {
@@ -550,7 +574,7 @@ function buildCandidates(
 
     // 3-line join — skip if first line is a section label AND join would be ≤2 words
     if (i + 2 < mergedLines.length) {
-      const joined3 = `${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`;
+      const joined3 = repairOcrText(`${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`);
       const shouldBlock3 = isSectionLabel(line.text) &&
         (wordCount(joined3) <= 2 || isAlwaysBlockJoinLabel(line.text));
       if (!shouldBlock3 && passesHardFilters(joined3)) {
@@ -601,13 +625,105 @@ function toTitleCase(text: string): string {
 }
 
 /**
+ * OCR digit→letter substitution map.
+ * Each key is a character that OCR commonly confuses; values are possible correct letters.
+ */
+const OCR_SUBSTITUTIONS: Record<string, string[]> = {
+  "0": ["o"],
+  "1": ["i", "l"],
+  "4": ["a"],
+  "5": ["s"],
+  "¡": ["i"],
+  "í": ["i", "l"],
+  "€": ["e"],
+};
+
+const OCR_ARTIFACT_PATTERN = /[0-9¡Íí€]/;
+
+/**
+ * Attempt to repair a single OCR-corrupted word using dictionary lookup.
+ * Returns the repaired word if a dictionary match is found, otherwise returns the original.
+ */
+function repairOcrWord(word: string): string {
+  if (!OCR_ARTIFACT_PATTERN.test(word)) return word;
+
+  const lower = word.toLowerCase();
+
+  const positions: Array<{ index: number; replacements: Array<string> }> = [];
+  for (let i = 0; i < lower.length; i++) {
+    const replacements = OCR_SUBSTITUTIONS[lower[i]];
+    if (replacements) {
+      positions.push({ index: i, replacements });
+    }
+  }
+
+  if (positions.length === 0 || positions.length > 8) return word;
+
+  const candidates = generateSubstitutions(lower, positions, 0);
+
+  for (const candidate of candidates) {
+    if (FOOD_DICTIONARY.has(candidate)) {
+      if (word === word.toUpperCase()) return candidate.toUpperCase();
+      if (word[0] === word[0].toUpperCase()) {
+        return candidate[0].toUpperCase() + candidate.slice(1);
+      }
+      return candidate;
+    }
+  }
+
+  return word;
+}
+
+/**
+ * Recursively generate all substitution variants for OCR artifact positions.
+ */
+function generateSubstitutions(
+  base: string,
+  positions: Array<{ index: number; replacements: Array<string> }>,
+  posIdx: number,
+): Array<string> {
+  if (posIdx >= positions.length) return [base];
+
+  const { index, replacements } = positions[posIdx];
+  const results: Array<string> = [];
+
+  for (const replacement of replacements) {
+    const variant = base.slice(0, index) + replacement + base.slice(index + 1);
+    results.push(...generateSubstitutions(variant, positions, posIdx + 1));
+  }
+
+  return results;
+}
+
+/**
+ * Apply dictionary-guided OCR repair to all words in a text string.
+ */
+function repairOcrText(text: string): string {
+  return text
+    .split(/\s+/)
+    .map((word) => {
+      const match = word.match(/^([^a-zA-Z0-9À-ÿ]*)(.*?)([^a-zA-Z0-9À-ÿ]*)$/);
+      if (!match) return word;
+      const [, prefix, core, suffix] = match;
+      if (!core) return word;
+      const repaired = repairOcrWord(core);
+      return prefix + repaired + suffix;
+    })
+    .join(" ");
+}
+
+/**
  * Post-processing normalization for OCR-extracted titles.
  * Strips stray section markers and substitutes common OCR digit-for-letter artifacts.
  * Title-case conversion is applied only when a substitution was actually made, so
  * clean ALL_CAPS titles (e.g. "CHOCOLATE CAKE") are returned unchanged.
  */
 function normalizeOcrTitle(raw: string): string {
-  let text = raw;
+  let text = raw.trim();
+
+  // Step 0: Dictionary-guided OCR repair — resolve ambiguous substitutions
+  // using word-level context before applying blind character replacements.
+  text = repairOcrText(text);
 
   // Step 1: Strip trailing section markers greedily appended to the title.
   // e.g. "MAKOWIEC ZE ŚLIWKAMI + SERVING AND STORAGE:" → "MAKOWIEC ZE ŚLIWKAMI"
@@ -679,6 +795,7 @@ export async function extractTitleWithEmbeddings(
 
   const lines = text.split("\n");
   const candidates = buildCandidates(lines);
+  const titleAbsent = isTitleAbsentPage(lines);
 
   if (candidates.length === 0) {
     return undefined;
@@ -768,11 +885,13 @@ export async function extractTitleWithEmbeddings(
   );
 
   // Pass 2: apply bonuses
-  const scored: Array<{ text: string; position: number; origin: CandidateOrigin; score: number; rawScore: number; baseScore: number; thresholdScore: number }> = rawScored.map((rs) => {
-    // Position factor: multiplicative tiebreaker — amplifies existing signal, doesn't replace it
-    const relativePosition = rs.position / lines.length;
-    const positionFactor = relativePosition < 0.5
-      ? 1.0 + 0.12 * (1 - relativePosition * 2)
+  const scored: Array<{ text: string; position: number; origin: CandidateOrigin; score: number; rawScore: number; baseScore: number; thresholdScore: number }> = rawScored.map((rs, candidateIndex) => {
+    // Position factor: multiplicative tiebreaker — amplifies existing signal, doesn't replace it.
+    // Use candidate-relative position (rank among candidates that passed hard filters) rather than
+    // raw line position, so filtered preamble lines don't penalize the first real candidate.
+    const candidateRelativePosition = candidateIndex / rawScored.length;
+    const positionFactor = candidateRelativePosition < 0.5
+      ? 1.0 + 0.12 * (1 - candidateRelativePosition * 2)
       : 1.0;
 
     // ALL_CAPS bonus: recipe books use ALL_CAPS for titles and section headings.
@@ -796,6 +915,25 @@ export async function extractTitleWithEmbeddings(
 
   if (scored.length === 0) {
     return undefined;
+  }
+
+  // First-after-preamble bonus (Pattern 3): when lines before the first candidate were all
+  // filtered/empty, the first surviving candidate occupies the structural "title position".
+  // E.g. "FISH & SEAFOOD\nHalibut with Saffron Cream Sauce\n..." — "FISH & SEAFOOD" is filtered
+  // as a section label, so "Halibut..." is the first candidate and gets this boost.
+  const firstCandidate = scored[0];
+  if (firstCandidate.position > 0) {
+    const allPrecedingFiltered = lines
+      .slice(0, firstCandidate.position)
+      .every((line) => {
+        const trimmed = line.trim();
+        return trimmed === "" || !passesHardFilters(trimmed);
+      });
+    if (allPrecedingFiltered) {
+      firstCandidate.score += 0.08;
+      firstCandidate.baseScore += 0.08;
+      firstCandidate.thresholdScore += 0.08;
+    }
   }
 
   // --- Pre-threshold bilingual title detection ---
@@ -900,6 +1038,47 @@ export async function extractTitleWithEmbeddings(
     }
   }
 
+  // Bilingual layout pattern: [FoodName (≤2 words)]\n[Translation (2-5 words, mixed-case)]\n...[Section label]
+  // Common in bilingual cookbooks: foreign food name at position 0, English translation at position 1-2.
+  // When detected, boost the position-0 candidate so it clears the threshold.
+  // Note: the ALL_CAPS bilingual block above (lines 940-995) handles mixed-case + ALL_CAPS pairs.
+  // This block handles mixed-case + mixed-case translation pairs — the two do not overlap because
+  // the mixed-case guard (`biSecond.text !== biSecond.text.toUpperCase()`) excludes ALL_CAPS lines.
+  if (scored.length >= 2) {
+    const biFirst = scored.find((s) => s.position === 0);
+    // Restrict to single-line candidates (same guard as the ALL_CAPS bilingual block at line 953)
+    const biSecond = scored.find((s) => s.position >= 1 && s.position <= 2 && s !== biFirst && s.origin === "single");
+
+    if (biFirst && biSecond) {
+      const firstWords = biFirst.text.trim().split(/\s+/);
+      const secondWords = biSecond.text.trim().split(/\s+/);
+
+      const isBilingualLayout =
+        firstWords.length <= 2 &&
+        secondWords.length >= 2 &&
+        secondWords.length <= 5 &&
+        // Second line is mixed-case (not ALL_CAPS, not all-lower)
+        biSecond.text !== biSecond.text.toUpperCase() &&
+        biSecond.text !== biSecond.text.toLowerCase() &&
+        // Second line is not an ingredient or instruction
+        !looksLikeIngredient(biSecond.text) &&
+        !looksLikeCookingInstruction(biSecond.text);
+
+      if (isBilingualLayout) {
+        // Check if a section label follows within a few lines after the first candidate
+        const sectionLabelNearby = lines
+          .slice(biFirst.position + 1, biFirst.position + 6)
+          .some((line) => isSectionLabel(line.trim()));
+
+        if (sectionLabelNearby) {
+          biFirst.score += 0.15;
+          biFirst.baseScore += 0.15;
+          biFirst.thresholdScore += 0.15;
+        }
+      }
+    }
+  }
+
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate
   // the threshold and block equally-valid headings on multi-recipe pages.
   const bestThresholdScore = Math.max(...scoredForThreshold.map((s) => s.thresholdScore));
@@ -922,6 +1101,16 @@ export async function extractTitleWithEmbeddings(
     if (fallback[0].rawScore > rawScoreThreshold) {
       selected = [fallback[0]];
     }
+  }
+
+  // Title-absent page guard: when the page starts mid-recipe (all of the first 3 non-empty
+  // lines are ingredients or cooking instructions), require a much higher rawScore and
+  // discard candidates deep in the file. This prevents stray body text or adjacent recipe
+  // titles from being picked up on pages with no title (Pattern 4).
+  if (titleAbsent) {
+    const titleAbsentThreshold = 0.10;
+    selected = selected.filter(s => s.rawScore >= titleAbsentThreshold);
+    selected = selected.filter(s => s.position <= 2);
   }
 
   // Remove word-boundary prefixes of firstStructuralHeading when the heading itself survived
@@ -1043,6 +1232,8 @@ export async function extractTitleWithEmbeddings(
   // the incomplete prefix line is never present here when the complete join is in selected.
   selected = selected.filter((a) => {
     const aLower = a.text.toLowerCase();
+    // Protect compound titles — these use explicit separators and the full form is intentional
+    if (/ [+:&] /.test(a.text)) return true;
     return !selected.some(
       (b) =>
         b !== a &&

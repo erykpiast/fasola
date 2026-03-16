@@ -916,7 +916,10 @@ export async function extractTitleWithEmbeddings(
     const fallback = scored
       .slice()
       .sort((a, b) => a.position - b.position || b.score - a.score);
-    if (fallback[0].rawScore > 0.02) {
+    // Position-0 candidates that passed hard filters are very likely titles even with
+    // weak embedding signal. Relax the rawScore guard for early-position candidates.
+    const rawScoreThreshold = fallback[0].position <= 2 ? -0.05 : 0.02;
+    if (fallback[0].rawScore > rawScoreThreshold) {
       selected = [fallback[0]];
     }
   }
@@ -1124,6 +1127,18 @@ export async function extractTitleWithEmbeddings(
   selected = selected.slice(0, 3);
 
   if (selected.length === 0) {
+    // Last resort: embedding scoring provided no usable signal.
+    // Return the earliest candidate that passed hard filters — it already survived
+    // ingredient, metadata, garbled, section-label, and cooking-instruction checks.
+    // Position 0 in a recipe file is overwhelmingly the title.
+    // Exclude hard-disqualified candidates (rawScore -1.0 = truncated OCR artifact).
+    const lastResort = scored
+      .slice()
+      .filter((s) => s.rawScore > -0.5)
+      .sort((a, b) => a.position - b.position || b.score - a.score);
+    if (lastResort.length > 0) {
+      return normalizeOcrTitle(lastResort[0].text.normalize("NFC").trim());
+    }
     return undefined;
   }
 

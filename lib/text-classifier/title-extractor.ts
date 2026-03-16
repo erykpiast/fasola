@@ -206,6 +206,46 @@ function looksLikeMetadata(text: string): boolean {
   return METADATA_PATTERNS.some((pattern) => pattern.test(text.trim()));
 }
 
+/** Content words are ≥3 alpha characters after stripping punctuation. */
+function extractContentWords(text: string): string[] {
+  return text
+    .split(/\s+/)
+    .filter((w) => w.replace(/[^a-zA-ZÀ-ÿ]/g, "").length >= 3)
+    .map((w) => w.toUpperCase());
+}
+
+/**
+ * Returns true if the candidate's vocabulary is sufficiently supported by the rest of
+ * the document. Short candidates (≤3 content words) require 100% corroboration;
+ * longer candidates require ≥67%. Used to detect orphaned OCR artifacts in multi-title pages.
+ */
+function passesCorroboration(
+  text: string,
+  position: number,
+  allLines: string[]
+): boolean {
+  const contentWords = extractContentWords(text);
+
+  if (contentWords.length === 0) {
+    return true; // No checkable words — pass through
+  }
+
+  let corroboratedCount = 0;
+  for (const word of contentWords) {
+    for (let i = 0; i < allLines.length; i++) {
+      if (i === position) continue;
+      if (allLines[i].toUpperCase().includes(word)) {
+        corroboratedCount++;
+        break;
+      }
+    }
+  }
+
+  const score = corroboratedCount / contentWords.length;
+  const threshold = contentWords.length <= 3 ? 1.0 : 0.67;
+  return score >= threshold;
+}
+
 function isLikelyGarbled(text: string): boolean {
   const letters = text.replace(/[^a-zA-Z]/g, "");
   if (letters.length < 2) return true;
@@ -1079,6 +1119,27 @@ export async function extractTitleWithEmbeddings(
     }
   }
 
+  // Pre-filter: when ≥2 ALL_CAPS candidates are present, identify OCR artifacts (those whose
+  // vocabulary has no support elsewhere in the document) and remove them before computing the
+  // threshold. Artifacts like "DAT FLATBREADS" can inflate the threshold via their early-position
+  // bonus, which causes legitimate titles later in the document to fall just below the cutoff.
+  // Safety: only pre-filter if ≥2 candidates remain after removal (avoids false-positive removal
+  // of unique-vocabulary titles on two-recipe pages).
+  const allCapsInScored = scoredForThreshold.filter((s) => isAllCaps(s.text));
+  if (allCapsInScored.length >= 2) {
+    const artifactTexts = new Set(
+      allCapsInScored
+        .filter((cap) => !passesCorroboration(cap.text, cap.position, lines))
+        .map((c) => c.text)
+    );
+    if (artifactTexts.size > 0) {
+      const remainingCaps = allCapsInScored.filter((c) => !artifactTexts.has(c.text));
+      if (remainingCaps.length >= 2) {
+        scoredForThreshold = scoredForThreshold.filter((s) => !artifactTexts.has(s.text));
+      }
+    }
+  }
+
   // Use thresholdScore (excludes structural bonus) so the structural bonus doesn't inflate
   // the threshold and block equally-valid headings on multi-recipe pages.
   const bestThresholdScore = Math.max(...scoredForThreshold.map((s) => s.thresholdScore));
@@ -1252,11 +1313,24 @@ export async function extractTitleWithEmbeddings(
   if (selected.length > 1) {
     const allCapsSelected = selected.filter((s) => isAllCaps(s.text));
     if (allCapsSelected.length >= 2) {
+      // Vocabulary corroboration: filter out ALL_CAPS candidates whose content words
+      // don't appear elsewhere in the document. This catches orphaned OCR artifacts
+      // (e.g., "DAT FLATBREADS" from a preceding page) that look structurally identical
+      // to real titles but have no vocabulary support in the document body.
+      const corroboratedCaps = allCapsSelected.filter((cap) =>
+        passesCorroboration(cap.text, cap.position, lines)
+      );
+
+      // Use corroborated candidates if any remain; otherwise fall back to original set
+      // (don't remove all candidates — that would break legitimate multi-title pages
+      // where corroboration fails for benign reasons).
+      const capsToUse = corroboratedCaps.length >= 2 ? corroboratedCaps : allCapsSelected;
+
       // Check whether non-first ALL_CAPS headings are section headers within one recipe
       // (followed immediately by ingredient-like content) rather than separate recipe titles.
       // A multi-recipe page has body text between titles; a single-recipe page has
       // ingredient lines immediately after each section heading.
-      const sortedCaps = [...allCapsSelected].sort((a, b) => a.position - b.position);
+      const sortedCaps = [...capsToUse].sort((a, b) => a.position - b.position);
       const isSubHeader = sortedCaps.slice(1).every((cap) => {
         const nextLines = lines.slice(cap.position + 1, cap.position + 3);
         return nextLines.some(
@@ -1266,7 +1340,7 @@ export async function extractTitleWithEmbeddings(
       if (isSubHeader) {
         selected = [sortedCaps[0]];
       } else {
-        selected = allCapsSelected;
+        selected = capsToUse;
       }
     } else if (allCapsSelected.length === 1) {
       const theCapCandidate = allCapsSelected[0];

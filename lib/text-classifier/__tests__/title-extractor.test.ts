@@ -376,4 +376,95 @@ describe("extractTitleWithEmbeddings", () => {
     const result = await extractTitleWithEmbeddings(text, embed);
     expect(result).toBe("Mixed Case Title");
   });
+
+  describe("corroboration (multi-title filtering)", () => {
+    it("rejects orphaned OCR artifact in multi-title assembly", async () => {
+      // "DAT FLATBREADS" is an OCR artifact from a preceding page — "DAT" doesn't appear
+      // anywhere else in the document, so it fails the 100% corroboration threshold.
+      // "FINNISH MILK FLATBREADS" and "FINNISH POTATO FLATBREADS" are both corroborated
+      // by their words appearing in the body text.
+      const embed = createMockEmbed(
+        ["dat flatbreads", "finnish milk flatbreads", "finnish potato flatbreads"],
+        []
+      );
+      const input = [
+        "2 cup plus 1 tablespoon mixer fried with for 5 minutes",
+        "nto a loured work counter shape into ball",
+        "DAT FLATBREADS",
+        "le Finnish region of Savo bread more like a",
+        "",
+        "FINNISH MILK FLATBREADS",
+        "",
+        "These traditional flatbreads are soft and delicious",
+        "served warm with butter and milk",
+        "500g flour",
+        "300ml milk",
+        "1 tsp salt",
+        "",
+        "Mix the flour and milk together until smooth",
+        "Let the dough rest for 30 minutes",
+        "",
+        "FINNISH POTATO FLATBREADS",
+        "",
+        "Finnish potato flatbreads are hearty and filling",
+        "3 large potatoes",
+        "200g flour",
+        "butter for frying",
+        "",
+        "Boil the potatoes until tender then mash",
+        "Mix mashed potato with flour and salt",
+      ].join("\n");
+
+      const result = await extractTitleWithEmbeddings(input, embed);
+      expect(result).toBe("FINNISH MILK FLATBREADS + FINNISH POTATO FLATBREADS");
+    });
+
+    it("keeps legitimate multi-recipe titles that are corroborated", async () => {
+      // Both CHICKEN SOUP and BEEF STEW have their words in the document body,
+      // so both pass corroboration and are returned.
+      const embed = createMockEmbed(["chicken soup", "beef stew"], []);
+      const input = [
+        "CHICKEN SOUP",
+        "",
+        "A classic chicken soup recipe",
+        "1 whole chicken",
+        "2 carrots",
+        "salt and pepper",
+        "",
+        "Place the chicken in a large pot",
+        "",
+        "BEEF STEW",
+        "",
+        "A hearty beef stew for cold days",
+        "500g beef chuck",
+        "3 potatoes",
+        "2 onions",
+        "",
+        "Cut the beef into cubes",
+      ].join("\n");
+
+      const result = await extractTitleWithEmbeddings(input, embed);
+      expect(result).toBe("CHICKEN SOUP + BEEF STEW");
+    });
+
+    it("does not apply corroboration to single-title pages", async () => {
+      // Corroboration only runs when ≥2 ALL_CAPS candidates are selected.
+      // A single ALL_CAPS title is returned as-is regardless of vocabulary overlap.
+      const embed = createMockEmbed(["golonka pieczona"], []);
+      const input = [
+        "GOLONKA PIECZONA",
+        "",
+        "Składniki na 4 porcje",
+        "1 kg mięsa",
+        "2 cebule",
+        "3 ząbki czosnku",
+        "",
+        "Mięso umyć i osuszyć",
+        "Cebulę pokroić w plastry",
+      ].join("\n");
+
+      const result = await extractTitleWithEmbeddings(input, embed);
+      expect(result).toBe("GOLONKA PIECZONA");
+    });
+  });
 });

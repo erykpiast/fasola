@@ -95,7 +95,7 @@ def determine_resume_phase(iteration: int) -> str:
         return "evaluate"
 
     accuracy = get_logged_accuracy(iteration)
-    if accuracy is not None and accuracy >= ACCURACY_THRESHOLD:
+    if accuracy is not None and accuracy >= ACCURACY_THRESHOLD and (iter_dir / "committed").exists():
         return "done"
 
     if not (iter_dir / "feedback.md").exists():
@@ -887,13 +887,29 @@ Do NOT modify any code files. Only write the improvement-plan.md file."""
 
     run_claude(create_prompt, model="opus", log_path=log_dir / "plan.log")
 
-    # Step 2: Validate the plan
+    # Step 2: Validate the plan against previous iterations
     validate_prompt = f"""/spec:validate {iter_rel}/improvement-plan.md
 
 Additional validation criteria:
 - Does the plan address every failure mentioned in {iter_rel}/feedback.md?
 - Are the proposed changes feasible within the hard constraints (mobile, <10s, lib/text-classifier/)?
 - Are there any overengineered solutions that could be simplified?
+
+CRITICAL — Cross-iteration contradiction check:
+Read the improvement plans from previous iterations in tools/title-loop/docs/*/improvement-plan.md.
+Look for cases where this plan proposes changes that CONTRADICT or REVERSE changes made in earlier
+iterations. Common patterns to catch:
+- Changing a heuristic in one direction (e.g., "prefer shorter lines") when a previous iteration
+  changed it the other way (e.g., "prefer longer lines") to fix a different case
+- Removing or weakening a rule that was specifically added to fix a known failure
+- Adjusting thresholds or weights that were tuned in a previous iteration without acknowledging
+  the cases those values were chosen to support
+
+When contradictions are found:
+- The plan must explicitly acknowledge the tension between the old and new requirements
+- The plan must propose a solution that handles BOTH cases (e.g., conditional logic, better
+  candidate features) rather than simply reverting a previous fix
+- If the previous approach was wrong, explain why and how the new approach avoids the old failure
 
 If issues are found, fix them directly in {iter_rel}/improvement-plan.md.
 Do NOT modify any code files."""

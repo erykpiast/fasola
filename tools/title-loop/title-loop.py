@@ -105,10 +105,14 @@ def determine_resume_phase(iteration: int) -> str:
         return "plan"
 
     tasks_dir = iter_dir / "tasks"
-    if not tasks_dir.exists() or not (tasks_dir / ".complete").exists():
+    task_files = get_task_files(tasks_dir) if tasks_dir.exists() else []
+    done_files = [t for t in task_files if t.with_suffix(".done").exists()]
+    if not task_files or (not done_files and not (tasks_dir / ".complete").exists()):
+        # No tasks at all, or tasks exist but none started and no completion marker
         return "decompose"
 
-    if get_pending_tasks(tasks_dir):
+    pending = [t for t in task_files if not t.with_suffix(".done").exists()]
+    if pending:
         return "execute"
 
     if not (iter_dir / "review.md").exists():
@@ -893,8 +897,14 @@ def phase_decompose(iter_dir: Path) -> None:
     """Decompose improvement plan into granular tasks with Claude (Opus)."""
     log_dir = iter_dir / "logs"
     tasks_dir = iter_dir / "tasks"
-    # Clean up any partial previous decomposition
+    # Clean up partial previous decomposition only if no tasks were executed yet
     if tasks_dir.exists():
+        done_files = list(tasks_dir.glob("task-*.done"))
+        if done_files:
+            raise RuntimeError(
+                f"Decompose called but {len(done_files)} tasks already executed. "
+                "This should not happen — check determine_resume_phase logic."
+            )
         shutil.rmtree(tasks_dir)
     tasks_dir.mkdir(parents=True, exist_ok=True)
 

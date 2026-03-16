@@ -81,11 +81,14 @@ def determine_resume_phase(iteration: int) -> str:
     Determine what phase to resume from for a given iteration.
 
     Returns one of:
-      'evaluate'  — no results yet, start from scratch
-      'analyze'   — results exist but no feedback.md
-      'plan'      — feedback exists but no improvement-plan.md
-      'execute'   — plan exists but not yet implemented/committed
-      'done'      — accuracy met threshold, iteration complete
+      'evaluate'   — no results yet, start from scratch
+      'analyze'    — results exist but no feedback.md
+      'plan'       — feedback exists but no improvement-plan.md
+      'decompose'  — plan exists but no task files
+      'execute'    — tasks exist but some not done
+      'review'     — all tasks done but no review.md
+      'commit'     — review done but not committed
+      'done'       — accuracy met threshold or committed
     """
     iter_dir = find_iter_dir(iteration)
     if iter_dir is None or not (iter_dir / "results.txt").exists():
@@ -101,10 +104,30 @@ def determine_resume_phase(iteration: int) -> str:
     if not (iter_dir / "improvement-plan.md").exists():
         return "plan"
 
-    if (iter_dir / "committed").exists():
-        return "done"
+    tasks_dir = iter_dir / "tasks"
+    if not tasks_dir.exists() or not get_task_files(tasks_dir):
+        return "decompose"
 
-    return "execute"
+    if get_pending_tasks(tasks_dir):
+        return "execute"
+
+    if not (iter_dir / "review.md").exists():
+        return "review"
+
+    if not (iter_dir / "committed").exists():
+        return "commit"
+
+    return "done"
+
+
+def get_task_files(tasks_dir: Path) -> list[Path]:
+    """Return sorted list of task-*.md files in the tasks directory."""
+    return sorted(tasks_dir.glob("task-*.md"))
+
+
+def get_pending_tasks(tasks_dir: Path) -> list[Path]:
+    """Return task files that don't have a corresponding .done marker."""
+    return [t for t in get_task_files(tasks_dir) if not t.with_suffix(".done").exists()]
 
 
 # --- Core helpers ---
@@ -866,12 +889,60 @@ Do NOT modify any code files. Only write the improvement-plan.md file."""
     run_claude(prompt, model="opus", log_path=log_dir / "plan.log")
 
 
-def phase_execute(iter_dir: Path) -> None:
-    """Execute improvements with Claude (Sonnet), verify, and commit."""
+def phase_decompose(iter_dir: Path) -> None:
+    """Decompose improvement plan into granular tasks with Claude (Opus)."""
     log_dir = iter_dir / "logs"
-    prompt = f"""Execute the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md.
+    tasks_dir = iter_dir / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
 
-Modify lib/text-classifier/title-extractor.ts and any related files as needed.
+    prompt = f"""Read the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md.
+
+Your job: decompose this plan into granular, self-contained tasks that can each be executed
+in a separate Claude session.
+
+Write each task as a separate file in {iter_dir.relative_to(PROJECT_ROOT)}/tasks/:
+- task-01.md, task-02.md, task-03.md, etc.
+- Order by dependency (foundation changes first, dependent changes later)
+- Each task file must contain:
+  1. **Summary**: One-line description of what this task does
+  2. **Files to modify**: List of files that will be changed
+  3. **Changes**: Detailed description with code snippets showing what to change
+  4. **Verification**: How to verify this task was done correctly
+
+Guidelines:
+- Each task should be completable in a single Claude session (not too large)
+- Tasks should be as independent as possible, but ordered so dependencies come first
+- Include enough context in each task that it can be understood without reading other tasks
+- Do NOT modify any code files. Only write the task files."""
+
+    run_claude(prompt, model="opus", log_path=log_dir / "decompose.log")
+
+    # Verify at least one task was created
+    task_files = get_task_files(tasks_dir)
+    if not task_files:
+        raise RuntimeError("Decompose phase produced no task files")
+    print(f"  Decomposed into {len(task_files)} tasks")
+
+
+def phase_execute(iter_dir: Path) -> None:
+    """Execute tasks one-by-one with Claude (Sonnet), verifying after each."""
+    log_dir = iter_dir / "logs"
+    tasks_dir = iter_dir / "tasks"
+    pending = get_pending_tasks(tasks_dir)
+    total = len(get_task_files(tasks_dir))
+
+    print(f"  {len(pending)} of {total} tasks pending")
+
+    for task_file in pending:
+        task_name = task_file.stem  # e.g. "task-01"
+        task_content = task_file.read_text()
+        print(f"\n  Executing {task_name}...")
+
+        prompt = f"""Execute the following task from the improvement plan.
+
+TASK ({task_name}):
+{task_content}
+
 Make sure:
 1. All existing tests still pass
 2. The CLI at tools/title-loop/extract-title.ts still works
@@ -886,24 +957,69 @@ This has been incorrectly changed 5 times and breaks tests every time.
 After making changes, run: npx vitest run --globals lib/text-classifier/__tests__/title-extractor.test.ts
 Fix any test failures before finishing."""
 
-    run_claude(prompt, model="sonnet", log_path=log_dir / "execute.log")
+        run_claude(prompt, model="sonnet", log_path=log_dir / f"execute-{task_name}.log")
 
-    # Verify tests and CLI
-    print(f"\nVerifying tests and CLI...")
-    tests_ok = run_tests()
-    cli_ok = verify_cli()
+        # Verify tests and CLI after each task
+        print(f"  Verifying after {task_name}...")
+        tests_ok = run_tests()
+        cli_ok = verify_cli()
 
-    if not tests_ok or not cli_ok:
-        print("  WARNING: Verification failed. Attempting to fix...")
-        fix_prompt = """The title extraction tests or CLI are failing after recent changes.
+        if not tests_ok or not cli_ok:
+            print(f"  WARNING: Verification failed after {task_name}. Attempting to fix...")
+            fix_prompt = f"""The title extraction tests or CLI are failing after executing {task_name}.
 Please fix any issues in lib/text-classifier/title-extractor.ts.
 Run: npx vitest run lib/text-classifier/__tests__/title-extractor.test.ts
 And verify: npx tsx tools/title-loop/extract-title.ts tools/title-loop/input/*.real.txt
 Make sure both pass before finishing."""
-        run_claude(fix_prompt, model="sonnet", log_path=log_dir / "fix.log")
+            run_claude(fix_prompt, model="sonnet", log_path=log_dir / f"fix-{task_name}.log")
 
-        if not run_tests() or not verify_cli():
-            raise RuntimeError("Tests or CLI still failing after fix attempt")
+            if not run_tests() or not verify_cli():
+                raise RuntimeError(f"Tests or CLI still failing after fix attempt for {task_name}")
+
+        # Mark task as done
+        task_file.with_suffix(".done").write_text("done\n")
+        print(f"  {task_name} completed")
+
+
+def phase_review(iter_dir: Path) -> None:
+    """Review all changes made in this iteration with Claude (Sonnet)."""
+    log_dir = iter_dir / "logs"
+
+    prompt = f"""Review all code changes made in this iteration for the title extraction improvement.
+
+Check the current state of these files:
+- lib/text-classifier/title-extractor.ts (and any related files that were modified)
+- Compare against the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
+
+Review for:
+1. **Architecture**: Are the changes well-structured and maintainable?
+2. **Code quality**: Clean code, no dead code, follows project conventions (AGENTS.md)?
+3. **Performance**: Will this run efficiently on a mobile device under 10 seconds?
+4. **Correctness**: Do the changes match the improvement plan's intent?
+
+CRITICAL CONSTRAINT: Do NOT modify the substring deduplication logic in title-extractor.ts.
+The block starting with "// Deduplicate: if one title is a substring of another, keep the shorter"
+must remain exactly as-is. It keeps the SHORTER candidate. Do not invert this to keep the longer.
+
+If you find issues:
+- Fix them directly in the code
+- Run tests after fixes: npx vitest run --globals lib/text-classifier/__tests__/title-extractor.test.ts
+- Verify CLI: npx tsx tools/title-loop/extract-title.ts tools/title-loop/input/*.real.txt
+
+Write your review to {iter_dir.relative_to(PROJECT_ROOT)}/review.md including:
+- Summary of changes reviewed
+- Issues found and fixed (if any)
+- Overall assessment"""
+
+    run_claude(prompt, model="sonnet", log_path=log_dir / "review.log")
+
+    # Verify review.md was created
+    if not (iter_dir / "review.md").exists():
+        raise RuntimeError("Review phase did not produce review.md")
+
+    # Verify tests still pass after any review fixes
+    if not run_tests() or not verify_cli():
+        raise RuntimeError("Tests or CLI failing after review phase")
 
 
 def run_tests() -> bool:
@@ -1050,15 +1166,34 @@ def main() -> None:
                 print(f"  FATAL: {e}. Stopping.")
                 break
 
-        # --- EXECUTE + VERIFY + COMMIT ---
-        print(f"\nExecuting improvements with Claude (Sonnet)...")
-        try:
-            phase_execute(iter_dir)
-        except RuntimeError as e:
-            print(f"  FATAL: {e}. Stopping.")
-            break
+        # --- DECOMPOSE ---
+        if phase in ("evaluate", "analyze", "plan", "decompose"):
+            print(f"\nDecomposing plan into tasks with Claude (Opus)...")
+            try:
+                phase_decompose(iter_dir)
+            except RuntimeError as e:
+                print(f"  FATAL: {e}. Stopping.")
+                break
 
-        # Commit changes
+        # --- EXECUTE (per-task) ---
+        if phase in ("evaluate", "analyze", "plan", "decompose", "execute"):
+            print(f"\nExecuting tasks with Claude (Sonnet)...")
+            try:
+                phase_execute(iter_dir)
+            except RuntimeError as e:
+                print(f"  FATAL: {e}. Stopping.")
+                break
+
+        # --- REVIEW ---
+        if phase in ("evaluate", "analyze", "plan", "decompose", "execute", "review"):
+            print(f"\nReviewing changes with Claude (Sonnet)...")
+            try:
+                phase_review(iter_dir)
+            except RuntimeError as e:
+                print(f"  FATAL: {e}. Stopping.")
+                break
+
+        # --- COMMIT ---
         print(f"\nCommitting changes...")
         try:
             commit_hash = git_commit_all(f"title-extraction: iteration {iteration}")

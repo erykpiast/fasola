@@ -105,7 +105,7 @@ def determine_resume_phase(iteration: int) -> str:
         return "plan"
 
     tasks_dir = iter_dir / "tasks"
-    if not tasks_dir.exists() or not get_task_files(tasks_dir):
+    if not tasks_dir.exists() or not (tasks_dir / ".complete").exists():
         return "decompose"
 
     if get_pending_tasks(tasks_dir):
@@ -893,6 +893,9 @@ def phase_decompose(iter_dir: Path) -> None:
     """Decompose improvement plan into granular tasks with Claude (Opus)."""
     log_dir = iter_dir / "logs"
     tasks_dir = iter_dir / "tasks"
+    # Clean up any partial previous decomposition
+    if tasks_dir.exists():
+        shutil.rmtree(tasks_dir)
     tasks_dir.mkdir(parents=True, exist_ok=True)
 
     prompt = f"""Read the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md.
@@ -921,6 +924,8 @@ Guidelines:
     task_files = get_task_files(tasks_dir)
     if not task_files:
         raise RuntimeError("Decompose phase produced no task files")
+    # Mark decomposition as complete so partial reruns are detected
+    (tasks_dir / ".complete").write_text(f"{len(task_files)} tasks\n")
     print(f"  Decomposed into {len(task_files)} tasks")
 
 
@@ -931,6 +936,9 @@ def phase_execute(iter_dir: Path) -> None:
     pending = get_pending_tasks(tasks_dir)
     total = len(get_task_files(tasks_dir))
 
+    completed = [t for t in get_task_files(tasks_dir) if t.with_suffix(".done").exists()]
+    if completed:
+        print(f"  Already completed: {', '.join(t.stem for t in completed)}")
     print(f"  {len(pending)} of {total} tasks pending")
 
     for task_file in pending:
@@ -1193,7 +1201,7 @@ def main() -> None:
                 print(f"  FATAL: {e}. Stopping.")
                 break
 
-        # --- COMMIT ---
+        # --- COMMIT (always runs if we reach here; "done" iterations skip via continue above) ---
         print(f"\nCommitting changes...")
         try:
             commit_hash = git_commit_all(f"title-extraction: iteration {iteration}")

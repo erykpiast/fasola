@@ -854,13 +854,17 @@ Do NOT read any other files. Do NOT modify any code files. Only write the feedba
 
 
 def phase_plan(iter_dir: Path, iteration: int) -> None:
-    """Plan algorithm improvements with Claude (Opus)."""
+    """Plan algorithm improvements with Claude (Opus), then validate."""
     log_dir = iter_dir / "logs"
-    prompt = f"""Read the feedback at {iter_dir.relative_to(PROJECT_ROOT)}/feedback.md
-and the current title extraction implementation at lib/text-classifier/title-extractor.ts.
-Also read previous iteration docs in tools/title-loop/docs/ to understand what has been tried.
+    iter_rel = iter_dir.relative_to(PROJECT_ROOT)
 
-Your job: propose changes that fix every failure. Think creatively and ambitiously.
+    # Step 1: Create the improvement plan as a spec
+    create_prompt = f"""/spec:create Improve title extraction algorithm based on feedback from iteration {iteration}
+
+Context for spec creation:
+- Read the feedback at {iter_rel}/feedback.md
+- Read the current implementation at lib/text-classifier/title-extractor.ts
+- Read previous iteration docs in tools/title-loop/docs/ to understand what has been tried
 
 Hard constraints:
 - Must run on a mobile device (React Native / Expo)
@@ -878,19 +882,23 @@ is one option, but you are free to propose alternatives if they'd work better:
 Don't be incremental for the sake of it — if the feedback reveals a fundamental design flaw,
 propose a fundamental fix. But also don't change things that already work well.
 
-Before writing any files, briefly outline your key proposed changes (2-3 sentences per failure)
-so you can think through the approach first.
-
-Then write a detailed improvement plan to {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
-that includes:
-1. Root cause analysis for each failure pattern
-2. Specific code changes with before/after examples
-3. New or modified heuristics, scoring adjustments, or pipeline changes
-4. Expected impact on accuracy
-
+IMPORTANT: Write the spec to {iter_rel}/improvement-plan.md (not to specs/ directory).
 Do NOT modify any code files. Only write the improvement-plan.md file."""
 
-    run_claude(prompt, model="opus", log_path=log_dir / "plan.log")
+    run_claude(create_prompt, model="opus", log_path=log_dir / "plan.log")
+
+    # Step 2: Validate the plan
+    validate_prompt = f"""/spec:validate {iter_rel}/improvement-plan.md
+
+Additional validation criteria:
+- Does the plan address every failure mentioned in {iter_rel}/feedback.md?
+- Are the proposed changes feasible within the hard constraints (mobile, <10s, lib/text-classifier/)?
+- Are there any overengineered solutions that could be simplified?
+
+If issues are found, fix them directly in {iter_rel}/improvement-plan.md.
+Do NOT modify any code files."""
+
+    run_claude(validate_prompt, model="opus", log_path=log_dir / "plan-validate.log")
 
 
 def phase_decompose(iter_dir: Path) -> None:
@@ -908,21 +916,17 @@ def phase_decompose(iter_dir: Path) -> None:
         shutil.rmtree(tasks_dir)
     tasks_dir.mkdir(parents=True, exist_ok=True)
 
-    prompt = f"""Read the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md.
+    prompt = f"""/spec:decompose {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
 
-Your job: decompose this plan into granular, self-contained tasks that can each be executed
-in a separate Claude session.
-
-Write each task as a separate file in {iter_dir.relative_to(PROJECT_ROOT)}/tasks/:
-- task-01.md, task-02.md, task-03.md, etc.
+Additional instructions for decomposition:
+- Write each task as a separate file in {iter_dir.relative_to(PROJECT_ROOT)}/tasks/
+  (task-01.md, task-02.md, task-03.md, etc.) instead of using STM or TodoWrite
 - Order by dependency (foundation changes first, dependent changes later)
 - Each task file must contain:
   1. **Summary**: One-line description of what this task does
   2. **Files to modify**: List of files that will be changed
   3. **Changes**: Detailed description with code snippets showing what to change
   4. **Verification**: How to verify this task was done correctly
-
-Guidelines:
 - Each task should be completable in a single Claude session (not too large)
 - Tasks should be as independent as possible, but ordered so dependencies come first
 - Include enough context in each task that it can be understood without reading other tasks
@@ -967,11 +971,6 @@ Make sure:
 3. The code is clean and follows the project conventions in AGENTS.md
 4. No unnecessary changes outside the title extraction logic
 
-CRITICAL CONSTRAINT: Do NOT modify the substring deduplication logic in title-extractor.ts.
-The block starting with "// Deduplicate: if one title is a substring of another, keep the shorter"
-must remain exactly as-is. It keeps the SHORTER candidate. Do not invert this to keep the longer.
-This has been incorrectly changed 5 times and breaks tests every time.
-
 After making changes, run: npx vitest run --globals lib/text-classifier/__tests__/title-extractor.test.ts
 Fix any test failures before finishing."""
 
@@ -1000,36 +999,24 @@ Make sure both pass before finishing."""
 
 
 def phase_review(iter_dir: Path) -> None:
-    """Review all changes made in this iteration with Claude (Sonnet)."""
+    """Review all changes made in this iteration with Claude (Opus)."""
     log_dir = iter_dir / "logs"
 
-    prompt = f"""Review all code changes made in this iteration for the title extraction improvement.
+    prompt = f"""/code-review lib/text-classifier/ changes from this iteration
 
-Check the current state of these files:
-- lib/text-classifier/title-extractor.ts (and any related files that were modified)
+Additional context:
 - Compare against the improvement plan at {iter_dir.relative_to(PROJECT_ROOT)}/improvement-plan.md
+- This code runs on a mobile device (React Native / Expo) — total title extraction must complete under 10 seconds
+- Focus on lib/text-classifier/title-extractor.ts and any related files that were modified
 
-Review for:
-1. **Architecture**: Are the changes well-structured and maintainable?
-2. **Code quality**: Clean code, no dead code, follows project conventions (AGENTS.md)?
-3. **Performance**: Will this run efficiently on a mobile device under 10 seconds?
-4. **Correctness**: Do the changes match the improvement plan's intent?
-
-CRITICAL CONSTRAINT: Do NOT modify the substring deduplication logic in title-extractor.ts.
-The block starting with "// Deduplicate: if one title is a substring of another, keep the shorter"
-must remain exactly as-is. It keeps the SHORTER candidate. Do not invert this to keep the longer.
-
-If you find issues:
+After the review, if you find issues:
 - Fix them directly in the code
 - Run tests after fixes: npx vitest run --globals lib/text-classifier/__tests__/title-extractor.test.ts
 - Verify CLI: npx tsx tools/title-loop/extract-title.ts tools/title-loop/input/*.real.txt
 
-Write your review to {iter_dir.relative_to(PROJECT_ROOT)}/review.md including:
-- Summary of changes reviewed
-- Issues found and fixed (if any)
-- Overall assessment"""
+Write the consolidated review to {iter_dir.relative_to(PROJECT_ROOT)}/review.md"""
 
-    run_claude(prompt, model="sonnet", log_path=log_dir / "review.log")
+    run_claude(prompt, model="opus", log_path=log_dir / "review.log")
 
     # Verify review.md was created
     if not (iter_dir / "review.md").exists():
@@ -1204,7 +1191,7 @@ def main() -> None:
 
         # --- REVIEW ---
         if phase in ("evaluate", "analyze", "plan", "decompose", "execute", "review"):
-            print(f"\nReviewing changes with Claude (Sonnet)...")
+            print(f"\nReviewing changes with Claude (Opus)...")
             try:
                 phase_review(iter_dir)
             except RuntimeError as e:

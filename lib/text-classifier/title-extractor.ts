@@ -153,13 +153,23 @@ const SECTION_LABELS = new Set([
   "ciasta",           // cakes (plural)
   "ciastka",          // cookies
   "torty",            // layer cakes
-  "placki",           // pancakes/flatbreads
+  // "placki" removed — it commonly starts recipe titles like "Placki Ziemniaczane", "Placki Żółte z Kukurydzą"
   "koktajle",         // cocktails/smoothies
+  // English — recipe-book chapter/category labels
+  "vegetables", "seafood", "fish", "soups", "salads", "desserts",
+  "appetizers", "breads", "breakfast", "pasta", "grains",
+  "main courses", "side dishes", "preserves", "baked goods",
+  "fish & seafood", "soups & broths", "desserts & baked goods",
+  "meats", "poultry", "game",
 ]);
 
 function isSectionLabel(text: string): boolean {
   const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
-  return SECTION_LABELS.has(normalized);
+  if (SECTION_LABELS.has(normalized)) return true;
+  // OCR variant: leading "l" may be OCR-corrupted "I" (e.g. "lngredients" → "ingredients")
+  const ocrNormalized = normalized.replace(/^l/, "i");
+  if (ocrNormalized !== normalized && SECTION_LABELS.has(ocrNormalized)) return true;
+  return false;
 }
 
 /**
@@ -291,6 +301,17 @@ function passesHardFilters(text: string): boolean {
   if (/^\s*[-•*]\s/.test(text)) return false;
   // "For the sauce:", "For the filling:" etc. are sub-section headers
   if (/^For the\s+/i.test(text) && /:\s*$/.test(text)) return false;
+  // Lines ending with ":" are recipe sub-section headers, not titles.
+  // Exception: compound titles using " : " as a title separator (e.g. "LEMON CURD : LEMON CURD WITH THYME").
+  if (/:\s*$/.test(text.trim()) && !/ : /.test(text)) return false;
+  // Page references are navigation markers, not recipe titles
+  if (/^Page\s+\d+/i.test(text.trim())) return false;
+  if (/^Strona\s+\d+/i.test(text.trim())) return false;
+  // Corrupted spillover annotations from synthetic multi-page OCR
+  if (/^\[CORRUPTED\s+SPILLOVER/i.test(text.trim())) return false;
+  // Parenthetical OCR annotation lines describing corruption artifacts
+  if (/^\(OCR\b/i.test(text.trim())) return false;
+  if (/^\(.*\bcorruption\b/i.test(text.trim())) return false;
   // Square-bracket category tags (e.g., "[CLASSIC FALL SOUPS]")
   if (/^\[.*\]$/.test(text.trim())) return false;
   // Known recipe section labels are structural headers, not titles
@@ -310,6 +331,27 @@ function passesHardFilters(text: string): boolean {
  */
 function findBurstEnd(lines: Array<{ text: string }>): number {
   let i = 0;
+
+  // Skip overflow preambles: blocks introduced by "PREVIOUS RECIPE OVERFLOW",
+  // "PREVIOUS PAGE CONTENT", "CORRUPTED SECTION", etc. that precede the actual recipe.
+  const OVERFLOW_MARKERS = /\b(PREVIOUS\s+(RECIPE|PAGE)\s+(OVERFLOW|CONTENT)|SPILLOVER|CONTINUATION|CORRUPTED\s+SECTION)\b/i;
+  let overflowEnd = 0;
+  for (let k = 0; k < lines.length && k < 30; k++) {
+    if (OVERFLOW_MARKERS.test(lines[k].text)) {
+      // Skip forward past the overflow block to the next visual separator or blank cluster
+      let m = k + 1;
+      while (m < lines.length) {
+        if (/^[=\-]{4,}$/.test(lines[m].text) || lines[m].text.length === 0) {
+          overflowEnd = m + 1;
+          break;
+        }
+        m++;
+      }
+      if (overflowEnd === 0) overflowEnd = k + 1;
+    }
+  }
+  if (overflowEnd > 0) i = overflowEnd;
+
   while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text) && !isAllCaps(lines[i].text)) {
     i++;
   }
@@ -386,6 +428,16 @@ function buildCandidates(
   }
 
   const burstEnd = findBurstEnd(nonEmptyLines);
+
+  // Pre-join hyphen-broken lines: "ROASTED CHICKEN WITH ROOT VEGET-" + "ABLES" → single line.
+  // Only applies within the candidate region (after burst end).
+  for (let hi = burstEnd; hi < nonEmptyLines.length - 1; hi++) {
+    if (nonEmptyLines[hi].text.endsWith("-")) {
+      const joined = nonEmptyLines[hi].text.slice(0, -1) + nonEmptyLines[hi + 1].text;
+      nonEmptyLines[hi] = { text: joined, index: nonEmptyLines[hi].index };
+      nonEmptyLines.splice(hi + 1, 1);
+    }
+  }
 
   // Pre-merge consecutive short ALL_CAPS lines (OCR-fragmented headings).
   // When a sequence of 2+ ALL_CAPS lines each has ≤2 words and ≤25 chars, they are
@@ -526,6 +578,84 @@ function buildCandidates(
   }
 
   return candidates;
+}
+
+/**
+ * Convert an ALL_CAPS string to Title Case, using a small-words list.
+ * Preserves Polish/French diacritics.
+ */
+function toTitleCase(text: string): string {
+  const smallWords = new Set([
+    "a", "an", "the", "and", "but", "or", "for", "nor",
+    "in", "on", "at", "to", "of", "by", "with", "from",
+    "z", "w", "i", "ze", "na", "do", "od", "za", "po",
+  ]);
+  return text.split(/(\s+)/).map((word, idx) => {
+    if (/^\s+$/.test(word)) return word;
+    const lower = word.toLowerCase();
+    if (idx === 0 || !smallWords.has(lower)) {
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }
+    return lower;
+  }).join("");
+}
+
+/**
+ * Post-processing normalization for OCR-extracted titles.
+ * Strips stray section markers and substitutes common OCR digit-for-letter artifacts.
+ * Title-case conversion is applied only when a substitution was actually made, so
+ * clean ALL_CAPS titles (e.g. "CHOCOLATE CAKE") are returned unchanged.
+ */
+function normalizeOcrTitle(raw: string): string {
+  let text = raw;
+
+  // Step 1: Strip trailing section markers greedily appended to the title.
+  // e.g. "MAKOWIEC ZE ŚLIWKAMI + SERVING AND STORAGE:" → "MAKOWIEC ZE ŚLIWKAMI"
+  text = text.replace(
+    /\s*\+\s*(?:SERV[IÍ1]NG(?:\s+AND\s+STORAGE)?|TOPPING|NOTES?|TIPS?)\s*:?\s*$/i,
+    ""
+  );
+
+  // Step 2: OCR character substitution.
+  // For ALL_CAPS text, apply digit-for-letter substitutions.
+  const beforeSub = text;
+  if (isAllCaps(text)) {
+    text = text
+      .replace(/1/g, "I")
+      .replace(/0(?=[A-ZÀ-Ż])/g, "O")
+      .replace(/(?<=[A-ZÀ-Ż])0/g, "O")
+      .replace(/4(?=[A-ZÀ-Ż])/g, "A")
+      .replace(/(?<=[A-ZÀ-Ż])4/g, "A")
+      .replace(/5(?=[A-ZÀ-Ż])/g, "S")
+      .replace(/(?<=[A-ZÀ-Ż])5/g, "S")
+      .replace(/¡/g, "I")
+      .replace(/€/g, "E")
+      .replace(/[ÍÌ]/g, "I");
+  } else {
+    // Mixed-case: fix per-word (digits between lowercase letters)
+    text = text.split(/(\s+)/).map((token) => {
+      if (/^\s+$/.test(token)) return token;
+      if (isAllCaps(token) && token.length > 1) {
+        return token
+          .replace(/1/g, "I")
+          .replace(/0(?=[A-Z])/g, "O")
+          .replace(/(?<=[A-Z])0/g, "O");
+      }
+      return token
+        .replace(/(?<=[a-zà-ż])1/g, "l")
+        .replace(/1(?=[a-zà-ż])/g, "l")
+        .replace(/¡/g, "i")
+        .replace(/€/g, "e");
+    }).join("");
+  }
+
+  // Step 3: Title-case conversion — ONLY when OCR substitution changed the text.
+  // This preserves clean ALL_CAPS titles (e.g. "CHOCOLATE CAKE") as-is.
+  if (text !== beforeSub && isAllCaps(text)) {
+    text = toTitleCase(text);
+  }
+
+  return text.trim();
 }
 
 // Module-level cache for reference embeddings
@@ -780,12 +910,15 @@ export async function extractTitleWithEmbeddings(
 
   // Empty-pool fallback: when threshold filtering discards every candidate,
   // the hard filters' structural verdict should not be overruled by weak
-  // embedding differentiation. Return the best positional candidate.
+  // embedding differentiation. Return the best positional candidate only
+  // if it has a meaningful positive raw score (avoids ingredient-list leakage).
   if (selected.length === 0 && scored.length > 0) {
     const fallback = scored
       .slice()
       .sort((a, b) => a.position - b.position || b.score - a.score);
-    selected = [fallback[0]];
+    if (fallback[0].rawScore > 0.02) {
+      selected = [fallback[0]];
+    }
   }
 
   // Remove word-boundary prefixes of firstStructuralHeading when the heading itself survived
@@ -994,19 +1127,7 @@ export async function extractTitleWithEmbeddings(
     return undefined;
   }
 
-  const result = selected.map((s) => s.text.normalize("NFC").trim()).join(" + ");
-
-  // Compound variant: "A : B" where both sides share the same first word → return only A.
-  // This handles pages with "TITLE VARIANT1 : TITLE VARIANT2" where only the first is wanted.
-  const colonMatch = result.match(/^(.+?)\s*:\s*(.+)$/);
-  if (colonMatch) {
-    const [, first, second] = colonMatch;
-    const firstWord = first.trim().toLowerCase().split(/\s+/)[0];
-    const secondWord = second.trim().toLowerCase().split(/\s+/)[0];
-    if (firstWord && firstWord === secondWord) {
-      return first.trim().normalize("NFC");
-    }
-  }
+  const result = selected.map((s) => normalizeOcrTitle(s.text.normalize("NFC").trim())).join(" + ");
 
   return result;
 }

@@ -364,11 +364,12 @@ function isBodyProse(line: string): boolean {
 
 /**
  * Detect pages where the OCR capture starts mid-recipe with no title present.
- * Returns true if the first 3 non-empty lines are all ingredients, cooking instructions,
- * or body prose continuation text.
+ * Returns true if the first 3 non-empty lines (after `startFrom`) are all ingredients,
+ * cooking instructions, or body prose continuation text.
  */
-function isTitleAbsentPage(lines: Array<string>): boolean {
-  const nonEmptyLines = lines.map(l => l.trim()).filter(l => l.length > 0);
+function isTitleAbsentPage(lines: Array<string>, startFrom: number = 0): boolean {
+  const relevantLines = startFrom > 0 ? lines.slice(startFrom) : lines;
+  const nonEmptyLines = relevantLines.map(l => l.trim()).filter(l => l.length > 0);
 
   if (nonEmptyLines.length < 3) return false;
 
@@ -433,12 +434,12 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
 
   // Skip overflow preambles: blocks introduced by "PREVIOUS RECIPE OVERFLOW",
   // "PREVIOUS PAGE CONTENT", "CORRUPTED SECTION", etc. that precede the actual recipe.
-  const OVERFLOW_MARKERS = /\b(PREVIOUS\s+(RECIPE|PAGE)\s+(OVERFLOW|CONTENT)|SPILLOVER|CONTINUATION|CORRUPTED\s+SECTION)\b/i;
+  const OVERFLOW_MARKERS = /\b(PREVIOUS\s+(RECIPE|PAGE)\b|SPILLOVER|CONTINUATION|CORRUPTED\s+(SECTION|TEXT)\b|PARTIAL\s+RECIPE)\b/i;
   let overflowEnd = 0;
   for (let k = 0; k < lines.length && k < 30; k++) {
     // Don't re-examine lines already determined to be overflow
     if (overflowEnd > 0 && k < overflowEnd) continue;
-    if (OVERFLOW_MARKERS.test(lines[k].text)) {
+    if (OVERFLOW_MARKERS.test(lines[k].text) || /^\[.*\b(PREVIOUS|CORRUPTED|SPILLOVER|CONTINUATION|PARTIAL)\b.*\]$/i.test(lines[k].text)) {
       // Skip forward past the overflow block to the next visual separator or blank cluster
       let m = k + 1;
       let consecutiveBlanks = 0;
@@ -475,33 +476,31 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
   while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text) && !isAllCaps(lines[i].text)) {
     i++;
   }
-  // Skip long instruction-like prologues: if 3+ consecutive lines look like cooking instructions,
-  // skip them to find the actual title region.
-  if (i === 0) {
-    let j = 0;
-    while (j < lines.length && looksLikeCookingInstruction(lines[j].text)) {
-      j++;
-    }
-    if (j >= 3) {
-      i = j;
-    }
-  }
-  // Skip prose prologues: mid-recipe body text before the actual title.
-  // If 3+ consecutive lines look like running body text (lowercase start, continuation,
-  // or sentence-ending with many words), skip them.
+  // Skip body-content prologues: when 3+ consecutive lines at the start are cooking
+  // instructions, prose continuations, or a mix of both, skip them to find the actual
+  // title region. This unifies the previous separate instruction and prose checks to
+  // handle interleaved patterns (e.g., instruction → prose continuation → instruction).
   if (i === 0) {
     let j = 0;
     while (j < lines.length) {
       const t = lines[j].text;
-      const isBodyText = (
-        /^[a-ząćęłńóśźż]/.test(t) ||
-        t.endsWith(",") ||
-        (t.endsWith(".") && wordCount(t) > 4)
-      ) && wordCount(t) >= 4;
-      if (isBodyText) j++;
-      else break;
+      const isInstruction = looksLikeCookingInstruction(t);
+      // Short body-text continuation: lowercase-start with 2+ words catches fragments
+      // like "creamy but still al dente..." that follow cooking instructions.
+      // Lower threshold than isBodyProse (2 vs 4 words) to handle interleaved patterns.
+      const isContinuation = /^[a-ząćęłńóśźż]/.test(t) && wordCount(t) >= 2;
+      // Non-lowercase body text: comma-ending or long sentence-ending lines
+      const isBodyEnding = (t.endsWith(",") || (t.endsWith(".") && wordCount(t) > 4)) && wordCount(t) >= 4;
+
+      if (isInstruction || isContinuation || isBodyEnding) {
+        j++;
+      } else {
+        break;
+      }
     }
-    if (j >= 3) i = j;
+    if (j >= 3) {
+      i = j;
+    }
   }
   return i;
 }
@@ -656,16 +655,30 @@ function buildCandidates(
     }
 
     // Blind OCR repair for early-position candidates: when the original text
-    // has OCR artifacts and is in the first few lines (strong positional evidence),
-    // generate an additional candidate with blind digit→letter repair.
-    // This gives the embedding scorer a clean version even when dictionary repair misses.
-    if (line.index <= 5 && OCR_ARTIFACT_PATTERN.test(line.text)) {
-      const blindRepaired = applyBlindOcrRepair(singleText);
-      if (blindRepaired !== singleText && passesHardFilters(blindRepaired)) {
-        const norm = blindRepaired.toLowerCase();
-        if (!seen.has(norm)) {
-          seen.add(norm);
-          candidates.push({ text: blindRepaired, position: line.index, origin: "single" });
+    // has OCR artifacts or erratic casing and is in the first few lines,
+    // generate additional candidates with blind digit→letter repair and/or
+    // casing normalization. This gives the embedding scorer clean versions
+    // even when dictionary repair misses.
+    if (line.index <= 5 && (OCR_ARTIFACT_PATTERN.test(line.text) || hasErraticCasing(line.text))) {
+      let repairable = singleText;
+      if (hasErraticCasing(repairable)) {
+        repairable = normalizeErraticCasing(repairable);
+        if (repairable !== singleText && passesHardFilters(repairable)) {
+          const norm = repairable.toLowerCase();
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            candidates.push({ text: repairable, position: line.index, origin: "single" });
+          }
+        }
+      }
+      const variants = generateBlindOcrVariants(repairable);
+      for (const variant of variants) {
+        if (passesHardFilters(variant)) {
+          const norm = variant.toLowerCase();
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            candidates.push({ text: variant, position: line.index, origin: "single" });
+          }
         }
       }
     }
@@ -711,10 +724,10 @@ function buildCandidates(
       const bShort = wordCount(b.text) <= 5 ? 0 : 1;
       return aShort - bShort;
     });
-    return { candidates: prioritized.slice(0, 25), burstEnd: nonEmptyLines[burstEnd]?.index ?? 0 };
+    return { candidates: prioritized.slice(0, 25), burstEnd: nonEmptyLines[burstEnd]?.index ?? lines.length };
   }
 
-  return { candidates, burstEnd: nonEmptyLines[burstEnd]?.index ?? 0 };
+  return { candidates, burstEnd: nonEmptyLines[burstEnd]?.index ?? lines.length };
 }
 
 /**
@@ -826,10 +839,39 @@ function repairOcrText(text: string): string {
 }
 
 /**
+ * Apply blind OCR repair to a single mixed-case token.
+ * @param oneLetter - the letter to substitute for `1` in lowercase context ("i" or "l")
+ */
+function applyBlindOcrRepairToken(token: string, oneLetter: "i" | "l"): string {
+  if (isAllCaps(token) && token.length > 1) {
+    return token
+      .replace(/1/g, "I")
+      .replace(/0(?=[A-ZÀ-Ż])/g, "O")
+      .replace(/(?<=[A-ZÀ-Ż])0/g, "O");
+  }
+  return token
+    .replace(/(?<=[a-zà-ż])1/g, oneLetter)
+    .replace(/1(?=[a-zà-ż])/g, oneLetter)
+    .replace(/¡/g, "i")
+    .replace(/€/g, "e");
+}
+
+/**
  * Apply blind OCR digit-for-letter repair without dictionary lookup.
  * Used to generate additional candidates for early-position lines where
  * positional evidence is strong enough to justify speculative repair.
  */
+/**
+ * Apply blind OCR repair to mixed-case text, mapping `1` to the given letter
+ * between lowercase characters. Handles per-token ALL_CAPS detection internally.
+ */
+function applyBlindOcrRepairMixedCase(text: string, oneLetter: "i" | "l"): string {
+  return text.split(/(\s+)/).map((token) => {
+    if (/^\s+$/.test(token)) return token;
+    return applyBlindOcrRepairToken(token, oneLetter);
+  }).join("");
+}
+
 function applyBlindOcrRepair(text: string): string {
   if (isAllCaps(text)) {
     return text
@@ -844,21 +886,55 @@ function applyBlindOcrRepair(text: string): string {
       .replace(/€/g, "E")
       .replace(/[ÍÌ]/g, "I");
   }
-  // Mixed-case: fix per-word (digits between lowercase letters)
-  return text.split(/(\s+)/).map((token) => {
+  return applyBlindOcrRepairMixedCase(text, "i");
+}
+
+function hasErraticCasing(text: string): boolean {
+  return text.split(/\s+/).some(word => {
+    if (word.length < 3) return false;
+    if (isAllCaps(word)) return false;
+    const inner = word.slice(1);
+    const upperInner = (inner.match(/[A-ZÀ-Ż]/g) || []).length;
+    const lowerInner = (inner.match(/[a-zà-ż]/g) || []).length;
+    return upperInner >= 2 && upperInner >= lowerInner * 0.3;
+  });
+}
+
+function normalizeErraticCasing(text: string): string {
+  return text.split(/(\s+)/).map(token => {
     if (/^\s+$/.test(token)) return token;
-    if (isAllCaps(token) && token.length > 1) {
-      return token
-        .replace(/1/g, "I")
-        .replace(/0(?=[A-Z])/g, "O")
-        .replace(/(?<=[A-Z])0/g, "O");
+    if (isAllCaps(token)) return token;
+    if (hasErraticCasing(token)) {
+      return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
     }
-    return token
-      .replace(/(?<=[a-zà-ż])1/g, "l")
-      .replace(/1(?=[a-zà-ż])/g, "l")
-      .replace(/¡/g, "i")
-      .replace(/€/g, "e");
+    return token;
   }).join("");
+}
+
+/**
+ * Generate multiple blind OCR repair variants for embedding comparison.
+ * For ALL_CAPS text, returns a single variant (1→I is unambiguous).
+ * For mixed-case text, returns two variants: one with 1→i and one with 1→l,
+ * letting the embedding scorer pick the better one.
+ */
+function generateBlindOcrVariants(text: string): Array<string> {
+  if (isAllCaps(text)) {
+    const repaired = applyBlindOcrRepair(text);
+    return repaired !== text ? [repaired] : [];
+  }
+
+  const variants: Array<string> = [];
+
+  // i-variant: 1→i between lowercase letters (default, correct for most recipe text)
+  const iVariant = applyBlindOcrRepair(text);
+
+  // l-variant: 1→l between lowercase letters (fallback for words like "llama", "fillets")
+  const lVariant = applyBlindOcrRepairMixedCase(text, "l");
+
+  if (iVariant !== text) variants.push(iVariant);
+  if (lVariant !== text && lVariant !== iVariant) variants.push(lVariant);
+
+  return variants;
 }
 
 /**
@@ -891,6 +967,11 @@ function normalizeOcrTitle(raw: string): string {
     text = toTitleCase(text);
   }
 
+  // Step 4: Normalize erratic casing (e.g. "KoPyTka" → "Kopytka").
+  if (hasErraticCasing(text)) {
+    text = normalizeErraticCasing(text);
+  }
+
   return text.trim();
 }
 
@@ -915,7 +996,7 @@ export async function extractTitleWithEmbeddings(
 
   const lines = text.split("\n");
   const { candidates, burstEnd } = buildCandidates(lines);
-  const titleAbsent = isTitleAbsentPage(lines);
+  const titleAbsent = isTitleAbsentPage(lines, burstEnd);
 
   if (candidates.length === 0) {
     return undefined;
@@ -1075,15 +1156,22 @@ export async function extractTitleWithEmbeddings(
   for (let ci = 0; ci < scored.length && ci <= 2; ci++) {
     const candidate = scored[ci];
     if (candidate.position > 0) {
-      const prevLine = lines[candidate.position - 1]?.trim() ?? "";
-      const prevIsHeader =
-        isSectionLabel(prevLine) ||
-        looksLikeMetadata(prevLine) ||
-        prevLine.includes(" | ");
-      if (prevIsHeader) {
-        candidate.score += 0.10;
-        candidate.baseScore += 0.10;
-        candidate.thresholdScore += 0.10;
+      // Scan backward past blank lines to find nearest non-empty preceding line
+      let prevPos = candidate.position - 1;
+      while (prevPos >= 0 && lines[prevPos].trim() === "") {
+        prevPos--;
+      }
+      if (prevPos >= 0) {
+        const prevLine = lines[prevPos].trim();
+        const prevIsHeader =
+          isSectionLabel(prevLine) ||
+          looksLikeMetadata(prevLine) ||
+          prevLine.includes(" | ");
+        if (prevIsHeader) {
+          candidate.score += 0.10;
+          candidate.baseScore += 0.10;
+          candidate.thresholdScore += 0.10;
+        }
       }
     }
   }

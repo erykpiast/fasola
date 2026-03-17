@@ -1,0 +1,87 @@
+# Claude (sonnet) — 2026-03-17 11:00:11
+# Duration: 0s — Exit: 1
+# Prompt:
+#   Execute the following task from the improvement plan.
+#   
+#   TASK (task-06):
+#   # Task 06: Run full evaluation and verify all fixes
+#   
+#   ## Summary
+#   
+#   Run the title-loop evaluation harness to verify all 16 generated-file failures are fixed with no regressions on real files.
+#   
+#   ## Dependencies
+#   
+#   Tasks 01-05 must all be completed first.
+#   
+#   ## Files to modify
+#   
+#   - `tools/title-loop/docs/iter.txt` (update with iteration 27 results)
+#   
+#   ## Changes
+#   
+#   ### Step 1: Run the evaluation harness
+#   
+#   ```bash
+#   cd tools/title-loop && python title-loop.py
+#   ```
+#   
+#   ### Step 2: Verify results
+#   
+#   Check the output for:
+#   1. **All 11 real files pass** (no regressions from 100% real accuracy)
+#   2. **All 16 generated-file failures are fixed:**
+#      - Pattern A (5): Corrupted spillover — title absent → now extracted correctly
+#      - Pattern B (2): Heavy digit corruption → OCR fully repaired, title extracted
+#      - Pattern C (3): Partial corruption → OCR fully repaired, correct title wins
+#      - Pattern D (3): Section header before title → first-after-preamble bonus pushes title above threshold
+#      - Pattern E (1): Multi-line title truncated → `LEMON HERB ROASTED VEGETABLES` merged
+#      - Pattern F (2): Mid-recipe page start → correctly detected as title-absent
+#   
+#   ### Step 3: Handle partial fixes
+#   
+#   If some failures persist:
+#   1. Check which patterns still fail
+#   2. Review the specific test case output to understand why
+#   3. Iterate on the relevant task's fix (do NOT change other fixes)
+#   
+#   ### Step 4: Edge case verification
+#   
+#   Manually check the edge cases from the spec:
+#   - A recipe titled `"Vegetable Soup"` where `"VEGETABLES"` appears standalone → should NOT merge if preceded by 5+ word title
+#   - A recipe starting with `"½ cup"` as first ingredient but with a title on line 0 → `isTitleAbsentPage` should NOT fire
+#   - Single-word `"SKŁADNIKI"` at line 2 following a complete title at line 0 → should NOT merge
+#   - Page with body prose on lines 0-2 but valid title at position 0 → extraction must still work
+#   
+#   ### Step 5: Record results
+#   
+#   Update `tools/title-loop/docs/iter.txt` with the iteration 27 accuracy numbers.
+#   
+#   ## Verification
+#   
+#   - Combined accuracy should be ≥ 97% (fixing all 16 failures from 85.6% baseline)
+#   - Real file accuracy remains 100% (11/11)
+#   - No new failures introduced
+#   
+#   
+#   Make sure:
+#   1. All existing tests still pass
+#   2. The CLI at tools/title-loop/extract-title.ts still works
+#   3. The code is clean and follows the project conventions in AGENTS.md
+#   4. No unnecessary changes outside the title extraction logic
+#   
+#   After making changes, run: npx vitest run --globals lib/text-classifier/__tests__/title-extractor.test.ts
+#   Fix any test failures before finishing.
+
+============================================================
+
+
+============================================================
+# STDERR:
+Error: Claude Code cannot be launched inside another Claude Code session.
+Nested sessions share runtime resources and will crash all active sessions.
+To bypass this check, unset the CLAUDECODE environment variable.
+
+
+============================================================
+# RAW STREAM (0 events):

@@ -1,5 +1,6 @@
 /**
- * ~500 common English and Polish food/cooking words for OCR repair.
+ * Common English and Polish food/cooking words and structural recipe title
+ * words (prepositions, adjectives) for OCR repair.
  * Words are lowercase, without diacritics (OCR-resilient matching).
  * Used by repairOcrWord() to resolve ambiguous digit→letter substitutions.
  */
@@ -128,4 +129,18 @@ export const FOOD_DICTIONARY: Set<string> = new Set([
   // Polish section labels (appear in recipe texts, useful for context)
   "skladniki", "przygotowanie", "sposob", "wykonanie", "porcje",
   "czas", "temperatura", "pieczenia",
+
+  // ── Common title words (for OCR repair) ─────────────────────────────────
+  // Prepositions & conjunctions
+  "with", "from", "over", "under", "the", "and", "for",
+  // Adjectives commonly in recipe titles
+  "classic", "simple", "quick", "easy", "light",
+  "thick", "thin", "old", "new",
+  // Short food terms missing from main dictionary
+  "dip", "bun", "buns", "roll", "rolls",
+  "jam", "jelly", "loaf", "hash", "bowl",
+  // Polish common title words (without diacritics)
+  "pieczone", "smazone",
+  "gotowane", "duszone", "duszony",
+  "domowy", "domowe", "tradycyjny", "tradycyjne",
 ]);

@@ -99,8 +99,8 @@ function looksLikeIngredient(line: string): boolean {
 }
 
 function startsWithNumber(line: string): boolean {
-  // Match lines starting with a digit, or bullet-then-digit (e.g., "- 2 jajka")
-  return /^\s*(?:[-•*]\s*)?\d/.test(line);
+  // Match lines starting with a digit or Unicode fraction, optionally preceded by bullet
+  return /^\s*(?:[-•*]\s*)?[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/.test(line);
 }
 
 function stripDiacritics(text: string): string {
@@ -165,6 +165,27 @@ const SECTION_LABELS = new Set([
   "fish & seafood", "soups & broths", "desserts & baked goods",
   "meats", "poultry", "game",
 ]);
+
+/**
+ * Subset of SECTION_LABELS that are food-group/chapter labels (not structural process labels).
+ * These may appear as the last word of a compound recipe title (e.g. "LEMON HERB ROASTED VEGETABLES").
+ */
+const CATEGORY_SECTION_LABELS = new Set([
+  // English food categories
+  "vegetables", "seafood", "fish", "soups", "salads", "desserts",
+  "appetizers", "breads", "breakfast", "pasta", "grains",
+  "meats", "poultry", "game",
+  // Polish food categories
+  "warzywa", "mieso", "miesa", "ryby", "zupy", "salatki", "desery",
+  "napoje", "pieczywo", "przekaski", "sniadania", "obiady", "kolacje",
+  "makarony", "kasza", "kasze", "przystawki", "dodatki", "wypieki",
+  "ciasta", "ciastka", "torty", "koktajle",
+]);
+
+function isCategorySectionLabel(text: string): boolean {
+  const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
+  return CATEGORY_SECTION_LABELS.has(normalized);
+}
 
 function isSectionLabel(text: string): boolean {
   const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
@@ -332,8 +353,18 @@ function looksLikeCookingInstruction(text: string): boolean {
 }
 
 /**
+ * A line starting with a lowercase letter and having 4+ words is prose continuation.
+ * Recipe titles are capitalized (Title Case or ALL CAPS), so a lowercase-start line
+ * is a strong signal for mid-recipe body text.
+ */
+function isBodyProse(line: string): boolean {
+  return /^[a-ząćęłńóśźż]/.test(line) && wordCount(line) >= 4;
+}
+
+/**
  * Detect pages where the OCR capture starts mid-recipe with no title present.
- * Returns true if the first 3 non-empty lines are all ingredients or cooking instructions.
+ * Returns true if the first 3 non-empty lines are all ingredients, cooking instructions,
+ * or body prose continuation text.
  */
 function isTitleAbsentPage(lines: Array<string>): boolean {
   const nonEmptyLines = lines.map(l => l.trim()).filter(l => l.length > 0);
@@ -342,7 +373,11 @@ function isTitleAbsentPage(lines: Array<string>): boolean {
 
   const first3 = nonEmptyLines.slice(0, 3);
 
-  return first3.every(line => looksLikeIngredient(line) || looksLikeCookingInstruction(line));
+  return first3.every(line =>
+    looksLikeIngredient(line) ||
+    looksLikeCookingInstruction(line) ||
+    isBodyProse(line)
+  );
 }
 
 function passesHardFilters(text: string): boolean {
@@ -400,17 +435,38 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
   const OVERFLOW_MARKERS = /\b(PREVIOUS\s+(RECIPE|PAGE)\s+(OVERFLOW|CONTENT)|SPILLOVER|CONTINUATION|CORRUPTED\s+SECTION)\b/i;
   let overflowEnd = 0;
   for (let k = 0; k < lines.length && k < 30; k++) {
+    // Don't re-examine lines already determined to be overflow
+    if (overflowEnd > 0 && k < overflowEnd) continue;
     if (OVERFLOW_MARKERS.test(lines[k].text)) {
       // Skip forward past the overflow block to the next visual separator or blank cluster
       let m = k + 1;
+      let consecutiveBlanks = 0;
       while (m < lines.length) {
-        if (/^[=\-]{4,}$/.test(lines[m].text) || lines[m].text.length === 0) {
+        const lineText = lines[m].text;
+        // Stop at visual separator
+        if (/^[=\-]{4,}$/.test(lineText)) {
           overflowEnd = m + 1;
           break;
         }
+        // Track consecutive blank lines
+        if (lineText.trim().length === 0) {
+          consecutiveBlanks++;
+          if (consecutiveBlanks >= 2) {
+            overflowEnd = m + 1;
+            break;
+          }
+        } else {
+          consecutiveBlanks = 0;
+          // Stop at ALL_CAPS line with ≥2 words (likely next recipe heading)
+          if (isAllCaps(lineText) && wordCount(lineText) >= 2) {
+            overflowEnd = m; // Don't skip past the heading itself
+            break;
+          }
+        }
         m++;
       }
-      if (overflowEnd === 0) overflowEnd = k + 1;
+      // If we walked to end without finding termination, skip everything we saw
+      if (overflowEnd === 0) overflowEnd = m;
     }
   }
   if (overflowEnd > 0) i = overflowEnd;
@@ -526,8 +582,9 @@ function buildCandidates(
           isAllCaps(next.text) &&
           wordCount(next.text) <= 2 &&
           next.text.length <= 25 &&
-          !isSectionLabel(next.text) &&
-          !isSectionLabel(repairOcrText(next.text)) &&
+          ((!isSectionLabel(next.text) && !isSectionLabel(repairOcrText(next.text))) ||
+           (wordCount(next.text) === 1 && wordCount(merged) >= 2 && wordCount(merged) <= 4 &&
+            isCategorySectionLabel(next.text))) &&
           !looksLikeMetadata(next.text) &&
           (merged + " " + next.text).length <= 80
         ) {
@@ -962,18 +1019,39 @@ export async function extractTitleWithEmbeddings(
   // E.g. "FISH & SEAFOOD\nHalibut with Saffron Cream Sauce\n..." — "FISH & SEAFOOD" is filtered
   // as a section label, so "Halibut..." is the first candidate and gets this boost.
   const firstCandidate = scored[0];
+  // Capture base score before positional bonuses to cap combined boost later
+  const baseScoreBeforePositionalBonuses = firstCandidate.baseScore;
   if (firstCandidate.position > 0) {
     const allPrecedingFiltered = lines
       .slice(0, firstCandidate.position)
       .every((line) => {
         const trimmed = line.trim();
-        return trimmed === "" || !passesHardFilters(trimmed);
+        return trimmed === "" || !passesHardFilters(trimmed) || isSectionLabel(trimmed);
       });
     if (allPrecedingFiltered) {
-      firstCandidate.score += 0.08;
-      firstCandidate.baseScore += 0.08;
-      firstCandidate.thresholdScore += 0.08;
+      // Stronger bonus when preamble contained structural markers (section labels, metadata)
+      // vs. only empty lines — structural markers are stronger positional evidence.
+      const hasStructuralPreamble = lines
+        .slice(0, firstCandidate.position)
+        .some((line) => {
+          const trimmed = line.trim();
+          return trimmed !== "" && (isSectionLabel(trimmed) || looksLikeMetadata(trimmed) || trimmed.includes(" | "));
+        });
+      const preambleBonus = hasStructuralPreamble ? 0.12 : 0.08;
+      firstCandidate.score += preambleBonus;
+      firstCandidate.baseScore += preambleBonus;
+      firstCandidate.thresholdScore += preambleBonus;
     }
+  }
+  // Cap combined positional boost (candidate-relative position factor + first-after-preamble bonus)
+  // to avoid over-boosting when both fire together (~+0.24 uncapped → capped at +0.15).
+  const maxPositionalBoost = 0.15;
+  const totalPositionalBoost = firstCandidate.score - baseScoreBeforePositionalBonuses;
+  if (totalPositionalBoost > maxPositionalBoost) {
+    const excess = totalPositionalBoost - maxPositionalBoost;
+    firstCandidate.score -= excess;
+    firstCandidate.baseScore -= excess;
+    firstCandidate.thresholdScore -= excess;
   }
 
   // --- Pre-threshold bilingual title detection ---
@@ -1125,6 +1203,10 @@ export async function extractTitleWithEmbeddings(
   // bonus, which causes legitimate titles later in the document to fall just below the cutoff.
   // Safety: only pre-filter if ≥2 candidates remain after removal (avoids false-positive removal
   // of unique-vocabulary titles on two-recipe pages).
+  // NOTE: The ≥2 guard is conservative — when there are exactly 2 ALL_CAPS candidates and one is
+  // an artifact, the artifact is NOT removed. Relaxing to ≥1 causes regressions because 3-line
+  // join candidates (which span a section label) can pass corroboration via shared vocabulary,
+  // while the legitimate short title fails. See "WORD ONE / INGREDIENTS / WORD TWO" test case.
   const allCapsInScored = scoredForThreshold.filter((s) => isAllCaps(s.text));
   if (allCapsInScored.length >= 2) {
     const artifactTexts = new Set(
@@ -1334,7 +1416,7 @@ export async function extractTitleWithEmbeddings(
       const isSubHeader = sortedCaps.slice(1).every((cap) => {
         const nextLines = lines.slice(cap.position + 1, cap.position + 3);
         return nextLines.some(
-          (l) => looksLikeIngredient(l.trim()) || /^\s*\d/.test(l.trim())
+          (l) => looksLikeIngredient(l.trim()) || startsWithNumber(l.trim())
         );
       });
       if (isSubHeader) {

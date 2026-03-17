@@ -946,6 +946,9 @@ Additional instructions for decomposition:
 - Each task should be completable in a single Claude session (not too large)
 - Tasks should be as independent as possible, but ordered so dependencies come first
 - Include enough context in each task that it can be understood without reading other tasks
+- Every task MUST make code changes. Do NOT create verification-only or testing-only tasks
+  (e.g., "verify all fixes", "run tests", "validate changes"). Verification runs automatically
+  after each task outside of Claude sessions.
 - Do NOT modify any code files. Only write the task files."""
 
     run_claude(prompt, model="opus", log_path=log_dir / "decompose.log")

@@ -7,7 +7,7 @@
 export const FOOD_DICTIONARY: Set<string> = new Set([
   // ── English ingredients ──────────────────────────────────────────────────
   "chicken", "beef", "pork", "lamb", "veal", "duck", "turkey", "venison",
-  "salmon", "cod", "halibut", "tuna", "trout", "sardine", "anchovy",
+  "salmon", "cod", "halibut", "tuna", "trout", "sardine", "anchovy", "sole",
   "shrimp", "prawn", "lobster", "crab", "scallop", "mussel", "clam",
   "tofu", "tempeh", "seitan",
 

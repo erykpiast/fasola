@@ -359,13 +359,20 @@ const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool
 // forms (e.g., "Smaż" → "Smaz", "Dodaj" → "Dodaj").
 // Note: only verbs that NEVER start a recipe title. "Piecz" (bake) is excluded because
 // "Pieczeń" (roast) and "Pieczarki" (mushrooms) share the prefix.
-const POLISH_COOKING_INSTRUCTION_STARTS = /^(podawaj|dodaj|dodawaj|sma[zż]|gotuj|odced[zź]|wymieszaj|mieszaj|wlej|nalej|przygotuj|zagotuj|pokr[oó]j|obierz|wrzuc|wrzuć|usma[zż]|podsma[zż]|prze[lł][oó][zż]|zblenduj|ubij|roztrzepaj|rozprowad[zź]|wyrob|zamieszaj|posyp|polej|odstaw|na[lł][oó][zż]|przykryj|odkryj|wstaw|zdejmij|ods[aą]cz|rozgrzej|posiekaj|zetrzyj|wy[lł][oó][zż]|wyjmij|ukr[oó]j|przekr[oó]j|formuj|ugniataj|rozwałkuj|ugotuj|ugotowa[cć]|upiecz|podawa[cć]|zapiekaj|obtocz|obtoczy[cć]|podgrzej|podgrzewaj)\b/i;
+// Use a Unicode-aware word-boundary lookahead instead of \b, because JS \b does not recognise
+// Polish letters (ą ć ę ł ń ó ś ź ż) as word characters. Without this, `smaż\b` would
+// incorrectly match "Smażona" since \b fires between ż (non-\w) and the following o (\w).
+const POLISH_COOKING_INSTRUCTION_STARTS = /^(podawaj|dodaj|dodawaj|sma[zż]|gotuj|odced[zź]|wymieszaj|mieszaj|wlej|nalej|przygotuj|zagotuj|pokr[oó]j|obierz|wrzuc|wrzuć|usma[zż]|podsma[zż]|prze[lł][oó][zż]|zblenduj|ubij|roztrzepaj|rozprowad[zź]|wyrob|zamieszaj|posyp|polej|odstaw|na[lł][oó][zż]|przykryj|odkryj|wstaw|zdejmij|ods[aą]cz|rozgrzej|posiekaj|zetrzyj|wy[lł][oó][zż]|wyjmij|ukr[oó]j|przekr[oó]j|formuj|ugniataj|rozwałkuj|ugotuj|ugotowa[cć]|upiecz|podawa[cć]|zapiekaj|obtocz|obtoczy[cć]|podgrzej|podgrzewaj)(?![a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ])/i;
 
 function looksLikeCookingInstruction(text: string): boolean {
   const words = text.trim().split(/\s+/);
-  if (words.length < 4) return false;  // Instructions are multi-word sentences
+  // Polish cooking instructions are commonly 2-3 words ("Ugotuj ziemniaki.", "Upiecz chleb.")
+  // and are unambiguous because Polish recipe titles don't start with imperative verbs.
+  if (POLISH_COOKING_INSTRUCTION_STARTS.test(text.trim())) {
+    return words.length >= 2;  // Polish: 2+ words is enough
+  }
+  if (words.length < 4) return false;  // English: keep existing 4-word threshold
   if (COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
-  if (POLISH_COOKING_INSTRUCTION_STARTS.test(text.trim())) return true;
   return false;
 }
 
@@ -649,7 +656,19 @@ function buildCandidates(
     if (i + 1 < capsCoalesced.length) {
       const nextText = capsCoalesced[i + 1].text;
       if (/^[/&+:(]/.test(nextText)) {
-        mergedLines.push({ text: `${line.text} ${nextText}`, index: line.index });
+        const mergedText = `${line.text} ${nextText}`;
+        mergedLines.push({ text: mergedText, index: line.index });
+        // Emit standalone as fallback ONLY when the merged form would fail hard
+        // filters (e.g. "(OCR CORRUPTION: ...)" annotations make the merge too
+        // long). When the merge is valid (e.g. "Title & Coriander"), only the
+        // merged form is emitted to prevent the incomplete standalone from
+        // winning on embedding score alone.
+        const mergedProcessed = repairOcrText(
+          stripParentheticalGloss(stripTrailingPageRef(stripPageNumber(mergedText)))
+        );
+        if (!passesHardFilters(mergedProcessed)) {
+          mergedLines.push(line);
+        }
         i++;
         continue;
       }
@@ -722,7 +741,8 @@ function buildCandidates(
 
     // 2-line join — skip if first line is a section label AND join would be ≤2 words
     // (a section label followed by modifiers is likely a recipe title, not a category header)
-    if (i + 1 < mergedLines.length) {
+    // Also skip if the next line is metadata (e.g. serving size "DLA & OSOB").
+    if (i + 1 < mergedLines.length && !looksLikeMetadata(mergedLines[i + 1].text)) {
       const joined2 = repairOcrText(`${line.text} ${mergedLines[i + 1].text}`);
       const shouldBlock2 = isSectionLabel(line.text) &&
         (wordCount(joined2) <= 2 || isAlwaysBlockJoinLabel(line.text));
@@ -735,8 +755,11 @@ function buildCandidates(
       }
     }
 
-    // 3-line join — skip if first line is a section label AND join would be ≤2 words
-    if (i + 2 < mergedLines.length) {
+    // 3-line join — skip if first line is a section label AND join would be ≤2 words.
+    // Also skip if any continuation line is metadata.
+    if (i + 2 < mergedLines.length &&
+        !looksLikeMetadata(mergedLines[i + 1].text) &&
+        !looksLikeMetadata(mergedLines[i + 2].text)) {
       const joined3 = repairOcrText(`${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`);
       const shouldBlock3 = isSectionLabel(line.text) &&
         (wordCount(joined3) <= 2 || isAlwaysBlockJoinLabel(line.text));
@@ -1236,7 +1259,7 @@ export async function extractTitleWithEmbeddings(
   // hasPipePreamble is set above inside the allPrecedingFiltered block, so it is
   // only true when the preamble-bonus logic also fired (consistent gating).
   const maxPositionalBoost =
-    hasPipePreamble && isAllCaps(firstCandidate.text) ? 0.18 : 0.15;
+    hasPipePreamble && isAllCaps(firstCandidate.text) ? 0.22 : 0.15;
   const totalPositionalBoost = firstCandidate.score - baseScoreBeforePositionalBonuses;
   if (totalPositionalBoost > maxPositionalBoost) {
     const excess = totalPositionalBoost - maxPositionalBoost;
@@ -1467,10 +1490,10 @@ export async function extractTitleWithEmbeddings(
   // Protect continuation joins: when a multi-line join (2-line or 3-line) survived the threshold
   // and its second part starts with a continuation character, remove the single-line prefix/suffix
   // so the dedup "shorter wins" rule doesn't destroy the complete join.
-  // Note: the pre-merge step above already handles the common Baked Eggs case (&/continuation
-  // on next line) by turning it into a single candidate — this block covers the rarer case where
-  // a continuation-character join was generated as a 2-line/3-line candidate and the prefix
-  // single also survived threshold independently (e.g. from a different code path or OCR layout).
+  // Note: pre-merged single candidates (Baked Eggs case) are handled by the separate filter below
+  // (lines ~1501). This block covers the rarer case where a continuation-character join was
+  // generated as a 2-line/3-line candidate and the prefix single also survived threshold
+  // independently (e.g. from a different code path or OCR layout).
   // Safety: only fires for joins whose continuation starts with /&+:( — digit continuations
   // like "Pierogi Ruskie 200g mąki" are NOT protected, so dedup correctly keeps the shorter form.
   const survivingJoins = selected.filter((s) => s.origin === "2-line" || s.origin === "3-line");
@@ -1497,6 +1520,23 @@ export async function extractTitleWithEmbeddings(
       return true;
     });
   }
+
+  // Safety net: remove pre-merged continuation prefix singles when a longer merged single
+  // also survived the threshold. Normally buildCandidates only emits the standalone when the
+  // merged form fails hard filters (so both can't coexist), but this guard handles any edge
+  // case where both forms enter `selected` (e.g. from different OCR repair code paths).
+  selected = selected.filter((s) => {
+    if (s.origin !== "single") return true;
+    const sLower = s.text.toLowerCase();
+    // Remove s if a longer single candidate exists that is a continuation extension of s
+    return !selected.some((other) => {
+      if (other === s || other.origin !== "single") return false;
+      const oLower = other.text.toLowerCase();
+      if (!oLower.startsWith(sLower + " ")) return false;
+      const remainder = oLower.slice(sLower.length + 1);
+      return /^[/&+:(]/.test(remainder);
+    });
+  });
 
   // Pre-dedup: remove sub-section headers that are substrings of other surviving candidates.
   // A sub-section header is an ALL_CAPS candidate followed by ingredient-like lines in the source.

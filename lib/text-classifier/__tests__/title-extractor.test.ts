@@ -202,6 +202,17 @@ describe("extractTitleWithEmbeddings", () => {
     expect(result).toBe("ARAYES SHRAK");
   });
 
+  it("keeps 2-line ALL_CAPS join when suffix is a food-category label (VEGETABLES-type)", async () => {
+    // "LEMON HERB ROASTED" qualifies as a structural heading on its own (3 words ALL_CAPS).
+    // "LEMON HERB ROASTED VEGETABLES" is its 2-line join. The dedup shorter-wins rule would
+    // normally drop the join in favour of the shorter prefix — but "VEGETABLES" is in
+    // CATEGORY_SECTION_LABELS, so the protection keeps the full joined form.
+    const embed = createMockEmbed(["lemon herb roasted vegetables"], ["ingredients"]);
+    const text = "LEMON HERB ROASTED\nVEGETABLES\nIngredients\n2 cups broth";
+    const result = await extractTitleWithEmbeddings(text, embed);
+    expect(result).toBe("LEMON HERB ROASTED VEGETABLES");
+  });
+
   it("extends ALL_CAPS structural heading when next line starts with continuation token (SAFFRON-type)", async () => {
     // "TITLE FIRST PART" qualifies as structural heading; continuation upgrades it to the join.
     // Pre-filter then removes the partial so dedup keeps the complete join.

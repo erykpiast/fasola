@@ -243,7 +243,8 @@ function extractContentWords(text: string): string[] {
 function passesCorroboration(
   text: string,
   position: number,
-  allLines: string[]
+  allLines: string[],
+  startLine: number = 0 // Only check corroboration against lines from this index onward
 ): boolean {
   const contentWords = extractContentWords(text);
 
@@ -253,7 +254,7 @@ function passesCorroboration(
 
   let corroboratedCount = 0;
   for (const word of contentWords) {
-    for (let i = 0; i < allLines.length; i++) {
+    for (let i = startLine; i < allLines.length; i++) {
       if (i === position) continue;
       if (allLines[i].toUpperCase().includes(word)) {
         corroboratedCount++;
@@ -474,14 +475,14 @@ function findBurstEnd(lines: Array<{ text: string }>): number {
   while (i < lines.length && lines[i].text.length < 20 && isLikelyGarbled(lines[i].text) && !isAllCaps(lines[i].text)) {
     i++;
   }
-  // Skip long instruction-like prologues: if 5+ consecutive lines look like cooking instructions,
+  // Skip long instruction-like prologues: if 3+ consecutive lines look like cooking instructions,
   // skip them to find the actual title region.
   if (i === 0) {
     let j = 0;
     while (j < lines.length && looksLikeCookingInstruction(lines[j].text)) {
       j++;
     }
-    if (j >= 5) {
+    if (j >= 3) {
       i = j;
     }
   }
@@ -536,7 +537,7 @@ export type CandidateOrigin = "single" | "2-line" | "3-line";
 
 function buildCandidates(
   lines: Array<string>
-): Array<{ text: string; position: number; origin: CandidateOrigin }> {
+): { candidates: Array<{ text: string; position: number; origin: CandidateOrigin }>; burstEnd: number } {
   const nonEmptyLines: Array<{ text: string; index: number }> = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -654,6 +655,21 @@ function buildCandidates(
       }
     }
 
+    // Blind OCR repair for early-position candidates: when the original text
+    // has OCR artifacts and is in the first few lines (strong positional evidence),
+    // generate an additional candidate with blind digit→letter repair.
+    // This gives the embedding scorer a clean version even when dictionary repair misses.
+    if (line.index <= 5 && OCR_ARTIFACT_PATTERN.test(line.text)) {
+      const blindRepaired = applyBlindOcrRepair(singleText);
+      if (blindRepaired !== singleText && passesHardFilters(blindRepaired)) {
+        const norm = blindRepaired.toLowerCase();
+        if (!seen.has(norm)) {
+          seen.add(norm);
+          candidates.push({ text: blindRepaired, position: line.index, origin: "single" });
+        }
+      }
+    }
+
     // 2-line join — skip if first line is a section label AND join would be ≤2 words
     // (a section label followed by modifiers is likely a recipe title, not a category header)
     if (i + 1 < mergedLines.length) {
@@ -695,10 +711,10 @@ function buildCandidates(
       const bShort = wordCount(b.text) <= 5 ? 0 : 1;
       return aShort - bShort;
     });
-    return prioritized.slice(0, 25);
+    return { candidates: prioritized.slice(0, 25), burstEnd: nonEmptyLines[burstEnd]?.index ?? 0 };
   }
 
-  return candidates;
+  return { candidates, burstEnd: nonEmptyLines[burstEnd]?.index ?? 0 };
 }
 
 /**
@@ -810,6 +826,42 @@ function repairOcrText(text: string): string {
 }
 
 /**
+ * Apply blind OCR digit-for-letter repair without dictionary lookup.
+ * Used to generate additional candidates for early-position lines where
+ * positional evidence is strong enough to justify speculative repair.
+ */
+function applyBlindOcrRepair(text: string): string {
+  if (isAllCaps(text)) {
+    return text
+      .replace(/1/g, "I")
+      .replace(/0(?=[A-ZÀ-Ż])/g, "O")
+      .replace(/(?<=[A-ZÀ-Ż])0/g, "O")
+      .replace(/4(?=[A-ZÀ-Ż])/g, "A")
+      .replace(/(?<=[A-ZÀ-Ż])4/g, "A")
+      .replace(/5(?=[A-ZÀ-Ż])/g, "S")
+      .replace(/(?<=[A-ZÀ-Ż])5/g, "S")
+      .replace(/¡/g, "I")
+      .replace(/€/g, "E")
+      .replace(/[ÍÌ]/g, "I");
+  }
+  // Mixed-case: fix per-word (digits between lowercase letters)
+  return text.split(/(\s+)/).map((token) => {
+    if (/^\s+$/.test(token)) return token;
+    if (isAllCaps(token) && token.length > 1) {
+      return token
+        .replace(/1/g, "I")
+        .replace(/0(?=[A-Z])/g, "O")
+        .replace(/(?<=[A-Z])0/g, "O");
+    }
+    return token
+      .replace(/(?<=[a-zà-ż])1/g, "l")
+      .replace(/1(?=[a-zà-ż])/g, "l")
+      .replace(/¡/g, "i")
+      .replace(/€/g, "e");
+  }).join("");
+}
+
+/**
  * Post-processing normalization for OCR-extracted titles.
  * Strips stray section markers and substitutes common OCR digit-for-letter artifacts.
  * Title-case conversion is applied only when a substitution was actually made, so
@@ -830,37 +882,8 @@ function normalizeOcrTitle(raw: string): string {
   );
 
   // Step 2: OCR character substitution.
-  // For ALL_CAPS text, apply digit-for-letter substitutions.
   const beforeSub = text;
-  if (isAllCaps(text)) {
-    text = text
-      .replace(/1/g, "I")
-      .replace(/0(?=[A-ZÀ-Ż])/g, "O")
-      .replace(/(?<=[A-ZÀ-Ż])0/g, "O")
-      .replace(/4(?=[A-ZÀ-Ż])/g, "A")
-      .replace(/(?<=[A-ZÀ-Ż])4/g, "A")
-      .replace(/5(?=[A-ZÀ-Ż])/g, "S")
-      .replace(/(?<=[A-ZÀ-Ż])5/g, "S")
-      .replace(/¡/g, "I")
-      .replace(/€/g, "E")
-      .replace(/[ÍÌ]/g, "I");
-  } else {
-    // Mixed-case: fix per-word (digits between lowercase letters)
-    text = text.split(/(\s+)/).map((token) => {
-      if (/^\s+$/.test(token)) return token;
-      if (isAllCaps(token) && token.length > 1) {
-        return token
-          .replace(/1/g, "I")
-          .replace(/0(?=[A-Z])/g, "O")
-          .replace(/(?<=[A-Z])0/g, "O");
-      }
-      return token
-        .replace(/(?<=[a-zà-ż])1/g, "l")
-        .replace(/1(?=[a-zà-ż])/g, "l")
-        .replace(/¡/g, "i")
-        .replace(/€/g, "e");
-    }).join("");
-  }
+  text = applyBlindOcrRepair(text);
 
   // Step 3: Title-case conversion — ONLY when OCR substitution changed the text.
   // This preserves clean ALL_CAPS titles (e.g. "CHOCOLATE CAKE") as-is.
@@ -891,7 +914,7 @@ export async function extractTitleWithEmbeddings(
   }
 
   const lines = text.split("\n");
-  const candidates = buildCandidates(lines);
+  const { candidates, burstEnd } = buildCandidates(lines);
   const titleAbsent = isTitleAbsentPage(lines);
 
   if (candidates.length === 0) {
@@ -1043,8 +1066,31 @@ export async function extractTitleWithEmbeddings(
       firstCandidate.thresholdScore += preambleBonus;
     }
   }
-  // Cap combined positional boost (candidate-relative position factor + first-after-preamble bonus)
-  // to avoid over-boosting when both fire together (~+0.24 uncapped → capped at +0.15).
+  // Direct-successor bonus: when the line immediately before this candidate is a
+  // section label, metadata, or pipe-separated line, the candidate is very likely
+  // the title that follows that header. This complements the first-after-preamble
+  // bonus which requires ALL preceding lines to be filtered — this one fires even
+  // when earlier non-filtered lines exist. Checked for the top 3 candidates only
+  // (ci <= 2) to prevent the bonus from firing on random mid-document lines.
+  for (let ci = 0; ci < scored.length && ci <= 2; ci++) {
+    const candidate = scored[ci];
+    if (candidate.position > 0) {
+      const prevLine = lines[candidate.position - 1]?.trim() ?? "";
+      const prevIsHeader =
+        isSectionLabel(prevLine) ||
+        looksLikeMetadata(prevLine) ||
+        prevLine.includes(" | ");
+      if (prevIsHeader) {
+        candidate.score += 0.10;
+        candidate.baseScore += 0.10;
+        candidate.thresholdScore += 0.10;
+      }
+    }
+  }
+
+  // Cap combined positional boost (position factor + first-after-preamble + direct-successor)
+  // to avoid over-boosting when multiple bonuses fire together. Applied after all positional
+  // bonuses so the cap covers all of them (per improvement plan: shared +0.15 max).
   const maxPositionalBoost = 0.15;
   const totalPositionalBoost = firstCandidate.score - baseScoreBeforePositionalBonuses;
   if (totalPositionalBoost > maxPositionalBoost) {
@@ -1211,7 +1257,7 @@ export async function extractTitleWithEmbeddings(
   if (allCapsInScored.length >= 2) {
     const artifactTexts = new Set(
       allCapsInScored
-        .filter((cap) => !passesCorroboration(cap.text, cap.position, lines))
+        .filter((cap) => !passesCorroboration(cap.text, cap.position, lines, burstEnd))
         .map((c) => c.text)
     );
     if (artifactTexts.size > 0) {
@@ -1377,12 +1423,26 @@ export async function extractTitleWithEmbeddings(
     const aLower = a.text.toLowerCase();
     // Protect compound titles — these use explicit separators and the full form is intentional
     if (/ [+:&] /.test(a.text)) return true;
-    return !selected.some(
-      (b) =>
-        b !== a &&
-        aLower.includes(b.text.toLowerCase()) &&
-        b.text.length < a.text.length
-    );
+    return !selected.some((b) => {
+      if (b === a) return false;
+      if (b.text.length >= a.text.length) return false;
+      if (!aLower.includes(b.text.toLowerCase())) return false;
+
+      // Protect multi-line joins whose suffix over the shorter candidate is a food-category label.
+      // E.g., "LEMON HERB ROASTED VEGETABLES" (2-line) vs "LEMON HERB ROASTED" (single):
+      // "VEGETABLES" is in CATEGORY_SECTION_LABELS — keep the full joined form.
+      // Use startsWith (not includes) to ensure b is a true prefix, not a mid-string match.
+      if ((a.origin === "2-line" || a.origin === "3-line") &&
+          aLower.startsWith(b.text.toLowerCase() + " ")) {
+        const suffix = a.text.slice(b.text.length).trim();
+        const suffixNorm = stripDiacritics(suffix.toLowerCase());
+        if (CATEGORY_SECTION_LABELS.has(suffixNorm)) {
+          return false; // Don't remove `a` — its suffix is a food-category label
+        }
+      }
+
+      return true;
+    });
   });
 
   // Multi-title guard: only join multiple candidates with "+" when there is
@@ -1400,7 +1460,7 @@ export async function extractTitleWithEmbeddings(
       // (e.g., "DAT FLATBREADS" from a preceding page) that look structurally identical
       // to real titles but have no vocabulary support in the document body.
       const corroboratedCaps = allCapsSelected.filter((cap) =>
-        passesCorroboration(cap.text, cap.position, lines)
+        passesCorroboration(cap.text, cap.position, lines, burstEnd)
       );
 
       // Use corroborated candidates if any remain; otherwise fall back to original set

@@ -299,7 +299,7 @@ function isLikelyGarbled(text: string): boolean {
 
   // Single word with internal lowercase→uppercase transition — OCR noise (e.g., "UuIw", "aBC")
   // No recipe title uses this pattern as a standalone single-word candidate.
-  if (words.length === 1 && /[a-z][A-Z]/.test(text.trim())) {
+  if (words.length === 1 && /[a-z][A-Z]/.test(text.trim()) && !/^(Mc|Mac)[A-Z]/.test(text.trim())) {
     return true;
   }
 
@@ -331,6 +331,22 @@ function isLikelyGarbled(text: string): boolean {
     if (hasGarbledWord) {
       return true;
     }
+
+    // Multi-word candidate with a garbled token: a short word with internal
+    // lowercase→uppercase transition. Length capped at 7 to avoid false positives
+    // from OCR-dropped-space artifacts ("withGarlic" = 10 chars). True garbled
+    // tokens like "XxYyZz" or "UuIw" are ≤7 chars.
+    // Narrow exemption: Mc/Mac name prefixes only (e.g., "McDonald").
+    const hasGarbledCamelCase = words.some(
+      (w) =>
+        w.length >= 3 &&
+        w.length <= 7 &&
+        /[a-z][A-Z]/.test(w) &&
+        !/^(Mc|Mac)[A-Z]/.test(w)
+    );
+    if (hasGarbledCamelCase) {
+      return true;
+    }
   }
 
   return false;
@@ -343,7 +359,7 @@ const COOKING_INSTRUCTION_STARTS = /^(beat|fold|stir|mix|add|pour|bake|cook|cool
 // forms (e.g., "Smaż" → "Smaz", "Dodaj" → "Dodaj").
 // Note: only verbs that NEVER start a recipe title. "Piecz" (bake) is excluded because
 // "Pieczeń" (roast) and "Pieczarki" (mushrooms) share the prefix.
-const POLISH_COOKING_INSTRUCTION_STARTS = /^(podawaj|dodaj|dodawaj|sma[zż]|gotuj|odced[zź]|wymieszaj|mieszaj|wlej|nalej|przygotuj|zagotuj|pokr[oó]j|obierz|wrzuc|wrzuć|usma[zż]|podsma[zż]|prze[lł][oó][zż]|zblenduj|ubij|roztrzepaj|rozprowad[zź]|wyrob|zamieszaj|posyp|polej|odstaw|na[lł][oó][zż]|przykryj|odkryj|wstaw|zdejmij|ods[aą]cz|rozgrzej|posiekaj|zetrzyj|wy[lł][oó][zż]|wyjmij|ukr[oó]j|przekr[oó]j|formuj|ugniataj|rozwałkuj)\b/i;
+const POLISH_COOKING_INSTRUCTION_STARTS = /^(podawaj|dodaj|dodawaj|sma[zż]|gotuj|odced[zź]|wymieszaj|mieszaj|wlej|nalej|przygotuj|zagotuj|pokr[oó]j|obierz|wrzuc|wrzuć|usma[zż]|podsma[zż]|prze[lł][oó][zż]|zblenduj|ubij|roztrzepaj|rozprowad[zź]|wyrob|zamieszaj|posyp|polej|odstaw|na[lł][oó][zż]|przykryj|odkryj|wstaw|zdejmij|ods[aą]cz|rozgrzej|posiekaj|zetrzyj|wy[lł][oó][zż]|wyjmij|ukr[oó]j|przekr[oó]j|formuj|ugniataj|rozwałkuj|ugotuj|ugotowa[cć]|upiecz|podawa[cć]|zapiekaj|obtocz|obtoczy[cć]|podgrzej|podgrzewaj)\b/i;
 
 function looksLikeCookingInstruction(text: string): boolean {
   const words = text.trim().split(/\s+/);
@@ -389,6 +405,14 @@ function passesHardFilters(text: string): boolean {
   if (looksLikeMetadata(text)) return false;
   if (isLikelyGarbled(text)) return false;
   if (looksLikeCookingInstruction(text)) return false;
+  // Apply lightweight OCR normalization before a second instruction check
+  // so that "Podaw4ć" is recognized as "Podawać" (cooking instruction).
+  // Only 4→a for now — the specific OCR artifact causing failures.
+  // Uses same letter-adjacent guard logic as applyBlindOcrRepairToken.
+  const ocrNormForInstruction = text
+    .replace(/(?<=[a-zà-ż])4/g, "a")
+    .replace(/4(?=[a-zà-ż])/g, "a");
+  if (ocrNormForInstruction !== text && looksLikeCookingInstruction(ocrNormForInstruction)) return false;
   // Pipe-separated lines are book category/chapter headers, not recipe titles
   if (text.includes(" | ")) return false;
   // Trailing page number (e.g. "VEGETABLE SIDES                         145")
@@ -524,6 +548,15 @@ function stripPageNumber(text: string): string {
   return match ? match[1] : text;
 }
 
+/**
+ * Strip trailing parenthesized page or step numbers.
+ * "Ugotuj ziemniaky. (38)" → "Ugotuj ziemniaky."
+ * "RECIPE NAME (p. 42)" → "RECIPE NAME"
+ */
+function stripTrailingPageRef(text: string): string {
+  return text.replace(/\s*\((?:p\.?\s*)?\d{1,4}\)\s*$/, "").trim();
+}
+
 function wordCount(text: string): number {
   return text.split(/\s+/).filter((w) => w.length > 0).length;
 }
@@ -645,7 +678,7 @@ function buildCandidates(
     if (metadataContinuationPositions.has(line.index)) continue;
 
     // Single line — strip page-number prefixes and parenthetical glosses before scoring
-    const singleText = repairOcrText(stripParentheticalGloss(stripPageNumber(line.text)));
+    const singleText = repairOcrText(stripParentheticalGloss(stripTrailingPageRef(stripPageNumber(line.text))));
     if (passesHardFilters(singleText)) {
       const norm = singleText.toLowerCase();
       if (!seen.has(norm)) {
@@ -659,25 +692,29 @@ function buildCandidates(
     // generate additional candidates with blind digit→letter repair and/or
     // casing normalization. This gives the embedding scorer clean versions
     // even when dictionary repair misses.
-    if (line.index <= 5 && (OCR_ARTIFACT_PATTERN.test(line.text) || hasErraticCasing(line.text))) {
-      let repairable = singleText;
-      if (hasErraticCasing(repairable)) {
-        repairable = normalizeErraticCasing(repairable);
-        if (repairable !== singleText && passesHardFilters(repairable)) {
-          const norm = repairable.toLowerCase();
-          if (!seen.has(norm)) {
-            seen.add(norm);
-            candidates.push({ text: repairable, position: line.index, origin: "single" });
+    if (line.index <= 5) {
+      const hasOcrArtifact = OCR_ARTIFACT_PATTERN.test(line.text);
+      const lineHasErraticCasing = hasErraticCasing(line.text);
+      if (hasOcrArtifact || lineHasErraticCasing) {
+        let repairable = singleText;
+        if (lineHasErraticCasing) {
+          repairable = normalizeErraticCasing(repairable);
+          if (repairable !== singleText && passesHardFilters(repairable)) {
+            const norm = repairable.toLowerCase();
+            if (!seen.has(norm)) {
+              seen.add(norm);
+              candidates.push({ text: repairable, position: line.index, origin: "single" });
+            }
           }
         }
-      }
-      const variants = generateBlindOcrVariants(repairable);
-      for (const variant of variants) {
-        if (passesHardFilters(variant)) {
-          const norm = variant.toLowerCase();
-          if (!seen.has(norm)) {
-            seen.add(norm);
-            candidates.push({ text: variant, position: line.index, origin: "single" });
+        const variants = generateBlindOcrVariants(repairable);
+        for (const variant of variants) {
+          if (passesHardFilters(variant)) {
+            const norm = variant.toLowerCase();
+            if (!seen.has(norm)) {
+              seen.add(norm);
+              candidates.push({ text: variant, position: line.index, origin: "single" });
+            }
           }
         }
       }
@@ -847,20 +884,28 @@ function applyBlindOcrRepairToken(token: string, oneLetter: "i" | "l"): string {
     return token
       .replace(/1/g, "I")
       .replace(/0(?=[A-ZÀ-Ż])/g, "O")
-      .replace(/(?<=[A-ZÀ-Ż])0/g, "O");
+      .replace(/(?<=[A-ZÀ-Ż])0/g, "O")
+      .replace(/4(?=[A-ZÀ-Ż])/g, "A")
+      .replace(/(?<=[A-ZÀ-Ż])4/g, "A")
+      .replace(/5(?=[A-ZÀ-Ż])/g, "S")
+      .replace(/(?<=[A-ZÀ-Ż])5/g, "S")
+      .replace(/¡/g, "I")
+      .replace(/€/g, "E")
+      .replace(/[ÍÌ]/g, "I");
   }
   return token
     .replace(/(?<=[a-zà-ż])1/g, oneLetter)
     .replace(/1(?=[a-zà-ż])/g, oneLetter)
     .replace(/¡/g, "i")
-    .replace(/€/g, "e");
+    .replace(/€/g, "e")
+    .replace(/(?<=[a-zà-ż])0/g, "o")
+    .replace(/0(?=[a-zà-ż])/g, "o")
+    .replace(/(?<=[a-zà-ż])4/g, "a")
+    .replace(/4(?=[a-zà-ż])/g, "a")
+    .replace(/(?<=[a-zà-ż])5/g, "s")
+    .replace(/5(?=[a-zà-ż])/g, "s");
 }
 
-/**
- * Apply blind OCR digit-for-letter repair without dictionary lookup.
- * Used to generate additional candidates for early-position lines where
- * positional evidence is strong enough to justify speculative repair.
- */
 /**
  * Apply blind OCR repair to mixed-case text, mapping `1` to the given letter
  * between lowercase characters. Handles per-token ALL_CAPS detection internally.
@@ -891,7 +936,7 @@ function applyBlindOcrRepair(text: string): string {
 
 function hasErraticCasing(text: string): boolean {
   return text.split(/\s+/).some(word => {
-    if (word.length < 3) return false;
+    if (word.length < 5) return false;
     if (isAllCaps(word)) return false;
     const inner = word.slice(1);
     const upperInner = (inner.match(/[A-ZÀ-Ż]/g) || []).length;
@@ -1124,6 +1169,7 @@ export async function extractTitleWithEmbeddings(
   // as a section label, so "Halibut..." is the first candidate and gets this boost.
   const firstCandidate = scored[0];
   // Capture base score before positional bonuses to cap combined boost later
+  let hasPipePreamble = false;
   const baseScoreBeforePositionalBonuses = firstCandidate.baseScore;
   if (firstCandidate.position > 0) {
     const allPrecedingFiltered = lines
@@ -1135,12 +1181,17 @@ export async function extractTitleWithEmbeddings(
     if (allPrecedingFiltered) {
       // Stronger bonus when preamble contained structural markers (section labels, metadata)
       // vs. only empty lines — structural markers are stronger positional evidence.
-      const hasStructuralPreamble = lines
-        .slice(0, firstCandidate.position)
-        .some((line) => {
-          const trimmed = line.trim();
-          return trimmed !== "" && (isSectionLabel(trimmed) || looksLikeMetadata(trimmed) || trimmed.includes(" | "));
-        });
+      let hasStructuralPreamble = false;
+      for (const line of lines.slice(0, firstCandidate.position)) {
+        const trimmed = line.trim();
+        if (trimmed === "") continue;
+        if (trimmed.includes(" | ")) {
+          hasStructuralPreamble = true;
+          hasPipePreamble = true;
+        } else if (isSectionLabel(trimmed) || looksLikeMetadata(trimmed)) {
+          hasStructuralPreamble = true;
+        }
+      }
       const preambleBonus = hasStructuralPreamble ? 0.12 : 0.08;
       firstCandidate.score += preambleBonus;
       firstCandidate.baseScore += preambleBonus;
@@ -1179,7 +1230,13 @@ export async function extractTitleWithEmbeddings(
   // Cap combined positional boost (position factor + first-after-preamble + direct-successor)
   // to avoid over-boosting when multiple bonuses fire together. Applied after all positional
   // bonuses so the cap covers all of them (per improvement plan: shared +0.15 max).
-  const maxPositionalBoost = 0.15;
+  // Raise cap slightly for pipe-separated metadata followed by ALL_CAPS candidate.
+  // This is a near-certain title pattern in Polish cookbooks where MiniLM
+  // (English-centric) gives weak embedding scores for Polish ALL_CAPS text.
+  // hasPipePreamble is set above inside the allPrecedingFiltered block, so it is
+  // only true when the preamble-bonus logic also fired (consistent gating).
+  const maxPositionalBoost =
+    hasPipePreamble && isAllCaps(firstCandidate.text) ? 0.18 : 0.15;
   const totalPositionalBoost = firstCandidate.score - baseScoreBeforePositionalBonuses;
   if (totalPositionalBoost > maxPositionalBoost) {
     const excess = totalPositionalBoost - maxPositionalBoost;

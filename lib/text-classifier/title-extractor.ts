@@ -64,8 +64,11 @@ const METADATA_PATTERNS = [
   /^DLA\s+[^a-zA-Z0-9\s]\s/i,
   // Time-unit metadata: any line containing "N MIN" or "N GODZ" is prep/cook/rest time,
   // regardless of OCR-corrupted prefix (catches PRZYGOTOWANTE, GOTOMANTE, etc.)
-  /\b\d+\s*MIN\b/i,
-  /\b\d+\s*GODZ/i,
+  // Accept OCR-corrupted digits: I→1, O→0, S→5 (e.g. "IO MIN" = "10 MIN")
+  /\b[\dIOSl]{1,3}\s*MIN\b/i,
+  /\b[\dIOSl]{1,3}\s*GODZ/i,
+  // "GODZ" (abbreviation for "godzin" = hours) anywhere in a line is a time metadata signal
+  /\bGODZ\b/i,
   // Season/category indicators
   /^SEZON\s*:/i,
   /^KATEGORIA\s*:/i,
@@ -216,6 +219,24 @@ const ALWAYS_BLOCK_JOIN_LABELS = new Set([
 function isAlwaysBlockJoinLabel(text: string): boolean {
   const normalized = stripDiacritics(text.trim().replace(/[:.]$/, "").toLowerCase());
   return ALWAYS_BLOCK_JOIN_LABELS.has(normalized);
+}
+
+/**
+ * Returns true if the text starts with an always-block section label word.
+ * Used to prevent multi-line joins from absorbing section headers as suffixes.
+ * E.g. "PRZYGOTOWANIE IO MIN" starts with "przygotowanie" which is in ALWAYS_BLOCK_JOIN_LABELS.
+ */
+function startsWithBlockLabel(text: string): boolean {
+  const normalized = stripDiacritics(text.trim().toLowerCase());
+  const firstWord = normalized.split(/\s+/)[0]?.replace(/[:.]$/, "");
+  if (!firstWord) return false;
+  // Check single-word match (with OCR "l" → "i" variant, matching isSectionLabel)
+  if (ALWAYS_BLOCK_JOIN_LABELS.has(firstWord) ||
+      ALWAYS_BLOCK_JOIN_LABELS.has(firstWord.replace(/^l/, "i"))) return true;
+  // Check two-word match (e.g. "sposob przygotowania")
+  const twoWords = normalized.split(/\s+/).slice(0, 2).join(" ").replace(/[:.]$/, "");
+  return ALWAYS_BLOCK_JOIN_LABELS.has(twoWords) ||
+    ALWAYS_BLOCK_JOIN_LABELS.has(twoWords.replace(/^l/, "i"));
 }
 
 function isAllCaps(line: string): boolean {
@@ -742,10 +763,13 @@ function buildCandidates(
     // 2-line join — skip if first line is a section label AND join would be ≤2 words
     // (a section label followed by modifiers is likely a recipe title, not a category header)
     // Also skip if the next line is metadata (e.g. serving size "DLA & OSOB").
+    // Also skip if the continuation line is an always-block section label (e.g. "PRZYGOTOWANIE IO MIN")
+    // — joining a title with a section header creates garbage like "KREM + PRZYGOTOWANIE IO MIN".
     if (i + 1 < mergedLines.length && !looksLikeMetadata(mergedLines[i + 1].text)) {
       const joined2 = repairOcrText(`${line.text} ${mergedLines[i + 1].text}`);
-      const shouldBlock2 = isSectionLabel(line.text) &&
-        (wordCount(joined2) <= 2 || isAlwaysBlockJoinLabel(line.text));
+      const shouldBlock2 = (isSectionLabel(line.text) &&
+        (wordCount(joined2) <= 2 || isAlwaysBlockJoinLabel(line.text))) ||
+        startsWithBlockLabel(mergedLines[i + 1].text);
       if (!shouldBlock2 && passesHardFilters(joined2)) {
         const norm = joined2.toLowerCase();
         if (!seen.has(norm)) {
@@ -756,13 +780,15 @@ function buildCandidates(
     }
 
     // 3-line join — skip if first line is a section label AND join would be ≤2 words.
-    // Also skip if any continuation line is metadata.
+    // Also skip if any continuation line is metadata or an always-block section label.
     if (i + 2 < mergedLines.length &&
         !looksLikeMetadata(mergedLines[i + 1].text) &&
         !looksLikeMetadata(mergedLines[i + 2].text)) {
       const joined3 = repairOcrText(`${line.text} ${mergedLines[i + 1].text} ${mergedLines[i + 2].text}`);
-      const shouldBlock3 = isSectionLabel(line.text) &&
-        (wordCount(joined3) <= 2 || isAlwaysBlockJoinLabel(line.text));
+      const shouldBlock3 = (isSectionLabel(line.text) &&
+        (wordCount(joined3) <= 2 || isAlwaysBlockJoinLabel(line.text))) ||
+        startsWithBlockLabel(mergedLines[i + 1].text) ||
+        startsWithBlockLabel(mergedLines[i + 2].text);
       if (!shouldBlock3 && passesHardFilters(joined3)) {
         const norm = joined3.toLowerCase();
         if (!seen.has(norm)) {
@@ -1058,19 +1084,29 @@ export async function extractTitleWithEmbeddings(
   text: string,
   embed: EmbedFn
 ): Promise<string | undefined> {
+  const t0 = performance.now();
+  const log = (stage: string, detail?: string) => {
+    const elapsed = (performance.now() - t0).toFixed(1);
+    console.log(`[Title Extractor] ${elapsed}ms — ${stage}${detail ? `: ${detail}` : ""}`);
+  };
+
   if (!text || text.trim().length === 0) {
     return undefined;
   }
 
   const lines = text.split("\n");
+  log("buildCandidates", `${lines.length} input lines`);
   const { candidates, burstEnd } = buildCandidates(lines);
   const titleAbsent = isTitleAbsentPage(lines, burstEnd);
+  log("candidates ready", `${candidates.length} candidates, burstEnd=${burstEnd}, titleAbsent=${titleAbsent}`);
 
   if (candidates.length === 0) {
+    log("done", "no candidates");
     return undefined;
   }
 
   // Cache reference embeddings
+  log("embed refs", "computing reference embeddings");
   if (!cachedTitleRefEmbedding) {
     cachedTitleRefEmbedding = await embed(TITLE_REFERENCE);
   }
@@ -1080,6 +1116,7 @@ export async function extractTitleWithEmbeddings(
   if (!cachedNoiseRefEmbedding) {
     cachedNoiseRefEmbedding = await embed(NOISE_REFERENCE);
   }
+  log("embed refs done");
 
   // Find ALL_CAPS candidates with ≥2 words where every significant word has ≥4 alpha letters.
   // Insignificant tokens (≤1 alpha letter: "/", "&", "+", ":", "D)", etc.) are filtered before
@@ -1091,6 +1128,7 @@ export async function extractTitleWithEmbeddings(
   };
 
   // Pass 1: compute rawScore for all candidates (embedding quality signal)
+  log("pass 1", `scoring ${candidates.length} candidates`);
   const rawScored: Array<{ text: string; position: number; origin: CandidateOrigin; rawScore: number; embedding: Array<number> }> = [];
   for (const candidate of candidates) {
     const embedding = await embed(candidate.text);
@@ -1100,6 +1138,7 @@ export async function extractTitleWithEmbeddings(
     const rawScore = titleSim - Math.max(headerSim, noiseSim);
     rawScored.push({ text: candidate.text, position: candidate.position, origin: candidate.origin, rawScore, embedding });
   }
+  log("pass 1 done");
 
   // Select baseHeading by embedding quality (rawScore), not position.
   // This prevents OCR-garbled fragments from claiming the structural heading slot.
@@ -1154,6 +1193,7 @@ export async function extractTitleWithEmbeddings(
   );
 
   // Pass 2: apply bonuses
+  log("pass 2", "applying bonuses");
   const scored: Array<{ text: string; position: number; origin: CandidateOrigin; score: number; rawScore: number; baseScore: number; thresholdScore: number }> = rawScored.map((rs, candidateIndex) => {
     // Position factor: multiplicative tiebreaker — amplifies existing signal, doesn't replace it.
     // Use candidate-relative position (rank among candidates that passed hard filters) rather than
@@ -1267,6 +1307,8 @@ export async function extractTitleWithEmbeddings(
     firstCandidate.baseScore -= excess;
     firstCandidate.thresholdScore -= excess;
   }
+
+  log("pass 2 done");
 
   // --- Pre-threshold bilingual title detection ---
   // When a mixed-case candidate at position 0 is followed by an ALL_CAPS candidate
@@ -1411,6 +1453,8 @@ export async function extractTitleWithEmbeddings(
     }
   }
 
+  log("bilingual detection done", `${translationCandidates.length} translations suppressed`);
+
   // Pre-filter: when ≥2 ALL_CAPS candidates are present, identify OCR artifacts (those whose
   // vocabulary has no support elsewhere in the document) and remove them before computing the
   // threshold. Artifacts like "DAT FLATBREADS" can inflate the threshold via their early-position
@@ -1440,9 +1484,11 @@ export async function extractTitleWithEmbeddings(
   // the threshold and block equally-valid headings on multi-recipe pages.
   const bestThresholdScore = Math.max(...scoredForThreshold.map((s) => s.thresholdScore));
   const threshold = Math.max(0.08, bestThresholdScore * 0.7);
+  log("threshold", `${threshold.toFixed(4)} (best=${bestThresholdScore.toFixed(4)})`);
 
   // Filter candidates above threshold
   let selected = scoredForThreshold.filter((s) => s.score >= threshold);
+  log("threshold filter", `${selected.length}/${scoredForThreshold.length} candidates survived`);
 
   // Empty-pool fallback: when threshold filtering discards every candidate,
   // the hard filters' structural verdict should not be overruled by weak
@@ -1599,6 +1645,8 @@ export async function extractTitleWithEmbeddings(
     });
   }
 
+  log("post-threshold cleanup done", `${selected.length} candidates remain`);
+
   // Deduplicate: if one title is a substring of another, keep the shorter (more focused) one.
   // DO NOT CHANGE THIS LOGIC — it has been incorrectly "improved" by the title-loop 5 times.
   // The tests require shorter wins: "Pierogi Ruskie" over "Pierogi Ruskie 200g mąki 3 ziemniaki".
@@ -1629,6 +1677,8 @@ export async function extractTitleWithEmbeddings(
       return true;
     });
   });
+
+  log("dedup done", `${selected.length} candidates remain`);
 
   // Multi-title guard: only join multiple candidates with "+" when there is
   // structural evidence of a multi-recipe page (≥2 ALL_CAPS headings).
@@ -1714,6 +1764,8 @@ export async function extractTitleWithEmbeddings(
     }
   }
 
+  log("multi-title guard done", `${selected.length} candidates remain`);
+
   // Cap at 3, sort by document position
   selected.sort((a, b) => a.position - b.position);
   selected = selected.slice(0, 3);
@@ -1729,13 +1781,17 @@ export async function extractTitleWithEmbeddings(
       .filter((s) => s.rawScore > -0.5)
       .sort((a, b) => a.position - b.position || b.score - a.score);
     if (lastResort.length > 0) {
-      return normalizeOcrTitle(lastResort[0].text.normalize("NFC").trim());
+      const result = normalizeOcrTitle(lastResort[0].text.normalize("NFC").trim());
+      log("done (last resort)", `"${result}"`);
+      return result;
     }
+    log("done", "no result");
     return undefined;
   }
 
   const result = selected.map((s) => normalizeOcrTitle(s.text.normalize("NFC").trim())).join(" + ");
 
+  log("done", `"${result}"`);
   return result;
 }
 

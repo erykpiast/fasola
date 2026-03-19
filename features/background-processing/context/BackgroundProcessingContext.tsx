@@ -184,10 +184,16 @@ export function BackgroundProcessingProvider({
             );
 
             if (classificationResult.suggestions.length === 0) {
+              const embeddingsTitle = classificationResult.title;
               classificationResult = await classifyText(
                 result.ocrResult.text,
                 "tfidf"
               );
+              // Preserve the embeddings-based title — the TF-IDF fallback
+              // only re-classifies tags, not the title
+              if (embeddingsTitle) {
+                classificationResult.title = embeddingsTitle;
+              }
             }
           } catch (error) {
             console.warn(

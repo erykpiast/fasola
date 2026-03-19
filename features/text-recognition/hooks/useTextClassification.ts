@@ -42,7 +42,13 @@ export function useTextClassification(): {
           console.log(
             "[Text Classification] No suggestions found with embeddings, using TF-IDF..."
           );
+          const embeddingsTitle = result.title;
           result = await classifyText(text, "tfidf");
+          // Preserve the embeddings-based title — the TF-IDF fallback
+          // only re-classifies tags, not the title
+          if (embeddingsTitle) {
+            result.title = embeddingsTitle;
+          }
         }
 
         console.log(

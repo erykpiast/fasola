@@ -7,6 +7,8 @@ import { type JSX } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const TITLE_LINE_HEIGHT = 29;
+
 export function MetadataOverlay({
   metadata,
   isProcessing,
@@ -50,7 +52,7 @@ export function MetadataOverlay({
             {metadata.title}
           </Text>
         ) : isProcessing ? (
-          <SkeletonBlock width="65%" height={28} style={{ marginBottom: 4 }} />
+          <SkeletonBlock width={200} height={TITLE_LINE_HEIGHT} style={{ marginBottom: 4 }} />
         ) : null}
         {hasSource ? (
           <Text style={styles.source} numberOfLines={1} ellipsizeMode="tail">
@@ -91,6 +93,7 @@ const styles = StyleSheet.create({
   title: {
     color: "white",
     fontSize: 24,
+    lineHeight: TITLE_LINE_HEIGHT,
     fontWeight: "bold",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 0, height: 1 },

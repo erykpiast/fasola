@@ -88,7 +88,7 @@ export function AddRecipeForm({
         <Image
           source={{ uri: photoUri }}
           style={styles.processingImage}
-          contentFit="cover"
+          contentFit="contain"
         />
         <View style={styles.processingBottomBar}>
           <LiquidGlassButton

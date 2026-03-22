@@ -115,8 +115,19 @@ export function RecipesProvider({
         recognizedText,
         classifiedMetadata
       );
+      const cacheBuster = `?v=${Date.now()}`;
       setRecipes((prev) =>
-        prev.map((recipe) => (recipe.id === id ? updatedRecipe : recipe))
+        prev.map((recipe) =>
+          recipe.id === id
+            ? {
+                ...updatedRecipe,
+                photoUri: `${updatedRecipe.photoUri}${cacheBuster}`,
+                thumbnailUri: updatedRecipe.thumbnailUri
+                  ? `${updatedRecipe.thumbnailUri}${cacheBuster}`
+                  : updatedRecipe.thumbnailUri,
+              }
+            : recipe
+        )
       );
       await refreshTags();
     },

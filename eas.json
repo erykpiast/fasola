@@ -23,5 +23,13 @@
         "autoIncrement": true
       }
     }
+  },
+  "submit": {
+    "preview": {
+      "ios": {}
+    },
+    "production": {
+      "ios": {}
+    }
   }
 }

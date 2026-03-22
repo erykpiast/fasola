@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "npx vitest run --globals",
-    "test-classifier": "npx tsx lib/text-classifier/cli.ts"
+    "test-classifier": "npx tsx lib/text-classifier/cli.ts",
+    "release:production": "./scripts/release-production.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "15.1.1",
@@ -68,7 +69,7 @@
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/react": "19.1.17",
-    "eas-cli": "18.1.0",
+    "eas-cli": "18.4.0",
     "esbuild": "0.27.1",
     "eslint": "9.37.0",
     "eslint-config-expo": "10.0.0",

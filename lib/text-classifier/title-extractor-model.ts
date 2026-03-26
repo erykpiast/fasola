@@ -31,14 +31,14 @@ const MODEL_URLS: Record<
   pl: {
     name: "bert-base-polish-cased-v1",
     model:
-      "https://huggingface.co/erykpiast/fasola-title-extractor-pl/resolve/main/title_extractor.onnx",
+      "https://huggingface.co/erykpiast/fasola-title-extractor-pl/resolve/main/title_extractor_xnnpack.pte",
     tokenizer:
       "https://huggingface.co/erykpiast/fasola-title-extractor-pl/resolve/main/tokenizer.json",
   },
   en: {
     name: "TinyBERT_General_4L_312D",
     model:
-      "https://huggingface.co/erykpiast/fasola-title-extractor-en/resolve/main/title_extractor.onnx",
+      "https://huggingface.co/erykpiast/fasola-title-extractor-en/resolve/main/title_extractor_xnnpack.pte",
     tokenizer:
       "https://huggingface.co/erykpiast/fasola-title-extractor-en/resolve/main/tokenizer.json",
   },

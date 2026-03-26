@@ -2,7 +2,6 @@ import * as Crypto from "expo-crypto";
 import { storage } from "../storage";
 import type { PhotoUri, RecipeId, SourceId, StorageKey, TagId } from "../types/primitives";
 import type { Recipe } from "../types/recipe";
-import { migrateIfNeeded } from "./photosToRecipesMigration";
 import { tagsRepository } from "./tags";
 import type { RecipeMetadataWrite, RecipeRepository } from "./types";
 
@@ -34,8 +33,6 @@ function normalizeRecipe(recipe: Recipe): Recipe {
 
 class AsyncStorageRecipeRepository implements RecipeRepository {
   private async readPersistedRecipes(): Promise<Array<Recipe>> {
-    await migrateIfNeeded(RECIPES_KEY);
-
     const data = await storage.getItem(RECIPES_KEY);
     if (!data) {
       return [];

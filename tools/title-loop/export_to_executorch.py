@@ -92,9 +92,10 @@ def export_to_pte(model_path: Path, output_dir: Path):
     print("Copying tokenizer...")
     tokenizer_files = list(model_path.glob("sentencepiece*")) + list(model_path.glob("tokenizer*"))
     for f in tokenizer_files:
-        dest = output_dir / f.name
-        shutil.copy2(f, dest)
-        print(f"  {f.name}")
+        if f.is_file():
+            dest = output_dir / f.name
+            shutil.copy2(f, dest)
+            print(f"  {f.name}")
 
     # Also save full tokenizer for JS fallback
     tokenizer.save_pretrained(output_dir / "tokenizer")

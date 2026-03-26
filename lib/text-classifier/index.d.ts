@@ -39,5 +39,6 @@ export interface ClassificationResult {
  */
 export function classifyText(
   text: string,
-  method?: ClassificationMethod
+  method?: ClassificationMethod,
+  language?: "en" | "pl"
 ): Promise<ClassificationResult>;

@@ -50,3 +50,12 @@ lib/photo-processor/*.bundle.map
 
 # Python
 __pycache__
+
+# ML pipeline generated artifacts
+tools/title-loop/input/
+tools/title-loop/data/
+tools/title-loop/models/
+tools/title-loop/docs/
+
+# Claude Code local settings
+.claude/settings.local.json

@@ -47,8 +47,9 @@ def export_to_pte(model_path: Path, output_dir: Path):
     wrapper.eval()
 
     # Create example inputs (static shape for XNNPACK)
-    example_input_ids = torch.ones(1, MAX_SEQ_LEN, dtype=torch.long)
-    example_attention_mask = torch.ones(1, MAX_SEQ_LEN, dtype=torch.long)
+    # Use int32 to match the Int32Array sent from the app
+    example_input_ids = torch.ones(1, MAX_SEQ_LEN, dtype=torch.int)
+    example_attention_mask = torch.ones(1, MAX_SEQ_LEN, dtype=torch.int)
 
     # Step 1: torch.export
     print("Step 1: torch.export...")

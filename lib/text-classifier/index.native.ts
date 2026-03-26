@@ -159,16 +159,38 @@ function classifyWithTfIdfMethod(text: string): ClassificationResult {
 /**
  * Classify text using embeddings
  */
+async function tryModelTitle(
+  text: string,
+  lang?: "en" | "pl"
+): Promise<string | undefined> {
+  if (!lang) return undefined;
+  try {
+    const { TitleExtractorModel } = await import("./title-extractor-model");
+    if (!TitleExtractorModel.isLoaded(lang)) {
+      await TitleExtractorModel.initialize(lang);
+    }
+    return await TitleExtractorModel.extractTitle(text, lang);
+  } catch {
+    // Model not available or download failed, fall through to heuristic
+  }
+  return undefined;
+}
+
 async function classifyWithEmbeddingsMethod(
-  text: string
+  text: string,
+  language?: "en" | "pl"
 ): Promise<ClassificationResult> {
   const startTime = Date.now();
 
   try {
-    const title = await extractTitleWithEmbeddings(
-      text,
-      EmbeddingsManager.forward.bind(EmbeddingsManager)
-    );
+    // Try model-based title extraction first, fall back to heuristic
+    let title = await tryModelTitle(text, language);
+    if (!title) {
+      title = await extractTitleWithEmbeddings(
+        text,
+        EmbeddingsManager.forward.bind(EmbeddingsManager)
+      );
+    }
     const allSuggestions = await EmbeddingsManager.classify(text);
 
     // Sort by confidence
@@ -211,13 +233,14 @@ async function classifyWithEmbeddingsMethod(
  */
 export async function classifyText(
   text: string,
-  method: ClassificationMethod = "embeddings"
+  method: ClassificationMethod = "embeddings",
+  language?: "en" | "pl"
 ): Promise<ClassificationResult> {
   if (method === "tfidf") {
     return classifyWithTfIdfMethod(text);
   }
 
-  return classifyWithEmbeddingsMethod(text);
+  return classifyWithEmbeddingsMethod(text, language);
 }
 
 /**

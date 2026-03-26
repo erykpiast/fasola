@@ -180,14 +180,16 @@ export function BackgroundProcessingProvider({
           try {
             classificationResult = await classifyText(
               result.ocrResult.text,
-              "embeddings"
+              "embeddings",
+              ocrLanguage
             );
 
             if (classificationResult.suggestions.length === 0) {
               const embeddingsTitle = classificationResult.title;
               classificationResult = await classifyText(
                 result.ocrResult.text,
-                "tfidf"
+                "tfidf",
+                ocrLanguage
               );
               // Preserve the embeddings-based title — the TF-IDF fallback
               // only re-classifies tags, not the title

@@ -1,0 +1,143 @@
+name: Export title extraction models to ExecuTorch
+
+# Converts trained PyTorch models to ExecuTorch .pte format and uploads
+# to HuggingFace. Run manually after training new models locally.
+#
+# Prerequisites:
+#   - Trained model uploaded to HuggingFace as safetensors (the "best" checkpoint)
+#   - HF_TOKEN secret with write access to erykpiast/fasola-title-extractor-{pl,en}
+#
+# The workflow downloads the trained model, converts to .pte with XNNPACK,
+# and uploads the .pte + tokenizer back to the same HuggingFace repo.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/title-loop/export_to_executorch.py"
+
+  workflow_dispatch:
+    inputs:
+      languages:
+        description: "Languages to export (pl, en, or both)"
+        default: "pl,en"
+        type: string
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lang: ["pl", "en"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers safetensors
+          pip install executorch || echo "WARNING: executorch install failed, will retry with nightly"
+          # Fallback to nightly if stable doesn't work
+          if ! python -c "from executorch.exir import to_edge" 2>/dev/null; then
+            pip install --pre executorch -f https://ossci-linux.s3.amazonaws.com/executorch-nightly/
+          fi
+
+      - name: Download trained model from HuggingFace
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from huggingface_hub import snapshot_download
+
+          lang = "${{ matrix.lang }}"
+          repo_id = f"erykpiast/fasola-title-extractor-{lang}"
+          local_dir = f"tools/title-loop/models/{lang}/best"
+
+          # Download model files (safetensors, config, tokenizer)
+          try:
+              snapshot_download(
+                  repo_id=repo_id,
+                  local_dir=local_dir,
+                  token=os.environ.get("HF_TOKEN"),
+              )
+              print(f"Downloaded {lang} model to {local_dir}")
+          except Exception as e:
+              print(f"Failed to download {lang} model: {e}")
+              # Create marker so next step knows to skip
+              with open(f"/tmp/skip_{lang}", "w") as f:
+                  f.write("1")
+          PYTHON
+
+      - name: Check model was downloaded
+        id: check
+        run: |
+          if [ -f "/tmp/skip_${{ matrix.lang }}" ]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Model not available for ${{ matrix.lang }}, skipping"
+          elif [ -f "tools/title-loop/models/${{ matrix.lang }}/best/config.json" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No config.json found for ${{ matrix.lang }}, skipping"
+          fi
+
+      - name: Export to ExecuTorch .pte
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          python3 tools/title-loop/export_to_executorch.py --lang ${{ matrix.lang }}
+
+      - name: Verify export
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          EXPORT_DIR="tools/title-loop/models/export/${{ matrix.lang }}"
+          PTE="$EXPORT_DIR/title_extractor_xnnpack.pte"
+          if [ -f "$PTE" ]; then
+            SIZE=$(du -h "$PTE" | cut -f1)
+            echo "✓ ${{ matrix.lang }} .pte exported: $SIZE"
+          else
+            echo "⚠ .pte not created (ExecuTorch may not support this model)"
+            echo "Checking for ONNX fallback..."
+            ls -lh "$EXPORT_DIR"/*.onnx* 2>/dev/null || echo "No ONNX either"
+            exit 1
+          fi
+
+      - name: Upload .pte to HuggingFace
+        if: steps.check.outputs.exists == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          from huggingface_hub import HfApi
+
+          lang = "${{ matrix.lang }}"
+          repo_id = f"erykpiast/fasola-title-extractor-{lang}"
+          export_dir = Path(f"tools/title-loop/models/export/{lang}")
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+
+          # Upload only the .pte and tokenizer files (not the full model)
+          files_to_upload = []
+          for f in export_dir.iterdir():
+              if f.is_file() and f.suffix in (".pte", ".json"):
+                  files_to_upload.append(f)
+
+          for f in files_to_upload:
+              api.upload_file(
+                  path_or_fileobj=str(f),
+                  path_in_repo=f.name,
+                  repo_id=repo_id,
+                  commit_message=f"Add {f.name} (.pte export)",
+              )
+              print(f"Uploaded {f.name} to {repo_id}")
+
+          print(f"✓ {lang} model uploaded to https://huggingface.co/{repo_id}")
+          PYTHON

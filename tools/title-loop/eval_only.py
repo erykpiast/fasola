@@ -13,6 +13,7 @@ def normalize_separators(s):
     return s.replace('-', ' ').replace('_', ' ')
 
 def _strip_diacritics(s):
+    s = s.replace('ł', 'l').replace('Ł', 'L')
     return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
 
 def _ocr_normalize(s):
@@ -28,9 +29,16 @@ def titles_match(extracted, expected):
     ]
     return all(part in extracted_norm for part in expected_parts)
 
+_PATTERN_SUFFIX_RE = re.compile(
+    r'\.(simple|spillover|split_title|metadata|corruption|narrative|compound|'
+    r'multi_language|category_season|servings_before|timing_before|corrupted|'
+    r'catastrophic|website|multilang|pipe|aug\d+)$'
+)
+
 def extract_expected_title(filename):
     name = Path(filename).name
     cleaned = re.sub(r'\.(real|generated)\.txt$', '', name)
+    cleaned = _PATTERN_SUFFIX_RE.sub('', cleaned)
     return cleaned
 
 def run_extraction(file_path):

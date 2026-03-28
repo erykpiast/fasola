@@ -301,7 +301,8 @@ def main():
     for idx, (title, is_polish) in enumerate(recipes, 1):
         # Sanitize filename
         safe_title = title.replace("/", " ").replace(":", " ").replace("\\", " ").strip()
-        filename = f"{safe_title}.generated.txt"
+        lang = "pl" if is_polish else "en"
+        filename = f"{safe_title}.{lang}.generated.txt"
         filepath = output_dir / filename
 
         # Generate text

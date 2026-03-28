@@ -22,7 +22,6 @@ from pathlib import Path
 from Levenshtein import ratio as levenshtein_ratio
 from transformers import AutoTokenizer
 
-from lang_detect import detect_file_language
 
 INPUT_DIR = Path(__file__).parent / "input"
 DATA_DIR = Path(__file__).parent / "data"
@@ -63,7 +62,7 @@ def full_normalize(s: str) -> str:
 
 def extract_expected_title(filename: str) -> str:
     name = Path(filename).name
-    cleaned = re.sub(r"\.(real|generated)\.txt$", "", name)
+    cleaned = re.sub(r"\.(pl|en)\.(real|generated)\.txt$", "", name)
     cleaned = _PATTERN_SUFFIX_RE.sub("", cleaned)
     return cleaned
 
@@ -256,15 +255,11 @@ def main():
     print(f"Loading tokenizer: {config['model_name']}")
     tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
 
-    # Collect and filter input files by language
-    all_real = sorted(INPUT_DIR.glob("*.real.txt"))
-    all_gen = sorted(INPUT_DIR.glob("*.generated.txt"))
+    # Collect input files by language suffix
+    real_files = sorted(INPUT_DIR.glob(f"*.{lang}.real.txt"))
+    gen_files = sorted(INPUT_DIR.glob(f"*.{lang}.generated.txt"))
 
-    real_files = [f for f in all_real if detect_file_language(f) == lang]
-    gen_files = [f for f in all_gen if detect_file_language(f) == lang]
-
-    print(f"Found {len(real_files)} real + {len(gen_files)} generated {lang.upper()} files "
-          f"(filtered from {len(all_real)} real + {len(all_gen)} generated total)")
+    print(f"Found {len(real_files)} real + {len(gen_files)} generated {lang.upper()} files")
 
     # Process files
     real_examples = []

@@ -184,9 +184,9 @@ def titles_match(extracted: str, expected: str) -> bool:
 
 
 def extract_expected_title(filename: str) -> str:
-    """Extract expected title from filename like 'Tomato Soup.real.txt'."""
+    """Extract expected title from filename like 'Tomato Soup.pl.real.txt'."""
     name = Path(filename).name
-    cleaned = re.sub(r"\.(real|generated)\.txt$", "", name)
+    cleaned = re.sub(r"\.(pl|en)\.(real|generated)\.txt$", "", name)
     if cleaned == name:
         raise ValueError(f"Unrecognized filename format: {filename!r}")
     return cleaned
@@ -267,8 +267,13 @@ def load_results_from_file(iter_dir: Path) -> list[dict]:
             expected = m.group(1)
             extracted = "(unknown)"
             match = m.group(2) == "yes"
-        real_file = INPUT_DIR / f"{expected}.real.txt"
-        file_path = str(real_file) if real_file.exists() else f"(input file for '{expected}')"
+        # Find the real file with any language suffix
+        real_file = next(
+            (INPUT_DIR / f"{expected}.{lg}.real.txt" for lg in ("pl", "en")
+             if (INPUT_DIR / f"{expected}.{lg}.real.txt").exists()),
+            None,
+        )
+        file_path = str(real_file) if real_file else f"(input file for '{expected}')"
         results.append({
             "file": file_path,
             "expected": expected,
@@ -568,7 +573,7 @@ def run_claude(
 
 def check_real_accuracy() -> tuple[float, list[dict]]:
     """Evaluate real input files and return (accuracy, results)."""
-    real_files = sorted(glob.glob(str(INPUT_DIR / "*.real.txt")))
+    real_files = sorted(glob.glob(str(INPUT_DIR / "*.*.real.txt")))
     print(f"  Found {len(real_files)} real files")
     real_results = evaluate_files(real_files)
     real_accuracy = compute_accuracy(real_results)
@@ -592,7 +597,7 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
 
     # If real accuracy is high enough, test on generated data too
     if real_accuracy >= ACCURACY_THRESHOLD:
-        existing_gen = sorted(glob.glob(str(INPUT_DIR / "*.generated.txt")))
+        existing_gen = sorted(glob.glob(str(INPUT_DIR / "*.*.generated.txt")))
         if existing_gen:
             print(f"\nFound {len(existing_gen)} existing synthetic files, skipping generation.")
         else:
@@ -601,7 +606,7 @@ def phase_evaluate(iteration: int, log_dir: Path) -> tuple[Path, float, list[dic
             generate_synthetic_data(log_dir=log_dir)
 
         print(f"\nEvaluating generated files...")
-        gen_files = sorted(glob.glob(str(INPUT_DIR / "*.generated.txt")))
+        gen_files = sorted(glob.glob(str(INPUT_DIR / "*.*.generated.txt")))
         print(f"  Found {len(gen_files)} generated files")
         if gen_files:
             gen_results = evaluate_files(gen_files)
@@ -705,7 +710,7 @@ _PATTERN_DESCRIPTIONS = {
 
 def generate_synthetic_data(log_dir: Path) -> None:
     """Generate synthetic OCR data using Claude Code in small batches."""
-    real_files = glob.glob(str(INPUT_DIR / "*.real.txt"))
+    real_files = glob.glob(str(INPUT_DIR / "*.*.real.txt"))
     existing_titles = [extract_expected_title(f) for f in real_files]
     titles_list = ", ".join(existing_titles)
 
@@ -729,13 +734,16 @@ def generate_synthetic_data(log_dir: Path) -> None:
         prompt = f"""Generate exactly {batch_count} realistic fake OCR recipe text files.
 
 Each file simulates real OCR output from a scanned cookbook page. Save each file to:
-tools/title-loop/input/{{RECIPE_TITLE}}.generated.txt
+tools/title-loop/input/{{RECIPE_TITLE}}.{{LANG}}.generated.txt
+
+where {{LANG}} is "pl" for Polish recipes or "en" for English recipes.
 
 FILENAME RULES (critical):
 - RECIPE_TITLE must use SPACES, not hyphens or underscores
-  (e.g., "Apple Crumble.generated.txt", NOT "apple-crumble.generated.txt")
-- Preserve Polish diacritics in filenames (e.g., "Żurek.generated.txt")
+  (e.g., "Apple Crumble.en.generated.txt", NOT "apple-crumble.en.generated.txt")
+- Preserve Polish diacritics in filenames (e.g., "Żurek.pl.generated.txt")
 - The filename title must EXACTLY match the main title in the text content (case-insensitive OK)
+- The LANG suffix must match the recipe language ("pl" or "en")
 
 RECIPE MIX: ~60% English, ~40% Polish. Variety of categories (soups, mains, desserts, salads,
 appetizers, breads, drinks, preserves). Mix of multi-word titles (2-5 words) and single-word.
@@ -754,18 +762,19 @@ Generate all {batch_count} files now."""
         run_claude(prompt, model="haiku", log_path=log_dir / f"generate-{batch_idx}.log")
 
         # Track what was generated so far
-        gen_files = glob.glob(str(INPUT_DIR / "*.generated.txt"))
+        gen_files = glob.glob(str(INPUT_DIR / "*.*.generated.txt"))
         generated_titles = [extract_expected_title(f) for f in gen_files]
 
 
 def _find_input_file(expected: str) -> Path | None:
     """Find the input file for an expected title (real or any generated version)."""
-    # Try real file first
-    real = INPUT_DIR / f"{expected}.real.txt"
-    if real.exists():
-        return real
-    # Try generated file
-    gen_matches = sorted(INPUT_DIR.glob(f"{expected}.generated.txt"))
+    # Try real file first (any language)
+    for lg in ("pl", "en"):
+        real = INPUT_DIR / f"{expected}.{lg}.real.txt"
+        if real.exists():
+            return real
+    # Try generated file (any language)
+    gen_matches = sorted(INPUT_DIR.glob(f"{expected}.*.generated.txt"))
     return gen_matches[0] if gen_matches else None
 
 
@@ -1065,7 +1074,7 @@ def run_tests() -> bool:
 
 def verify_cli() -> bool:
     """Verify the CLI script runs without errors on a sample file."""
-    real_files = glob.glob(str(INPUT_DIR / "*.real.txt"))
+    real_files = glob.glob(str(INPUT_DIR / "*.*.real.txt"))
     if not real_files:
         print("  No real files to test CLI with")
         return False

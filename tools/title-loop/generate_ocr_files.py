@@ -468,10 +468,10 @@ def generate_file(title, pattern_type):
     else:
         return generate_file_simple(title)
 
-def save_file(title, lines):
+def save_file(title, lines, lang="en"):
     """Save file with proper filename convention."""
     # Filename uses spaces, not hyphens
-    filename = f"{title}.generated.txt"
+    filename = f"{title}.{lang}.generated.txt"
     filepath = OUTPUT_DIR / filename
 
     with open(filepath, "w", encoding="utf-8") as f:
@@ -481,11 +481,11 @@ def save_file(title, lines):
 
 def main():
     """Generate 100 OCR recipe files."""
-    # Combine recipes
-    all_recipes = ENGLISH_RECIPES + POLISH_RECIPES
+    # Combine recipes as (title, lang) tuples
+    all_recipes = [(r, "en") for r in ENGLISH_RECIPES] + [(r, "pl") for r in POLISH_RECIPES]
 
     # Filter out excluded titles
-    all_recipes = [r for r in all_recipes if r.lower() not in EXCLUDED_TITLES]
+    all_recipes = [(r, l) for r, l in all_recipes if r.lower() not in EXCLUDED_TITLES]
 
     # Ensure 60% English, 40% Polish from what we have
     random.shuffle(all_recipes)
@@ -507,9 +507,9 @@ def main():
 
     print(f"Generating {len(selected_recipes)} OCR recipe files...\n")
 
-    for i, (recipe, pattern) in enumerate(zip(selected_recipes, patterns), 1):
+    for i, ((recipe, lang), pattern) in enumerate(zip(selected_recipes, patterns), 1):
         lines = generate_file(recipe, pattern)
-        save_file(recipe, lines)
+        save_file(recipe, lines, lang=lang)
 
         if i % 20 == 0:
             print(f"  ... {i}/100 files created")

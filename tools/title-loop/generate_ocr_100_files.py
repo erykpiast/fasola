@@ -358,7 +358,7 @@ def sanitize_filename(title):
     """Create a valid filename from recipe title."""
     # Remove special chars but keep spaces and diacritics
     safe_title = ''.join(c if c.isalnum() or c.isspace() or ord(c) > 127 else ' ' for c in title)
-    return f"{safe_title.strip()}.generated.txt"
+    return safe_title.strip()
 
 def main():
     """Generate 100 OCR recipe files."""
@@ -374,7 +374,7 @@ def main():
     # Select exactly 60 English and 40 Polish
     selected_english = random.sample(english_recipes, k=60)
     selected_polish = random.sample(polish_recipes, k=40)
-    all_recipes = selected_english + selected_polish
+    all_recipes = [(r, "en") for r in selected_english] + [(r, "pl") for r in selected_polish]
 
     # Define pattern distribution (totals to 100)
     patterns = (
@@ -392,18 +392,18 @@ def main():
 
     # Generate files
     generated_count = 0
-    for i, recipe_title in enumerate(all_recipes):
+    for i, (recipe_title, lang) in enumerate(all_recipes):
         pattern = patterns[i % len(patterns)]
 
         # Handle compound recipes (multiple recipes in one)
         if pattern == "compound" and i % 2 == 0:
-            second_recipe = all_recipes[(i + 1) % len(all_recipes)]
+            second_recipe = all_recipes[(i + 1) % len(all_recipes)][0]
             recipe_title = f"{recipe_title} + {second_recipe}"
 
         try:
             content = generate_ocr_file(recipe_title, pattern)
-            filename = sanitize_filename(recipe_title)
-            filepath = OUTPUT_DIR / filename
+            safe_title = sanitize_filename(recipe_title)
+            filepath = OUTPUT_DIR / f"{safe_title}.{lang}.generated.txt"
 
             filepath.write_text(content, encoding='utf-8')
             generated_count += 1

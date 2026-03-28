@@ -18,7 +18,6 @@ import numpy as np
 import torch
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
-from lang_detect import detect_file_language
 
 INPUT_DIR = Path(__file__).parent / "input"
 MODELS_DIR = Path(__file__).parent / "models"
@@ -63,7 +62,7 @@ _PATTERN_SUFFIX_RE = re.compile(
 
 def extract_expected_title(filename):
     name = Path(filename).name
-    cleaned = re.sub(r"\.(real|generated)\.txt$", "", name)
+    cleaned = re.sub(r"\.(pl|en)\.(real|generated)\.txt$", "", name)
     cleaned = _PATTERN_SUFFIX_RE.sub("", cleaned)
     return cleaned
 
@@ -182,9 +181,9 @@ def main():
     model = AutoModelForTokenClassification.from_pretrained(model_path).to(device)
     model.eval()
 
-    # Filter files by language
-    real_files = sorted(f for f in INPUT_DIR.glob("*.real.txt") if detect_file_language(f) == lang)
-    gen_files = sorted(f for f in INPUT_DIR.glob("*.generated.txt") if detect_file_language(f) == lang)
+    # Filter files by language suffix
+    real_files = sorted(INPUT_DIR.glob(f"*.{lang}.real.txt"))
+    gen_files = sorted(INPUT_DIR.glob(f"*.{lang}.generated.txt"))
 
     print(f"Real files ({lang}): {len(real_files)}, Generated files ({lang}): {len(gen_files)}")
 

@@ -174,3 +174,21 @@ Test failures must be fixed:
 
 yes
 
+### Prompt 14
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [...
+

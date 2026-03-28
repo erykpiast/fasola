@@ -671,3 +671,65 @@ REQUIRED ACTIONS:
 ---
 
 yes
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:17:27
+  [2m   Duration [22m 356ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically

@@ -594,8 +594,8 @@ def main():
     random.seed(42)
 
     existing_real = {
-        re.sub(r"\.real\.txt$", "", p.name).lower()
-        for p in OUTPUT_DIR.glob("*.real.txt")
+        re.sub(r"\.(pl|en)\.real\.txt$", "", p.name).lower()
+        for p in OUTPUT_DIR.glob("*.*.real.txt")
     }
 
     all_recipes = [(t, "pl") for t in PL_TITLES] + [(t, "en") for t in EN_TITLES]
@@ -620,7 +620,7 @@ def main():
                 continue
             seen.add(name)
 
-            filename = f"{recipe}.{name}.generated.txt"
+            filename = f"{recipe}.{name}.{lang}.generated.txt"
             filepath = OUTPUT_DIR / filename
             if filepath.exists():
                 skipped += 1
@@ -642,22 +642,25 @@ def main():
     # ── Real-data augmentation ────────────────────────────────────────────
     print("\nAugmenting real files...")
     aug_count = 0
-    real_files = sorted(OUTPUT_DIR.glob("*.real.txt"))
+    real_files = sorted(OUTPUT_DIR.glob("*.*.real.txt"))
 
     for real_file in real_files:
-        title = re.sub(r"\.real\.txt$", "", real_file.name)
+        # Extract title and lang from {title}.{lang}.real.txt
+        match = re.match(r"^(.+)\.(pl|en)\.real\.txt$", real_file.name)
+        if not match:
+            continue
+        title = match.group(1)
+        file_lang = match.group(2)
         text = real_file.read_text(encoding="utf-8")
         file_lines = text.splitlines()
 
         for aug_idx in range(random.randint(5, 8)):
-            aug_name = f"{title}.aug{aug_idx}.generated.txt"
+            aug_name = f"{title}.aug{aug_idx}.{file_lang}.generated.txt"
             aug_path = OUTPUT_DIR / aug_name
             if aug_path.exists():
                 continue
 
             aug_lines = list(file_lines)
-            is_pl = any(c in title for c in POLISH_CHARS)
-            file_lang = "pl" if is_pl else "en"
 
             augmentations = random.sample(
                 ["corrupt", "garbage_prepend", "line_delete", "line_shuffle",
@@ -671,7 +674,7 @@ def main():
                     rate = random.uniform(0.03, 0.10)
                     aug_lines = [corrupt_ocr(l, rate) for l in aug_lines]
                 elif aug_type == "garbage_prepend":
-                    garbage = GARBAGE_PL if is_pl else GARBAGE_EN
+                    garbage = GARBAGE_PL if file_lang == "pl" else GARBAGE_EN
                     prefix = [random.choice(garbage) for _ in range(random.randint(3, 15))]
                     aug_lines = prefix + [""] + aug_lines
                 elif aug_type == "line_delete":
@@ -711,7 +714,7 @@ def main():
             aug_path.write_text("\n".join(aug_lines), encoding="utf-8")
             aug_count += 1
 
-    total = len(list(OUTPUT_DIR.glob("*.generated.txt")))
+    total = len(list(OUTPUT_DIR.glob("*.*.generated.txt")))
     print(f"Generated {generated} synthetic + {aug_count} augmented = {generated + aug_count} files")
     print(f"Total .generated.txt files: {total}")
 

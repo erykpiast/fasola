@@ -37,7 +37,7 @@ _PATTERN_SUFFIX_RE = re.compile(
 
 def extract_expected_title(filename):
     name = Path(filename).name
-    cleaned = re.sub(r'\.(real|generated)\.txt$', '', name)
+    cleaned = re.sub(r'\.(pl|en)\.(real|generated)\.txt$', '', name)
     cleaned = _PATTERN_SUFFIX_RE.sub('', cleaned)
     return cleaned
 
@@ -50,8 +50,8 @@ def run_extraction(file_path):
         return ''
     return result.stdout.strip()
 
-real_files = sorted(glob.glob(str(INPUT_DIR / '*.real.txt')))
-gen_files = sorted(glob.glob(str(INPUT_DIR / '*.generated.txt')))
+real_files = sorted(glob.glob(str(INPUT_DIR / '*.*.real.txt')))
+gen_files = sorted(glob.glob(str(INPUT_DIR / '*.*.generated.txt')))
 
 print(f'Real files: {len(real_files)}, Generated files: {len(gen_files)}')
 

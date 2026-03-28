@@ -50,6 +50,7 @@ lib/photo-processor/*.bundle.map
 
 # Python
 __pycache__
+.venv*
 
 # ML pipeline generated artifacts
 tools/title-loop/input/

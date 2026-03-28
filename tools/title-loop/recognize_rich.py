@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """
-OCR recipe photos from example-recipes/ using Apple Vision framework,
+OCR recipe photos from ~/Downloads using Apple Vision framework,
 then extract recipe titles using Claude Haiku.
 
+Recognized images are moved to example-recipes/.
 Output: tools/title-loop/input/{RECOGNIZED_TITLE}.real.txt
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from lang_detect import detect_language
 
 import Vision
 from Foundation import NSURL
@@ -19,7 +23,8 @@ from Quartz import (
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 OUTPUT_DIR = Path(__file__).parent / "input"
-IMAGES_DIR = REPO_ROOT / "example-recipes"
+IMAGES_DIR = Path.home() / "Downloads"
+ARCHIVE_DIR = REPO_ROOT / "example-recipes"
 IMAGE_EXTENSIONS = ("*.jpg", "*.jpeg", "*.png", "*.heic", "*.HEIC", "*.JPG", "*.JPEG", "*.PNG")
 
 
@@ -142,15 +147,21 @@ def main():
             continue
 
         safe_title = sanitize_filename(title)
-        output_path = OUTPUT_DIR / f"{safe_title}.real.txt"
+        lang = detect_language(ocr_text)
+        output_path = OUTPUT_DIR / f"{safe_title}.{lang}.real.txt"
 
         if output_path.exists():
-            print(f"  Already exists: {safe_title}.real.txt, skipping")
+            print(f"  Already exists: {safe_title}.{lang}.real.txt, skipping")
             skipped += 1
             continue
 
         output_path.write_text(ocr_text, encoding="utf-8")
-        print(f"  -> {safe_title}.real.txt")
+        print(f"  -> {safe_title}.{lang}.real.txt ({lang.upper()})")
+
+        # Move processed image to example-recipes/
+        dest = ARCHIVE_DIR / image_path.name
+        shutil.move(str(image_path), str(dest))
+        print(f"  Moved to {dest.relative_to(REPO_ROOT)}")
         processed += 1
 
     print(f"\nDone: {processed} saved, {skipped} skipped, {failed} failed")

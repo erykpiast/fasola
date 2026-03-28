@@ -21,7 +21,7 @@ export async function extractTextFromImage(uri: string): Promise<string[]> {
  */
 export async function extractTextWithBounds(
   uri: string
-): Promise<import("./src/types").TextObservation[]> {
+): ReturnType<typeof ExpoTextExtractorModule.extractTextWithBounds> {
   const processedUri = uri.replace("file://", "");
   return ExpoTextExtractorModule.extractTextWithBounds(processedUri);
 }

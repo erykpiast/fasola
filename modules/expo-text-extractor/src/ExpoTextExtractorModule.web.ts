@@ -1,5 +1,7 @@
+import type { TextObservation } from "./types";
+
 export default {
   isSupported: false,
-  extractTextFromImage: async (_uri: string) => [] as string[],
-  extractTextWithBounds: async (_uri: string) => [] as never[],
+  extractTextFromImage: async (_uri: string): Promise<string[]> => [],
+  extractTextWithBounds: async (_uri: string): Promise<TextObservation[]> => [],
 };

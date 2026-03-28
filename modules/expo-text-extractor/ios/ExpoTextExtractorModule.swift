@@ -53,29 +53,34 @@ public class ExpoTextExtractorModule: Module {
     }
 
     private func performOcr(url: URL, completion: @escaping (Result<[VNRecognizedTextObservation], Error>) -> Void) {
-        do {
-            let imageData = try Data(contentsOf: url)
-            let image = UIImage(data: imageData)
-            guard let cgImage = image?.cgImage else {
-                throw Exception.init(name: "err", description: "Could not create CGImage")
-            }
-
-            let requestHandler = VNImageRequestHandler(cgImage: cgImage)
-            let request = VNRecognizeTextRequest { (request, error) in
-                if let error = error {
-                    completion(.failure(error))
-                    return
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let imageData = try Data(contentsOf: url)
+                let image = UIImage(data: imageData)
+                guard let cgImage = image?.cgImage else {
+                    throw Exception.init(name: "err", description: "Could not create CGImage")
                 }
-                guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                    completion(.success([]))
-                    return
-                }
-                completion(.success(observations))
-            }
 
-            try requestHandler.perform([request])
-        } catch {
-            completion(.failure(error))
+                let requestHandler = VNImageRequestHandler(cgImage: cgImage)
+                let request = VNRecognizeTextRequest { (request, error) in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+                    guard let observations = request.results as? [VNRecognizedTextObservation] else {
+                        completion(.success([]))
+                        return
+                    }
+                    completion(.success(observations))
+                }
+                request.recognitionLevel = .accurate
+                request.recognitionLanguages = ["pl", "en"]
+                request.usesLanguageCorrection = true
+
+                try requestHandler.perform([request])
+            } catch {
+                completion(.failure(error))
+            }
         }
     }
 }

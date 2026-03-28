@@ -1,13 +1,23 @@
 name: Export title extraction models to ExecuTorch
 
-# Converts trained PyTorch models to ExecuTorch .pte format and uploads
-# to HuggingFace. Run manually after training new models locally.
+# Converts trained PyTorch models to ExecuTorch .pte format with INT8
+# quantization and uploads to HuggingFace. Run manually after training
+# new models locally.
+#
+# Quantization pipeline:
+#   Stage B: torchao int8_weight_only on linear layers (aten ops, no calibration)
+#   Stage A: QuantizedEmbedding INT8 row-wise on embedding tables (aten ops)
+#   → torch.export → to_edge_transform_and_lower with XnnpackPartitioner → .pte
+#
+# PT2E static quantization (XNNPACKQuantizer) was tried but abandoned:
+#   set_global annotates position-ID tensors used as indices, causing IndexError
+#   during calibration. Weight-only quantization needs no calibration data.
 #
 # Prerequisites:
 #   - Trained model uploaded to HuggingFace as safetensors (the "best" checkpoint)
 #   - HF_TOKEN secret with write access to erykpiast/fasola-title-extractor-{pl,en}
 #
-# The workflow downloads the trained model, converts to .pte with XNNPACK,
+# The workflow downloads the trained model, converts to .pte with INT8+XNNPACK,
 # and uploads the .pte + tokenizer back to the same HuggingFace repo.
 
 on:
@@ -17,11 +27,6 @@ on:
       - "tools/title-loop/export_to_executorch.py"
 
   workflow_dispatch:
-    inputs:
-      languages:
-        description: "Languages to export (pl, en, or both)"
-        default: "pl,en"
-        type: string
 
 jobs:
   export:
@@ -41,13 +46,17 @@ jobs:
 
       - name: Install dependencies
         run: |
+          set -e
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install transformers safetensors
-          pip install executorch || echo "WARNING: executorch install failed, will retry with nightly"
-          # Fallback to nightly if stable doesn't work
-          if ! python -c "from executorch.exir import to_edge" 2>/dev/null; then
-            pip install --pre executorch -f https://ossci-linux.s3.amazonaws.com/executorch-nightly/
+          pip install -r tools/title-loop/requirements-ml.txt
+          # Try stable executorch first; nightly as fallback if stable is unavailable
+          if ! pip install executorch; then
+            echo "Stable executorch unavailable, trying nightly..."
+            pip install --pre executorch --index-url https://download.pytorch.org/whl/nightly/cpu
           fi
+          # Verify the critical import works
+          python -c "from executorch.exir import to_edge_transform_and_lower" \
+            || { echo "::error::executorch import verification failed"; exit 1; }
 
       - name: Download trained model from HuggingFace
         env:
@@ -94,16 +103,30 @@ jobs:
         run: |
           python3 tools/title-loop/export_to_executorch.py --lang ${{ matrix.lang }}
 
-      - name: Verify export
+      - name: Verify export size
         if: steps.check.outputs.exists == 'true'
         run: |
           EXPORT_DIR="tools/title-loop/models/export/${{ matrix.lang }}"
           PTE="$EXPORT_DIR/title_extractor_xnnpack.pte"
           if [ -f "$PTE" ]; then
-            SIZE=$(du -h "$PTE" | cut -f1)
-            echo "✓ ${{ matrix.lang }} .pte exported: $SIZE"
+            SIZE_BYTES=$(stat -c%s "$PTE" 2>/dev/null || stat -f%z "$PTE")
+            SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+            echo "Model size: ${SIZE_MB} MB"
+
+            # Size gate: PL should be <=150 MB, EN should be <=20 MB
+            MAX_SIZE_MB=150
+            if [ "${{ matrix.lang }}" = "en" ]; then
+              MAX_SIZE_MB=20
+            fi
+
+            if [ "$SIZE_MB" -gt "$MAX_SIZE_MB" ]; then
+              echo "::error::Model too large: ${SIZE_MB} MB > ${MAX_SIZE_MB} MB limit"
+              exit 1
+            fi
+
+            echo "Size OK: ${SIZE_MB} MB <= ${MAX_SIZE_MB} MB"
           else
-            echo "⚠ .pte not created (ExecuTorch may not support this model)"
+            echo "::error::.pte file not created"
             echo "Checking for ONNX fallback..."
             ls -lh "$EXPORT_DIR"/*.onnx* 2>/dev/null || echo "No ONNX either"
             exit 1
@@ -136,7 +159,7 @@ jobs:
                   path_or_fileobj=str(f),
                   path_in_repo=f.name,
                   repo_id=repo_id,
-                  commit_message=f"Add {f.name} (.pte export)",
+                  commit_message=f"Add {f.name} (INT8 quantized .pte export)",
               )
               print(f"Uploaded {f.name} to {repo_id}")
 

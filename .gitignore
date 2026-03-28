@@ -57,6 +57,7 @@ tools/title-loop/input/
 tools/title-loop/data/
 tools/title-loop/models/
 tools/title-loop/docs/
+tools/title-loop/bboxes/
 
 # Claude Code local settings
 .claude/settings.local.json

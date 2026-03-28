@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "b8e8b4d3c731",
+  "strategy": "manual-commit",
+  "branch": "feat/en_model_bert_base_cased",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "lib/text-classifier/title-extractor-model.ts",
+    "tools/title-loop/README.md",
+    "tools/title-loop/eval_model.py",
+    "tools/title-loop/prepare_training_data.py",
+    "tools/title-loop/train_title_model.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b8/e8b4d3c731/0/metadata.json",
+      "transcript": "/b8/e8b4d3c731/0/full.jsonl",
+      "context": "/b8/e8b4d3c731/0/context.md",
+      "content_hash": "/b8/e8b4d3c731/0/content_hash.txt",
+      "prompt": "/b8/e8b4d3c731/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1817,
+    "cache_creation_tokens": 59948,
+    "cache_read_tokens": 1338356,
+    "output_tokens": 10533,
+    "api_call_count": 29
+  }
+}

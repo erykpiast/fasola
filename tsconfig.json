@@ -9,7 +9,8 @@
     "paths": {
       "@/*": ["./*"],
       "liquid-glass": ["./modules/liquid-glass/index.ts"],
-      "icloud-sync": ["./modules/icloud-sync/index.ts"]
+      "icloud-sync": ["./modules/icloud-sync/index.ts"],
+      "expo-text-extractor": ["./modules/expo-text-extractor/index.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

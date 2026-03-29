@@ -314,6 +314,11 @@ def detect_columns(observations, min_gap=0.03):
             if gap < min_gap:
                 continue
 
+        # Reject splits where too many observations straddle the boundary
+        total = len(left) + len(right) + straddling
+        if straddling / total > 0.2:
+            continue
+
         # Score: maximize clean splits, penalize straddling
         score = (len(left) + len(right)) - straddling * 3
 
@@ -387,7 +392,8 @@ def _cluster_column(observations, y_tolerance, region_gap):
 
     # Step 2b: Sub-split bands by height similarity.
     # Within each Y-band, separate observations with different font sizes.
-    # Sort by height, then split where consecutive heights differ by >30%.
+    # Sort by height, then split where consecutive heights differ by >20%.
+    # Re-sort each sub-band by Y to preserve reading order.
     bands = []
     for raw_band in raw_bands:
         if len(raw_band) <= 1:
@@ -402,9 +408,10 @@ def _cluster_column(observations, y_tolerance, region_gap):
             if ratio > 0.8:  # within 20% of each other
                 sub_band.append(obs)
             else:
-                bands.append(sub_band)
+                # Re-sort by Y before appending
+                bands.append(sorted(sub_band, key=lambda o: o["bbox"]["y"]))
                 sub_band = [obs]
-        bands.append(sub_band)
+        bands.append(sorted(sub_band, key=lambda o: o["bbox"]["y"]))
 
     # Step 3: Merge adjacent bands into regions
     # Only merge bands that have similar line heights (same font size zone)
@@ -482,9 +489,10 @@ def _cluster_column(observations, y_tolerance, region_gap):
         num_lines = len(line_groups)
 
         # Concatenate text (left-to-right within each line, top-to-bottom)
+        # Quantize X to 0.01 so nearly-aligned observations sort by Y (reading order)
         text_parts = []
         for line_group in line_groups:
-            sorted_line = sorted(line_group, key=lambda o: o["bbox"]["x"])
+            sorted_line = sorted(line_group, key=lambda o: (round(o["bbox"]["x"], 2), o["bbox"]["y"]))
             text_parts.append(" ".join(o["text"] for o in sorted_line))
         text = " ".join(text_parts)
 

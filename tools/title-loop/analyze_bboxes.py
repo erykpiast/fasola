@@ -774,6 +774,43 @@ def _strip_trailing_ingredients(text):
     return text
 
 
+def _extract_leading_title(region):
+    """Extract title from the leading observation(s) of a large region.
+
+    In many cookbooks, the recipe title is the first text element in a region,
+    followed by body text.  When the full region text is too long for a title,
+    extract just the short leading observation(s).
+    """
+    obs = sorted(region["observations"],
+                 key=lambda o: (round(o["bbox"]["y"], 2), o["bbox"]["x"]))
+    if not obs:
+        return None
+
+    first = obs[0]
+    # First observation must be short (title-like), start with an uppercase
+    # letter (titles are Title Case or ALL CAPS), and not end with a period
+    # (which would indicate a sentence / body text).
+    if len(first["text"]) > 60 or len(first["text"]) < 4:
+        return None
+    first_alpha = next((c for c in first["text"] if c.isalpha()), None)
+    if first_alpha and first_alpha.islower():
+        return None
+    if first["text"].rstrip().endswith("."):
+        return None
+
+    # Collect observations on the same Y band as the first (multi-word titles)
+    y_tol = 0.03
+    title_obs = [first]
+    for o in obs[1:]:
+        if abs(o["bbox"]["y"] - first["bbox"]["y"]) < y_tol and len(o["text"]) <= 40:
+            title_obs.append(o)
+        else:
+            break
+
+    title_obs.sort(key=lambda o: o["bbox"]["x"])
+    return " ".join(o["text"] for o in title_obs)
+
+
 def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04):
     """Cluster into regions, score for title, validate. Return best title text."""
     regions = cluster_into_regions(observations, y_tolerance, region_gap)
@@ -875,6 +912,16 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                 primary_y = region["bbox"]["y"]
                 used_regions = {id(region)}
                 break
+            # For regions too long to be titles, try extracting just the
+            # leading observation(s) which are often the recipe title
+            # followed by body text in the same cluster.
+            if len(region["text"]) > 200:
+                leading = _extract_leading_title(region)
+                if leading and validate_title_text(leading):
+                    primary_text = leading
+                    primary_y = region["bbox"]["y"]
+                    used_regions = {id(region)}
+                    break
 
     if primary_text is None:
         return None

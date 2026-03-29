@@ -15,6 +15,7 @@ Persistent state in tools/title-loop/docs/bbox-loop/:
 Usage: MPLBACKEND=Agg python3 tools/title-loop/bbox-loop.py
 """
 
+import argparse
 import json
 import os
 import re
@@ -40,6 +41,58 @@ LOG_FILE = DOCS_DIR / "log.md"
 ALL_JSON = BBOXES_DIR / "_all.json"
 
 os.environ.setdefault("MPLBACKEND", "Agg")
+
+VIS_DIR = BBOXES_DIR / "visualized"
+IMAGES_DIR = PROJECT_ROOT / "example-recipes"
+
+
+# --- Visualization ---
+
+def regenerate_visualizations(failures: list[dict]):
+    """Regenerate visualization PNGs for failure images using current clustering."""
+    try:
+        from AppKit import NSImage, NSBitmapImageRep
+    except ImportError:
+        print("  (skipping visualization — AppKit not available)")
+        return
+
+    sys.path.insert(0, str(LOOP_DIR))
+    for mod_name in list(sys.modules):
+        if mod_name.startswith(("recognize_bboxes", "analyze_bboxes")):
+            del sys.modules[mod_name]
+    from recognize_bboxes import load_nsimage, draw_visualization
+
+    VIS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Visualize up to 20 failure images
+    stems = set()
+    for f in failures[:20]:
+        stem = f["image"].rsplit(".", 1)[0]
+        stems.add(stem)
+
+    for stem in sorted(stems):
+        bbox_path = BBOXES_DIR / f"{stem}.json"
+        if not bbox_path.exists():
+            continue
+
+        data = json.loads(bbox_path.read_text())
+        observations = data["observations"]
+
+        # Find the original image
+        ns_image = None
+        for ext in [".HEIC", ".heic", ".jpg", ".png"]:
+            img_path = IMAGES_DIR / f"{stem}{ext}"
+            if img_path.exists():
+                ns_image = load_nsimage(img_path)
+                break
+
+        if ns_image is None:
+            continue
+
+        vis_path = VIS_DIR / f"{stem}.png"
+        draw_visualization(ns_image, observations, vis_path)
+
+    print(f"  Visualizations updated for {len(stems)} failure images → {VIS_DIR}/")
 
 
 # --- Evaluation ---
@@ -281,7 +334,7 @@ Total failures: {len(results['failures'])}
 """
 
 
-def run_iteration(iteration: int):
+def run_iteration(iteration: int, visualize: bool = False):
     """Run one iteration of the improvement loop."""
     iter_dir = DOCS_DIR / f"iter-{iteration}"
     iter_dir.mkdir(parents=True, exist_ok=True)
@@ -336,6 +389,11 @@ def run_iteration(iteration: int):
 
     log_iteration(iteration, new_results, summary, f"delta={delta:+.1%}")
 
+    # Regenerate visualizations for failures so you can inspect
+    if visualize:
+        print("\n--- Step 4: Updating visualizations ---")
+        regenerate_visualizations(new_results["failures"])
+
     return False
 
 
@@ -364,6 +422,11 @@ def log_iteration(iteration: int, results: dict, summary: str, notes: str):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Self-improving bbox title extraction loop")
+    parser.add_argument("--visualize", action="store_true",
+                        help="Regenerate visualization PNGs for failure images after each iteration")
+    args = parser.parse_args()
+
     if not ALL_JSON.exists():
         print(f"Error: {ALL_JSON} not found. Run recognize_bboxes.py first.")
         sys.exit(1)
@@ -372,7 +435,7 @@ def main():
     print(f"Starting from iteration {start_iter} (max {MAX_ITERATIONS})")
 
     for iteration in range(start_iter, start_iter + MAX_ITERATIONS):
-        done = run_iteration(iteration)
+        done = run_iteration(iteration, visualize=args.visualize)
         if done:
             print(f"\nTarget accuracy reached at iteration {iteration}!")
             break

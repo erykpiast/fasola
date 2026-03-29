@@ -672,6 +672,15 @@ def score_title_region(region, all_regions):
     region_width = region["bbox"]["width"]
     width_score = min(region_width / 0.30, 1.0)
 
+    # Gutter noise penalty: narrow regions near the page edge with abnormally
+    # tall line heights are garbled OCR from the book spine/gutter, not real text.
+    # Real titles are wider (>0.20) and positioned away from the page edge.
+    gutter_penalty = 0.0
+    if (region["mean_line_height"] > 0.035
+            and region["bbox"]["width"] < 0.20
+            and region["bbox"]["x"] < 0.10):
+        gutter_penalty = 0.3
+
     return (
         0.20 * line_count_score
         + 0.15 * relative_line_height
@@ -680,6 +689,7 @@ def score_title_region(region, all_regions):
         + 0.05 * text_length_score
         + 0.15 * caps_boost
         + 0.10 * width_score
+        - gutter_penalty
     )
 
 

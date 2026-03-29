@@ -500,8 +500,15 @@ def score_title_region(region, all_regions):
     max_mlh = max(r["mean_line_height"] for r in all_regions)
     relative_line_height = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
 
-    # Vertical position: top of page higher
-    vertical_position = 1.0 - region["bbox"]["y"]
+    # Vertical position: strong preference for top of page.
+    # Titles almost always appear in the top 30%. Score drops sharply after that.
+    y = region["bbox"]["y"]
+    if y < 0.3:
+        vertical_position = 1.0
+    elif y < 0.5:
+        vertical_position = 0.5
+    else:
+        vertical_position = 0.1
 
     # Character density: low density = big font
     max_density = max(r["char_density"] for r in all_regions)
@@ -516,12 +523,12 @@ def score_title_region(region, all_regions):
     caps_boost = 1.0 if upper_ratio > 0.8 else 0.0
 
     return (
-        0.25 * line_count_score
-        + 0.25 * relative_line_height
-        + 0.15 * vertical_position
-        + 0.15 * char_density_score
+        0.20 * line_count_score
+        + 0.20 * relative_line_height
+        + 0.25 * vertical_position
+        + 0.10 * char_density_score
         + 0.10 * text_length_score
-        + 0.10 * caps_boost
+        + 0.15 * caps_boost
     )
 
 

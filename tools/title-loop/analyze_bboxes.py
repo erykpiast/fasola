@@ -53,10 +53,18 @@ def titles_match(extracted, expected):
 
 _LANG_RE = re.compile(r"\.(pl|en)\.real\.txt$")
 
+_PATTERN_SUFFIX_RE = re.compile(
+    r"\.(simple|spillover|split_title|metadata|corruption|narrative|compound|"
+    r"multi_language|category_season|servings_before|timing_before|corrupted|"
+    r"catastrophic|website|multilang|pipe|aug\d+)$"
+)
+
 
 def extract_expected_title(filename):
     name = Path(filename).name
-    return re.sub(r"\.(pl|en)\.real\.txt$", "", name)
+    cleaned = re.sub(r"\.(pl|en)\.real\.txt$", "", name)
+    cleaned = _PATTERN_SUFFIX_RE.sub("", cleaned)
+    return cleaned
 
 
 # ── Ground truth matching ────────────────────────────────────────────────────
@@ -230,6 +238,208 @@ def heuristic_weighted_score(observations):
     return best[1]
 
 
+# ── Region clustering (spec 022) ─────────────────────────────────────────────
+
+# Ingredient/section patterns for text validation
+_MEASUREMENT_RE = re.compile(
+    r"\b\d+\s*(g|ml|kg|cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|"
+    r"łyżka|łyżki|łyżek|łyżeczka|szklanka|szklanki|szczypta|garść)\b",
+    re.IGNORECASE,
+)
+
+_SECTION_LABELS = {
+    # English
+    "ingredients", "directions", "instructions", "method", "preparation",
+    "steps", "notes", "tip", "tips", "variations", "garnish", "topping",
+    "serving", "glaze", "filling", "frosting",
+    # Polish (no diacritics)
+    "skladniki", "przygotowanie", "sposob przygotowania", "sposob wykonania",
+    "wykonanie", "wskazowki", "sos", "nadzienie", "polewa", "ciasto",
+    "instrukcje", "uwagi", "notatki", "podawanie",
+}
+
+
+def cluster_into_regions(observations, y_tolerance=0.05, region_gap=0.04):
+    """Cluster observations into spatial regions.
+
+    Step 1: Sort by Y.
+    Step 2: Group into horizontal bands (close Y + similar height).
+    Step 3: Merge adjacent bands into regions (small vertical gap + overlapping X).
+    Step 4: Compute region properties.
+    """
+    if not observations:
+        return []
+
+    # Step 1: Sort by Y
+    sorted_obs = sorted(observations, key=lambda o: o["bbox"]["y"])
+
+    # Step 2: Group into horizontal bands
+    bands = []
+    current_band = [sorted_obs[0]]
+
+    for obs in sorted_obs[1:]:
+        prev = current_band[-1]
+        y_diff = abs(obs["bbox"]["y"] - prev["bbox"]["y"])
+        h_prev = prev["bbox"]["height"]
+        h_curr = obs["bbox"]["height"]
+        if h_prev > 0 and h_curr > 0:
+            ratio = min(h_prev, h_curr) / max(h_prev, h_curr)
+        else:
+            ratio = 0
+
+        if y_diff < y_tolerance and ratio > 0.4:
+            current_band.append(obs)
+        else:
+            bands.append(current_band)
+            current_band = [obs]
+    bands.append(current_band)
+
+    # Step 3: Merge adjacent bands into regions
+    regions = [bands[0]]
+
+    for band in bands[1:]:
+        prev_region = regions[-1]
+        # Get the last band in the current region
+        prev_band = prev_region if not isinstance(prev_region[0], list) else prev_region[-1]
+        # Flatten prev_region to get all observations
+        prev_all = prev_region if not isinstance(prev_region[0], list) else [o for b in prev_region for o in b]
+
+        # Compute vertical gap
+        prev_max_bottom = max(o["bbox"]["y"] + o["bbox"]["height"] for o in prev_all)
+        curr_min_top = min(o["bbox"]["y"] for o in band)
+        gap = curr_min_top - prev_max_bottom
+
+        # Compute X overlap
+        prev_min_x = min(o["bbox"]["x"] for o in prev_all)
+        prev_max_x = max(o["bbox"]["x"] + o["bbox"]["width"] for o in prev_all)
+        curr_min_x = min(o["bbox"]["x"] for o in band)
+        curr_max_x = max(o["bbox"]["x"] + o["bbox"]["width"] for o in band)
+
+        overlap_start = max(prev_min_x, curr_min_x)
+        overlap_end = min(prev_max_x, curr_max_x)
+        overlap = max(0, overlap_end - overlap_start)
+        narrower_width = min(prev_max_x - prev_min_x, curr_max_x - curr_min_x)
+        x_overlap_ratio = overlap / narrower_width if narrower_width > 0 else 0
+
+        if gap < region_gap and x_overlap_ratio > 0.5:
+            # Merge into current region
+            regions[-1] = prev_all + band
+        else:
+            regions.append(band)
+
+    # Step 4: Compute region properties
+    result = []
+    for region_obs in regions:
+        # Flatten if nested
+        if isinstance(region_obs[0], list):
+            flat = [o for band in region_obs for o in band]
+        else:
+            flat = region_obs
+
+        all_x = [o["bbox"]["x"] for o in flat]
+        all_y = [o["bbox"]["y"] for o in flat]
+        all_r = [o["bbox"]["x"] + o["bbox"]["width"] for o in flat]
+        all_b = [o["bbox"]["y"] + o["bbox"]["height"] for o in flat]
+
+        bbox_x = min(all_x)
+        bbox_y = min(all_y)
+        bbox_w = max(all_r) - bbox_x
+        bbox_h = max(all_b) - bbox_y
+
+        # Count lines by re-grouping observations within this region by Y
+        line_groups = find_same_y_groups(flat, y_tolerance=y_tolerance)
+        num_lines = len(line_groups)
+
+        # Concatenate text (left-to-right within each line, top-to-bottom)
+        text_parts = []
+        for line_group in line_groups:
+            sorted_line = sorted(line_group, key=lambda o: o["bbox"]["x"])
+            text_parts.append(" ".join(o["text"] for o in sorted_line))
+        text = " ".join(text_parts)
+
+        area = bbox_w * bbox_h if bbox_w > 0 and bbox_h > 0 else 1
+        char_density = len(text) / area
+        mean_line_height = statistics.mean(o["bbox"]["height"] for o in flat)
+
+        result.append({
+            "observations": flat,
+            "bbox": {"x": bbox_x, "y": bbox_y, "width": bbox_w, "height": bbox_h},
+            "lines": num_lines,
+            "text": text,
+            "char_density": char_density,
+            "mean_line_height": mean_line_height,
+        })
+
+    return result
+
+
+def score_title_region(region, all_regions):
+    """Score a region for title-likeness using the 6 features from spec 022."""
+    # Line count score: 1-3 lines high, 4+ low
+    line_count_score = max(0, 1 - (region["lines"] - 1) / 4)
+
+    # Relative line height: tallest mean_line_height among all regions
+    max_mlh = max(r["mean_line_height"] for r in all_regions)
+    relative_line_height = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
+
+    # Vertical position: top of page higher
+    vertical_position = 1.0 - region["bbox"]["y"]
+
+    # Character density: low density = big font
+    max_density = max(r["char_density"] for r in all_regions)
+    char_density_score = 1 - min(region["char_density"] / max_density, 1) if max_density > 0 else 0
+
+    # Text length: short text high
+    text_length_score = max(0, 1 - len(region["text"]) / 100)
+
+    # ALL_CAPS boost
+    alpha_chars = [c for c in region["text"] if c.isalpha()]
+    upper_ratio = sum(1 for c in alpha_chars if c.isupper()) / len(alpha_chars) if alpha_chars else 0
+    caps_boost = 1.0 if upper_ratio > 0.8 else 0.0
+
+    return (
+        0.25 * line_count_score
+        + 0.25 * relative_line_height
+        + 0.15 * vertical_position
+        + 0.15 * char_density_score
+        + 0.10 * text_length_score
+        + 0.10 * caps_boost
+    )
+
+
+def validate_title_text(text):
+    """Light text validation — reject obvious non-titles."""
+    if len(text) < 2 or len(text) > 200:
+        return False
+    if _MEASUREMENT_RE.search(text):
+        return False
+    # Check against section labels (strip diacritics, case-insensitive)
+    cleaned = strip_diacritics(text.strip().rstrip(":").lower())
+    if cleaned in _SECTION_LABELS:
+        return False
+    return True
+
+
+def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04):
+    """Cluster into regions, score for title, validate. Return best title text."""
+    regions = cluster_into_regions(observations, y_tolerance, region_gap)
+
+    if len(regions) < 3:
+        # Too few regions — fallback
+        return None
+
+    # Score all regions
+    scored = [(score_title_region(r, regions), r) for r in regions]
+    scored.sort(key=lambda x: -x[0])
+
+    # Try top 3 candidates
+    for score, region in scored[:3]:
+        if validate_title_text(region["text"]):
+            return region["text"]
+
+    return None
+
+
 # ── Fragmentation analysis ───────────────────────────────────────────────────
 
 
@@ -296,6 +506,7 @@ def main():
         "merge_same_y": heuristic_merge_same_y,
         "top_page_largest": heuristic_top_page_largest,
         "weighted_score": heuristic_weighted_score,
+        "region_clustering": heuristic_region_clustering,
     }
 
     heuristic_results = {}
@@ -397,6 +608,68 @@ def main():
             print(f"\nSample failures for '{name}' (first 5):")
             for f in failures[:5]:
                 print(f"  {f['image']}: expected='{f['expected']}' got='{f['extracted']}'")
+
+    # ── Grid search for clustering thresholds ─────────────────────────────
+
+    print("\n" + "=" * 60)
+    print("GRID SEARCH: Region Clustering Thresholds")
+    print("=" * 60)
+
+    y_tols = [0.03, 0.04, 0.05, 0.06, 0.08]
+    r_gaps = [0.02, 0.03, 0.04, 0.05, 0.06]
+
+    best_accuracy = 0
+    best_params = (0.05, 0.04)
+    grid_results = []
+
+    for yt in y_tols:
+        for rg in r_gaps:
+            matched_count = 0
+            for m in matches:
+                extracted = heuristic_region_clustering(
+                    m["observations"], y_tolerance=yt, region_gap=rg
+                )
+                if titles_match(extracted, m["expected_title"]):
+                    matched_count += 1
+            acc = matched_count / len(matches) if matches else 0
+            grid_results.append({
+                "y_tolerance": yt,
+                "region_gap": rg,
+                "matched": matched_count,
+                "total": len(matches),
+                "accuracy": round(acc, 4),
+            })
+            if acc > best_accuracy:
+                best_accuracy = acc
+                best_params = (yt, rg)
+            print(f"  y_tol={yt:.2f} gap={rg:.2f} → {acc:.1%} ({matched_count}/{len(matches)})")
+
+    print(f"\nBest: y_tolerance={best_params[0]}, region_gap={best_params[1]} → {best_accuracy:.1%}")
+
+    # Per-language breakdown for best params
+    yt, rg = best_params
+    for lang in ["pl", "en"]:
+        lang_matches = [m for m in matches if m["lang"] == lang]
+        if not lang_matches:
+            continue
+        lang_matched = sum(
+            1 for m in lang_matches
+            if titles_match(
+                heuristic_region_clustering(m["observations"], y_tolerance=yt, region_gap=rg),
+                m["expected_title"],
+            )
+        )
+        print(f"  {lang}: {lang_matched}/{len(lang_matches)} = {lang_matched / len(lang_matches):.1%}")
+
+    report["grid_search"] = {
+        "best_params": {"y_tolerance": best_params[0], "region_gap": best_params[1]},
+        "best_accuracy": best_accuracy,
+        "all_results": grid_results,
+    }
+
+    # Re-write report with grid search results
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nUpdated report: {report_path}")
 
 
 if __name__ == "__main__":

@@ -102,13 +102,36 @@ def titles_match(extracted, expected):
     # Longer words (≥5 chars) allow distance 2 for multi-char OCR corruption
     # at word boundaries (e.g. "PIERNICZKI"→"FERNICZKI", "LEMON"→"MON").
     # Short words keep distance 1 to avoid false positives.
-    return all(
-        all(
-            any(_levenshtein(w, ew) <= (2 if len(w) >= 5 else 1) for ew in extracted_word_list)
-            for w in part.split()
-        )
+    def _fuzzy_word_match(w, word_list):
+        thresh = 2 if len(w) >= 5 else 1
+        return any(_levenshtein(w, ew) <= thresh for ew in word_list)
+
+    if all(
+        all(_fuzzy_word_match(w, extracted_word_list) for w in part.split())
         for part in expected_parts
-    )
+    ):
+        return True
+    # Fallback: merged-word matching — handles OCR merging adjacent words
+    # (e.g. "z jagodami" → "zjagodami").  When a short expected word fails
+    # to match individually, concatenate it with the next expected word and
+    # check the combined form against extracted words.
+    for part in expected_parts:
+        words = part.split()
+        i = 0
+        while i < len(words):
+            w = words[i]
+            if _fuzzy_word_match(w, extracted_word_list):
+                i += 1
+                continue
+            # Try concatenating with next word
+            if i + 1 < len(words) and len(w) <= 2:
+                merged = w + words[i + 1]
+                if _fuzzy_word_match(merged, extracted_word_list):
+                    i += 2
+                    continue
+            return False
+        # all words in this part matched
+    return True
 
 
 _LANG_RE = re.compile(r"\.(pl|en)\.real\.txt$")

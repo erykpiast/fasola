@@ -3,10 +3,10 @@ require 'json'
 package = JSON.parse(File.read(File.join(__dir__, '..', 'package.json')))
 
 Pod::Spec.new do |s|
-  s.name           = 'ExpoTextExtractor'
+  s.name           = 'TextExtractor'
   s.version        = package['version']
   s.summary        = 'Text extraction (OCR) using Apple Vision'
-  s.description    = 'A React Native module for text recognition using Apple Vision framework'
+  s.description    = 'Native module for text recognition using Apple Vision framework'
   s.license        = 'MIT'
   s.author         = 'fasola'
   s.homepage       = 'https://github.com/fasola'

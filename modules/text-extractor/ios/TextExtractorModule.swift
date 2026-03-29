@@ -1,31 +1,12 @@
 import ExpoModulesCore
 import Vision
 
-public class ExpoTextExtractorModule: Module {
+public class TextExtractorModule: Module {
     public func definition() -> ModuleDefinition {
-        Name("ExpoTextExtractor")
+        Name("TextExtractor")
 
-        Constants([
-            "isSupported": true
-        ])
-
-        // Backward-compatible: returns string[] only
-        AsyncFunction("extractTextFromImage") { (url: URL, promise: Promise) in
-            self.performOcr(url: url) { result in
-                switch result {
-                case .success(let observations):
-                    let texts = observations.compactMap { observation in
-                        observation.topCandidates(1).first?.string
-                    }
-                    promise.resolve(texts)
-                case .failure(let error):
-                    promise.reject(error)
-                }
-            }
-        }
-
-        // New: returns [{text, confidence, bounds: {x, y, width, height}}]
-        AsyncFunction("extractTextWithBounds") { (url: URL, promise: Promise) in
+        // Returns [{text, confidence, bounds: {x, y, width, height}}]
+        AsyncFunction("extractText") { (url: URL, promise: Promise) in
             self.performOcr(url: url) { result in
                 switch result {
                 case .success(let observations):

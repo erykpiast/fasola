@@ -259,7 +259,7 @@ _SECTION_LABELS = {
 }
 
 
-def detect_columns(observations, min_gap=0.05):
+def detect_columns(observations, min_gap=0.03):
     """Detect text columns by projecting observations onto the X axis and finding gaps.
 
     Projects each observation as an X interval [x, x+width], merges overlapping

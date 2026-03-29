@@ -6,7 +6,7 @@
 import type { DataUrl } from "@/lib/types/primitives";
 import { Paths } from "expo-file-system";
 import { writeAsStringAsync } from "expo-file-system/legacy";
-import { extractTextFromImage } from "text-extractor";
+import { extractTextWithBounds } from "text-extractor";
 import type { OcrResult } from "./types";
 
 /**
@@ -44,28 +44,31 @@ export async function extractText(imageUri: DataUrl, _language?: string): Promis
     // Dump image to disk for debugging
     await dumpImageToDisk(imageUri);
 
-    // Extract text using text-extractor (ML Kit / Apple Vision)
-    const textBlocks = await extractTextFromImage(imageUri);
+    // Extract text with bounding boxes using text-extractor (ML Kit / Apple Vision)
+    const observations = await extractTextWithBounds(imageUri);
 
-    if (!textBlocks || textBlocks.length === 0) {
+    if (!observations || observations.length === 0) {
       console.log("[OCR Bridge] No text detected in image");
       return {
         success: true,
         text: "",
         textBlocks: [],
+        observations: [],
         confidence: 1.0,
       };
     }
 
+    const textBlocks = observations.map((o) => o.text);
     const fullText = textBlocks.join("\n");
     console.log(
-      `[OCR Bridge] Text extraction complete: ${textBlocks.length} blocks, ${fullText.length} characters`
+      `[OCR Bridge] Text extraction complete: ${observations.length} blocks, ${fullText.length} characters`
     );
 
     return {
       success: true,
       text: fullText,
       textBlocks,
+      observations,
       confidence: 1.0, // ML Kit/Vision don't expose confidence scores
     };
   } catch (error) {

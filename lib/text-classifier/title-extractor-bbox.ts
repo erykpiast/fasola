@@ -15,10 +15,6 @@ interface BboxObservation {
   bbox: { x: number; y: number; width: number; height: number };
 }
 
-interface BboxInput {
-  image: string;
-  observations: Array<BboxObservation>;
-}
 
 interface Region {
   observations: Array<BboxObservation>;
@@ -1202,4 +1198,4 @@ export function extractTitleFromBboxes(
   return primaryText;
 }
 
-export type { BboxObservation, BboxInput, Region };
+export type { BboxObservation };

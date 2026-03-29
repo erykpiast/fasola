@@ -43,9 +43,9 @@ LANG_CONFIG = {
         "torch_dtype": torch.float32,
     },
     "en": {
-        "model_name": "huawei-noah/TinyBERT_General_4L_312D",
-        "learning_rate": 3e-5,
-        "num_epochs": 30,
+        "model_name": "google-bert/bert-base-cased",
+        "learning_rate": 2e-5,
+        "num_epochs": 15,
         "batch_size": 8,
         "torch_dtype": torch.float32,
     },
@@ -246,6 +246,13 @@ def main():
     train_ds = train_dataset.select_columns(train_cols)
     val_ds = _val_dataset.select_columns(train_cols)
 
+    callbacks = []
+    if len(val_examples) >= 5:
+        callbacks.append(EarlyStoppingCallback(early_stopping_patience=5))
+    else:
+        print(f"Val set too small ({len(val_examples)} examples) — disabling early stopping, training all {config['num_epochs']} epochs")
+        training_args.load_best_model_at_end = False
+
     trainer = WeightedTrainer(
         class_weights=class_weights.tolist(),
         model=model,
@@ -253,7 +260,7 @@ def main():
         train_dataset=train_ds,
         eval_dataset=val_ds,
         compute_metrics=lambda p: compute_metrics(p, tokenizer),
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
+        callbacks=callbacks,
     )
 
     print(f"\nStarting training ({lang})...")

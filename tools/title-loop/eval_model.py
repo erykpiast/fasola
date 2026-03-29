@@ -18,10 +18,18 @@ import numpy as np
 import torch
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
+from lang_detect import detect_language
 
 INPUT_DIR = Path(__file__).parent / "input"
 MODELS_DIR = Path(__file__).parent / "models"
 MAX_SEQ_LEN = 512
+
+def warn_language_mismatch(file_name, text, lang):
+    """Warn if file content doesn't match expected language."""
+    if lang == "en":
+        detected = detect_language(text)
+        if detected == "pl":
+            print(f"  WARNING: {file_name} appears to be Polish")
 
 
 # ── Matching logic (from eval_only.py) ────────────────────────────────────────
@@ -192,6 +200,7 @@ def main():
     for fp in real_files:
         expected = extract_expected_title(fp.name)
         text = fp.read_text(encoding="utf-8")
+        warn_language_mismatch(fp.name, text, lang)
         extracted = predict_title(model, tokenizer, text, device)
         match = titles_match(extracted, expected)
         real_results.append({"expected": expected, "extracted": extracted, "match": match})
@@ -203,6 +212,7 @@ def main():
     for fp in gen_files:
         expected = extract_expected_title(fp.name)
         text = fp.read_text(encoding="utf-8")
+        warn_language_mismatch(fp.name, text, lang)
         extracted = predict_title(model, tokenizer, text, device)
         match = titles_match(extracted, expected)
         gen_results.append({"expected": expected, "extracted": extracted, "match": match})

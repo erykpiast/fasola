@@ -52,7 +52,7 @@ This directory contains two systems that solve the same problem (extracting a re
 | Language | Base model | Params | INT8 size |
 |---|---|---|---|
 | Polish | `dkleczek/bert-base-polish-cased-v1` | 132M | ~132 MB |
-| English | `huawei-noah/TinyBERT_General_4L_312D` | 14.4M | ~14 MB |
+| English | `google-bert/bert-base-cased` | 110M | ~130 MB |
 
 ### Data flow (ML pipeline)
 

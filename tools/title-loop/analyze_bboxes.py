@@ -815,8 +815,7 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     """Cluster into regions, score for title, validate. Return best title text."""
     regions = cluster_into_regions(observations, y_tolerance, region_gap)
 
-    if len(regions) < 3:
-        # Too few regions — fallback
+    if not regions:
         return None
 
     # Score all regions

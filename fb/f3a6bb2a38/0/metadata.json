@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "fbf3a6bb2a38",
+  "session_id": "a70b4822-81ec-4a4c-ac04-244b66f4623e",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-29T00:51:45.444679Z",
+  "branch": "feat/en_model_bert_base_cased",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "lib/text-classifier/title-extractor-model.ts",
+    "tools/title-loop/README.md",
+    "tools/title-loop/eval_model.py",
+    "tools/title-loop/prepare_training_data.py",
+    "tools/title-loop/train_title_model.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "f23bac16b9cd",
+  "token_usage": {
+    "input_tokens": 1907,
+    "cache_creation_tokens": 460190,
+    "cache_read_tokens": 6856780,
+    "output_tokens": 20486,
+    "api_call_count": 89
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-29T00:51:45.215075Z",
+    "agent_lines": 0,
+    "human_added": 20,
+    "human_modified": 7,
+    "human_removed": 0,
+    "total_committed": 20,
+    "agent_percentage": 0
+  }
+}

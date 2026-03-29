@@ -49,7 +49,16 @@ def titles_match(extracted, expected):
         return False
     extracted_norm = norm_for_match(extracted)
     expected_parts = [norm_for_match(p) for p in expected.split("+")]
-    return all(part in extracted_norm for part in expected_parts)
+    # Primary: substring containment
+    if all(part in extracted_norm for part in expected_parts):
+        return True
+    # Fallback: word-level matching — handles reordered text from multi-line
+    # titles and extra whitespace from line-break hyphens (e.g. "SLOW- ROASTED")
+    extracted_words = set(extracted_norm.split())
+    return all(
+        all(w in extracted_words for w in part.split())
+        for part in expected_parts
+    )
 
 
 _LANG_RE = re.compile(r"\.(pl|en)\.real\.txt$")

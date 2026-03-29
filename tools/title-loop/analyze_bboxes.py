@@ -259,14 +259,85 @@ _SECTION_LABELS = {
 }
 
 
+def detect_columns(observations, min_gap=0.05):
+    """Detect text columns by projecting observations onto the X axis and finding gaps.
+
+    Projects each observation as an X interval [x, x+width], merges overlapping
+    intervals, then checks for gaps between merged intervals. If a gap exceeds
+    min_gap (fraction of page width), splits observations into separate columns.
+
+    Returns a list of observation lists, one per column (left to right).
+    If no significant column split is found, returns [observations].
+    """
+    if len(observations) < 4:
+        return [observations]
+
+    # Project onto X axis as intervals [left, right]
+    intervals = [(o["bbox"]["x"], o["bbox"]["x"] + o["bbox"]["width"], o) for o in observations]
+
+    # Sort by left edge
+    intervals.sort(key=lambda t: t[0])
+
+    # Merge overlapping intervals to find contiguous text regions on X axis
+    merged = []  # [(left, right, [observations])]
+    cur_left, cur_right = intervals[0][0], intervals[0][1]
+    cur_obs = [intervals[0][2]]
+
+    for left, right, obs in intervals[1:]:
+        if left <= cur_right + 0.01:  # allow tiny overlap/gap within column
+            cur_right = max(cur_right, right)
+            cur_obs.append(obs)
+        else:
+            merged.append((cur_left, cur_right, cur_obs))
+            cur_left, cur_right = left, right
+            cur_obs = [obs]
+    merged.append((cur_left, cur_right, cur_obs))
+
+    if len(merged) < 2:
+        return [observations]
+
+    # Check gaps between merged intervals
+    columns = []
+    current_col = merged[0][2]
+
+    for i in range(1, len(merged)):
+        gap = merged[i][0] - merged[i - 1][1]
+        if gap >= min_gap:
+            # Significant gap → column boundary
+            columns.append(current_col)
+            current_col = merged[i][2]
+        else:
+            current_col.extend(merged[i][2])
+    columns.append(current_col)
+
+    return columns if len(columns) > 1 else [observations]
+
+
 def cluster_into_regions(observations, y_tolerance=0.05, region_gap=0.04):
     """Cluster observations into spatial regions.
 
-    Step 1: Sort by Y.
+    Step 0: Detect columns (significant horizontal gaps).
+    Step 1: Within each column, sort by Y.
     Step 2: Group into horizontal bands (close Y + similar height).
     Step 3: Merge adjacent bands into regions (small vertical gap + overlapping X).
     Step 4: Compute region properties.
     """
+    if not observations:
+        return []
+
+    # Step 0: Detect columns
+    columns = detect_columns(observations)
+
+    all_regions = []
+    for col_obs in columns:
+        col_regions = _cluster_column(col_obs, y_tolerance, region_gap)
+        all_regions.extend(col_regions)
+
+    return all_regions
+
+
+def _cluster_column(observations, y_tolerance, region_gap):
+    """Cluster observations within a single column into regions."""
     if not observations:
         return []
 

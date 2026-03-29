@@ -729,7 +729,30 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     scored = [(score_title_region(r, regions), r) for r in regions]
     scored.sort(key=lambda x: -x[0])
 
-    # Try top 3 candidates
+    # Try merging top-2 regions when both are clearly title-like.
+    # Centered/artistic title layouts split the title across two regions
+    # (e.g. "Strucla" + "z makiem") that _merge_stacked_title_lines misses
+    # because they aren't left-aligned.
+    if len(scored) >= 2:
+        s1, r1 = scored[0]
+        s2, r2 = scored[1]
+        if s1 >= 0.65 and s2 >= 0.65:
+            # Order by vertical position
+            top = r1 if r1["bbox"]["y"] <= r2["bbox"]["y"] else r2
+            bot = r2 if r1["bbox"]["y"] <= r2["bbox"]["y"] else r1
+            gap = bot["bbox"]["y"] - (top["bbox"]["y"] + top["bbox"]["height"])
+            # Require horizontal overlap (rejects different columns)
+            r1_right = r1["bbox"]["x"] + r1["bbox"]["width"]
+            r2_right = r2["bbox"]["x"] + r2["bbox"]["width"]
+            x_overlap = min(r1_right, r2_right) - max(r1["bbox"]["x"], r2["bbox"]["x"])
+            if gap < 0.15 and x_overlap > 0:
+                h_ratio = min(r1["mean_line_height"], r2["mean_line_height"]) / max(r1["mean_line_height"], r2["mean_line_height"])
+                if h_ratio > 0.3:
+                    merged_text = _strip_trailing_ingredients(top["text"] + " " + bot["text"])
+                    if validate_title_text(merged_text):
+                        return merged_text
+
+    # Try top 3 candidates individually
     for score, region in scored[:3]:
         text = _strip_trailing_ingredients(region["text"])
         if validate_title_text(text):

@@ -10,38 +10,17 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
 
-class ExpoTextExtractorModule : Module() {
+class TextExtractorModule : Module() {
   private val recognizer by lazy {
     TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
   }
 
   override fun definition() = ModuleDefinition {
-    Name("ExpoTextExtractor")
+    Name("TextExtractor")
 
-    Constants(
-      "isSupported" to true
-    )
-
-    // Backward-compatible: returns string[] only
-    AsyncFunction("extractTextFromImage") { uriString: String, promise: Promise ->
-      try {
-        processImage(uriString) { inputImage, imageWidth, imageHeight ->
-          recognizer.process(inputImage)
-            .addOnSuccessListener { visionText ->
-              val recognizedTexts = visionText.textBlocks.map { it.text }
-              promise.resolve(recognizedTexts)
-            }
-            .addOnFailureListener { error ->
-              promise.reject(CodedException("err", error))
-            }
-        }
-      } catch (error: Exception) {
-        promise.reject(CodedException("UNKNOWN_ERROR", error.message ?: "Unknown error", error))
-      }
-    }
-
-    // New: returns [{text, confidence, bounds: {x, y, width, height}}]
-    AsyncFunction("extractTextWithBounds") { uriString: String, promise: Promise ->
+    // Returns [{text, confidence, bounds: {x, y, width, height}}]
+    // ML Kit v1 (play-services) does not expose block/line confidence, so confidence is always 0
+    AsyncFunction("extractText") { uriString: String, promise: Promise ->
       try {
         processImage(uriString) { inputImage, imageWidth, imageHeight ->
           recognizer.process(inputImage)
@@ -50,7 +29,6 @@ class ExpoTextExtractorModule : Module() {
                 val box = block.boundingBox
                 mapOf(
                   "text" to block.text,
-                  // ML Kit v1 (play-services) does not expose block/line confidence
                   "confidence" to 0f,
                   "bounds" to mapOf(
                     "x" to if (box != null && imageWidth > 0) box.left.toFloat() / imageWidth else 0f,

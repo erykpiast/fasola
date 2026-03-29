@@ -1,12 +1,12 @@
 /**
- * Native OCR implementation using expo-text-extractor
+ * Native OCR implementation using text-extractor module
  * Uses ML Kit on Android and Apple Vision on iOS
  */
 
 import type { DataUrl } from "@/lib/types/primitives";
 import { Paths } from "expo-file-system";
 import { writeAsStringAsync } from "expo-file-system/legacy";
-import { extractTextFromImage, isSupported } from "expo-text-extractor";
+import { extractTextFromImage } from "text-extractor";
 import type { OcrResult } from "./types";
 
 /**
@@ -44,15 +44,7 @@ export async function extractText(imageUri: DataUrl, _language?: string): Promis
     // Dump image to disk for debugging
     await dumpImageToDisk(imageUri);
 
-    if (!isSupported) {
-      console.warn("[OCR Bridge] OCR not supported on this device");
-      return {
-        success: false,
-        error: "OCR not supported on this device",
-      };
-    }
-
-    // Extract text using expo-text-extractor (ML Kit / Apple Vision)
+    // Extract text using text-extractor (ML Kit / Apple Vision)
     const textBlocks = await extractTextFromImage(imageUri);
 
     if (!textBlocks || textBlocks.length === 0) {

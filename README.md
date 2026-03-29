@@ -27,7 +27,7 @@ You can start developing by editing the files inside the **app** directory. This
 
 ## Testing on Physical Devices
 
-This app uses custom native modules (like `expo-text-extractor` for OCR) that require a development build instead of Expo Go.
+This app uses custom native modules (like `text-extractor` for OCR) that require a development build instead of Expo Go.
 
 ### iOS Device
 

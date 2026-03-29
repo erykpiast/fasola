@@ -943,11 +943,17 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         rel_h = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
         if rel_h < 0.55:
             continue
-        # Must be short text (titles, not paragraphs)
-        if len(region["text"]) > 60:
-            continue
-        # Must pass title validation
+        # Must be short text (titles, not paragraphs).
+        # For longer regions, try extracting just the leading title line(s),
+        # which handles cases where a title got merged with body text below it.
         text = _strip_trailing_ingredients(region["text"])
+        if len(text) > 60:
+            leading = _extract_leading_title(region)
+            if leading and len(leading) <= 60:
+                text = leading
+            else:
+                continue
+        # Must pass title validation
         if not validate_title_text(text):
             continue
         # Titles don't end with periods; body text sentences do

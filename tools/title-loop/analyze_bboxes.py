@@ -794,6 +794,9 @@ def validate_title_text(text):
     """Light text validation — reject obvious non-titles."""
     if len(text) < 4 or len(text) > 200:
         return False
+    # Body text sentences end with periods; titles don't
+    if text.rstrip().endswith("."):
+        return False
     if _MEASUREMENT_RE.search(text):
         return False
     # Check against section labels (strip diacritics, case-insensitive)
@@ -1022,9 +1025,6 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         # Must pass title validation
         if not validate_title_text(text):
             continue
-        # Titles don't end with periods; body text sentences do
-        if text.rstrip().endswith("."):
-            continue
         additional.append((region["bbox"]["y"], text))
 
     # Observation-level sub-title scan: find short ALL_CAPS observations
@@ -1054,17 +1054,17 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         # to avoid cross-column interference.
         obs_left = obs["bbox"]["x"]
         obs_right = obs_left + obs["bbox"]["width"]
-        gap_above = obs["bbox"]["y"]  # default: distance from top
+        gap_above = None
         for j in range(i - 1, -1, -1):
             prev = all_obs[j]
             p_left = prev["bbox"]["x"]
             p_right = p_left + prev["bbox"]["width"]
-            # Check X overlap
+            # Check X overlap (same column)
             if min(obs_right, p_right) - max(obs_left, p_left) > 0:
                 prev_bottom = prev["bbox"]["y"] + prev["bbox"]["height"]
                 gap_above = obs["bbox"]["y"] - prev_bottom
                 break
-        if gap_above < 0.03:
+        if gap_above is None or gap_above < 0.03:
             continue
         # Must be well-separated from primary title
         if abs(obs["bbox"]["y"] - primary_y) < 0.08:
@@ -1074,8 +1074,6 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         if obs_words <= primary_norm_words:
             continue
         if not validate_title_text(text):
-            continue
-        if text.rstrip().endswith("."):
             continue
         additional.append((obs["bbox"]["y"], text))
 

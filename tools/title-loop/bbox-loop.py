@@ -49,7 +49,11 @@ IMAGES_DIR = PROJECT_ROOT / "example-recipes"
 # --- Visualization ---
 
 def regenerate_visualizations(failures: list[dict]):
-    """Regenerate visualization PNGs for failure images using current clustering."""
+    """Regenerate visualization PNGs for failure images using current clustering.
+
+    Uses dewarped images from bboxes/dewarped/ as the base, falling back to
+    original HEIC images if dewarped version doesn't exist.
+    """
     try:
         from AppKit import NSImage, NSBitmapImageRep
     except ImportError:
@@ -62,6 +66,7 @@ def regenerate_visualizations(failures: list[dict]):
             del sys.modules[mod_name]
     from recognize_bboxes import load_nsimage, draw_visualization
 
+    DEWARPED_DIR = BBOXES_DIR / "dewarped"
     VIS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Visualize up to 20 failure images
@@ -78,13 +83,17 @@ def regenerate_visualizations(failures: list[dict]):
         data = json.loads(bbox_path.read_text())
         observations = data["observations"]
 
-        # Find the original image
+        # Prefer dewarped image, fall back to original
+        dewarped_path = DEWARPED_DIR / f"{stem}.png"
         ns_image = None
-        for ext in [".HEIC", ".heic", ".jpg", ".png"]:
-            img_path = IMAGES_DIR / f"{stem}{ext}"
-            if img_path.exists():
-                ns_image = load_nsimage(img_path)
-                break
+        if dewarped_path.exists():
+            ns_image = load_nsimage(dewarped_path)
+        if ns_image is None:
+            for ext in [".HEIC", ".heic", ".jpg", ".png"]:
+                img_path = IMAGES_DIR / f"{stem}{ext}"
+                if img_path.exists():
+                    ns_image = load_nsimage(img_path)
+                    break
 
         if ns_image is None:
             continue

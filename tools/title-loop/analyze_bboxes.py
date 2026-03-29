@@ -784,28 +784,75 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     scored = [(score_title_region(r, regions), r) for r in regions]
     scored.sort(key=lambda x: -x[0])
 
-    # Try merging top-2 regions when both are clearly title-like.
-    # Centered/artistic title layouts split the title across two regions
-    # (e.g. "Strucla" + "z makiem") that _merge_stacked_title_lines misses
-    # because they aren't left-aligned.
-    if len(scored) >= 2:
-        s1, r1 = scored[0]
-        s2, r2 = scored[1]
-        if s1 >= 0.65 and s2 >= 0.65:
-            # Order by vertical position
-            top = r1 if r1["bbox"]["y"] <= r2["bbox"]["y"] else r2
-            bot = r2 if r1["bbox"]["y"] <= r2["bbox"]["y"] else r1
-            gap = bot["bbox"]["y"] - (top["bbox"]["y"] + top["bbox"]["height"])
-            # Require horizontal overlap (rejects different columns)
-            r1_right = r1["bbox"]["x"] + r1["bbox"]["width"]
-            r2_right = r2["bbox"]["x"] + r2["bbox"]["width"]
-            x_overlap = min(r1_right, r2_right) - max(r1["bbox"]["x"], r2["bbox"]["x"])
-            if gap < 0.15 and x_overlap > 0:
-                h_ratio = min(r1["mean_line_height"], r2["mean_line_height"]) / max(r1["mean_line_height"], r2["mean_line_height"])
-                if h_ratio > 0.3:
-                    merged_text = _strip_trailing_ingredients(top["text"] + " " + bot["text"])
-                    if validate_title_text(merged_text):
-                        return merged_text
+    # Greedy multi-region merge: start with the best region and iteratively
+    # absorb nearby short-text regions that score >= 0.50.  This handles
+    # multi-line titles split across regions (e.g. foreign name + Polish
+    # subtitle, or word-per-line artistic layouts) that _merge_stacked_title_lines
+    # misses when lines aren't left-aligned or have different font sizes.
+    s1, r1 = scored[0]
+    if s1 >= 0.55:
+        acc_y_top = r1["bbox"]["y"]
+        acc_y_bot = r1["bbox"]["y"] + r1["bbox"]["height"]
+        acc_x_left = r1["bbox"]["x"]
+        acc_x_right = r1["bbox"]["x"] + r1["bbox"]["width"]
+        merged_regions = [r1]
+
+        remaining = [(s, r) for s, r in scored[1:] if s >= 0.50]
+        changed = True
+        while changed:
+            changed = False
+            new_remaining = []
+            for s, r in remaining:
+                r_top = r["bbox"]["y"]
+                r_bot = r["bbox"]["y"] + r["bbox"]["height"]
+
+                # Must be directly above or below accumulated region
+                gap_above = acc_y_top - r_bot
+                gap_below = r_top - acc_y_bot
+                if gap_above > 0 and gap_below > 0:
+                    vertical_gap = min(gap_above, gap_below)
+                elif gap_above <= 0 and gap_below <= 0:
+                    vertical_gap = 0  # overlapping
+                else:
+                    vertical_gap = max(gap_above, gap_below)
+                if vertical_gap > 0.10:
+                    new_remaining.append((s, r))
+                    continue
+
+                # Short text only (title-like, not body paragraphs)
+                if len(r["text"]) > 50:
+                    new_remaining.append((s, r))
+                    continue
+
+                # No recipe metadata
+                if _RECIPE_METADATA_RE.search(strip_diacritics(r["text"])):
+                    new_remaining.append((s, r))
+                    continue
+
+                # Require horizontal overlap or close proximity
+                r_left = r["bbox"]["x"]
+                r_right = r["bbox"]["x"] + r["bbox"]["width"]
+                x_overlap = min(acc_x_right, r_right) - max(acc_x_left, r_left)
+                if x_overlap <= -0.05:
+                    new_remaining.append((s, r))
+                    continue
+
+                # Merge this region
+                merged_regions.append(r)
+                acc_y_top = min(acc_y_top, r_top)
+                acc_y_bot = max(acc_y_bot, r_bot)
+                acc_x_left = min(acc_x_left, r_left)
+                acc_x_right = max(acc_x_right, r_right)
+                changed = True
+            remaining = new_remaining
+
+        if len(merged_regions) > 1:
+            merged_regions.sort(key=lambda r: r["bbox"]["y"])
+            merged_text = _strip_trailing_ingredients(
+                " ".join(r["text"] for r in merged_regions)
+            )
+            if validate_title_text(merged_text):
+                return merged_text
 
     # Try top 3 candidates individually
     for score, region in scored[:3]:

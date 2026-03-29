@@ -439,7 +439,17 @@ def _cluster_column(observations, y_tolerance, region_gap):
         else:
             height_ratio = 0
 
-        if gap < region_gap and x_overlap_ratio > 0.5 and height_ratio > 0.8:
+        # Check line width consistency — a significant width drop signals a new zone
+        # (e.g., title lines are wide, metadata lines that follow are narrow).
+        # Compare the band's total X span against the region's typical span.
+        prev_span = prev_max_x - prev_min_x
+        curr_span = curr_max_x - curr_min_x
+        if prev_span > 0 and curr_span > 0:
+            width_ratio = min(prev_span, curr_span) / max(prev_span, curr_span)
+        else:
+            width_ratio = 0
+
+        if gap < region_gap and x_overlap_ratio > 0.5 and height_ratio > 0.8 and width_ratio > 0.5:
             # Merge into current region
             regions[-1] = prev_all + band
         else:

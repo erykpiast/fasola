@@ -15,11 +15,8 @@ import sys
 from pathlib import Path
 
 import Vision
-from Foundation import NSURL
-from Quartz import (
-    CGImageSourceCreateWithURL,
-    CGImageSourceCreateImageAtIndex,
-)
+from AppKit import NSImage, NSBitmapImageRep
+from Quartz import CGImageGetWidth, CGImageGetHeight
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 OUTPUT_DIR = Path(__file__).parent / "bboxes"
@@ -34,17 +31,28 @@ def find_images():
     return sorted(set(files))
 
 
-def ocr_image_with_bboxes(image_path: Path) -> list[dict]:
-    """Run Apple Vision OCR on a single image. Returns list of observations with bounding boxes."""
-    url = NSURL.fileURLWithPath_(str(image_path))
-    source = CGImageSourceCreateWithURL(url, None)
-    if source is None:
-        print(f"  Could not load image: {image_path.name}")
-        return []
+def load_portrait_cgimage(image_path: Path):
+    """Load image and normalize to portrait orientation using EXIF metadata.
 
-    cg_image = CGImageSourceCreateImageAtIndex(source, 0, None)
+    NSImage automatically applies EXIF orientation, so a landscape-pixel
+    photo with orientation=6 (rotated 90° CW) becomes portrait.
+    This ensures OCR bounding boxes align with reading direction:
+    y = vertical page position, height = line height (font size proxy).
+    """
+    ns_image = NSImage.alloc().initWithContentsOfFile_(str(image_path))
+    if ns_image is None:
+        return None
+    bitmap = NSBitmapImageRep.alloc().initWithData_(ns_image.TIFFRepresentation())
+    if bitmap is None:
+        return None
+    return bitmap.CGImage()
+
+
+def ocr_image_with_bboxes(image_path: Path) -> list[dict]:
+    """Run Apple Vision OCR on a portrait-normalized image. Returns observations with bounding boxes."""
+    cg_image = load_portrait_cgimage(image_path)
     if cg_image is None:
-        print(f"  Could not create CGImage: {image_path.name}")
+        print(f"  Could not load image: {image_path.name}")
         return []
 
     request = Vision.VNRecognizeTextRequest.alloc().init()

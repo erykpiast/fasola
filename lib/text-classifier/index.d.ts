@@ -3,6 +3,8 @@
  * Shared types for platform-specific text classification implementations
  */
 
+import type { TextObservation } from "text-extractor";
+
 /**
  * Classification category type
  */
@@ -40,5 +42,6 @@ export interface ClassificationResult {
 export function classifyText(
   text: string,
   method?: ClassificationMethod,
-  language?: "en" | "pl"
+  language?: "en" | "pl",
+  observations?: Array<TextObservation>
 ): Promise<ClassificationResult>;

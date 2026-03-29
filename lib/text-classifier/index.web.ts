@@ -180,7 +180,8 @@ function classifyWithTfIdfMethod(text: string): ClassificationResult {
 export async function classifyText(
   text: string,
   method: ClassificationMethod = "embeddings",
-  _language?: "en" | "pl"
+  _language?: "en" | "pl",
+  _observations?: Array<{ text: string; confidence: number; bounds: { x: number; y: number; width: number; height: number } }>
 ): Promise<ClassificationResult> {
   const startTime = Date.now();
 

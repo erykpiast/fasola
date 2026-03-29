@@ -26,6 +26,8 @@ import {
   extractTitle,
   extractTitleWithEmbeddings,
 } from "./title-extractor";
+import { extractTitleFromBboxes } from "./title-extractor-bbox";
+import type { TextObservation } from "text-extractor";
 
 /**
  * Singleton pattern for model and label embeddings
@@ -178,13 +180,27 @@ async function tryModelTitle(
 
 async function classifyWithEmbeddingsMethod(
   text: string,
-  language?: "en" | "pl"
+  language?: "en" | "pl",
+  observations?: Array<TextObservation>
 ): Promise<ClassificationResult> {
   const startTime = Date.now();
 
   try {
-    // Try model-based title extraction first, fall back to heuristic
-    let title = await tryModelTitle(text, language);
+    // Try bbox-based title extraction first (when bounding box data is available)
+    let title: string | undefined;
+    if (observations && observations.length > 0) {
+      title = extractTitleFromBboxes(
+        observations.map((obs) => ({
+          text: obs.text,
+          confidence: obs.confidence,
+          bbox: obs.bounds,
+        }))
+      );
+    }
+    // Fall back to model-based, then heuristic title extraction
+    if (!title) {
+      title = await tryModelTitle(text, language);
+    }
     if (!title) {
       title = await extractTitleWithEmbeddings(
         text,
@@ -234,13 +250,14 @@ async function classifyWithEmbeddingsMethod(
 export async function classifyText(
   text: string,
   method: ClassificationMethod = "embeddings",
-  language?: "en" | "pl"
+  language?: "en" | "pl",
+  observations?: Array<TextObservation>
 ): Promise<ClassificationResult> {
   if (method === "tfidf") {
     return classifyWithTfIdfMethod(text);
   }
 
-  return classifyWithEmbeddingsMethod(text, language);
+  return classifyWithEmbeddingsMethod(text, language, observations);
 }
 
 /**

@@ -98,11 +98,13 @@ def titles_match(extracted, expected):
         for part in expected_parts
     ):
         return True
-    # Fallback: fuzzy word matching — tolerates single-character OCR errors
-    # per word (e.g. "PRUNE"→"PRUNC", "FETA"→"PETA", "DE"→"AE")
+    # Fallback: fuzzy word matching — tolerates OCR errors per word.
+    # Longer words (≥5 chars) allow distance 2 for multi-char OCR corruption
+    # at word boundaries (e.g. "PIERNICZKI"→"FERNICZKI", "LEMON"→"MON").
+    # Short words keep distance 1 to avoid false positives.
     return all(
         all(
-            any(_levenshtein(w, ew) <= 1 for ew in extracted_word_list)
+            any(_levenshtein(w, ew) <= (2 if len(w) >= 5 else 1) for ew in extracted_word_list)
             for w in part.split()
         )
         for part in expected_parts
@@ -947,6 +949,9 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         # Must pass title validation
         text = _strip_trailing_ingredients(region["text"])
         if not validate_title_text(text):
+            continue
+        # Titles don't end with periods; body text sentences do
+        if text.rstrip().endswith("."):
             continue
         additional.append((region["bbox"]["y"], text))
 

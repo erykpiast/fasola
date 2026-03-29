@@ -15,6 +15,7 @@ No Claude CLI calls — fully offline, runs unattended.
 """
 
 import argparse
+import gc
 import json
 import os
 import shutil
@@ -229,6 +230,15 @@ def main():
     skipped = 0
 
     for i, image_path in enumerate(images, 1):
+        # Skip already-processed images (resume after crash)
+        per_image_path = OUTPUT_DIR / f"{image_path.stem}.json"
+        if per_image_path.exists():
+            entry = json.loads(per_image_path.read_text())
+            all_results.append(entry)
+            processed += 1
+            print(f"[{i}/{len(images)}] {image_path.name} — cached ({entry['observation_count']} obs)")
+            continue
+
         print(f"[{i}/{len(images)}] {image_path.name}", end="", flush=True)
 
         dewarped_path = None
@@ -257,6 +267,10 @@ def main():
             continue
 
         observations = run_ocr(cg_image)
+
+        # Release heavy image objects before visualization
+        del cg_image
+
         if not observations:
             print(" — no text, skipping")
             skipped += 1
@@ -269,9 +283,11 @@ def main():
             vis_path = VIS_DIR / f"{image_path.stem}.png"
             draw_visualization(ocr_source_nsimage, observations, vis_path)
 
-        # Clean up temp dir
+        # Release all image objects and clean up temp dir
+        del ocr_source_nsimage
         if tmp_dir:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+        gc.collect()
 
         entry = {
             "image": image_path.name,
@@ -279,7 +295,6 @@ def main():
             "observations": observations,
         }
 
-        per_image_path = OUTPUT_DIR / f"{image_path.stem}.json"
         per_image_path.write_text(json.dumps(entry, ensure_ascii=False, indent=2), encoding="utf-8")
 
         all_results.append(entry)

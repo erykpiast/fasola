@@ -19,6 +19,7 @@ import gc
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -212,13 +213,72 @@ def draw_visualization(ns_image: NSImage, observations: list[dict], output_path:
     png_data.writeToFile_atomically_(str(output_path), True)
 
 
+def process_single_image(image_path: Path, dewarp: bool, visualize: bool) -> dict | None:
+    """Process a single image: dewarp → OCR → visualize. Returns entry dict or None."""
+    dewarped_path = None
+    ocr_source_nsimage = None
+
+    if dewarp:
+        dewarped_path = dewarp_image(image_path)
+
+    if dewarped_path:
+        ocr_source_nsimage = load_nsimage(dewarped_path)
+        cg_image = nsimage_to_cgimage(ocr_source_nsimage) if ocr_source_nsimage else None
+    else:
+        ns_image = load_nsimage(image_path)
+        if ns_image:
+            ocr_source_nsimage = ns_image
+            cg_image = nsimage_to_cgimage(ns_image)
+        else:
+            cg_image = None
+
+    if cg_image is None:
+        return None
+
+    observations = run_ocr(cg_image)
+    del cg_image
+
+    if not observations:
+        return None
+
+    if visualize and ocr_source_nsimage:
+        VIS_DIR.mkdir(parents=True, exist_ok=True)
+        vis_path = VIS_DIR / f"{image_path.stem}.png"
+        draw_visualization(ocr_source_nsimage, observations, vis_path)
+
+    entry = {
+        "image": image_path.name,
+        "observation_count": len(observations),
+        "observations": observations,
+    }
+
+    per_image_path = OUTPUT_DIR / f"{image_path.stem}.json"
+    per_image_path.write_text(json.dumps(entry, ensure_ascii=False, indent=2), encoding="utf-8")
+    return entry
+
+
 def main():
     parser = argparse.ArgumentParser(description="Extract bounding boxes from recipe images via Apple Vision OCR")
     parser.add_argument("--limit", type=int, default=0, help="Process only first N images (0 = all)")
     parser.add_argument("--dewarp", action="store_true", help="Apply page dewarping before OCR")
     parser.add_argument("--visualize", action="store_true", help="Save annotated image with bbox overlays")
+    parser.add_argument("--single", type=str, default="", help="Process a single image path (internal use)")
     args = parser.parse_args()
 
+    # Single-image mode: process one image in an isolated process, then exit.
+    # This prevents OOM by letting the OS reclaim all memory after each image.
+    # Writes result to a .status file (not stdout, which page-dewarp pollutes).
+    if args.single:
+        image_path = Path(args.single)
+        status_path = OUTPUT_DIR / f".{image_path.stem}.status"
+        entry = process_single_image(image_path, args.dewarp, args.visualize)
+        if entry:
+            status_path.write_text(json.dumps({"status": "ok", "observations": entry["observation_count"]}))
+        else:
+            status_path.write_text(json.dumps({"status": "skip"}))
+        sys.exit(0)
+
+    # Batch mode: iterate over all images, spawning a subprocess per image
     images = find_images()
     if not images:
         print(f"No images found in {IMAGES_DIR}")
@@ -231,7 +291,7 @@ def main():
 
     print(f"Processing {len(images)} images → {OUTPUT_DIR}/")
     if args.dewarp:
-        print("  Dewarping enabled")
+        print("  Dewarping enabled (subprocess per image to prevent OOM)")
     if args.visualize:
         print(f"  Visualization → {VIS_DIR}/")
 
@@ -251,55 +311,45 @@ def main():
 
         print(f"[{i}/{len(images)}] {image_path.name}", end="", flush=True)
 
-        dewarped_path = None
-        ocr_source_nsimage = None
-
+        # Spawn subprocess to process this image (memory isolation)
+        script_path = str(Path(__file__).resolve())
+        cmd = [sys.executable, script_path, "--single", str(image_path)]
         if args.dewarp:
-            dewarped_path = dewarp_image(image_path)
+            cmd.append("--dewarp")
+        if args.visualize:
+            cmd.append("--visualize")
 
-        if dewarped_path:
-            ocr_source_nsimage = load_nsimage(dewarped_path)
-            cg_image = nsimage_to_cgimage(ocr_source_nsimage) if ocr_source_nsimage else None
-        else:
-            ns_image = load_nsimage(image_path)
-            if ns_image:
-                ocr_source_nsimage = ns_image
-                cg_image = nsimage_to_cgimage(ns_image)
-            else:
-                cg_image = None
+        status_path = OUTPUT_DIR / f".{image_path.stem}.status"
+        status_path.unlink(missing_ok=True)
 
-        if cg_image is None:
-            print(" — could not load, skipping")
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=300,
+            env={**os.environ, "MPLBACKEND": "Agg"},
+        )
+
+        if result.returncode != 0:
+            print(f" — failed (exit {result.returncode})")
             skipped += 1
             continue
 
-        observations = run_ocr(cg_image)
-        del cg_image
+        # Read status from file (not stdout, which page-dewarp pollutes)
+        try:
+            status = json.loads(status_path.read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f" — no status file")
+            skipped += 1
+            continue
+        finally:
+            status_path.unlink(missing_ok=True)
 
-        if not observations:
+        if status.get("status") == "ok":
+            entry = json.loads(per_image_path.read_text())
+            all_results.append(entry)
+            processed += 1
+            print(f" — {status['observations']} observations")
+        else:
             print(" — no text, skipping")
             skipped += 1
-            continue
-
-        # Save visualization if requested (on dewarped image)
-        if args.visualize and ocr_source_nsimage:
-            vis_path = VIS_DIR / f"{image_path.stem}.png"
-            draw_visualization(ocr_source_nsimage, observations, vis_path)
-
-        del ocr_source_nsimage
-        gc.collect()
-
-        entry = {
-            "image": image_path.name,
-            "observation_count": len(observations),
-            "observations": observations,
-        }
-
-        per_image_path.write_text(json.dumps(entry, ensure_ascii=False, indent=2), encoding="utf-8")
-
-        all_results.append(entry)
-        processed += 1
-        print(f" — {len(observations)} observations")
 
     # Combined JSON
     combined_path = OUTPUT_DIR / "_all.json"

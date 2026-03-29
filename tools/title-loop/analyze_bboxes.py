@@ -14,6 +14,7 @@ import json
 import re
 import statistics
 import unicodedata
+from collections import defaultdict
 from pathlib import Path
 
 BBOXES_DIR = Path(__file__).parent / "bboxes"
@@ -365,7 +366,101 @@ def cluster_into_regions(observations, y_tolerance=0.05, region_gap=0.04):
         col_regions = _cluster_column(col_obs, y_tolerance, region_gap)
         all_regions.extend(col_regions)
 
+    # Step 5: Post-merge stacked title lines.
+    # Adjacent small regions (1-2 lines, short text) with similar left alignment
+    # and similar line height are likely parts of one multi-line title.
+    all_regions = _merge_stacked_title_lines(all_regions)
+
     return all_regions
+
+
+def _merge_stacked_title_lines(regions):
+    """Merge small regions that look like stacked title lines.
+
+    Groups regions by left-edge alignment (same X column), then within each
+    group merges consecutive small regions with similar line height.
+    This handles multi-line titles where each word/line is a separate region.
+    """
+    if len(regions) < 2:
+        return regions
+
+    # Group regions by left edge (quantize to 0.05)
+    x_groups = defaultdict(list)
+    for region in regions:
+        x_bucket = round(region["bbox"]["x"] * 20) / 20  # quantize to 0.05
+        x_groups[x_bucket].append(region)
+
+    merged_all = []
+
+    for x_bucket, group in x_groups.items():
+        # Sort by Y within the group
+        group.sort(key=lambda r: r["bbox"]["y"])
+
+        merged = [group[0]]
+
+        for region in group[1:]:
+            prev = merged[-1]
+
+            # Current region must be small; accumulated can be larger
+            curr_small = region["lines"] <= 2 and len(region["text"]) < 40
+            prev_not_huge = prev["lines"] <= 10 and len(prev["text"]) < 250
+
+            if not (prev_not_huge and curr_small):
+                merged.append(region)
+                continue
+
+            # Check left alignment (within 0.03)
+            if abs(prev["bbox"]["x"] - region["bbox"]["x"]) > 0.03:
+                merged.append(region)
+                continue
+
+            # Check line height similarity (within 40%)
+            prev_h = prev["mean_line_height"]
+            curr_h = region["mean_line_height"]
+            if prev_h > 0 and curr_h > 0:
+                h_ratio = min(prev_h, curr_h) / max(prev_h, curr_h)
+            else:
+                h_ratio = 0
+            if h_ratio < 0.6:
+                merged.append(region)
+                continue
+
+            # Check vertical proximity (gap < 0.08)
+            prev_bottom = prev["bbox"]["y"] + prev["bbox"]["height"]
+            curr_top = region["bbox"]["y"]
+            gap = curr_top - prev_bottom
+            if gap > 0.08:
+                merged.append(region)
+                continue
+
+            # Merge
+            combined_obs = prev["observations"] + region["observations"]
+            all_x = [o["bbox"]["x"] for o in combined_obs]
+            all_y = [o["bbox"]["y"] for o in combined_obs]
+            all_r = [o["bbox"]["x"] + o["bbox"]["width"] for o in combined_obs]
+            all_b = [o["bbox"]["y"] + o["bbox"]["height"] for o in combined_obs]
+
+            sorted_obs = sorted(combined_obs, key=lambda o: (round(o["bbox"]["y"], 2), round(o["bbox"]["x"], 2)))
+            text = " ".join(o["text"] for o in sorted_obs)
+
+            bbox_x = min(all_x)
+            bbox_y = min(all_y)
+            bbox_w = max(all_r) - bbox_x
+            bbox_h = max(all_b) - bbox_y
+            area = bbox_w * bbox_h if bbox_w > 0 and bbox_h > 0 else 1
+
+            merged[-1] = {
+                "observations": combined_obs,
+                "bbox": {"x": bbox_x, "y": bbox_y, "width": bbox_w, "height": bbox_h},
+                "lines": prev["lines"] + region["lines"],
+                "text": text,
+                "char_density": len(text) / area,
+                "mean_line_height": statistics.mean(o["bbox"]["height"] for o in combined_obs),
+            }
+
+        merged_all.extend(merged)
+
+    return merged_all
 
 
 def _cluster_column(observations, y_tolerance, region_gap):

@@ -319,7 +319,9 @@ _SECTION_LABELS = {
 # Polish recipe timing/servings metadata block (not a title).
 # Applied to diacritic-stripped text for OCR robustness.
 _RECIPE_METADATA_RE = re.compile(
-    r"\b(DLA\s+\d+\s+OSOB|GOTOWANIE\s+\d|PRZYGOTOWANIE\s+\d|MROZENIE\s+\d|OCZEKIWANIE\s+\d)",
+    r"\b(DLA\s+\d+\s+OSOB|GOTOWANIE\s+\d|PRZYGOTOWANIE\s+\d|MROZENIE\s+\d|OCZEKIWANIE\s+\d"
+    r"|PORCJ[EI]\b|\d+\s*PORCJ[EI]\b"
+    r"|\bSERVES\s+\d|\bMAKES\s*:?\s*\d|\bYIELD\b)",
     re.IGNORECASE,
 )
 
@@ -829,11 +831,15 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                     new_remaining.append((s, r))
                     continue
 
-                # Require horizontal overlap or close proximity
+                # Require horizontal overlap or close proximity.
+                # Short regions (single-word category labels like "TŁUSTE",
+                # "KWAŚNE") can sit to the right of the title with a larger
+                # horizontal gap — allow up to 0.15 gap for short text.
                 r_left = r["bbox"]["x"]
                 r_right = r["bbox"]["x"] + r["bbox"]["width"]
                 x_overlap = min(acc_x_right, r_right) - max(acc_x_left, r_left)
-                if x_overlap <= -0.05:
+                x_gap_limit = -0.15 if len(r["text"]) < 15 else -0.05
+                if x_overlap <= x_gap_limit:
                     new_remaining.append((s, r))
                     continue
 

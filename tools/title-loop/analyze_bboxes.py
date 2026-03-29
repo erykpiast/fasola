@@ -660,10 +660,12 @@ def score_title_region(region, all_regions):
     # Text length: short text high
     text_length_score = max(0, 1 - len(region["text"]) / 100)
 
-    # ALL_CAPS boost
+    # ALL_CAPS boost, scaled by relative line height.
+    # Small ALL_CAPS subtitles (e.g. Korean romanization) should not outscore
+    # larger mixed-case titles that have the tallest font on the page.
     alpha_chars = [c for c in region["text"] if c.isalpha()]
     upper_ratio = sum(1 for c in alpha_chars if c.isupper()) / len(alpha_chars) if alpha_chars else 0
-    caps_boost = 1.0 if upper_ratio > 0.8 else 0.0
+    caps_boost = (1.0 if upper_ratio > 0.8 else 0.0) * relative_line_height
 
     # Region width: titles span a meaningful portion of the page.
     # Narrow regions (< 0.10) are often OCR noise from book gutters/edges.

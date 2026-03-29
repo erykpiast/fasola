@@ -774,8 +774,9 @@ function scoreTitleRegion(
   );
 
   // ALL_CAPS boost, scaled by relative line height
+  // Use Unicode property escape to match all alphabetic characters (like Python's str.isalpha())
   const alphaChars = [...region.text].filter((c) =>
-    /[a-zA-Z]/.test(c),
+    /\p{L}/u.test(c),
   );
   const upperRatio =
     alphaChars.length > 0
@@ -869,7 +870,7 @@ function extractLeadingTitle(
     return undefined;
   }
   const firstAlpha = [...first.text].find((c) =>
-    /[a-zA-Z]/.test(c),
+    /\p{L}/u.test(c),
   );
   if (
     firstAlpha !== undefined &&
@@ -1133,7 +1134,8 @@ export function extractTitleFromBboxes(
       continue;
     }
     // Must be mostly uppercase (title-like)
-    const alpha = [...text].filter((c) => /[a-zA-Z]/.test(c));
+    // Use Unicode property escape to match all alphabetic characters (like Python's str.isalpha())
+    const alpha = [...text].filter((c) => /\p{L}/u.test(c));
     if (
       alpha.length === 0 ||
       alpha.filter((c) => c === c.toUpperCase()).length /

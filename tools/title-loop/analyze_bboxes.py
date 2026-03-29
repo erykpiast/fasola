@@ -927,6 +927,14 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     if primary_text is None:
         return None
 
+    # Compute primary region X bounds for multi-recipe column detection.
+    primary_x_left = None
+    primary_x_right = None
+    for _s, r in scored:
+        if id(r) in used_regions:
+            primary_x_left = r["bbox"]["x"] if primary_x_left is None else min(primary_x_left, r["bbox"]["x"])
+            primary_x_right = (r["bbox"]["x"] + r["bbox"]["width"]) if primary_x_right is None else max(primary_x_right, r["bbox"]["x"] + r["bbox"]["width"])
+
     # Multi-recipe page detection: look for additional title-like regions
     # that are well-separated from the primary title.  On pages with 2-3
     # recipes, each recipe title has a notably larger font than body text.
@@ -936,12 +944,22 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         if id(region) in used_regions:
             continue
         # Must be well-separated vertically (different recipe section)
+        # OR horizontally separated (side-by-side recipes in different columns)
         y_gap = abs(region["bbox"]["y"] - primary_y)
-        if y_gap < 0.15:
+        x_separated = False
+        if primary_x_left is not None:
+            r_left = region["bbox"]["x"]
+            r_right = r_left + region["bbox"]["width"]
+            x_separated = (r_right < primary_x_left - 0.05) or (r_left > primary_x_right + 0.05)
+        if y_gap < 0.15 and not x_separated:
             continue
-        # Must have large font relative to page (title-sized, not body)
+        # Must have large font relative to page (title-sized, not body).
+        # For X-separated candidates (side-by-side columns), relax the
+        # threshold because body text in the other column may have a
+        # larger font than the title in this column.
         rel_h = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
-        if rel_h < 0.55:
+        min_rel_h = 0.40 if x_separated else 0.55
+        if rel_h < min_rel_h:
             continue
         # Must be short text (titles, not paragraphs).
         # For longer regions, try extracting just the leading title line(s),

@@ -376,7 +376,7 @@ _RECIPE_METADATA_RE = re.compile(
 )
 
 
-def detect_columns(observations, min_gap=0.03):
+def detect_columns(observations, min_gap=0.025):
     """Detect text columns by finding the X position where most observations have a gap.
 
     Wide-spanning elements (titles, headers) can bridge column gaps, so we can't just
@@ -1027,10 +1027,67 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             continue
         additional.append((region["bbox"]["y"], text))
 
+    # Observation-level sub-title scan: find short ALL_CAPS observations
+    # buried inside large regions that have significantly larger vertical
+    # gaps above them than typical line spacing.  These are sub-recipe
+    # titles (e.g. "EGG WAFFLES", "CRISP WAFFLES") on multi-recipe pages
+    # where all text has a similar font size, so region-level detection
+    # misses them.
+    primary_norm_words = set(norm_for_match(primary_text).split())
+    all_obs = sorted(
+        [o for r in regions for o in r["observations"]],
+        key=lambda o: o["bbox"]["y"],
+    )
+    for i, obs in enumerate(all_obs):
+        text = obs["text"].strip()
+        if len(text) < 4 or len(text) > 30:
+            continue
+        # Section labels end with ":"
+        if text.endswith(":"):
+            continue
+        # Must be mostly uppercase (title-like)
+        alpha = [c for c in text if c.isalpha()]
+        if not alpha or sum(1 for c in alpha if c.isupper()) / len(alpha) < 0.8:
+            continue
+        # Must have a significant vertical gap above (> 3x typical spacing).
+        # Only compare to observations in the same column (overlapping X range)
+        # to avoid cross-column interference.
+        obs_left = obs["bbox"]["x"]
+        obs_right = obs_left + obs["bbox"]["width"]
+        gap_above = obs["bbox"]["y"]  # default: distance from top
+        for j in range(i - 1, -1, -1):
+            prev = all_obs[j]
+            p_left = prev["bbox"]["x"]
+            p_right = p_left + prev["bbox"]["width"]
+            # Check X overlap
+            if min(obs_right, p_right) - max(obs_left, p_left) > 0:
+                prev_bottom = prev["bbox"]["y"] + prev["bbox"]["height"]
+                gap_above = obs["bbox"]["y"] - prev_bottom
+                break
+        if gap_above < 0.03:
+            continue
+        # Must be well-separated from primary title
+        if abs(obs["bbox"]["y"] - primary_y) < 0.08:
+            continue
+        # Skip if all words already in primary title
+        obs_words = set(norm_for_match(text).split())
+        if obs_words <= primary_norm_words:
+            continue
+        if not validate_title_text(text):
+            continue
+        if text.rstrip().endswith("."):
+            continue
+        additional.append((obs["bbox"]["y"], text))
+
     if additional:
         additional.sort(key=lambda t: t[0])
+        # Deduplicate by normalized words
+        seen_words = set()
         for _, text in additional:
-            primary_text += " " + text
+            words = frozenset(norm_for_match(text).split())
+            if words not in seen_words:
+                seen_words.add(words)
+                primary_text += " " + text
 
     return primary_text
 

@@ -697,6 +697,24 @@ def validate_title_text(text):
     return True
 
 
+def _strip_trailing_ingredients(text):
+    """Strip ingredient/recipe text that got merged after the title.
+
+    When a title region accidentally includes ingredient lines below it
+    (e.g. "MAFTOUL SALAD 2 tablespoons extra-virgin..."), extract just
+    the title portion before the first measurement.
+    """
+    m = _MEASUREMENT_RE.search(text)
+    if not m:
+        return text
+    prefix = text[: m.start()].strip()
+    # Remove trailing numbers left after truncation (e.g. "TITLE 3" → "TITLE")
+    prefix = re.sub(r"\s+\d+\s*$", "", prefix).strip()
+    if len(prefix) >= 4:
+        return prefix
+    return text
+
+
 def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04):
     """Cluster into regions, score for title, validate. Return best title text."""
     regions = cluster_into_regions(observations, y_tolerance, region_gap)
@@ -711,8 +729,9 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
 
     # Try top 3 candidates
     for score, region in scored[:3]:
-        if validate_title_text(region["text"]):
-            return region["text"]
+        text = _strip_trailing_ingredients(region["text"])
+        if validate_title_text(text):
+            return text
 
     return None
 

@@ -135,9 +135,8 @@ def run_ocr(cg_image) -> list[dict]:
 def draw_visualization(ns_image: NSImage, observations: list[dict], output_path: Path,
                        y_tolerance: float = 0.03, region_gap: float = 0.02):
     """Draw observation boxes (blue) and clustered region boundaries (yellow/green) on the image."""
-    from AppKit import NSColor, NSBezierPath, NSFont, NSString
-    from AppKit import NSFontAttributeName, NSForegroundColorAttributeName
-    from Foundation import NSMakeRect, NSDictionary
+    from AppKit import NSColor, NSBezierPath
+    from Foundation import NSMakeRect
 
     sys.path.insert(0, str(Path(__file__).parent))
     from analyze_bboxes import cluster_into_regions, score_title_region
@@ -178,8 +177,6 @@ def draw_visualization(ns_image: NSImage, observations: list[dict], output_path:
     # --- Draw clustered regions (yellow border, green for title) ---
     yellow = NSColor.colorWithCalibratedRed_green_blue_alpha_(1.0, 0.9, 0.0, 0.9)
     green = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.0, 1.0, 0.0, 0.9)
-    white_bg = NSColor.colorWithCalibratedRed_green_blue_alpha_(1.0, 1.0, 1.0, 0.85)
-    font = NSFont.boldSystemFontOfSize_(max(14, h / 60))
 
     for i, region in enumerate(regions):
         b = region["bbox"]
@@ -194,20 +191,6 @@ def draw_visualization(ns_image: NSImage, observations: list[dict], output_path:
         path = NSBezierPath.bezierPathWithRect_(rect)
         path.setLineWidth_(3.0)
         path.stroke()
-
-        # Label
-        score = score_title_region(region, regions)
-        label = f"R{i}: {region['lines']}L score={score:.2f}"
-        attrs = NSDictionary.dictionaryWithObjects_forKeys_(
-            [font, color], [NSFontAttributeName, NSForegroundColorAttributeName]
-        )
-        label_str = NSString.stringWithString_(label)
-        label_size = label_str.sizeWithAttributes_(attrs)
-        bg_rect = NSMakeRect(rx, ry + rh - label_size.height - 4, label_size.width + 6, label_size.height + 4)
-        white_bg.set()
-        NSBezierPath.fillRect_(bg_rect)
-        label_str.drawAtPoint_withAttributes_((rx + 3, ry + rh - label_size.height - 2), attrs)
-
     ns_image.unlockFocus()
 
     # Save as PNG

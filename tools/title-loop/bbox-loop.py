@@ -28,7 +28,7 @@ from pathlib import Path
 
 # --- Configuration ---
 MAX_ITERATIONS = 20
-ACCURACY_THRESHOLD = 0.80  # target: 80%+ on both PL and EN
+ACCURACY_THRESHOLD = 0.95  # target: 95%+ on both PL and EN
 CLAUDE_TIMEOUT = 1800  # 30 minutes per Claude session
 CLAUDE_STALL_TIMEOUT = 180  # kill if no output for 3 minutes
 CLAUDE_MODEL = "opus"
@@ -343,7 +343,7 @@ def build_prompt(iteration: int, results: dict, history: str) -> str:
 - Overall: {accuracy:.1%} ({results['matched']}/{results['total']})
 - PL: {pl['accuracy']:.1%} ({pl['matched']}/{pl['total']})
 - EN: {en['accuracy']:.1%} ({en['matched']}/{en['total']})
-- Target: ≥80% on both PL and EN
+- Target: ≥95% on both PL and EN
 
 ## Failure examples (iteration {iteration})
 

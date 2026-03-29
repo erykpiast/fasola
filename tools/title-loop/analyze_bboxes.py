@@ -791,6 +791,10 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     # multi-line titles split across regions (e.g. foreign name + Polish
     # subtitle, or word-per-line artistic layouts) that _merge_stacked_title_lines
     # misses when lines aren't left-aligned or have different font sizes.
+    primary_text = None
+    primary_y = None
+    used_regions = set()
+
     s1, r1 = scored[0]
     if s1 >= 0.55:
         acc_y_top = r1["bbox"]["y"]
@@ -858,15 +862,54 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                 " ".join(r["text"] for r in merged_regions)
             )
             if validate_title_text(merged_text):
-                return merged_text
+                primary_text = merged_text
+                primary_y = merged_regions[0]["bbox"]["y"]
+                used_regions = {id(r) for r in merged_regions}
 
-    # Try top 3 candidates individually
-    for score, region in scored[:3]:
+    # Try top 3 candidates individually if no merged title found
+    if primary_text is None:
+        for score, region in scored[:3]:
+            text = _strip_trailing_ingredients(region["text"])
+            if validate_title_text(text):
+                primary_text = text
+                primary_y = region["bbox"]["y"]
+                used_regions = {id(region)}
+                break
+
+    if primary_text is None:
+        return None
+
+    # Multi-recipe page detection: look for additional title-like regions
+    # that are well-separated from the primary title.  On pages with 2-3
+    # recipes, each recipe title has a notably larger font than body text.
+    max_mlh = max(r["mean_line_height"] for r in regions)
+    additional = []
+    for _score, region in scored:
+        if id(region) in used_regions:
+            continue
+        # Must be well-separated vertically (different recipe section)
+        y_gap = abs(region["bbox"]["y"] - primary_y)
+        if y_gap < 0.15:
+            continue
+        # Must have large font relative to page (title-sized, not body)
+        rel_h = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
+        if rel_h < 0.7:
+            continue
+        # Must be short text (titles, not paragraphs)
+        if len(region["text"]) > 60:
+            continue
+        # Must pass title validation
         text = _strip_trailing_ingredients(region["text"])
-        if validate_title_text(text):
-            return text
+        if not validate_title_text(text):
+            continue
+        additional.append((region["bbox"]["y"], text))
 
-    return None
+    if additional:
+        additional.sort(key=lambda t: t[0])
+        for _, text in additional:
+            primary_text += " " + text
+
+    return primary_text
 
 
 # ── Fragmentation analysis ───────────────────────────────────────────────────

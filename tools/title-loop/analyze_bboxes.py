@@ -54,6 +54,22 @@ def norm_for_match(s):
     return ocr_normalize(strip_diacritics(s))
 
 
+def _levenshtein(a, b):
+    """Compute Levenshtein edit distance between two strings."""
+    if len(a) < len(b):
+        return _levenshtein(b, a)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a):
+        curr = [i + 1]
+        for j, cb in enumerate(b):
+            cost = 0 if ca == cb else 1
+            curr.append(min(curr[j] + 1, prev[j + 1] + 1, prev[j] + cost))
+        prev = curr
+    return prev[-1]
+
+
 def titles_match(extracted, expected):
     if not extracted:
         return False
@@ -77,8 +93,18 @@ def titles_match(extracted, expected):
     adjacent_pairs = {extracted_word_list[i] + extracted_word_list[i + 1]
                       for i in range(len(extracted_word_list) - 1)}
     all_forms = extracted_words | adjacent_pairs
-    return all(
+    if all(
         all(w in all_forms for w in part.split())
+        for part in expected_parts
+    ):
+        return True
+    # Fallback: fuzzy word matching — tolerates single-character OCR errors
+    # per word (e.g. "PRUNE"→"PRUNC", "FETA"→"PETA", "DE"→"AE")
+    return all(
+        all(
+            any(_levenshtein(w, ew) <= 1 for ew in extracted_word_list)
+            for w in part.split()
+        )
         for part in expected_parts
     )
 

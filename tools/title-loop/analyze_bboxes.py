@@ -41,7 +41,10 @@ def ocr_normalize(s):
 
 
 def norm_for_match(s):
-    return ocr_normalize(strip_diacritics(normalize(s).replace("-", " ").replace("_", " ")))
+    s = normalize(s).replace("-", " ").replace("_", " ")
+    # Re-collapse whitespace after hyphen/underscore removal (e.g. "SLOW- ROASTED" → "SLOW ROASTED")
+    s = re.sub(r"\s+", " ", s).strip()
+    return ocr_normalize(strip_diacritics(s))
 
 
 def titles_match(extracted, expected):

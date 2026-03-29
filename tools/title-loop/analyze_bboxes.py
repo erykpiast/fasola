@@ -941,7 +941,7 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             continue
         # Must have large font relative to page (title-sized, not body)
         rel_h = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
-        if rel_h < 0.7:
+        if rel_h < 0.55:
             continue
         # Must be short text (titles, not paragraphs)
         if len(region["text"]) > 60:

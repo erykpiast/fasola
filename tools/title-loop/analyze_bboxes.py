@@ -259,6 +259,13 @@ _SECTION_LABELS = {
     "instrukcje", "uwagi", "notatki", "podawanie",
 }
 
+# Polish recipe timing/servings metadata block (not a title).
+# Applied to diacritic-stripped text for OCR robustness.
+_RECIPE_METADATA_RE = re.compile(
+    r"\b(DLA\s+\d+\s+OSOB|GOTOWANIE\s+\d|PRZYGOTOWANIE\s+\d|MROZENIE\s+\d|OCZEKIWANIE\s+\d)",
+    re.IGNORECASE,
+)
+
 
 def detect_columns(observations, min_gap=0.03):
     """Detect text columns by finding the X position where most observations have a gap.
@@ -654,6 +661,9 @@ def validate_title_text(text):
     # Check against section labels (strip diacritics, case-insensitive)
     cleaned = strip_diacritics(text.strip().rstrip(":").lower())
     if cleaned in _SECTION_LABELS:
+        return False
+    # Reject Polish recipe metadata blocks (servings/timing lines, not titles)
+    if _RECIPE_METADATA_RE.search(strip_diacritics(text)):
         return False
     return True
 

@@ -449,7 +449,10 @@ def _cluster_column(observations, y_tolerance, region_gap):
         else:
             width_ratio = 0
 
-        if gap < region_gap and x_overlap_ratio > 0.5 and height_ratio > 0.8 and width_ratio > 0.5:
+        # Width ratio threshold: only split when the narrower band is less than 1/3
+        # the wider band. This catches title→metadata transitions (0.10 vs 0.40)
+        # while allowing ragged title wrapping (0.12 vs 0.24).
+        if gap < region_gap and x_overlap_ratio > 0.5 and height_ratio > 0.8 and width_ratio > 0.33:
             # Merge into current region
             regions[-1] = prev_all + band
         else:

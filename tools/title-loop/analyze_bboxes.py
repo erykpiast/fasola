@@ -615,8 +615,17 @@ def _cluster_column(observations, y_tolerance, region_gap):
 
 def score_title_region(region, all_regions):
     """Score a region for title-likeness using the 6 features from spec 022."""
-    # Line count score: 1-3 lines high, 4+ low
-    line_count_score = max(0, 1 - (region["lines"] - 1) / 4)
+    # Line count score: sweet spot at 2-3 lines (typical titles).
+    # Single lines are often OCR fragments; 4+ lines degrade gently.
+    n = region["lines"]
+    if n <= 1:
+        line_count_score = 0.75  # single line — may be fragment
+    elif n <= 3:
+        line_count_score = 1.0   # sweet spot for titles
+    elif n <= 6:
+        line_count_score = max(0.2, 1 - (n - 3) / 5)
+    else:
+        line_count_score = 0.1
 
     # Relative line height: tallest mean_line_height among all regions
     max_mlh = max(r["mean_line_height"] for r in all_regions)

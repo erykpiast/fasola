@@ -317,7 +317,6 @@ No new security implications. All processing is on-device from user-provided ima
 - Update `recognize_bboxes.py` to detect EXIF orientation and rotate images to portrait before OCR
 - Re-process all 407 images to get portrait-normalized bounding boxes
 - Fix `extract_expected_title` in `analyze_bboxes.py` to match `eval_model.py`
-- Verify the new bbox data has sensible coordinates (width > height for text lines, y increases top-to-bottom)
 
 ### Phase 2: Clustering algorithm + evaluation
 

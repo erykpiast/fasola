@@ -29,6 +29,7 @@ from Quartz import CGImageGetWidth, CGImageGetHeight
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 OUTPUT_DIR = Path(__file__).parent / "bboxes"
+DEWARPED_DIR = OUTPUT_DIR / "dewarped"
 VIS_DIR = OUTPUT_DIR / "visualized"
 IMAGES_DIR = REPO_ROOT / "example-recipes"
 IMAGE_EXTENSIONS = ("*.jpg", "*.jpeg", "*.png", "*.heic", "*.HEIC", "*.JPG", "*.JPEG", "*.PNG")
@@ -54,37 +55,46 @@ def nsimage_to_cgimage(ns_image: NSImage):
     return bitmap.CGImage()
 
 
-def dewarp_image(image_path: Path) -> tuple[Path | None, str | None]:
-    """Apply page dewarping. Returns (dewarped_png_path, tmp_dir) or (None, None)."""
+def dewarp_image(image_path: Path) -> Path | None:
+    """Apply page dewarping. Saves dewarped PNG to DEWARPED_DIR and returns its path."""
     try:
         os.environ.setdefault("MPLBACKEND", "Agg")
         from page_dewarp.image import WarpedImage
         from page_dewarp.options import Config
     except ImportError:
-        return None, None
+        return None
+
+    # Check if already dewarped
+    DEWARPED_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = DEWARPED_DIR / f"{image_path.stem}.png"
+    if output_path.exists():
+        return output_path
 
     ns_image = load_nsimage(image_path)
     if ns_image is None:
-        return None, None
+        return None
 
     tmp_dir = tempfile.mkdtemp(prefix="dewarp_")
     try:
         bitmap = NSBitmapImageRep.alloc().initWithData_(ns_image.TIFFRepresentation())
         if bitmap is None:
             shutil.rmtree(tmp_dir, ignore_errors=True)
-            return None, None
+            return None
         png_data = bitmap.representationUsingType_properties_(4, None)
         tmp_input = Path(tmp_dir) / "input.png"
         png_data.writeToFile_atomically_(str(tmp_input), True)
 
         warped = WarpedImage(tmp_input, config=Config(NO_BINARY=1, OUTPUT_ZOOM=1.0))
         if warped.written:
-            return Path(warped.outfile), tmp_dir
+            # Copy dewarped result to persistent location
+            shutil.copy2(str(warped.outfile), str(output_path))
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            return output_path
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        return None, None
+        return None
     except Exception:
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        return None, None
+        return None
 
 
 def run_ocr(cg_image) -> list[dict]:
@@ -242,11 +252,10 @@ def main():
         print(f"[{i}/{len(images)}] {image_path.name}", end="", flush=True)
 
         dewarped_path = None
-        tmp_dir = None
         ocr_source_nsimage = None
 
         if args.dewarp:
-            dewarped_path, tmp_dir = dewarp_image(image_path)
+            dewarped_path = dewarp_image(image_path)
 
         if dewarped_path:
             ocr_source_nsimage = load_nsimage(dewarped_path)
@@ -262,31 +271,22 @@ def main():
         if cg_image is None:
             print(" — could not load, skipping")
             skipped += 1
-            if tmp_dir:
-                shutil.rmtree(tmp_dir, ignore_errors=True)
             continue
 
         observations = run_ocr(cg_image)
-
-        # Release heavy image objects before visualization
         del cg_image
 
         if not observations:
             print(" — no text, skipping")
             skipped += 1
-            if tmp_dir:
-                shutil.rmtree(tmp_dir, ignore_errors=True)
             continue
 
-        # Save visualization if requested
+        # Save visualization if requested (on dewarped image)
         if args.visualize and ocr_source_nsimage:
             vis_path = VIS_DIR / f"{image_path.stem}.png"
             draw_visualization(ocr_source_nsimage, observations, vis_path)
 
-        # Release all image objects and clean up temp dir
         del ocr_source_nsimage
-        if tmp_dir:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
         gc.collect()
 
         entry = {

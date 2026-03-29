@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "30ec062b23c2",
+  "strategy": "manual-commit",
+  "branch": "feat/en_model_bert_base_cased",
+  "checkpoints_count": 8,
+  "files_touched": [
+    "tools/title-loop/run_pipeline.sh",
+    "tools/title-loop/train_title_model.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/30/ec062b23c2/0/metadata.json",
+      "transcript": "/30/ec062b23c2/0/full.jsonl",
+      "context": "/30/ec062b23c2/0/context.md",
+      "content_hash": "/30/ec062b23c2/0/content_hash.txt",
+      "prompt": "/30/ec062b23c2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 41,
+    "cache_creation_tokens": 258358,
+    "cache_read_tokens": 1845665,
+    "output_tokens": 4691,
+    "api_call_count": 27
+  }
+}

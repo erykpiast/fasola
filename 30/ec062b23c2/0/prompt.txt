@@ -1,0 +1,1263 @@
+<local-command-stderr>Error: Shell command permission check failed for pattern "!`claudekit list agents`": This command requires approval</local-command-stderr>
+
+---
+
+<local-command-stderr>Error: Shell command permission check failed for pattern "!`claudekit list agents`": This command requires approval</local-command-stderr>
+
+---
+
+/spec:execute @specs/021_en_model_upgrade/feat-en-model-bert-base-cased.md                                                                                                                              
+  ⎿  Error: Shell command permission check failed for pattern "!claudekit list agents": This command requires approval       
+
+How so? Is it a worktree problem?
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 02:56:15
+  [2m   Duration [22m 326ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+ok
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are there any "Not implemented yet" placeholders or TODO comments in production code?
+
+**Code Quality:**
+• Is there duplicated logic that should be extracted?
+
+**Integration & Refactoring:**
+• Does the code structure still make sense after your additions?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:03:47
+  [2m   Duration [22m 318ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+# Code Review
+
+## Current Repository State
+ M lib/text-classifier/title-extractor-model.ts
+ M tools/title-loop/README.md
+ M tools/title-loop/eval_model.py
+ M tools/title-loop/prepare_training_data.py
+ M tools/title-loop/train_title_model.py
+---
+ lib/text-classifier/title-extractor-model.ts |  2 +-
+ tools/title-loop/README.md                   |  2 +-
+ tools/title-loop/eval_model.py               | 13 +++++++++++++
+ tools/title-loop/prepare_training_data.py    |  2 +-
+ tools/title-loop/train_title_model.py        |  6 +++---
+ 5 files changed, 19 insertions(+), 6 deletions(-)
+---
+ad01916 docs(ml): add spec for EN model upgrade to bert-base-cased
+49d918d chore: remove legacy photos-to-recipes migration
+dd5fc07 fix(ml): export models with int32 inputs to match app runtime
+29d48ca fix(ml): skip directories when copying tokenizer files during export
+1ea43be fix(ci): specify pip cache dependency path for setup-python
+
+## Pre-Review Analysis: Think This Through End-to-End
+
+Before launching review agents, analyze the complete impact and context:
+
+### Impact Assessment
+- **System Impact**: What systems, services, or components could be affected by these changes?
+- **Deployment Context**: What's the risk level and timeline for these changes?
+- **Integration Points**: Are there external dependencies, APIs, or team workflows involved?
+- **Stakeholder Impact**: Who depends on the code being reviewed?
+
+### Review Strategy Coordination
+Based on impact assessment and ****, determine:
+- **Critical vs. Nice-to-Have**: Which review aspects are CRITICAL vs. optional for this change?
+- **Potential Conflicts**: Could findings from different review areas suggest competing solutions?
+- **Shared Context**: What context should all review agents be aware of?
+- **Appropriate Rigor**: What level of analysis matches the change scope and risk?
+
+## Review Strategy
+
+Based on **** and the impact assessment above, determine which review agents are needed:
+
+If reviewing "changes" or recent modifications:
+1. Analyze the file types that have been modified
+2. Launch only relevant review agents:
+   - **Documentation files only** (*.md, *.txt, README): Launch only Documentation & API Review agent
+   - **Test files only** (*test.*, *.spec.*, tests/): Launch Testing Quality Review and Code Quality Review agents
+   - **Config files only** (*.json, *.yaml, *.toml, .*rc): Launch Security & Dependencies Review and Architecture Review agents
+   - **Source code files** (*.ts, *.js, *.py, etc.): Launch all 6 review agents
+   - **Mixed changes**: Launch agents relevant to each file type present
+
+If reviewing a specific directory or broad scope:
+- Launch all 6 review agents for comprehensive coverage
+
+Use the Task tool to invoke the appropriate code-review-expert agents concurrently with enhanced thinking trigger instructions:
+
+## 1. Architecture & Design Review
+```
+Subagent: code-review-expert
+Description: Architecture review with end-to-end analysis
+Prompt: Review the architecture and design patterns in: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: module organization, separation of concerns, dependency management, abstraction levels, design pattern usage, and architectural consistency. Check available experts with claudekit for domain-specific patterns.
+
+THINK THIS THROUGH END-TO-END:
+- Trace architectural impacts: How does this change affect all dependent systems?
+- Map the complete data/control flow through the architecture
+- Identify what breaks when components fail or change
+- Consider the full deployment and integration pipeline
+- Analyze how this fits into the broader system architecture
+
+Check available experts with claudekit for domain-specific patterns.
+```
+
+## 2. Code Quality Review
+```
+Subagent: code-review-expert
+Description: Code quality review  
+Prompt: Review code quality and maintainability in: 
+Focus on: readability, naming conventions, code complexity, DRY principles, code smells, refactoring opportunities, and consistent coding patterns. Pull domain-specific quality metrics from available experts.
+```
+
+## 3. Security & Dependencies Review
+```
+Subagent: code-review-expert
+Description: Security and dependencies review with alternative hypothesis analysis
+Prompt: Perform security and dependency analysis of: 
+
+CONTEXT: [Include findings from Pre-Review Analysis above - system impact, deployment context, integration points]
+
+Primary Focus: input validation, injection vulnerabilities, authentication/authorization, secrets management, dependency vulnerabilities, license compliance, version pinning, and supply chain security. Use security insights from domain experts if available.
+
+CONSIDER ALTERNATIVE HYPOTHESES:
+- Beyond obvious vulnerabilities, what other attack vectors exist?
+- How else could these security controls be bypassed or exploited?
+- What assumptions about user behavior, data flow, or system boundaries could an attacker violate?
+- Are there alternative explanations for apparent security measures?
+- What if the current security model is fundamentally flawed?
+
+Use security insights from domain experts if available.
+```
+
+## 4. Performance & Scalability Review
+```
+Subagent: code-review-expert
+Description: Performance and scalability review
+Prompt: Analyze performance and scalability in: 
+Focus on: algorithm complexity, memory usage, database queries, caching strategies, async patterns, resource management, load handling, and horizontal scaling considerations. Get performance patterns from relevant experts.
+```
+
+## 5. Testing Quality Review
+```
+Subagent: code-review-expert
+Description: Testing quality review
+Prompt: Review test quality and effectiveness for: 
+Focus on: meaningful assertions, test isolation, edge case handling, failure scenario coverage, mock vs real dependencies balance, test maintainability, clear test names, and actual behavior verification (not just coverage metrics). Check for testing-expert insights if available.
+```
+
+## 6. Documentation & API Review
+```
+Subagent: code-review-expert
+Description: Documentation and API review
+Prompt: Review documentation and API design for: 
+
+Focus on: README completeness, API documentation, breaking changes, code comments, JSDoc/TypeDoc coverage, usage examples, migration guides, and developer experience. Evaluate API consistency and contract clarity.
+
+Documentation Review Guidelines:
+- Consider purpose and audience: Who needs this information and why?
+- Evaluate effectiveness: Does the documentation achieve its goals?
+- Focus on clarity: Can users understand and apply the information?
+- Identify real issues: Missing information, errors, contradictions, outdated content
+- Respect intentional variation: Multiple examples may show different valid approaches
+```
+
+## Post-Review Consolidation: Consider Alternative Hypotheses
+
+After all agents complete, apply alternative hypothesis thinking before consolidating:
+
+### Cross-Pattern Analysis
+- **Competing Solutions**: Do findings from different review areas suggest conflicting solutions or approaches?
+- **Alternative Explanations**: Are there alternative explanations for patterns seen across multiple review areas?
+- **Root Cause Investigation**: Could the same underlying issue be manifesting in multiple review aspects?
+- **Intentional Trade-offs**: What if apparent "problems" are actually intentional design decisions with valid reasoning?
+
+### Prioritization with Context
+- **Real vs. Theoretical Issues**: Which issues matter given the actual deployment context and timeline?
+- **Conflicting Recommendations**: How do we sequence fixes that might conflict with each other?
+- **Alternative Approaches**: If obvious fixes prove problematic, what are the alternative solutions?
+
+Then consolidate findings into this structured format:
+
+```
+🗂 Consolidated Code Review Report - [Target]
+
+📋 Review Scope
+Target: [directory/files reviewed] ([X files, Y lines])
+Focus: Architecture, Security, Performance, Testing, Documentation
+
+📊 Executive Summary
+Brief overview of code quality, key strengths, and critical issues requiring attention.
+
+🔴 CRITICAL Issues (Must Fix Immediately)
+1. 🔒 [Security/🏗️ Architecture/⚡ Performance/🧪 Testing/📝 Documentation/💥 Breaking] [Issue Name]
+   File: [path:line]
+   Impact: [description]
+   Solution:
+   ```[code example]```
+
+2. [Additional critical issues with type icons...]
+
+🟠 HIGH Priority Issues
+1. [Type icon] [Issue name]
+   File: [path:line]
+   Impact: [description]
+   Solution: [recommendation]
+
+2. [Additional high priority issues...]
+
+🟡 MEDIUM Priority Issues
+1. [Type icon] [Issue name] - [file:line]
+   Extract into: [suggested refactoring]
+
+2. [Additional medium priority issues...]
+
+✅ Quality Metrics
+Include only aspects that were actually reviewed based on the file types and agents launched:
+┌─────────────────┬───────┬────────────────────────────────────┐
+│ Aspect          │ Score │ Notes                              │
+├─────────────────┼───────┼────────────────────────────────────┤
+│ [Only include relevant aspects based on what was reviewed]      │
+│ Architecture    │ X/10  │ [Clean separation, coupling issues]│
+│ Code Quality    │ X/10  │ [Readability, consistency, patterns]│
+│ Security        │ X/10  │ [Critical vulnerabilities, if any] │
+│ Performance     │ X/10  │ [Bottlenecks, scalability concerns]│
+│ Testing         │ X/10  │ [Coverage percentage, test quality]│
+│ Documentation   │ X/10  │ [API docs, comments, examples]     │
+└─────────────────┴───────┴────────────────────────────────────┘
+
+For example:
+- Documentation-only review: Show only Documentation row
+- Test file review: Show Testing and Code Quality rows
+- Config file review: Show Security and Architecture rows
+- Full code review: Show all relevant aspects
+
+✨ Strengths to Preserve
+- [Key strength with evidence]
+- [Additional strengths...]
+
+🚀 Proactive Improvements
+1. [Pattern/Practice Name]
+   ```[code example]```
+
+2. [Additional improvements...]
+
+📊 Issue Distribution
+- Architecture: [X critical, Y high, Z medium]
+- Security: [X critical, Y high, Z medium]
+- Performance: [X critical, Y high, Z medium]
+- Testing: [X critical, Y high, Z medium]
+- Documentation: [X critical, Y high, Z medium]
+
+⚠️ Systemic Issues
+Repeated problems that need addressing:
+- [Problem pattern] (X occurrences)
+  → [Actionable fix/next step]
+- [Additional problems with solutions...]
+```
+
+After all agents complete, consolidate findings into this format. Focus on actionable feedback with specific file locations and code examples. Use type icons:
+🔒 Security | 🏗️ Architecture | ⚡ Performance | 🧪 Testing | 📝 Documentation | 💥 Breaking Change
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Are all the features actually working, or just pretending to work?
+
+**Code Quality:**
+• Did you leave the code better than you found it?
+
+**Integration & Refactoring:**
+• Did you just add code on top without integrating it properly?
+
+**Codebase Consistency:**
+• Did you create a utility that existing code could benefit from?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:14:53
+  [2m   Duration [22m 307ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+Base directory for this skill: /Users/eryk.napierala/.claude/skills/ship
+
+# Ship
+
+Prepare code changes for a pull request using conversation context and current git state.
+
+## Process
+
+### Step 1: Assess State
+
+Run these commands in parallel to understand the full context:
+
+- `git status` and `git diff` — understand all staged/unstaged/untracked changes
+- `gh pr view --json title,body,url,state 2>/dev/null` — check if a PR already exists for the current branch
+- `git log --oneline main..HEAD` — understand all commits on this branch
+
+Combine with conversation context about what was worked on.
+
+### Step 2: Determine Flow
+
+Based on the results from Step 1, follow one of two paths:
+
+- **No existing PR** → follow the **New PR** flow (Steps 3–7)
+- **Existing PR found** → follow the **Update PR** flow (Steps 8–10)
+
+---
+
+## New PR Flow
+
+### Step 3: Propose Branch Name
+
+Follow the format: `{PREFIX}/{SHORT_NAME}`
+
+- `PREFIX` — the Linear ticket ID if available, otherwise a conventional commit type (`feat`, `fix`, `chore`)
+- `SHORT_NAME` — three to five words separated with `_`, describing the scope
+
+Skip this step if already on a well-named feature branch.
+
+### Step 4: Draft Commit Message
+
+Use conventional commits with the appropriate scope. Always use present tense verbs.
+
+- The first line is a concise summary
+- The body describes high-level changes in detail
+- Avoid mentioning exact modules, files, or function names in the body
+
+**Example:**
+```
+feat(user): add SSO login capability
+
+Users can now sign in with their SSO provider, streamlining authentication
+and improving security for enterprise accounts.
+
+This change introduces backend logic to handle the SSO authentication
+flow, updates the user model to support SSO identities, and adds a new UI
+entry point for SSO login on the sign-in page.
+
+Tested with Okta and AzureAD providers. User provisioning and session
+handling confirmed.
+```
+
+Skip this step if there are no uncommitted changes.
+
+### Step 5: Draft PR Title
+
+Set the PR title to exactly match the commit message header (first line). If there are multiple commits and no new commit to make, summarize the branch's overall change.
+
+### Step 6: Draft PR Description
+
+Structure with three H2 headers:
+
+- **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
+- **What** — Exactly matches the commit message body. If multiple commits, summarize all changes on the branch.
+- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
+  - Create an H3 header for each scenario
+  - Each scenario contains precise manual steps as checkbox bullets
+  - Never include steps like "run tests" or "linting passes" — those belong in CI
+  - Example:
+    ### SSO Login
+    - [ ] Go to the login page
+    - [ ] Select the SSO option
+    - [ ] Authenticate with SSO
+    - [ ] Verify the dashboard is displayed
+
+### Step 7: Confirm and Execute
+
+Present the proposed branch name (if changing), commit message (if there are uncommitted changes), PR title, and PR description to the user **before** executing any git commands.
+
+Then ask: **"Create draft PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+When creating the PR, always create it as a **draft**.
+
+---
+
+## Update PR Flow
+
+### Step 8: Draft Commit Message
+
+If there are uncommitted changes, draft a commit message following the same conventions as Step 4.
+
+Skip this step if there are no uncommitted changes.
+
+### Step 9: Propose PR Updates
+
+Fetch the existing PR title and body. Based on the new commits (both already pushed and about to be pushed), propose:
+
+- **Updated PR title** — only if the scope of the PR has materially changed
+- **Updated PR description** — amend the What and Testing sections to reflect the new commits; preserve the existing Why section unless it's now inaccurate
+
+Show the existing and proposed versions side by side so the user can see what changed.
+
+### Step 10: Confirm and Execute
+
+Present the commit message (if applicable) and proposed PR description updates.
+
+Then ask: **"Commit, push, and update PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+Use `gh pr edit` to update the title and/or body.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:16:25
+  [2m   Duration [22m 316ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+yes
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:17:27
+  [2m   Duration [22m 356ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+how come it trains PL when I say EN? eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-feat-en_model_bert_base_cased (feat/en_model_bert_base_cased)> bash tools/title-loop/run_pipeline.sh --lang en
+[2026-03-28 03:16:37] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:16:37] ║  Per-Language Title Extraction — Training        ║
+[2026-03-28 03:16:37] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:16:37] Repo: /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased
+[2026-03-28 03:16:37] Log:  /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/pipeline.log
+[2026-03-28 03:16:37] 
+[2026-03-28 03:16:37] Installing Python dependencies...
+[2026-03-28 03:16:37] ✓ Dependencies installed
+[2026-03-28 03:16:37] ━━━ STEP: Generate training data ━━━
+[2026-03-28 03:16:37] Running: python3 tools/title-loop/generate_training_data.py
+[2026-03-28 03:16:38] ✓ Generate training data succeeded
+
+Augmenting real files...
+Generated 396 synthetic + 73 augmented = 469 files
+Total .generated.txt files: 469
+[2026-03-28 03:16:38] 
+[2026-03-28 03:16:38] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:16:38] ║  Language: PL                                   ║
+[2026-03-28 03:16:38] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:16:38] ━━━ STEP: Prepare PL training data ━━━
+[2026-03-28 03:16:38] Running: python3 tools/title-loop/prepare_training_data.py --lang pl
+[2026-03-28 03:16:43] ✓ Prepare PL training data succeeded
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/pl/val.jsonl: 1 examples
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/pl/test.jsonl: 1 examples
+  train: avg 11.1 title tokens per example
+  val: avg 6.0 title tokens per example
+  test: avg 14.0 title tokens per example
+[2026-03-28 03:16:43] ━━━ STEP: Train PL model ━━━
+[2026-03-28 03:16:43] Running: python3 tools/title-loop/train_title_model.py --lang pl
+^C⏎
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:18:07
+  [2m   Duration [22m 332ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+not so great results .napierala@Eryks-MacBook-Pro ~/P/fasola-feat-en_model_bert_base_cased (feat/en_model_bert_base_cased)> bash tools/title-loop/run_pipeline.sh --lang en
+[2026-03-28 03:16:37] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:16:37] ║  Per-Language Title Extraction — Training        ║
+[2026-03-28 03:16:37] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:16:37] Repo: /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased
+[2026-03-28 03:16:37] Log:  /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/pipeline.log
+[2026-03-28 03:16:37] 
+[2026-03-28 03:16:37] Installing Python dependencies...
+[2026-03-28 03:16:37] ✓ Dependencies installed
+[2026-03-28 03:16:37] ━━━ STEP: Generate training data ━━━
+[2026-03-28 03:16:37] Running: python3 tools/title-loop/generate_training_data.py
+[2026-03-28 03:16:38] ✓ Generate training data succeeded
+
+Augmenting real files...
+Generated 396 synthetic + 73 augmented = 469 files
+Total .generated.txt files: 469
+[2026-03-28 03:16:38] 
+[2026-03-28 03:16:38] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:16:38] ║  Language: PL                                   ║
+[2026-03-28 03:16:38] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:16:38] ━━━ STEP: Prepare PL training data ━━━
+[2026-03-28 03:16:38] Running: python3 tools/title-loop/prepare_training_data.py --lang pl
+[2026-03-28 03:16:43] ✓ Prepare PL training data succeeded
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/pl/val.jsonl: 1 examples
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/pl/test.jsonl: 1 examples
+  train: avg 11.1 title tokens per example
+  val: avg 6.0 title tokens per example
+  test: avg 14.0 title tokens per example
+[2026-03-28 03:16:43] ━━━ STEP: Train PL model ━━━
+[2026-03-28 03:16:43] Running: python3 tools/title-loop/train_title_model.py --lang pl
+^C⏎                                                                                                                                                                                                       eryk.napierala@Eryks-MacBook-Pro ~/P/fasola-feat-en_model_bert_base_cased (feat/en_model_bert_base_cased) [SIGINT]> bash tools/title-loop/run_pipeline.sh --lang en
+[2026-03-28 03:18:00] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:18:00] ║  Per-Language Title Extraction — Training        ║
+[2026-03-28 03:18:00] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:18:00] Repo: /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased
+[2026-03-28 03:18:00] Log:  /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/pipeline.log
+[2026-03-28 03:18:00] 
+[2026-03-28 03:18:00] Installing Python dependencies...
+[2026-03-28 03:18:00] ✓ Dependencies installed
+[2026-03-28 03:18:00] ━━━ STEP: Generate training data ━━━
+[2026-03-28 03:18:00] Running: python3 tools/title-loop/generate_training_data.py
+[2026-03-28 03:18:00] ✓ Generate training data succeeded
+
+Augmenting real files...
+Generated 243 synthetic + 11 augmented = 254 files
+Total .generated.txt files: 723
+[2026-03-28 03:18:00] 
+[2026-03-28 03:18:00] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:18:00] ║  Language: EN                                   ║
+[2026-03-28 03:18:00] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:18:00] ━━━ STEP: Prepare EN training data ━━━
+[2026-03-28 03:18:00] Running: python3 tools/title-loop/prepare_training_data.py --lang en
+[2026-03-28 03:18:07] ✓ Prepare EN training data succeeded
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/en/val.jsonl: 1 examples
+Wrote /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/data/en/test.jsonl: 2 examples
+  train: avg 10.9 title tokens per example
+  val: avg 32.0 title tokens per example
+  test: avg 13.5 title tokens per example
+[2026-03-28 03:18:07] ━━━ STEP: Train EN model ━━━
+[2026-03-28 03:18:07] Running: python3 tools/title-loop/train_title_model.py --lang en
+[2026-03-28 03:24:34] ✓ Train EN model succeeded
+  eval_span_accuracy: 0.0000
+  eval_runtime: 0.0714
+  eval_samples_per_second: 14.0100
+  eval_steps_per_second: 14.0100
+  epoch: 6.0000
+[2026-03-28 03:24:34] ━━━ STEP: Evaluate EN model ━━━
+[2026-03-28 03:24:34] Running: python3 tools/title-loop/eval_model.py --lang en
+[2026-03-28 03:25:44] ✓ Evaluate EN model succeeded
+  Generated: 156/410 = 38.0%
+  Combined:  158/417 = 37.9%
+==================================================
+
+Detailed results written to /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/en/eval_results_en.json
+[2026-03-28 03:25:44] ━━━ STEP: Export EN model ━━━
+[2026-03-28 03:25:44] Running: python3 tools/title-loop/export_to_executorch.py --lang en
+[2026-03-28 03:25:51] ✓ Export EN model succeeded
+Copying tokenizer...
+  tokenizer_config.json
+  tokenizer.json
+
+Export complete. Files in /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/export/en
+[2026-03-28 03:25:51] 
+[2026-03-28 03:25:51] ╔══════════════════════════════════════════════════╗
+[2026-03-28 03:25:51] ║  Pipeline complete!                             ║
+[2026-03-28 03:25:51] ╚══════════════════════════════════════════════════╝
+[2026-03-28 03:25:51] Polish:  tools/title-loop/models/pl/best/
+[2026-03-28 03:25:51] English: tools/title-loop/models/en/best/
+[2026-03-28 03:25:51] Export:  tools/title-loop/models/export/{pl,en}/
+[2026-03-28 03:25:51] Full log: /Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/tools/title-loop/models/pipeline.log
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 03:29:56
+  [2m   Duration [22m 307ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+please continue
+
+---
+
+Stop hook feedback:
+📋 **Self-Review**
+
+Please review these aspects of your changes:
+
+**Implementation Completeness:**
+• Did you implement the full solution or just the minimum to make tests green?
+
+**Code Quality:**
+• Is the code more complex now than it needs to be?
+
+**Integration & Refactoring:**
+• Would refactoring the surrounding code make everything simpler?
+
+**Codebase Consistency:**
+• Should other parts of the codebase be updated to match your improvements?
+
+💡 **Tip:** The code-review-expert subagent is available. Use it to review each self-review topic.
+Use the Task tool with subagent_type: "code-review-expert"
+
+Address any concerns before proceeding.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 19:41:48
+  [2m   Duration [22m 316ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+Base directory for this skill: /Users/eryk.napierala/.claude/skills/ship
+
+# Ship
+
+Prepare code changes for a pull request using conversation context and current git state.
+
+## Process
+
+### Step 1: Assess State
+
+Run these commands in parallel to understand the full context:
+
+- `git status` and `git diff` — understand all staged/unstaged/untracked changes
+- `gh pr view --json title,body,url,state 2>/dev/null` — check if a PR already exists for the current branch
+- `git log --oneline main..HEAD` — understand all commits on this branch
+
+Combine with conversation context about what was worked on.
+
+### Step 2: Determine Flow
+
+Based on the results from Step 1, follow one of two paths:
+
+- **No existing PR** → follow the **New PR** flow (Steps 3–7)
+- **Existing PR found** → follow the **Update PR** flow (Steps 8–10)
+
+---
+
+## New PR Flow
+
+### Step 3: Propose Branch Name
+
+Follow the format: `{PREFIX}/{SHORT_NAME}`
+
+- `PREFIX` — the Linear ticket ID if available, otherwise a conventional commit type (`feat`, `fix`, `chore`)
+- `SHORT_NAME` — three to five words separated with `_`, describing the scope
+
+Skip this step if already on a well-named feature branch.
+
+### Step 4: Draft Commit Message
+
+Use conventional commits with the appropriate scope. Always use present tense verbs.
+
+- The first line is a concise summary
+- The body describes high-level changes in detail
+- Avoid mentioning exact modules, files, or function names in the body
+
+**Example:**
+```
+feat(user): add SSO login capability
+
+Users can now sign in with their SSO provider, streamlining authentication
+and improving security for enterprise accounts.
+
+This change introduces backend logic to handle the SSO authentication
+flow, updates the user model to support SSO identities, and adds a new UI
+entry point for SSO login on the sign-in page.
+
+Tested with Okta and AzureAD providers. User provisioning and session
+handling confirmed.
+```
+
+Skip this step if there are no uncommitted changes.
+
+### Step 5: Draft PR Title
+
+Set the PR title to exactly match the commit message header (first line). If there are multiple commits and no new commit to make, summarize the branch's overall change.
+
+### Step 6: Draft PR Description
+
+Structure with three H2 headers:
+
+- **Why** — The motivation for the change. If the reason is not clearly stated in the conversation context, the initial prompt, or a linked spec/ticket, **stop and ask the user** to provide the motivation before continuing. Do not guess or fabricate a "Why".
+- **What** — Exactly matches the commit message body. If multiple commits, summarize all changes on the branch.
+- **Testing** — Manual testing scenarios inferred from the conversation and implementation:
+  - Create an H3 header for each scenario
+  - Each scenario contains precise manual steps as checkbox bullets
+  - Never include steps like "run tests" or "linting passes" — those belong in CI
+  - Example:
+    ### SSO Login
+    - [ ] Go to the login page
+    - [ ] Select the SSO option
+    - [ ] Authenticate with SSO
+    - [ ] Verify the dashboard is displayed
+
+### Step 7: Confirm and Execute
+
+Present the proposed branch name (if changing), commit message (if there are uncommitted changes), PR title, and PR description to the user **before** executing any git commands.
+
+Then ask: **"Create draft PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+When creating the PR, always create it as a **draft**.
+
+---
+
+## Update PR Flow
+
+### Step 8: Draft Commit Message
+
+If there are uncommitted changes, draft a commit message following the same conventions as Step 4.
+
+Skip this step if there are no uncommitted changes.
+
+### Step 9: Propose PR Updates
+
+Fetch the existing PR title and body. Based on the new commits (both already pushed and about to be pushed), propose:
+
+- **Updated PR title** — only if the scope of the PR has materially changed
+- **Updated PR description** — amend the What and Testing sections to reflect the new commits; preserve the existing Why section unless it's now inaccurate
+
+Show the existing and proposed versions side by side so the user can see what changed.
+
+### Step 10: Confirm and Execute
+
+Present the commit message (if applicable) and proposed PR description updates.
+
+Then ask: **"Commit, push, and update PR? (Yes / No)"** and wait for an explicit answer. Do not proceed until the user responds.
+
+Use `gh pr edit` to update the title and/or body.
+
+---
+
+Stop hook feedback:
+[claudekit-hooks run test-project]: Running project test suite...
+████ Test Suite Failed ████
+
+Test failures must be fixed:
+
+  
+  > fasola@1.0.0 test
+  > npx vitest run --globals
+  
+  
+  [1m[46m RUN [49m[22m [36mv4.1.2 [39m[90m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased[39m
+  
+   [31m❯[39m lib/text-classifier/__tests__/title-extractor.test.ts [2m([22m[2m0 test[22m[2m)[22m
+   [31m❯[39m lib/utils/__tests__/recipeValidation.test.ts [2m([22m[2m0 test[22m[2m)[22m
+  
+  [2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+  [2m      Tests [22m [2mno tests[22m
+  [2m   Start at [22m 00:58:09
+  [2m   Duration [22m 310ms[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  
+  
+  [31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+  
+  [41m[1m FAIL [22m[49m lib/text-classifier/__tests__/title-extractor.test.ts[2m [ lib/text-classifier/__tests__/title-extractor.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/text-classifier/__tests__/title-extractor.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/text-classifier/__tests__/title-extractor.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+  
+  [41m[1m FAIL [22m[49m lib/utils/__tests__/recipeValidation.test.ts[2m [ lib/utils/__tests__/recipeValidation.test.ts ][22m
+  [31m[1mError[22m: Transform failed with 1 error:
+  
+  [31m[TSCONFIG_ERROR] Error:[0m Failed to load tsconfig for 'lib/utils/__tests__/recipeValidation.test.ts': Tsconfig not found
+  [39m
+    Plugin: [35mvite:oxc[39m
+    File: [36m/Users/eryk.napierala/Projects/fasola-feat-en_model_bert_base_cased/lib/utils/__tests__/recipeValidation.test.ts[39m
+  [90m [2m❯[22m transformWithOxc ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3720:19[22m[39m
+  [90m [2m❯[22m TransformPluginContext.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m3788:26[22m[39m
+  [90m [2m❯[22m EnvironmentPluginContainer.transform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m30048:51[22m[39m
+  [90m [2m❯[22m loadAndTransform ../../.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/chunks/node.js:[2m24177:26[22m[39m
+  
+  [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+  
+  
+
+REQUIRED ACTIONS:
+1. Fix all test failures shown above
+2. Run test command to verify fixes
+3. Make necessary corrections
+4. The validation will run again automatically
+
+---
+
+I think you can amend the last commit

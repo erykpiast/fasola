@@ -421,14 +421,16 @@ def _merge_stacked_title_lines(regions):
                 merged.append(region)
                 continue
 
-            # Check line height similarity (within 40%)
+            # Check line height similarity (within 60%)
+            # Relaxed from 0.6 to 0.4 so stacked title lines with different
+            # font sizes (e.g. Polish name + Korean romanized subtitle) merge.
             prev_h = prev["mean_line_height"]
             curr_h = region["mean_line_height"]
             if prev_h > 0 and curr_h > 0:
                 h_ratio = min(prev_h, curr_h) / max(prev_h, curr_h)
             else:
                 h_ratio = 0
-            if h_ratio < 0.6:
+            if h_ratio < 0.4:
                 merged.append(region)
                 continue
 

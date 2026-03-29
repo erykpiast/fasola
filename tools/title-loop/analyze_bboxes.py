@@ -665,13 +665,19 @@ def score_title_region(region, all_regions):
     upper_ratio = sum(1 for c in alpha_chars if c.isupper()) / len(alpha_chars) if alpha_chars else 0
     caps_boost = 1.0 if upper_ratio > 0.8 else 0.0
 
+    # Region width: titles span a meaningful portion of the page.
+    # Narrow regions (< 0.10) are often OCR noise from book gutters/edges.
+    region_width = region["bbox"]["width"]
+    width_score = min(region_width / 0.30, 1.0)
+
     return (
         0.20 * line_count_score
-        + 0.20 * relative_line_height
+        + 0.15 * relative_line_height
         + 0.25 * vertical_position
         + 0.10 * char_density_score
-        + 0.10 * text_length_score
+        + 0.05 * text_length_score
         + 0.15 * caps_boost
+        + 0.10 * width_score
     )
 
 

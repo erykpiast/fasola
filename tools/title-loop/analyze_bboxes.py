@@ -260,57 +260,84 @@ _SECTION_LABELS = {
 
 
 def detect_columns(observations, min_gap=0.03):
-    """Detect text columns by projecting observations onto the X axis and finding gaps.
+    """Detect text columns by finding the X position where most observations have a gap.
 
-    Projects each observation as an X interval [x, x+width], merges overlapping
-    intervals, then checks for gaps between merged intervals. If a gap exceeds
-    min_gap (fraction of page width), splits observations into separate columns.
+    Wide-spanning elements (titles, headers) can bridge column gaps, so we can't just
+    merge X intervals. Instead, we test candidate split positions and count how many
+    observations fall cleanly into left vs right, penalizing observations that straddle
+    the split.
 
     Returns a list of observation lists, one per column (left to right).
     If no significant column split is found, returns [observations].
     """
-    if len(observations) < 4:
+    if len(observations) < 6:
         return [observations]
 
-    # Project onto X axis as intervals [left, right]
-    intervals = [(o["bbox"]["x"], o["bbox"]["x"] + o["bbox"]["width"], o) for o in observations]
+    # Collect all right-edges and left-edges as candidate split points
+    edges = set()
+    for o in observations:
+        edges.add(round(o["bbox"]["x"] + o["bbox"]["width"], 3))
+        edges.add(round(o["bbox"]["x"], 3))
 
-    # Sort by left edge
-    intervals.sort(key=lambda t: t[0])
+    best_split = None
+    best_score = -1
 
-    # Merge overlapping intervals to find contiguous text regions on X axis
-    merged = []  # [(left, right, [observations])]
-    cur_left, cur_right = intervals[0][0], intervals[0][1]
-    cur_obs = [intervals[0][2]]
+    for split_x in sorted(edges):
+        if split_x < 0.15 or split_x > 0.85:
+            continue  # skip extreme edges
 
-    for left, right, obs in intervals[1:]:
-        if left <= cur_right + 0.01:  # allow tiny overlap/gap within column
-            cur_right = max(cur_right, right)
-            cur_obs.append(obs)
-        else:
-            merged.append((cur_left, cur_right, cur_obs))
-            cur_left, cur_right = left, right
-            cur_obs = [obs]
-    merged.append((cur_left, cur_right, cur_obs))
+        left = []
+        right = []
+        straddling = 0
 
-    if len(merged) < 2:
+        for o in observations:
+            ox = o["bbox"]["x"]
+            or_ = ox + o["bbox"]["width"]
+
+            if or_ <= split_x + 0.01:
+                left.append(o)
+            elif ox >= split_x - 0.01:
+                right.append(o)
+            else:
+                straddling += 1
+
+        # Good split: many observations on each side, few straddling
+        if len(left) < 3 or len(right) < 3:
+            continue
+
+        # Check that there's actually a gap at this position
+        # (left side right-edges should end before split, right side left-edges should start after)
+        if left and right:
+            left_max_right = max(o["bbox"]["x"] + o["bbox"]["width"] for o in left)
+            right_min_left = min(o["bbox"]["x"] for o in right)
+            gap = right_min_left - left_max_right
+            if gap < min_gap:
+                continue
+
+        # Score: maximize clean splits, penalize straddling
+        score = (len(left) + len(right)) - straddling * 3
+
+        if score > best_score:
+            best_score = score
+            best_split = split_x
+
+    if best_split is None:
         return [observations]
 
-    # Check gaps between merged intervals
-    columns = []
-    current_col = merged[0][2]
-
-    for i in range(1, len(merged)):
-        gap = merged[i][0] - merged[i - 1][1]
-        if gap >= min_gap:
-            # Significant gap → column boundary
-            columns.append(current_col)
-            current_col = merged[i][2]
+    # Split observations at best_split; straddling ones go to whichever side their center falls
+    left_col = []
+    right_col = []
+    for o in observations:
+        center_x = o["bbox"]["x"] + o["bbox"]["width"] / 2
+        if center_x < best_split:
+            left_col.append(o)
         else:
-            current_col.extend(merged[i][2])
-    columns.append(current_col)
+            right_col.append(o)
 
-    return columns if len(columns) > 1 else [observations]
+    if len(left_col) < 3 or len(right_col) < 3:
+        return [observations]
+
+    return [left_col, right_col]
 
 
 def cluster_into_regions(observations, y_tolerance=0.05, region_gap=0.04):

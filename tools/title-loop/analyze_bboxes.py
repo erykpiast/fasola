@@ -552,7 +552,7 @@ def score_title_region(region, all_regions):
 
 def validate_title_text(text):
     """Light text validation — reject obvious non-titles."""
-    if len(text) < 2 or len(text) > 200:
+    if len(text) < 4 or len(text) > 200:
         return False
     if _MEASUREMENT_RE.search(text):
         return False

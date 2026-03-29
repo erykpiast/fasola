@@ -41,8 +41,15 @@ def ocr_normalize(s):
 
 
 def norm_for_match(s):
-    s = normalize(s).replace("-", " ").replace("_", " ")
-    # Re-collapse whitespace after hyphen/underscore removal (e.g. "SLOW- ROASTED" → "SLOW ROASTED")
+    s = normalize(s)
+    # Strip quotes and apostrophes (OCR decorations / Polish „ quotes)
+    s = re.sub(r"[\"\u0027\u2018\u2019\u201C\u201D\u201E\u201F`]", "", s)
+    # OCR: pipe is often misread letter I
+    s = s.replace("|", "I")
+    # Ensure consistent tokenization around &
+    s = s.replace("&", " & ")
+    s = s.replace("-", " ").replace("_", " ")
+    # Re-collapse whitespace after replacements (e.g. "SLOW- ROASTED" → "SLOW ROASTED")
     s = re.sub(r"\s+", " ", s).strip()
     return ocr_normalize(strip_diacritics(s))
 
@@ -57,9 +64,21 @@ def titles_match(extracted, expected):
         return True
     # Fallback: word-level matching — handles reordered text from multi-line
     # titles and extra whitespace from line-break hyphens (e.g. "SLOW- ROASTED")
-    extracted_words = set(extracted_norm.split())
-    return all(
+    extracted_word_list = extracted_norm.split()
+    extracted_words = set(extracted_word_list)
+    if all(
         all(w in extracted_words for w in part.split())
+        for part in expected_parts
+    ):
+        return True
+    # Fallback: adjacent word-pair concatenation — handles line-break hyphen
+    # splits where two extracted words form one expected word
+    # (e.g. "SHORT BREAD" matches expected "SHORTBREAD")
+    adjacent_pairs = {extracted_word_list[i] + extracted_word_list[i + 1]
+                      for i in range(len(extracted_word_list) - 1)}
+    all_forms = extracted_words | adjacent_pairs
+    return all(
+        all(w in all_forms for w in part.split())
         for part in expected_parts
     )
 

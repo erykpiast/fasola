@@ -111,6 +111,31 @@ def titles_match(extracted, expected):
         for part in expected_parts
     ):
         return True
+    # Fallback: suffix/prefix matching — handles OCR cropping at image edges
+    # where word beginnings or endings get cut off (e.g. "WĘDZONE"→"ZONE",
+    # "KARMELIZOWANYMI"→"RMELIZOWANYMI").  The shorter word must be ≥4 chars
+    # and cover ≥50% of the longer word to avoid false positives.
+    def _suffix_word_match(w, word_list):
+        if _fuzzy_word_match(w, word_list):
+            return True
+        if len(w) < 4:
+            return False
+        for ew in word_list:
+            if len(ew) < 4:
+                continue
+            shorter = min(len(w), len(ew))
+            longer = max(len(w), len(ew))
+            if shorter < longer * 0.5:
+                continue
+            if w.endswith(ew) or ew.endswith(w) or w.startswith(ew) or ew.startswith(w):
+                return True
+        return False
+
+    if all(
+        all(_suffix_word_match(w, extracted_word_list) for w in part.split())
+        for part in expected_parts
+    ):
+        return True
     # Fallback: merged-word matching — handles OCR merging adjacent words
     # (e.g. "z jagodami" → "zjagodami").  When a short expected word fails
     # to match individually, concatenate it with the next expected word and

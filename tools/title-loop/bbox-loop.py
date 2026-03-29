@@ -31,7 +31,7 @@ MAX_ITERATIONS = 20
 ACCURACY_THRESHOLD = 0.80  # target: 80%+ on both PL and EN
 CLAUDE_TIMEOUT = 1800  # 30 minutes per Claude session
 CLAUDE_STALL_TIMEOUT = 180  # kill if no output for 3 minutes
-CLAUDE_MODEL = "sonnet"
+CLAUDE_MODEL = "opus"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 LOOP_DIR = Path(__file__).resolve().parent
@@ -93,6 +93,48 @@ def regenerate_visualizations(failures: list[dict]):
         draw_visualization(ns_image, observations, vis_path)
 
     print(f"  Visualizations updated for {len(stems)} failure images → {VIS_DIR}/")
+
+
+# --- Spatial summaries ---
+
+def generate_spatial_summary(image_stem: str) -> str:
+    """Generate a human-readable spatial layout summary for a failure image."""
+    sys.path.insert(0, str(LOOP_DIR))
+    for mod_name in list(sys.modules):
+        if mod_name.startswith("analyze_bboxes"):
+            del sys.modules[mod_name]
+    from analyze_bboxes import cluster_into_regions, score_title_region, detect_columns
+
+    bbox_path = BBOXES_DIR / f"{image_stem}.json"
+    if not bbox_path.exists():
+        return f"  (no bbox data for {image_stem})"
+
+    data = json.loads(bbox_path.read_text())
+    observations = data["observations"]
+    cols = detect_columns(observations)
+    regions = cluster_into_regions(observations, y_tolerance=0.03, region_gap=0.02)
+
+    if not regions:
+        return f"  {image_stem}: {len(observations)} obs, 0 regions (clustering produced nothing)"
+
+    scored = [(score_title_region(r, regions), i, r) for i, r in enumerate(regions)]
+    scored.sort(key=lambda x: -x[0])
+
+    lines = [f"  {image_stem}: {len(observations)} obs → {len(cols)} col(s) → {len(regions)} regions"]
+
+    for s, i, r in scored[:5]:
+        obs_heights = [o["bbox"]["height"] for o in r["observations"]]
+        obs_widths = [o["bbox"]["width"] for o in r["observations"]]
+        avg_h = sum(obs_heights) / len(obs_heights)
+        avg_w = sum(obs_widths) / len(obs_widths)
+        lines.append(
+            f"    R{i}: score={s:.2f} y={r['bbox']['y']:.2f} "
+            f"{r['lines']}L avg_h={avg_h:.4f} avg_w={avg_w:.3f} "
+            f'"{r["text"][:50]}"'
+        )
+
+    lines.append(f"    Visualization: tools/title-loop/bboxes/visualized/{image_stem}.png")
+    return "\n".join(lines)
 
 
 # --- Evaluation ---
@@ -271,6 +313,16 @@ def build_prompt(iteration: int, results: dict, history: str) -> str:
         for f in failures
     )
 
+    # Generate spatial summaries for top 5 failures
+    spatial_summaries = []
+    seen_stems = set()
+    for f in failures[:5]:
+        stem = f["image"].rsplit(".", 1)[0]
+        if stem not in seen_stems:
+            seen_stems.add(stem)
+            spatial_summaries.append(generate_spatial_summary(stem))
+    spatial_text = "\n\n".join(spatial_summaries)
+
     accuracy = results["accuracy"]
     pl = results["per_lang"]["pl"]
     en = results["per_lang"]["en"]
@@ -290,17 +342,37 @@ def build_prompt(iteration: int, results: dict, history: str) -> str:
 
 Total failures: {len(results['failures'])}
 
+## Spatial layout of top failures
+
+These show how the clustering algorithm currently groups observations into regions.
+The highest-scoring region is picked as the title. "R0: score=0.85 y=0.15 2L" means
+region 0, score 0.85, starts at 15% from top, has 2 lines.
+
+{spatial_text}
+
+## Visual debugging
+
+You can READ the visualization PNGs to see the actual page with overlaid boxes:
+- Blue semi-transparent = individual OCR observations
+- Yellow border = clustered regions
+- Green border = region picked as title
+
+Example: Read the file at tools/title-loop/bboxes/visualized/IMG_1388.png
+
+Do this for 2-3 failure images to understand the layout visually before making changes.
+
 ## Previous iterations
 
 {history if history else "(first iteration)"}
 
 ## Your task
 
-1. Read tools/title-loop/analyze_bboxes.py — focus on cluster_into_regions, _cluster_column, score_title_region, detect_columns, and validate_title_text
-2. Examine 3-5 of the failure images by reading their bbox JSON files from tools/title-loop/bboxes/{{IMAGE_STEM}}.json
-3. Identify the dominant failure pattern — what's going wrong for most failures?
-4. Make a SINGLE targeted fix to the clustering or scoring code. Don't change multiple things at once.
-5. After fixing, verify by running:
+1. READ 2-3 failure visualization PNGs from tools/title-loop/bboxes/visualized/{{IMAGE_STEM}}.png to see the actual page layouts
+2. Read tools/title-loop/analyze_bboxes.py — focus on cluster_into_regions, _cluster_column, score_title_region, detect_columns, validate_title_text, and _merge_stacked_title_lines
+3. Also read the bbox JSON files from tools/title-loop/bboxes/{{IMAGE_STEM}}.json for coordinate details
+4. Identify the dominant failure pattern — what's going wrong for most failures?
+5. Make a SINGLE targeted fix to the clustering or scoring code. Don't change multiple things at once.
+6. After fixing, verify by running:
    python3 -c "
    import json, sys; sys.path.insert(0, 'tools/title-loop')
    from analyze_bboxes import heuristic_region_clustering, titles_match, load_ground_truth, match_images_to_ground_truth
@@ -361,12 +433,17 @@ def run_iteration(iteration: int, visualize: bool = False):
         log_iteration(iteration, results, "TARGET REACHED", "")
         return True
 
-    # Step 2: Build prompt with history
+    # Step 2: Generate visualizations for failures (before Claude, so it can read them)
+    if visualize:
+        print("\n--- Step 2: Generating visualizations ---")
+        regenerate_visualizations(results["failures"])
+
+    # Step 3: Build prompt with history
     history = LOG_FILE.read_text() if LOG_FILE.exists() else ""
     prompt = build_prompt(iteration, results, history)
 
-    # Step 3: Run Claude
-    print("\n--- Step 2: Running Claude ---")
+    # Step 4: Run Claude
+    print("\n--- Step 3: Running Claude (Opus) ---")
     try:
         claude_output = run_claude(prompt, log_path=iter_dir / "claude_output.txt")
     except (ClaudeStallError, RuntimeError) as e:
@@ -376,8 +453,8 @@ def run_iteration(iteration: int, visualize: bool = False):
 
     (iter_dir / "claude_response.md").write_text(claude_output)
 
-    # Step 3: Re-evaluate after fix
-    print("\n--- Step 3: Re-evaluating ---")
+    # Step 5: Re-evaluate after fix
+    print("\n--- Step 4: Re-evaluating ---")
     new_results = run_evaluation()
     new_accuracy = new_results["accuracy"]
     new_pl = new_results["per_lang"]["pl"]["accuracy"]
@@ -388,11 +465,6 @@ def run_iteration(iteration: int, visualize: bool = False):
     summary = claude_output.strip().split("\n")[-1] if claude_output.strip() else "(no output)"
 
     log_iteration(iteration, new_results, summary, f"delta={delta:+.1%}")
-
-    # Regenerate visualizations for failures so you can inspect
-    if visualize:
-        print("\n--- Step 4: Updating visualizations ---")
-        regenerate_visualizations(new_results["failures"])
 
     return False
 

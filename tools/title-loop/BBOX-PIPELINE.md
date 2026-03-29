@@ -103,19 +103,20 @@ Step 5: LOG
 |------|--------------------|-----------------------|
 | Accuracy numbers | Yes (pre-computed) | No |
 | Failure list (15 examples) | Yes (image name, expected, extracted) | No |
+| Spatial layout summaries (5 images) | Yes (regions, scores, positions) | No |
 | Iteration history | Yes (full log.md content) | No |
+| Visualization PNGs | Referenced in prompt | Yes (Claude reads 2-3 PNGs to see page layouts) |
 | Bbox JSON for specific images | No | Yes (Claude reads files it chooses) |
 | analyze_bboxes.py source | No | Yes (Claude reads before editing) |
-| Visualization PNGs | No | No (Claude cannot view images) |
 
-**Claude's autonomy:** Claude decides which failure images to investigate, reads their bbox JSONs, identifies the pattern, edits the code, runs the evaluation command to verify, and commits. The prompt provides failure examples and history as starting context, but Claude does all the detective work itself.
+**Claude's autonomy:** Claude reads visualization PNGs to see actual page layouts with observation and region overlays, reads bbox JSONs for coordinate details, identifies the dominant failure pattern, edits the code, runs the evaluation command to verify, and commits. The prompt provides failure examples, spatial summaries, and history as starting context.
 
 ## Models
 
 | Role | Model | Why |
 |------|-------|-----|
-| Analysis + implementation | **Sonnet 4.6** (default) | Fast enough for 20 iterations overnight, good at code edits |
-| Can be changed to | Opus 4.6 | Set `CLAUDE_MODEL = "opus"` in bbox-loop.py for harder problems |
+| Analysis + implementation | **Opus 4.6** (default) | Best spatial reasoning from coordinate data; 19 points to close is hard |
+| Can be changed to | Sonnet 4.6 | Set `CLAUDE_MODEL = "sonnet"` for faster but less capable iterations |
 | Not used | Haiku | Too weak for multi-step code analysis |
 
 No separate model for analysis vs implementation — it's one Claude session per iteration that does both.
@@ -151,7 +152,7 @@ tools/title-loop/docs/bbox-loop/
 ## What This Pipeline Does NOT Do
 
 - **No planning skills** (`/brainstorm`, `/spec:create`): This is a tight fix loop, not architectural exploration
-- **No image analysis**: Claude cannot view PNGs — it works entirely from bbox JSON coordinates
+- **No OCR re-processing from images**: Claude views pre-rendered visualization PNGs but does not run OCR
 - **No model training**: Pure rule-based clustering improvements
 - **No OCR re-processing**: Bbox data is pre-computed and cached; only the clustering algorithm changes
 - **No web search**: Fully offline

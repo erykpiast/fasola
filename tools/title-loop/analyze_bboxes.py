@@ -371,35 +371,47 @@ def _cluster_column(observations, y_tolerance, region_gap):
     # Step 1: Sort by Y
     sorted_obs = sorted(observations, key=lambda o: o["bbox"]["y"])
 
-    # Step 2: Group into horizontal bands
-    bands = []
+    # Step 2: Group into horizontal bands by Y proximity
+    raw_bands = []
     current_band = [sorted_obs[0]]
 
     for obs in sorted_obs[1:]:
         prev = current_band[-1]
         y_diff = abs(obs["bbox"]["y"] - prev["bbox"]["y"])
-        h_prev = prev["bbox"]["height"]
-        h_curr = obs["bbox"]["height"]
-        if h_prev > 0 and h_curr > 0:
-            ratio = min(h_prev, h_curr) / max(h_prev, h_curr)
-        else:
-            ratio = 0
-
-        if y_diff < y_tolerance and ratio > 0.4:
+        if y_diff < y_tolerance:
             current_band.append(obs)
         else:
-            bands.append(current_band)
+            raw_bands.append(current_band)
             current_band = [obs]
-    bands.append(current_band)
+    raw_bands.append(current_band)
+
+    # Step 2b: Sub-split bands by height similarity.
+    # Within each Y-band, separate observations with different font sizes.
+    # Sort by height, then split where consecutive heights differ by >30%.
+    bands = []
+    for raw_band in raw_bands:
+        if len(raw_band) <= 1:
+            bands.append(raw_band)
+            continue
+        by_height = sorted(raw_band, key=lambda o: o["bbox"]["height"])
+        sub_band = [by_height[0]]
+        for obs in by_height[1:]:
+            prev_h = sub_band[-1]["bbox"]["height"]
+            curr_h = obs["bbox"]["height"]
+            ratio = prev_h / curr_h if curr_h > 0 else 0
+            if ratio > 0.8:  # within 20% of each other
+                sub_band.append(obs)
+            else:
+                bands.append(sub_band)
+                sub_band = [obs]
+        bands.append(sub_band)
 
     # Step 3: Merge adjacent bands into regions
+    # Only merge bands that have similar line heights (same font size zone)
     regions = [bands[0]]
 
     for band in bands[1:]:
         prev_region = regions[-1]
-        # Get the last band in the current region
-        prev_band = prev_region if not isinstance(prev_region[0], list) else prev_region[-1]
-        # Flatten prev_region to get all observations
         prev_all = prev_region if not isinstance(prev_region[0], list) else [o for b in prev_region for o in b]
 
         # Compute vertical gap
@@ -419,7 +431,15 @@ def _cluster_column(observations, y_tolerance, region_gap):
         narrower_width = min(prev_max_x - prev_min_x, curr_max_x - curr_min_x)
         x_overlap_ratio = overlap / narrower_width if narrower_width > 0 else 0
 
-        if gap < region_gap and x_overlap_ratio > 0.5:
+        # Check line height consistency — don't merge bands with different font sizes
+        prev_mean_h = statistics.mean(o["bbox"]["height"] for o in prev_all)
+        curr_mean_h = statistics.mean(o["bbox"]["height"] for o in band)
+        if prev_mean_h > 0 and curr_mean_h > 0:
+            height_ratio = min(prev_mean_h, curr_mean_h) / max(prev_mean_h, curr_mean_h)
+        else:
+            height_ratio = 0
+
+        if gap < region_gap and x_overlap_ratio > 0.5 and height_ratio > 0.8:
             # Merge into current region
             regions[-1] = prev_all + band
         else:

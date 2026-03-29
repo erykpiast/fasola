@@ -181,7 +181,8 @@ export function BackgroundProcessingProvider({
             classificationResult = await classifyText(
               result.ocrResult.text,
               "embeddings",
-              ocrLanguage
+              ocrLanguage,
+              result.ocrResult.observations
             );
 
             if (classificationResult.suggestions.length === 0) {

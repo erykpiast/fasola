@@ -904,13 +904,20 @@ export function extractTitleFromBboxes(
   yTolerance: number = 0.05,
   regionGap: number = 0.04,
 ): string | undefined {
+  console.log(
+    `[BBox Title] Starting extraction from ${observations.length} observations`,
+  );
+
   const regions = clusterIntoRegions(
     observations,
     yTolerance,
     regionGap,
   );
 
+  console.log(`[BBox Title] Clustered into ${regions.length} regions`);
+
   if (regions.length === 0) {
+    console.log("[BBox Title] No regions found, returning undefined");
     return undefined;
   }
 
@@ -920,6 +927,17 @@ export function extractTitleFromBboxes(
     r,
   ]);
   scored.sort((a, b) => b[0] - a[0]);
+
+  // Log scored regions
+  for (const [score, region] of scored) {
+    const textPreview =
+      region.text.length > 60
+        ? region.text.slice(0, 60) + "..."
+        : region.text;
+    console.log(
+      `[BBox Title]   score=${score.toFixed(3)} lines=${region.lines} y=${region.bbox.y.toFixed(3)} h=${region.mean_line_height.toFixed(4)} text="${textPreview}"`,
+    );
+  }
 
   // Greedy multi-region merge
   let primaryText: string | undefined = undefined;
@@ -1000,6 +1018,9 @@ export function extractTitleFromBboxes(
       const mergedText = stripTrailingIngredients(
         mergedRegions.map((r) => r.text).join(" "),
       );
+      console.log(
+        `[BBox Title] Merged ${mergedRegions.length} regions: "${mergedText}"`,
+      );
       if (validateTitleText(mergedText)) {
         primaryText = mergedText;
         primaryY = mergedRegions[0].bbox.y;
@@ -1016,10 +1037,15 @@ export function extractTitleFromBboxes(
 
   // Try top 3 candidates individually if no merged title found
   if (primaryText === undefined) {
+    console.log("[BBox Title] No merged title, trying top 3 candidates individually");
     for (let i = 0; i < Math.min(3, scored.length); i++) {
       const [, region] = scored[i];
       const text = stripTrailingIngredients(region.text);
-      if (validateTitleText(text)) {
+      const valid = validateTitleText(text);
+      console.log(
+        `[BBox Title]   candidate ${i}: valid=${valid} text="${text.length > 60 ? text.slice(0, 60) + "..." : text}"`,
+      );
+      if (valid) {
         primaryText = text;
         primaryY = region.bbox.y;
         usedRegionIndices.add(i);
@@ -1029,6 +1055,9 @@ export function extractTitleFromBboxes(
       // leading observation(s)
       if (region.text.length > 200) {
         const leading = extractLeadingTitle(region);
+        console.log(
+          `[BBox Title]   candidate ${i} leading title: ${leading ?? "(none)"}`,
+        );
         if (leading !== undefined && validateTitleText(leading)) {
           primaryText = leading;
           primaryY = region.bbox.y;
@@ -1040,6 +1069,7 @@ export function extractTitleFromBboxes(
   }
 
   if (primaryText === undefined || primaryY === undefined) {
+    console.log("[BBox Title] No valid title found, returning undefined");
     return undefined;
   }
 
@@ -1195,6 +1225,7 @@ export function extractTitleFromBboxes(
     }
   }
 
+  console.log(`[BBox Title] Result: "${primaryText}"`);
   return primaryText;
 }
 

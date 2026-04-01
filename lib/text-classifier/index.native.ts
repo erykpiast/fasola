@@ -196,6 +196,9 @@ async function classifyWithEmbeddingsMethod(
           bbox: obs.bounds,
         }))
       );
+      if (!title) {
+        console.log("[Text Classifier] Bbox title extraction returned nothing, falling back");
+      }
     }
     // Fall back to model-based, then heuristic title extraction
     if (!title) {

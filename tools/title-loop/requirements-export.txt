@@ -1,0 +1,9 @@
+# Export venv: converts trained models to ExecuTorch .pte format
+# Must match the ExecuTorch runtime version in react-native-executorch.
+# See README.md in this directory for setup instructions.
+#
+# react-native-executorch 0.6.0 → ExecuTorch runtime 1.0.0
+executorch==1.0.0
+torchao>=0.13.0,<0.16.0
+torch>=2.2.0
+transformers>=4.40.0

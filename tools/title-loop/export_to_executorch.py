@@ -42,7 +42,7 @@ MODELS_DIR = Path(__file__).parent / "models"
 MAX_SEQ_LEN = 512
 
 # Size gates per language (MB)
-MAX_SIZE_MB = {"pl": 150, "en": 20}
+MAX_SIZE_MB = {"pl": 150, "en": 150}
 
 
 class QuantizedEmbedding(nn.Module):

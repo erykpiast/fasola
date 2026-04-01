@@ -48,6 +48,7 @@ LANG_CONFIG = {
         "num_epochs": 15,
         "batch_size": 8,
         "torch_dtype": torch.float32,
+        "freeze_layers_below": 10,  # freeze encoder layers 0-9, train 10-11 + classifier
     },
 }
 
@@ -217,6 +218,21 @@ def main():
         label2id=LABEL2ID,
         torch_dtype=config["torch_dtype"],
     )
+
+    # Freeze lower encoder layers if configured
+    freeze_below = config.get("freeze_layers_below")
+    if freeze_below is not None:
+        # Freeze embeddings
+        for param in model.bert.embeddings.parameters():
+            param.requires_grad = False
+        # Freeze encoder layers below threshold
+        for i, layer in enumerate(model.bert.encoder.layer):
+            if i < freeze_below:
+                for param in layer.parameters():
+                    param.requires_grad = False
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in model.parameters())
+        print(f"Frozen layers 0-{freeze_below - 1} + embeddings: {trainable:,} / {total:,} params trainable ({100*trainable/total:.1f}%)")
 
     # Training args
     training_args = TrainingArguments(

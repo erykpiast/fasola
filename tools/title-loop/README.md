@@ -78,9 +78,27 @@ The exported `.pte` models are loaded by `lib/text-classifier/title-extractor-mo
 
 ### Prerequisites
 
+Two separate Python venvs are needed because training and export have conflicting dependencies (different torch versions, executorch requires Python ≤3.12).
+
+#### Training venv (`.venv`) — data prep, training, evaluation
+
 ```bash
-pip3 install --break-system-packages -r tools/title-loop/requirements-ml.txt
+cd tools/title-loop
+uv venv .venv --python 3.14
+uv pip install --python .venv/bin/python3 -r requirements-ml.txt
 ```
+
+#### Export venv (`.venv-export`) — ExecuTorch .pte conversion
+
+```bash
+cd tools/title-loop
+uv venv .venv-export --python 3.12
+uv pip install --python .venv-export/bin/python3 --prerelease=allow -r requirements-export.txt
+```
+
+> **Version constraint:** The `executorch` version in `requirements-export.txt` must match
+> the runtime bundled in `react-native-executorch` (check its release notes).
+> RNE 0.6.0 → ExecuTorch 1.0.0. A mismatch causes `Error 17 (NotImplemented)` on device.
 
 ### Quick start: run the full pipeline overnight
 
@@ -113,8 +131,8 @@ Produces synthetic OCR files across 10 noise patterns plus 5-8 augmented copies 
 #### 3. Prepare per-language BIO-labeled dataset
 
 ```bash
-python3 tools/title-loop/prepare_training_data.py --lang pl
-python3 tools/title-loop/prepare_training_data.py --lang en
+.venv/bin/python3 tools/title-loop/prepare_training_data.py --lang pl
+.venv/bin/python3 tools/title-loop/prepare_training_data.py --lang en
 ```
 
 Detects file language, tokenizes with the language-specific tokenizer, fuzzy-aligns titles to BIO labels. Output: `data/{lang}/{train,val,test}.jsonl`.
@@ -122,8 +140,8 @@ Detects file language, tokenizes with the language-specific tokenizer, fuzzy-ali
 #### 4. Train per-language model
 
 ```bash
-python3 tools/title-loop/train_title_model.py --lang pl
-python3 tools/title-loop/train_title_model.py --lang en
+.venv/bin/python3 tools/title-loop/train_title_model.py --lang pl
+.venv/bin/python3 tools/title-loop/train_title_model.py --lang en
 ```
 
 Direct fine-tuning with weighted cross-entropy and early stopping on span accuracy.
@@ -131,22 +149,22 @@ Direct fine-tuning with weighted cross-entropy and early stopping on span accura
 #### 5. Evaluate
 
 ```bash
-python3 tools/title-loop/eval_model.py --lang pl
-python3 tools/title-loop/eval_model.py --lang en
+.venv/bin/python3 tools/title-loop/eval_model.py --lang pl
+.venv/bin/python3 tools/title-loop/eval_model.py --lang en
 ```
 
 #### 6. Test on arbitrary text
 
 ```bash
-python3 tools/title-loop/predict_title.py --lang pl recipe.txt
-echo "CHOCOLATE CAKE..." | python3 tools/title-loop/predict_title.py --lang en
+.venv/bin/python3 tools/title-loop/predict_title.py --lang pl recipe.txt
+echo "CHOCOLATE CAKE..." | .venv/bin/python3 tools/title-loop/predict_title.py --lang en
 ```
 
-#### 7. Export for on-device
+#### 7. Export for on-device (uses export venv)
 
 ```bash
-python3 tools/title-loop/export_to_executorch.py --lang pl
-python3 tools/title-loop/export_to_executorch.py --lang en
+.venv-export/bin/python3 tools/title-loop/export_to_executorch.py --lang pl
+.venv-export/bin/python3 tools/title-loop/export_to_executorch.py --lang en
 ```
 
 ### Running the heuristic loop
@@ -163,7 +181,8 @@ python3 tools/title-loop/eval_only.py        # Quick standalone evaluation
 ```
 tools/title-loop/
 ├── README.md
-├── requirements-ml.txt           # Python deps for ML pipeline
+├── requirements-ml.txt           # Python deps for training (.venv)
+├── requirements-export.txt       # Python deps for ExecuTorch export (.venv-export)
 ├── run_pipeline.sh               # Overnight training (both languages)
 ├── lang_detect.py                # Shared language detection
 │

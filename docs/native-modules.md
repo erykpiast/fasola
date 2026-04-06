@@ -16,7 +16,19 @@ Custom Expo module providing iOS-specific UI components with glass/blur effects.
 
 Swift implementations in `modules/liquid-glass/ios/`.
 
-### iOS Debugging
+## page-dewarper
+
+Native page dewarping module using [page-dewarp-swift](https://github.com/erykpiast/page-dewarp-swift). iOS-only.
+
+### API
+
+- `dewarpImage(uri: string): Promise<{ colorUri: string, bwUri: string }>` - Dewarp a page image, returning both a color-dewarped image (for display) and a BW-thresholded image (for OCR).
+
+### Implementation
+
+Vendored fork of page-dewarp-swift in `modules/page-dewarper/ios/PageDewarp/`. OpenCV is provided by the `opencv-rne` CocoaPod dependency. The fork adds `remapColorImage` to produce color output alongside the default BW output.
+
+## iOS Debugging
 
 Bundle ID: `com.erykpiast.fasola`
 

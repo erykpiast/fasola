@@ -6,7 +6,7 @@
 - `features/` - Feature modules with components, hooks, and contexts
 - `lib/` - Shared utilities, types, repositories, and photo processing pipelines
 - `platform/` - Platform-specific code (i18n, theme)
-- `modules/` - Native Expo modules (e.g., `liquid-glass` for iOS UI components)
+- `modules/` - Native Expo modules (`liquid-glass`, `text-extractor`, `page-dewarper`)
 
 ## Key Patterns
 
@@ -20,9 +20,10 @@
 
 **Storage Layer**: `lib/storage/` provides platform-specific storage implementations. `lib/repositories/` contains data access patterns (e.g., `recipeRepository`).
 
-**Photo Processing**: `lib/photo-processor/` contains OpenCV-based image processing pipelines:
+**Photo Processing**: `lib/photo-processor/` contains the image processing pipeline:
 
-- `pipelines/geometry/` - Dewarping and perspective correction
+- `geometry.native.ts` / `geometry.web.ts` - Platform-specific geometry correction (native `page-dewarper` on iOS, WebView OpenCV on web)
+- `pipelines/geometry/` - WebView-based dewarping (web fallback)
 - `pipelines/clarity/` - Denoising and sharpening
 - `pipelines/lighting/` - CLAHE, white balance
 - `pipelines/text-recognition/` - OCR integration

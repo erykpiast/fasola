@@ -7,7 +7,6 @@
 import { useRecipes } from "@/features/recipes-list/context/RecipesContext";
 import { useSources } from "@/features/sources/context/SourcesContext";
 import { processPhoto } from "@/lib/photo-processor";
-import { DEFAULT_CONFIG } from "@/lib/photo-processor/types";
 import { loadImageAsDataUrl } from "@/lib/photo-processor/utils/loadImageAsDataUrl";
 import { recipeRepository } from "@/lib/repositories/recipes";
 import { storage } from "@/lib/storage";
@@ -139,25 +138,14 @@ export function BackgroundProcessingProvider({
 
         updateProgress(recipeId, "geometry", 0);
 
-        const result = await processPhoto(photoDataUrl, {
-          ...DEFAULT_CONFIG,
-          geometry: {
-            ...DEFAULT_CONFIG.geometry,
-            enabled: true,
+        const result = await processPhoto(
+          photoDataUrl,
+          {
+            geometry: { enabled: true },
+            ocr: { enabled: true, language: ocrLanguage },
           },
-          lighting: {
-            ...DEFAULT_CONFIG.lighting,
-            enabled: true,
-          },
-          clarity: {
-            ...DEFAULT_CONFIG.clarity,
-            enabled: true,
-          },
-          ocr: {
-            enabled: true,
-            language: ocrLanguage,
-          },
-        });
+          photoUri
+        );
 
         if (!result.success || !result.processedUri) {
           console.error(

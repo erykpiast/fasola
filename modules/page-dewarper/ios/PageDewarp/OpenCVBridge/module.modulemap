@@ -1,0 +1,4 @@
+module OpenCVBridge {
+    header "include/OpenCVWrapper.h"
+    export *
+}

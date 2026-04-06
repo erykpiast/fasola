@@ -1,7 +1,6 @@
 import { BackgroundProcessingProvider } from "@/features/background-processing";
 import { ICloudSyncProvider } from "@/features/icloud-sync";
 import { DebugProvider } from "@/features/photo-adjustment/context/DebugContext";
-import { usePhotoAdjustment } from "@/features/photo-adjustment/hooks/usePhotoAdjustment";
 import { RecipesProvider } from "@/features/recipes-list/context/RecipesContext";
 import { PreferencesProvider } from "@/features/settings/context/PreferencesContext";
 import { SourcesProvider } from "@/features/sources/context/SourcesContext";
@@ -16,7 +15,6 @@ import { useTheme } from "../platform/theme/useTheme";
 
 export default function RootLayout(): JSX.Element {
   const theme = useTheme();
-  const { WebViewSetup } = usePhotoAdjustment();
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(theme === "dark" ? "#000000" : "#F5F5F5");
@@ -33,7 +31,6 @@ export default function RootLayout(): JSX.Element {
                 <ICloudSyncProvider>
                   <BackgroundProcessingProvider>
                     <Stack screenOptions={{ headerShown: false }} />
-                    <WebViewSetup />
                   </BackgroundProcessingProvider>
                 </ICloudSyncProvider>
               </RecipesProvider>

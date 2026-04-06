@@ -1,9 +1,10 @@
-import type { DebugVisualizationData } from "@/lib/photo-processor/types";
 import { createContext, useContext, useState, useCallback, useMemo, type JSX, type ReactNode } from "react";
 
+type DebugData = Record<string, unknown>;
+
 interface DebugContextValue {
-  debugData: DebugVisualizationData | null;
-  setDebugData: (data: DebugVisualizationData | null) => void;
+  debugData: DebugData | null;
+  setDebugData: (data: DebugData | null) => void;
   isVisible: boolean;
   setIsVisible: (visible: boolean) => void;
   toggleVisibility: () => void;
@@ -12,10 +13,10 @@ interface DebugContextValue {
 const DebugContext = createContext<DebugContextValue | null>(null);
 
 export function DebugProvider(props: { children: ReactNode }): JSX.Element {
-  const [debugData, setDebugDataState] = useState<DebugVisualizationData | null>(null);
+  const [debugData, setDebugDataState] = useState<DebugData | null>(null);
   const [isVisible, setIsVisibleState] = useState(false);
 
-  const setDebugData = useCallback((data: DebugVisualizationData | null) => {
+  const setDebugData = useCallback((data: DebugData | null) => {
     setDebugDataState(data);
   }, []);
 

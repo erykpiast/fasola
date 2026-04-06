@@ -8,21 +8,47 @@ public class PageDewarperModule: Module {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let url: URL
-                    if inputPath.hasPrefix("/") {
+                    if inputPath.hasPrefix("file://") {
+                        guard let parsed = URL(string: inputPath) else {
+                            throw NSError(domain: "PageDewarper", code: 1, userInfo: [
+                                NSLocalizedDescriptionKey: "Invalid file URL: \(inputPath.prefix(100))"
+                            ])
+                        }
+                        url = parsed
+                    } else if inputPath.hasPrefix("/") {
                         url = URL(fileURLWithPath: inputPath)
+                    } else if inputPath.hasPrefix("data:") {
+                        throw NSError(domain: "PageDewarper", code: 1, userInfo: [
+                            NSLocalizedDescriptionKey: "DataURL input not supported, pass a file path"
+                        ])
                     } else if let parsed = URL(string: inputPath) {
                         url = parsed
                     } else {
                         throw NSError(domain: "PageDewarper", code: 1, userInfo: [
-                            NSLocalizedDescriptionKey: "Invalid input path: \(inputPath)"
+                            NSLocalizedDescriptionKey: "Invalid input path: \(inputPath.prefix(100))"
                         ])
                     }
 
                     let imageData = try Data(contentsOf: url)
-                    guard let image = UIImage(data: imageData) else {
+                    guard var image = UIImage(data: imageData) else {
                         throw NSError(domain: "PageDewarper", code: 2, userInfo: [
-                            NSLocalizedDescriptionKey: "Could not create UIImage from data"
+                            NSLocalizedDescriptionKey: "Could not create UIImage from \(imageData.count) bytes"
                         ])
+                    }
+
+                    // Downscale large images to prevent OOM during OpenCV processing.
+                    let maxDimension: CGFloat = 2000
+                    let w = image.size.width
+                    let h = image.size.height
+                    if max(w, h) > maxDimension {
+                        let scale = maxDimension / max(w, h)
+                        let newSize = CGSize(width: w * scale, height: h * scale)
+                        UIGraphicsBeginImageContextWithOptions(newSize, true, 1.0)
+                        image.draw(in: CGRect(origin: .zero, size: newSize))
+                        if let resized = UIGraphicsGetImageFromCurrentImageContext() {
+                            image = resized
+                        }
+                        UIGraphicsEndImageContext()
                     }
 
                     let result = DewarpPipeline.process(image: image)

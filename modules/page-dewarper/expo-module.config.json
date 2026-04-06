@@ -1,0 +1,7 @@
+{
+  "name": "page-dewarper",
+  "platforms": ["ios"],
+  "ios": {
+    "modules": ["PageDewarperModule"]
+  }
+}

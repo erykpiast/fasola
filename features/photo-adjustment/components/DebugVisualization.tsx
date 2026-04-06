@@ -1,5 +1,45 @@
 import { useDebugContext } from "@/features/photo-adjustment/context/DebugContext";
-import type { DewarpDebugData } from "@/lib/photo-processor/types";
+interface ProgressLog {
+  phase: string;
+  timestamp: number;
+  message: string;
+}
+
+interface DewarpDebugData {
+  mathValidation?: { polynomialTest: boolean; projectionTest: boolean };
+  imageWidth: number;
+  imageHeight: number;
+  binaryText?: string;
+  erodedText?: string;
+  edgeMap?: string;
+  detectedLines?: string;
+  fittedLines?: string;
+  pageBoundary?: string;
+  spanEstimates?: string;
+  detectedSpans?: string;
+  keypointCloud?: string;
+  preprocessingStats: {
+    contoursFound: number;
+    linesDetected: number;
+    pageBounds: { width: number; height: number };
+  };
+  optimizationMetrics: {
+    spanIterations: number;
+    spanError: number;
+    modelIterations: number;
+    modelError: number;
+    parameters: Array<number>;
+  };
+  meshGrid?: string;
+  surfaceMesh?: string;
+  beforeAfter?: string;
+  remapStats: {
+    resolution: { width: number; height: number };
+    interpolation: string;
+  };
+  processingTime: number;
+  progressLog?: Array<ProgressLog>;
+}
 import { useCallback, useState, type JSX } from "react";
 import {
   Image,
@@ -36,7 +76,7 @@ export function DebugVisualization(): JSX.Element | null {
     return null;
   }
 
-  const dewarpData = debugData as DewarpDebugData;
+  const dewarpData = debugData as unknown as DewarpDebugData;
 
   return (
     <>
@@ -334,7 +374,7 @@ function MetricsTab(props: {
         {dewarpData.progressLog && dewarpData.progressLog.length > 0 && (
           <>
             <Text style={styles.statsHeader}>Processing Timeline</Text>
-            {dewarpData.progressLog.map((log, index) => (
+            {dewarpData.progressLog.map((log: ProgressLog, index: number) => (
               <Text key={index} style={styles.statsSmall}>
                 {log.timestamp}ms - {log.phase}: {log.message}
               </Text>

@@ -43,11 +43,12 @@ LANG_CONFIG = {
         "torch_dtype": torch.float32,
     },
     "en": {
-        "model_name": "huawei-noah/TinyBERT_General_4L_312D",
-        "learning_rate": 3e-5,
-        "num_epochs": 30,
+        "model_name": "google-bert/bert-base-cased",
+        "learning_rate": 2e-5,
+        "num_epochs": 15,
         "batch_size": 8,
         "torch_dtype": torch.float32,
+        "freeze_layers_below": 10,  # freeze encoder layers 0-9, train 10-11 + classifier
     },
 }
 
@@ -218,6 +219,21 @@ def main():
         torch_dtype=config["torch_dtype"],
     )
 
+    # Freeze lower encoder layers if configured
+    freeze_below = config.get("freeze_layers_below")
+    if freeze_below is not None:
+        # Freeze embeddings
+        for param in model.bert.embeddings.parameters():
+            param.requires_grad = False
+        # Freeze encoder layers below threshold
+        for i, layer in enumerate(model.bert.encoder.layer):
+            if i < freeze_below:
+                for param in layer.parameters():
+                    param.requires_grad = False
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in model.parameters())
+        print(f"Frozen layers 0-{freeze_below - 1} + embeddings: {trainable:,} / {total:,} params trainable ({100*trainable/total:.1f}%)")
+
     # Training args
     training_args = TrainingArguments(
         output_dir=str(output_dir),
@@ -246,6 +262,13 @@ def main():
     train_ds = train_dataset.select_columns(train_cols)
     val_ds = _val_dataset.select_columns(train_cols)
 
+    callbacks = []
+    if len(val_examples) >= 5:
+        callbacks.append(EarlyStoppingCallback(early_stopping_patience=5))
+    else:
+        print(f"Val set too small ({len(val_examples)} examples) — disabling early stopping, training all {config['num_epochs']} epochs")
+        training_args.load_best_model_at_end = False
+
     trainer = WeightedTrainer(
         class_weights=class_weights.tolist(),
         model=model,
@@ -253,7 +276,7 @@ def main():
         train_dataset=train_ds,
         eval_dataset=val_ds,
         compute_metrics=lambda p: compute_metrics(p, tokenizer),
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
+        callbacks=callbacks,
     )
 
     print(f"\nStarting training ({lang})...")

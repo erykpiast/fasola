@@ -31,7 +31,7 @@ LABEL_MAP = {"O": 0, "B-TITLE": 1, "I-TITLE": 2}
 
 LANG_CONFIG = {
     "pl": {"model_name": "dkleczek/bert-base-polish-cased-v1"},
-    "en": {"model_name": "huawei-noah/TinyBERT_General_4L_312D"},
+    "en": {"model_name": "google-bert/bert-base-cased"},
 }
 
 _PATTERN_SUFFIX_RE = re.compile(

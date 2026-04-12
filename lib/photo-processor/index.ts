@@ -30,11 +30,9 @@ export async function processPhoto(
     } else {
       imageDataUrl = await loadImageAsDataUrl(photoUri);
     }
-    let geometryOnlyDataUrl: DataUrl = imageDataUrl;
-
     // Phase 1: Geometry correction (native on iOS, WebView on web)
     // On failure, continue with the original image (graceful degradation).
-    // Native geometry produces both a color image (for display) and a BW image (for OCR).
+    // Native geometry produces a BW (adaptive-thresholded) image for OCR.
     let bwImageUri: string | undefined;
     if (config.geometry.enabled) {
       console.log("[Photo Processor] Running geometry correction");
@@ -43,14 +41,12 @@ export async function processPhoto(
         config.geometry as unknown as Record<string, unknown>
       );
 
-      if (!geoResult.success || !geoResult.processedUri) {
+      if (!geoResult.success || !geoResult.bwUri) {
         console.warn(
           "[Photo Processor] Geometry correction failed, using original:",
           geoResult.error
         );
       } else {
-        imageDataUrl = geoResult.processedUri;
-        geometryOnlyDataUrl = imageDataUrl;
         bwImageUri = geoResult.bwUri;
       }
     }
@@ -84,7 +80,7 @@ export async function processPhoto(
 
     return {
       success: true,
-      processedUri: geometryOnlyDataUrl,
+      processedUri: imageDataUrl,
       ocrResult,
     };
   } catch (error) {

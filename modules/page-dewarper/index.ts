@@ -5,8 +5,7 @@ import PageDewarperModule, {
 export type { DewarpResult };
 
 /**
- * Dewarp a page image, returning both a color-dewarped image and a BW-thresholded image.
- * The color image is for display; the BW image is optimized for OCR.
+ * Dewarp a page image, returning a BW-thresholded image optimized for OCR.
  */
 export async function dewarpImage(uri: string): Promise<DewarpResult> {
   return PageDewarperModule.dewarpImage(uri);

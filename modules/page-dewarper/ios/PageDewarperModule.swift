@@ -1,11 +1,12 @@
 import ExpoModulesCore
+import PageDewarp
 
 public class PageDewarperModule: Module {
     public func definition() -> ModuleDefinition {
         Name("PageDewarper")
 
         AsyncFunction("dewarpImage") { (inputPath: String, promise: Promise) in
-            DispatchQueue.global(qos: .userInitiated).async {
+            DispatchQueue.global(qos: .userInitiated).async(execute: DispatchWorkItem {
                 do {
                     let url: URL
                     if inputPath.hasPrefix("file://") {
@@ -51,14 +52,22 @@ public class PageDewarperModule: Module {
                         UIGraphicsEndImageContext()
                     }
 
-                    let result = DewarpPipeline.process(image: image)
+                    NSLog("[PageDewarper] Input size: %.0fx%.0f, starting pipeline...",
+                          image.size.width, image.size.height)
+                    let startTime = CFAbsoluteTimeGetCurrent()
+
+                    let result = DewarpPipeline.process(image: image, method: .powell, output: .binary)
+
+                    let elapsed = CFAbsoluteTimeGetCurrent() - startTime
+                    NSLog("[PageDewarper] Pipeline completed in %.2fs", elapsed)
+
                     switch result {
-                    case .success(let output):
-                        let colorPath = self.writeTempImage(output.colorImage, suffix: "color")
-                        let bwPath = self.writeTempImage(output.bwImage, suffix: "bw")
+                    case .success(let bwImage):
+                        NSLog("[PageDewarper] Success — bw: %.0fx%.0f",
+                              bwImage.size.width, bwImage.size.height)
+                        let bwPath = try self.writeTempImage(bwImage, suffix: "bw")
 
                         promise.resolve([
-                            "colorUri": colorPath,
                             "bwUri": bwPath,
                         ])
                     case .failure(let error):
@@ -69,16 +78,19 @@ public class PageDewarperModule: Module {
                 } catch {
                     promise.reject("DEWARP_ERROR", error.localizedDescription)
                 }
-            }
+            })
         }
     }
 
-    private func writeTempImage(_ image: UIImage, suffix: String) -> String {
+    private func writeTempImage(_ image: UIImage, suffix: String) throws -> String {
         let filename = "\(UUID().uuidString)_\(suffix).jpg"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        if let data = image.jpegData(compressionQuality: 0.95) {
-            try? data.write(to: url)
+        guard let data = image.jpegData(compressionQuality: 0.95) else {
+            throw NSError(domain: "PageDewarper", code: 4, userInfo: [
+                NSLocalizedDescriptionKey: "Failed to encode image as JPEG"
+            ])
         }
+        try data.write(to: url)
         return url.path
     }
 }

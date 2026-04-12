@@ -9,7 +9,6 @@ export async function processGeometryNative(
   const result = await processGeometry(photoUri as DataUrl, config);
   return {
     success: result.success,
-    processedUri: result.processedUri,
     bwUri: undefined,
     error: result.error,
   };

@@ -1,7 +1,6 @@
 import { requireNativeModule } from "expo-modules-core";
 
 export interface DewarpResult {
-  colorUri: string;
   bwUri: string;
 }
 

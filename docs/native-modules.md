@@ -22,11 +22,11 @@ Native page dewarping module using [page-dewarp-swift](https://github.com/erykpi
 
 ### API
 
-- `dewarpImage(uri: string): Promise<{ colorUri: string, bwUri: string }>` - Dewarp a page image, returning both a color-dewarped image (for display) and a BW-thresholded image (for OCR).
+- `dewarpImage(uri: string): Promise<{ bwUri: string }>` - Dewarp a page image, returning a BW-thresholded image optimized for OCR.
 
 ### Implementation
 
-Vendored fork of page-dewarp-swift in `modules/page-dewarper/ios/PageDewarp/`. OpenCV is provided by the `opencv-rne` CocoaPod dependency. The fork adds `remapColorImage` to produce color output alongside the default BW output.
+Uses the `PageDewarp` CocoaPod (`~> 2.0`) from [erykpiast/page-dewarp-swift](https://github.com/erykpiast/page-dewarp-swift). OpenCV is provided transitively via the `opencv-rne` dependency.
 
 ## iOS Debugging
 

@@ -311,7 +311,7 @@ PODS:
     - opencv-rne (~> 4.11)
   - PageDewarper (1.0.0):
     - ExpoModulesCore
-    - PageDewarp (~> 2.0)
+    - PageDewarp
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
   - RCTTypeSafety (0.81.5):
@@ -2768,7 +2768,7 @@ SPEC CHECKSUMS:
   LiquidGlass: ff0927fdd686048d4068715e84975fede73c76b0
   opencv-rne: 2305807573b6e29c8c87e3416ab096d09047a7a0
   PageDewarp: a8fc247f59400834b6ad1e7bb819571097b247f2
-  PageDewarper: b85824f999bff218acf55e3924ae8f9efa874226
+  PageDewarper: e06d19ff7f56fb4c495776792b07532bfdbd9c9a
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c

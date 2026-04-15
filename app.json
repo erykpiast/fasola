@@ -48,7 +48,8 @@
       "expo-font",
       "expo-localization",
       "expo-web-browser",
-      "./modules/icloud-sync/app.plugin.js"
+      "./modules/icloud-sync/app.plugin.js",
+      "./modules/page-dewarper/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true,

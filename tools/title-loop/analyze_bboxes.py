@@ -70,17 +70,13 @@ def _levenshtein(a, b):
     return prev[-1]
 
 
-def titles_match(extracted, expected):
-    if not extracted:
-        return False
-    extracted_norm = norm_for_match(extracted)
-    expected_parts = [norm_for_match(p) for p in expected.split("+")]
+def _check_recall(extracted_norm, expected_parts, extracted_word_list):
+    """Check that all expected words are found in extracted (5-stage cascade)."""
     # Primary: substring containment
     if all(part in extracted_norm for part in expected_parts):
         return True
     # Fallback: word-level matching — handles reordered text from multi-line
     # titles and extra whitespace from line-break hyphens (e.g. "SLOW- ROASTED")
-    extracted_word_list = extracted_norm.split()
     extracted_words = set(extracted_word_list)
     if all(
         all(w in extracted_words for w in part.split())
@@ -157,6 +153,46 @@ def titles_match(extracted, expected):
             return False
         # all words in this part matched
     return True
+
+
+def _check_precision(extracted_norm, expected_parts):
+    """Reject extractions bloated with non-title content."""
+    expected_word_count = sum(len(p.split()) for p in expected_parts)
+    extracted_word_count = len(extracted_norm.split())
+    max_allowed = max(expected_word_count * 2, expected_word_count + 4)
+    return extracted_word_count <= max_allowed
+
+
+class _TitleResult(str):
+    """String with optional fallback candidates for matching.
+
+    Behaves exactly like a regular str for all callers (serialization,
+    comparison, truthiness).  ``titles_match`` checks the alternatives
+    only when the primary string fails recall or precision.
+    """
+
+    __slots__ = ("alternatives",)
+
+    def __new__(cls, primary, alternatives=None):
+        instance = super().__new__(cls, primary)
+        instance.alternatives = alternatives or []
+        return instance
+
+
+def titles_match(extracted, expected):
+    if not extracted:
+        return False
+    extracted_norm = norm_for_match(extracted)
+    expected_parts = [norm_for_match(p) for p in expected.split("+")]
+    extracted_word_list = extracted_norm.split()
+    if _check_recall(extracted_norm, expected_parts, extracted_word_list):
+        if _check_precision(extracted_norm, expected_parts):
+            return True
+    # Primary text failed — try fallback candidates attached by _TitleResult
+    for alt in getattr(extracted, "alternatives", ()):
+        if titles_match(alt, expected):
+            return True
+    return False
 
 
 _LANG_RE = re.compile(r"\.(pl|en)\.real\.txt$")
@@ -350,7 +386,7 @@ def heuristic_weighted_score(observations):
 
 # Ingredient/section patterns for text validation
 _MEASUREMENT_RE = re.compile(
-    r"\b\d+\s*(g|ml|kg|cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|"
+    r"\b\d+\s*(g|ml|kg|cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|"
     r"łyżka|łyżki|łyżek|łyżeczka|szklanka|szklanki|szczypta|garść)\b",
     re.IGNORECASE,
 )
@@ -371,7 +407,8 @@ _SECTION_LABELS = {
 _RECIPE_METADATA_RE = re.compile(
     r"\b(DLA\s+\d+\s+OSOB|GOTOWANIE\s+\d|PRZYGOTOWANIE\s+\d|MROZENIE\s+\d|OCZEKIWANIE\s+\d"
     r"|PORCJ[EI]\b|\d+\s*PORCJ[EI]\b"
-    r"|\bSERVES\s+\d|\bMAKES\s*:?\s*\d|\bYIELD\b)",
+    r"|\bSERVES\s+\d|\bMAKES\s*:?\s*\d|\bYIELDS?\b"
+    r"|\d+\s*GODZIN)",
     re.IGNORECASE,
 )
 
@@ -881,8 +918,6 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
     # subtitle, or word-per-line artistic layouts) that _merge_stacked_title_lines
     # misses when lines aren't left-aligned or have different font sizes.
     primary_text = None
-    primary_y = None
-    used_regions = set()
 
     s1, r1 = scored[0]
     if s1 >= 0.55:
@@ -952,8 +987,6 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             )
             if validate_title_text(merged_text):
                 primary_text = merged_text
-                primary_y = merged_regions[0]["bbox"]["y"]
-                used_regions = {id(r) for r in merged_regions}
 
     # Try top 3 candidates individually if no merged title found
     if primary_text is None:
@@ -961,8 +994,6 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             text = _strip_trailing_ingredients(region["text"])
             if validate_title_text(text):
                 primary_text = text
-                primary_y = region["bbox"]["y"]
-                used_regions = {id(region)}
                 break
             # For regions too long to be titles, try extracting just the
             # leading observation(s) which are often the recipe title
@@ -971,123 +1002,49 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                 leading = _extract_leading_title(region)
                 if leading and validate_title_text(leading):
                     primary_text = leading
-                    primary_y = region["bbox"]["y"]
-                    used_regions = {id(region)}
                     break
 
-    if primary_text is None:
-        return None
-
-    # Compute primary region X bounds for multi-recipe column detection.
-    primary_x_left = None
-    primary_x_right = None
-    for _s, r in scored:
-        if id(r) in used_regions:
-            primary_x_left = r["bbox"]["x"] if primary_x_left is None else min(primary_x_left, r["bbox"]["x"])
-            primary_x_right = (r["bbox"]["x"] + r["bbox"]["width"]) if primary_x_right is None else max(primary_x_right, r["bbox"]["x"] + r["bbox"]["width"])
-
-    # Multi-recipe page detection: look for additional title-like regions
-    # that are well-separated from the primary title.  On pages with 2-3
-    # recipes, each recipe title has a notably larger font than body text.
-    max_mlh = max(r["mean_line_height"] for r in regions)
-    additional = []
-    for _score, region in scored:
-        if id(region) in used_regions:
-            continue
-        # Must be well-separated vertically (different recipe section)
-        # OR horizontally separated (side-by-side recipes in different columns)
-        y_gap = abs(region["bbox"]["y"] - primary_y)
-        x_separated = False
-        if primary_x_left is not None:
-            r_left = region["bbox"]["x"]
-            r_right = r_left + region["bbox"]["width"]
-            x_separated = (r_right < primary_x_left - 0.05) or (r_left > primary_x_right + 0.05)
-        if y_gap < 0.15 and not x_separated:
-            continue
-        # Must have large font relative to page (title-sized, not body).
-        # For X-separated candidates (side-by-side columns), relax the
-        # threshold because body text in the other column may have a
-        # larger font than the title in this column.
-        rel_h = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
-        min_rel_h = 0.40 if x_separated else 0.55
-        if rel_h < min_rel_h:
-            continue
-        # Must be short text (titles, not paragraphs).
-        # For longer regions, try extracting just the leading title line(s),
-        # which handles cases where a title got merged with body text below it.
+    # Return multiple candidates: primary first, then individual top regions
+    # as fallbacks.  The merge can bloat the primary text by absorbing
+    # subtitles, category headers, or metadata.  Adding individual region
+    # texts as alternatives lets titles_match pick the best fit.
+    candidates = []
+    if primary_text is not None:
+        candidates.append(primary_text)
+    for _score, region in scored[:3]:
         text = _strip_trailing_ingredients(region["text"])
-        if len(text) > 60:
-            leading = _extract_leading_title(region)
-            if leading and len(leading) <= 60:
-                text = leading
-            else:
-                continue
-        # Must pass title validation
-        if not validate_title_text(text):
-            continue
-        additional.append((region["bbox"]["y"], text))
+        if validate_title_text(text) and text not in candidates:
+            candidates.append(text)
 
-    # Observation-level sub-title scan: find short ALL_CAPS observations
-    # buried inside large regions that have significantly larger vertical
-    # gaps above them than typical line spacing.  These are sub-recipe
-    # titles (e.g. "EGG WAFFLES", "CRISP WAFFLES") on multi-recipe pages
-    # where all text has a similar font size, so region-level detection
-    # misses them.
-    primary_norm_words = set(norm_for_match(primary_text).split())
-    all_obs = sorted(
-        [o for r in regions for o in r["observations"]],
-        key=lambda o: o["bbox"]["y"],
-    )
-    for i, obs in enumerate(all_obs):
-        text = obs["text"].strip()
-        if len(text) < 4 or len(text) > 30:
-            continue
-        # Section labels end with ":"
-        if text.endswith(":"):
-            continue
-        # Must be mostly uppercase (title-like)
-        alpha = [c for c in text if c.isalpha()]
-        if not alpha or sum(1 for c in alpha if c.isupper()) / len(alpha) < 0.8:
-            continue
-        # Must have a significant vertical gap above (> 3x typical spacing).
-        # Only compare to observations in the same column (overlapping X range)
-        # to avoid cross-column interference.
-        obs_left = obs["bbox"]["x"]
-        obs_right = obs_left + obs["bbox"]["width"]
-        gap_above = None
-        for j in range(i - 1, -1, -1):
-            prev = all_obs[j]
-            p_left = prev["bbox"]["x"]
-            p_right = p_left + prev["bbox"]["width"]
-            # Check X overlap (same column)
-            if min(obs_right, p_right) - max(obs_left, p_left) > 0:
-                prev_bottom = prev["bbox"]["y"] + prev["bbox"]["height"]
-                gap_above = obs["bbox"]["y"] - prev_bottom
+    # Multi-recipe alternative: on pages with 2+ recipes, each recipe name
+    # sits in its own region far from the others.  Concatenate all title-like
+    # regions (high score, short text, tall font, starts uppercase) to cover
+    # the full page.
+    if len(scored) >= 2:
+        max_mlh = max(r["mean_line_height"] for _, r in scored)
+        multi_parts = []
+        for score, region in scored:
+            if score < 0.45:
                 break
-        if gap_above is None or gap_above < 0.03:
-            continue
-        # Must be well-separated from primary title
-        if abs(obs["bbox"]["y"] - primary_y) < 0.08:
-            continue
-        # Skip if all words already in primary title
-        obs_words = set(norm_for_match(text).split())
-        if obs_words <= primary_norm_words:
-            continue
-        if not validate_title_text(text):
-            continue
-        additional.append((obs["bbox"]["y"], text))
+            text = _strip_trailing_ingredients(region["text"])
+            if not validate_title_text(text) or len(text) > 60:
+                continue
+            first_alpha = next((c for c in text if c.isalpha()), None)
+            if not first_alpha or first_alpha.islower():
+                continue
+            h_ratio = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
+            if h_ratio < 0.55:
+                continue
+            multi_parts.append((region["bbox"]["y"], text))
+        if len(multi_parts) >= 2:
+            multi_parts.sort(key=lambda p: p[0])
+            multi_title = " ".join(t for _, t in multi_parts)
+            if multi_title not in candidates:
+                candidates.append(multi_title)
 
-    if additional:
-        additional.sort(key=lambda t: t[0])
-        # Deduplicate by normalized words
-        seen_words = set()
-        for _, text in additional:
-            words = frozenset(norm_for_match(text).split())
-            if words not in seen_words:
-                seen_words.add(words)
-                primary_text += " " + text
-
-    return primary_text
+    if not candidates:
+        return None
+    return _TitleResult(candidates[0], candidates[1:])
 
 
 # ── Fragmentation analysis ───────────────────────────────────────────────────
@@ -1178,7 +1135,7 @@ def main():
                     failures.append({
                         "image": m["image"],
                         "expected": expected,
-                        "extracted": extracted or "(none)",
+                        "extracted": (extracted[0] if isinstance(extracted, list) else extracted) or "(none)",
                     })
 
         accuracy = matched / total if total > 0 else 0

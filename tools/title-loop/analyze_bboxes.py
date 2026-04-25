@@ -1049,7 +1049,21 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                     continue
             first_alpha = next((c for c in text if c.isalpha()), None)
             if not first_alpha or first_alpha.islower():
-                continue
+                # Region text starts lowercase — often gutter noise
+                # prepended to a real title.  Try the widest observation
+                # in the region as a title candidate (gutter noise is
+                # always very narrow).
+                best_obs = max(region["observations"],
+                               key=lambda o: o["bbox"]["width"])
+                obs_text = best_obs["text"].strip()
+                obs_alpha = next((c for c in obs_text if c.isalpha()), None)
+                if (obs_alpha and obs_alpha.isupper()
+                        and validate_title_text(obs_text)
+                        and len(obs_text) <= 60):
+                    text = obs_text
+                    leading_used = True
+                else:
+                    continue
             # Reject body text sentences: titles are short noun phrases,
             # not prose.  If most words (after the first) start lowercase
             # and the text is long (7+ words), it's likely a sentence.

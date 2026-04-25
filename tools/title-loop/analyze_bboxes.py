@@ -1037,7 +1037,14 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                 break
             text = _strip_trailing_ingredients(region["text"])
             if not validate_title_text(text) or len(text) > 60:
-                continue
+                # Region text too long or invalid — try extracting just the
+                # leading observation(s) which are often a recipe title
+                # followed by body text in the same cluster.
+                leading = _extract_leading_title(region)
+                if leading and validate_title_text(leading) and len(leading) <= 60:
+                    text = leading
+                else:
+                    continue
             first_alpha = next((c for c in text if c.isalpha()), None)
             if not first_alpha or first_alpha.islower():
                 continue

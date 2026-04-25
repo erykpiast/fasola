@@ -21,8 +21,9 @@ platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
 prepare_react_native_project!
 
 target 'fasola' do
-  # Declare git source before use_expo_modules! so CocoaPods can resolve
-  # PageDewarper's dependency on PageDewarp without hitting trunk CDN.
+  # Must be declared before use_expo_modules! — PageDewarper's podspec
+  # depends on PageDewarp which is a private pod (not on CocoaPods trunk).
+  # The :git source here acts as the resolution source during pod install.
   pod 'PageDewarp', :git => 'https://github.com/erykpiast/page-dewarp-swift.git', :tag => '2.0.0'
   use_expo_modules!
 

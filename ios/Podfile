@@ -23,7 +23,7 @@ prepare_react_native_project!
 target 'fasola' do
   # Declare git source before use_expo_modules! so CocoaPods can resolve
   # PageDewarper's dependency on PageDewarp without hitting trunk CDN.
-  pod 'PageDewarp', :git => 'https://github.com/erykpiast/page-dewarp-swift.git', :commit => '097d9c0d4b3288a8a50658a55885314335e34056'
+  pod 'PageDewarp', :git => 'https://github.com/erykpiast/page-dewarp-swift.git', :tag => '2.0.0'
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'

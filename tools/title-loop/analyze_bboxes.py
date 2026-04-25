@@ -1036,6 +1036,7 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             if score < 0.45:
                 break
             text = _strip_trailing_ingredients(region["text"])
+            leading_used = False
             if not validate_title_text(text) or len(text) > 60:
                 # Region text too long or invalid — try extracting just the
                 # leading observation(s) which are often a recipe title
@@ -1043,13 +1044,26 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
                 leading = _extract_leading_title(region)
                 if leading and validate_title_text(leading) and len(leading) <= 60:
                     text = leading
+                    leading_used = True
                 else:
                     continue
             first_alpha = next((c for c in text if c.isalpha()), None)
             if not first_alpha or first_alpha.islower():
                 continue
+            # Reject body text sentences: titles are short noun phrases,
+            # not prose.  If most words (after the first) start lowercase
+            # and the text is long (7+ words), it's likely a sentence.
+            words = text.split()
+            if len(words) >= 7:
+                lc = sum(1 for w in words[1:] if w[:1].islower())
+                if lc / (len(words) - 1) > 0.7:
+                    continue
+            # When leading extraction was used, the region's mean line
+            # height is diluted by body text observations — use a relaxed
+            # threshold so title-sized leading text isn't rejected.
+            h_threshold = 0.45 if leading_used else 0.55
             h_ratio = region["mean_line_height"] / max_mlh if max_mlh > 0 else 0
-            if h_ratio < 0.55:
+            if h_ratio < h_threshold:
                 continue
             multi_parts.append((region["bbox"]["y"], text))
         if len(multi_parts) >= 2:

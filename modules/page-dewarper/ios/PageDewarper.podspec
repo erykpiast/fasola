@@ -19,5 +19,7 @@ Pod::Spec.new do |s|
   s.frameworks = 'UIKit'
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'PageDewarp'
+  # PageDewarp is a peer dependency declared in the Podfile via git source.
+  # Declaring it here causes CocoaPods to look it up on trunk CDN (where
+  # it doesn't exist) before the Podfile's git source is registered.
 end

@@ -1086,6 +1086,38 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
             if multi_title not in candidates:
                 candidates.append(multi_title)
 
+    # ALL CAPS observation scan: on pages with multiple short ALL CAPS
+    # observations, concatenate them as an alternative.  This catches recipe
+    # sub-headings embedded in body text regions that the clustering algorithm
+    # merges with surrounding paragraphs (e.g. "EGG WAFFLES", "CRISP WAFFLES"
+    # on a multi-recipe page).  No font-size gate is applied: sub-headings
+    # are often the same size as surrounding body text.
+    caps_parts = []
+    seen_caps = set()
+    for obs in observations:
+        text = obs["text"].strip()
+        if len(text) < 4 or len(text) > 40:
+            continue
+        alpha = [c for c in text if c.isalpha()]
+        if len(alpha) < 3:
+            continue
+        upper_ratio = sum(1 for c in alpha if c.isupper()) / len(alpha)
+        if upper_ratio < 0.8:
+            continue
+        if not validate_title_text(text):
+            continue
+        norm = text.upper()
+        if norm in seen_caps:
+            continue
+        seen_caps.add(norm)
+        caps_parts.append((obs["bbox"]["y"], text))
+
+    if len(caps_parts) >= 2:
+        caps_parts.sort(key=lambda p: p[0])
+        caps_title = " ".join(t for _, t in caps_parts)
+        if caps_title not in candidates:
+            candidates.append(caps_title)
+
     if not candidates:
         return None
     return _TitleResult(candidates[0], candidates[1:])

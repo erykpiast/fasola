@@ -74,23 +74,17 @@ function levenshtein(a: string, b: string): number {
   return prev[prev.length - 1];
 }
 
-export function titlesMatch(
-  extracted: string | undefined,
-  expected: string,
+function checkRecall(
+  extractedNorm: string,
+  expectedParts: Array<string>,
+  extractedWordList: Array<string>,
 ): boolean {
-  if (extracted === undefined || extracted === "") {
-    return false;
-  }
-  const extractedNorm = normForMatch(extracted);
-  const expectedParts = expected.split("+").map((p) => normForMatch(p));
-
   // Primary: substring containment
   if (expectedParts.every((part) => extractedNorm.includes(part))) {
     return true;
   }
 
   // Fallback: word-level matching
-  const extractedWordList = extractedNorm.split(" ");
   const extractedWords = new Set(extractedWordList);
   if (
     expectedParts.every((part) =>
@@ -190,10 +184,40 @@ export function titlesMatch(
   return true;
 }
 
+function checkPrecision(
+  extractedNorm: string,
+  expectedParts: Array<string>,
+): boolean {
+  const expectedWordCount = expectedParts.reduce(
+    (sum, p) => sum + p.split(" ").length,
+    0,
+  );
+  const extractedWordCount = extractedNorm.split(" ").length;
+  const maxAllowed = Math.max(expectedWordCount * 2, expectedWordCount + 4);
+  return extractedWordCount <= maxAllowed;
+}
+
+export function titlesMatch(
+  extracted: string | undefined,
+  expected: string,
+): boolean {
+  if (extracted === undefined || extracted === "") {
+    return false;
+  }
+  const extractedNorm = normForMatch(extracted);
+  const expectedParts = expected.split("+").map((p) => normForMatch(p));
+  const extractedWordList = extractedNorm.split(" ");
+
+  if (!checkRecall(extractedNorm, expectedParts, extractedWordList)) {
+    return false;
+  }
+  return checkPrecision(extractedNorm, expectedParts);
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const _MEASUREMENT_RE = new RegExp(
-  "\\b\\d+\\s*(g|ml|kg|cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|" +
+  "\\b\\d+\\s*(g|ml|kg|cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|" +
     "łyżka|łyżki|łyżek|łyżeczka|szklanka|szklanki|szczypta|garść)\\b",
   "i",
 );
@@ -236,11 +260,19 @@ const _SECTION_LABELS = new Set([
 const _RECIPE_METADATA_RE = new RegExp(
   "\\b(DLA\\s+\\d+\\s+OSOB|GOTOWANIE\\s+\\d|PRZYGOTOWANIE\\s+\\d|MROZENIE\\s+\\d|OCZEKIWANIE\\s+\\d" +
     "|PORCJ[EI]\\b|\\d+\\s*PORCJ[EI]\\b" +
-    "|\\bSERVES\\s+\\d|\\bMAKES\\s*:?\\s*\\d|\\bYIELD\\b)",
+    "|\\bSERVES\\s+\\d|\\bMAKES\\s*:?\\s*\\d|\\bYIELDS?\\b" +
+    "|\\d+\\s*GODZIN)",
   "i",
 );
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
+
+/** Equivalent to Python's str.isalpha(): matches any Unicode letter. */
+const _ALPHA_RE = /\p{L}/u;
+
+function isAlpha(c: string): boolean {
+  return _ALPHA_RE.test(c);
+}
 
 function mean(arr: Array<number>): number {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -334,9 +366,9 @@ function detectColumns(
 
     for (const o of observations) {
       const ox = o.bbox.x;
-      const or_ = ox + o.bbox.width;
+      const oRight = ox + o.bbox.width;
 
-      if (or_ <= splitX + 0.01) {
+      if (oRight <= splitX + 0.01) {
         left.push(o);
       } else if (ox >= splitX - 0.01) {
         right.push(o);
@@ -721,7 +753,8 @@ function mergeStackedTitleLines(regions: Array<Region>): Array<Region> {
 
 function scoreTitleRegion(
   region: Region,
-  allRegions: Array<Region>,
+  maxMlh: number,
+  maxDensity: number,
 ): number {
   // Line count score
   const n = region.lines;
@@ -737,9 +770,6 @@ function scoreTitleRegion(
   }
 
   // Relative line height
-  const maxMlh = Math.max(
-    ...allRegions.map((r) => r.mean_line_height),
-  );
   const relativeLineHeight =
     maxMlh > 0 ? region.mean_line_height / maxMlh : 0;
 
@@ -755,9 +785,6 @@ function scoreTitleRegion(
   }
 
   // Character density
-  const maxDensity = Math.max(
-    ...allRegions.map((r) => r.char_density),
-  );
   const charDensityScore =
     maxDensity > 0
       ? 1 - Math.min(region.char_density / maxDensity, 1)
@@ -770,10 +797,7 @@ function scoreTitleRegion(
   );
 
   // ALL_CAPS boost, scaled by relative line height
-  // Use Unicode property escape to match all alphabetic characters (like Python's str.isalpha())
-  const alphaChars = [...region.text].filter((c) =>
-    /\p{L}/u.test(c),
-  );
+  const alphaChars = [...region.text].filter(isAlpha);
   const upperRatio =
     alphaChars.length > 0
       ? alphaChars.filter((c) => c === c.toUpperCase()).length /
@@ -866,7 +890,7 @@ function extractLeadingTitle(
     return undefined;
   }
   const firstAlpha = [...first.text].find((c) =>
-    /\p{L}/u.test(c),
+    isAlpha(c),
   );
   if (
     firstAlpha !== undefined &&
@@ -897,6 +921,64 @@ function extractLeadingTitle(
   return titleObs.map((o) => o.text).join(" ");
 }
 
+/**
+ * Resolve the representative text for a region in a multi-recipe context.
+ * Returns the text and whether a relaxed height threshold should be used,
+ * or undefined if the region is not title-like.
+ */
+function resolveMultiRecipeText(
+  region: Region,
+): { text: string; relaxedH: boolean } | undefined {
+  let text = stripTrailingIngredients(region.text);
+  let relaxedH = false;
+
+  if (!validateTitleText(text) || text.length > 60) {
+    const leading = extractLeadingTitle(region);
+    if (
+      leading !== undefined &&
+      validateTitleText(leading) &&
+      leading.length <= 60
+    ) {
+      text = leading;
+      relaxedH = true;
+    } else {
+      return undefined;
+    }
+  }
+
+  const firstAlpha = [...text].find(isAlpha);
+  if (firstAlpha === undefined || firstAlpha === firstAlpha.toLowerCase()) {
+    // Region text starts lowercase — try widest observation
+    const bestObs = region.observations.reduce((a, b) =>
+      a.bbox.width > b.bbox.width ? a : b,
+    );
+    const obsText = bestObs.text.trim();
+    const obsAlpha = [...obsText].find(isAlpha);
+    if (
+      obsAlpha !== undefined &&
+      obsAlpha === obsAlpha.toUpperCase() &&
+      validateTitleText(obsText) &&
+      obsText.length <= 60
+    ) {
+      return { text: obsText, relaxedH: true };
+    }
+    return undefined;
+  }
+
+  // Reject body text sentences
+  const words = text.split(" ");
+  if (words.length >= 7) {
+    const lc = words
+      .slice(1)
+      .filter((w) => w.length > 0 && w[0] === w[0].toLowerCase()).length;
+    if (lc / (words.length - 1) > 0.7) {
+      return undefined;
+    }
+  }
+
+  return { text, relaxedH };
+}
+
 // ── Main entry point ───────────────────────────────────────────────────────────
 
 export function extractTitleFromBboxes(
@@ -904,45 +986,35 @@ export function extractTitleFromBboxes(
   yTolerance: number = 0.05,
   regionGap: number = 0.04,
 ): string | undefined {
-  console.log(
-    `[BBox Title] Starting extraction from ${observations.length} observations`,
-  );
-
   const regions = clusterIntoRegions(
     observations,
     yTolerance,
     regionGap,
   );
 
-  console.log(`[BBox Title] Clustered into ${regions.length} regions`);
-
   if (regions.length === 0) {
-    console.log("[BBox Title] No regions found, returning undefined");
     return undefined;
   }
 
+  // Precompute region-level maxima once (used by scoring and multi-recipe)
+  const maxMlh = regions.reduce(
+    (m, r) => Math.max(m, r.mean_line_height),
+    0,
+  );
+  const maxDensity = regions.reduce(
+    (m, r) => Math.max(m, r.char_density),
+    0,
+  );
+
   // Score all regions
   const scored: Array<[number, Region]> = regions.map((r) => [
-    scoreTitleRegion(r, regions),
+    scoreTitleRegion(r, maxMlh, maxDensity),
     r,
   ]);
   scored.sort((a, b) => b[0] - a[0]);
 
-  // Log scored regions
-  for (const [score, region] of scored) {
-    const textPreview =
-      region.text.length > 60
-        ? region.text.slice(0, 60) + "..."
-        : region.text;
-    console.log(
-      `[BBox Title]   score=${score.toFixed(3)} lines=${region.lines} y=${region.bbox.y.toFixed(3)} h=${region.mean_line_height.toFixed(4)} text="${textPreview}"`,
-    );
-  }
-
   // Greedy multi-region merge
   let primaryText: string | undefined = undefined;
-  let primaryY: number | undefined = undefined;
-  const usedRegionIndices = new Set<number>();
 
   const [s1, r1] = scored[0];
   if (s1 >= 0.55) {
@@ -1018,215 +1090,124 @@ export function extractTitleFromBboxes(
       const mergedText = stripTrailingIngredients(
         mergedRegions.map((r) => r.text).join(" "),
       );
-      console.log(
-        `[BBox Title] Merged ${mergedRegions.length} regions: "${mergedText}"`,
-      );
       if (validateTitleText(mergedText)) {
         primaryText = mergedText;
-        primaryY = mergedRegions[0].bbox.y;
-        // Track used regions by finding their index in scored
-        for (const mr of mergedRegions) {
-          const idx = scored.findIndex(([, r]) => r === mr);
-          if (idx >= 0) {
-            usedRegionIndices.add(idx);
-          }
-        }
       }
     }
   }
 
   // Try top 3 candidates individually if no merged title found
   if (primaryText === undefined) {
-    console.log("[BBox Title] No merged title, trying top 3 candidates individually");
     for (let i = 0; i < Math.min(3, scored.length); i++) {
       const [, region] = scored[i];
       const text = stripTrailingIngredients(region.text);
-      const valid = validateTitleText(text);
-      console.log(
-        `[BBox Title]   candidate ${i}: valid=${valid} text="${text.length > 60 ? text.slice(0, 60) + "..." : text}"`,
-      );
-      if (valid) {
+      if (validateTitleText(text)) {
         primaryText = text;
-        primaryY = region.bbox.y;
-        usedRegionIndices.add(i);
         break;
       }
       // For regions too long to be titles, try extracting just the
       // leading observation(s)
       if (region.text.length > 200) {
         const leading = extractLeadingTitle(region);
-        console.log(
-          `[BBox Title]   candidate ${i} leading title: ${leading ?? "(none)"}`,
-        );
         if (leading !== undefined && validateTitleText(leading)) {
           primaryText = leading;
-          primaryY = region.bbox.y;
-          usedRegionIndices.add(i);
           break;
         }
       }
     }
   }
 
-  if (primaryText === undefined || primaryY === undefined) {
-    console.log("[BBox Title] No valid title found, returning undefined");
-    return undefined;
-  }
+  // Build a ranked list of candidates. candidates[0] is returned as the
+  // extraction result. Additional candidates maintain structural parity
+  // with the Python implementation where they serve as _TitleResult
+  // alternatives for evaluation matching.
+  const candidates: Array<string> = [];
+  const candidateSet = new Set<string>();
 
-  // Compute primary region X bounds for multi-recipe column detection.
-  let primaryXLeft: number | undefined = undefined;
-  let primaryXRight: number | undefined = undefined;
-  for (let i = 0; i < scored.length; i++) {
-    if (usedRegionIndices.has(i)) {
-      const r = scored[i][1];
-      primaryXLeft =
-        primaryXLeft === undefined
-          ? r.bbox.x
-          : Math.min(primaryXLeft, r.bbox.x);
-      primaryXRight =
-        primaryXRight === undefined
-          ? r.bbox.x + r.bbox.width
-          : Math.max(primaryXRight, r.bbox.x + r.bbox.width);
+  function addCandidate(text: string): void {
+    if (!candidateSet.has(text)) {
+      candidateSet.add(text);
+      candidates.push(text);
     }
   }
 
-  // Multi-recipe page detection
-  const maxMlh = Math.max(
-    ...regions.map((r) => r.mean_line_height),
-  );
-  const additional: Array<[number, string]> = [];
+  if (primaryText !== undefined) {
+    addCandidate(primaryText);
+  }
 
-  for (let i = 0; i < scored.length; i++) {
-    if (usedRegionIndices.has(i)) {
-      continue;
+  // Individual top-3 region texts + leading observations as alternatives
+  for (const [, region] of scored.slice(0, 3)) {
+    const text = stripTrailingIngredients(region.text);
+    if (validateTitleText(text)) {
+      addCandidate(text);
     }
-    const region = scored[i][1];
+    const leading = extractLeadingTitle(region);
+    if (leading !== undefined && validateTitleText(leading)) {
+      addCandidate(leading);
+    }
+  }
 
-    // Must be well-separated vertically OR horizontally separated
-    const yGap = Math.abs(region.bbox.y - primaryY);
-    let xSeparated = false;
-    if (primaryXLeft !== undefined && primaryXRight !== undefined) {
-      const rLeft = region.bbox.x;
-      const rRight = rLeft + region.bbox.width;
-      xSeparated =
-        rRight < primaryXLeft - 0.05 ||
-        rLeft > primaryXRight + 0.05;
-    }
-    if (yGap < 0.15 && !xSeparated) {
-      continue;
-    }
-
-    // Must have large font relative to page
-    const relH =
-      maxMlh > 0 ? region.mean_line_height / maxMlh : 0;
-    const minRelH = xSeparated ? 0.4 : 0.55;
-    if (relH < minRelH) {
-      continue;
-    }
-
-    // Must be short text
-    let text = stripTrailingIngredients(region.text);
-    if (text.length > 60) {
-      const leading = extractLeadingTitle(region);
-      if (leading !== undefined && leading.length <= 60) {
-        text = leading;
-      } else {
+  // Multi-recipe alternative: concatenate all title-like regions
+  if (scored.length >= 2) {
+    const multiParts: Array<[number, string]> = [];
+    for (const [score, region] of scored) {
+      if (score < 0.45) {
+        break;
+      }
+      const candidate = resolveMultiRecipeText(region);
+      if (candidate === undefined) {
         continue;
       }
+      const hThreshold = candidate.relaxedH ? 0.45 : 0.55;
+      const hRatio =
+        maxMlh > 0 ? region.mean_line_height / maxMlh : 0;
+      if (hRatio < hThreshold) {
+        continue;
+      }
+      multiParts.push([region.bbox.y, candidate.text]);
     }
-    // Must pass title validation
-    if (!validateTitleText(text)) {
-      continue;
+    if (multiParts.length >= 2) {
+      multiParts.sort((a, b) => a[0] - b[0]);
+      addCandidate(multiParts.map(([, t]) => t).join(" "));
     }
-    additional.push([region.bbox.y, text]);
   }
 
-  // Observation-level sub-title scan
-  const primaryNormWords = new Set(
-    normForMatch(primaryText).split(" "),
-  );
-  const allObs = regions
-    .flatMap((r) => r.observations)
-    .sort((a, b) => a.bbox.y - b.bbox.y);
-
-  for (let i = 0; i < allObs.length; i++) {
-    const obs = allObs[i];
+  // ALL CAPS observation scan
+  const capsParts: Array<[number, string]> = [];
+  const seenCaps = new Set<string>();
+  for (const obs of observations) {
     const text = obs.text.trim();
-    if (text.length < 4 || text.length > 30) {
+    if (text.length < 4 || text.length > 40) {
       continue;
     }
-    // Section labels end with ":"
-    if (text.endsWith(":")) {
+    const alpha = [...text].filter(isAlpha);
+    if (alpha.length < 3) {
       continue;
     }
-    // Must be mostly uppercase (title-like)
-    // Use Unicode property escape to match all alphabetic characters (like Python's str.isalpha())
-    const alpha = [...text].filter((c) => /\p{L}/u.test(c));
-    if (
-      alpha.length === 0 ||
-      alpha.filter((c) => c === c.toUpperCase()).length /
-        alpha.length <
-        0.8
-    ) {
-      continue;
-    }
-    // Must have a significant vertical gap above
-    const obsLeft = obs.bbox.x;
-    const obsRight = obsLeft + obs.bbox.width;
-    let gapAbove: number | undefined = undefined;
-    for (let j = i - 1; j >= 0; j--) {
-      const prev = allObs[j];
-      const pLeft = prev.bbox.x;
-      const pRight = pLeft + prev.bbox.width;
-      // Check X overlap (same column)
-      if (Math.min(obsRight, pRight) - Math.max(obsLeft, pLeft) > 0) {
-        const prevBottom = prev.bbox.y + prev.bbox.height;
-        gapAbove = obs.bbox.y - prevBottom;
-        break;
-      }
-    }
-    if (gapAbove === undefined || gapAbove < 0.03) {
-      continue;
-    }
-    // Must be well-separated from primary title
-    if (Math.abs(obs.bbox.y - primaryY) < 0.08) {
-      continue;
-    }
-    // Skip if all words already in primary title
-    const obsWords = new Set(normForMatch(text).split(" "));
-    let allInPrimary = true;
-    for (const w of obsWords) {
-      if (!primaryNormWords.has(w)) {
-        allInPrimary = false;
-        break;
-      }
-    }
-    if (allInPrimary) {
+    const upperRatio =
+      alpha.filter((c) => c === c.toUpperCase()).length / alpha.length;
+    if (upperRatio < 0.8) {
       continue;
     }
     if (!validateTitleText(text)) {
       continue;
     }
-    additional.push([obs.bbox.y, text]);
-  }
-
-  if (additional.length > 0) {
-    additional.sort((a, b) => a[0] - b[0]);
-    // Deduplicate by normalized words
-    const seenWords = new Set<string>();
-    for (const [, text] of additional) {
-      const words = [...normForMatch(text).split(" ")]
-        .sort()
-        .join(" ");
-      if (!seenWords.has(words)) {
-        seenWords.add(words);
-        primaryText += " " + text;
-      }
+    const norm = text.toUpperCase();
+    if (seenCaps.has(norm)) {
+      continue;
     }
+    seenCaps.add(norm);
+    capsParts.push([obs.bbox.y, text]);
+  }
+  if (capsParts.length >= 2) {
+    capsParts.sort((a, b) => a[0] - b[0]);
+    addCandidate(capsParts.map(([, t]) => t).join(" "));
   }
 
-  console.log(`[BBox Title] Result: "${primaryText}"`);
-  return primaryText;
+  if (candidates.length === 0) {
+    return undefined;
+  }
+  return candidates[0];
 }
 
 export type { BboxObservation };

@@ -24,6 +24,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from pathlib import Path
 
 # --- Configuration ---
@@ -168,40 +169,38 @@ def run_evaluation() -> dict:
     matches = match_images_to_ground_truth(all_bboxes, gt)
 
     results = {"total": len(matches), "matched": 0, "failures": [], "per_lang": {}}
+    lang_hits = {"pl": 0, "en": 0}
+    lang_totals = {"pl": 0, "en": 0}
 
     for m in matches:
         extracted = heuristic_region_clustering(
             m["observations"], y_tolerance=0.03, region_gap=0.02
         )
         expected = m["expected_title"]
+        lang = m["lang"]
+        lang_totals[lang] = lang_totals.get(lang, 0) + 1
 
         if titles_match(extracted, expected):
             results["matched"] += 1
+            lang_hits[lang] = lang_hits.get(lang, 0) + 1
         else:
             results["failures"].append({
                 "image": m["image"],
                 "expected": expected,
                 "extracted": extracted or "(none)",
-                "lang": m["lang"],
+                "lang": lang,
                 "observation_count": len(m["observations"]),
             })
 
     results["accuracy"] = results["matched"] / results["total"] if results["total"] > 0 else 0
 
-    # Per-language breakdown
     for lang in ["pl", "en"]:
-        lang_matches = [m for m in matches if m["lang"] == lang]
-        lang_hit = 0
-        for m in lang_matches:
-            extracted = heuristic_region_clustering(
-                m["observations"], y_tolerance=0.03, region_gap=0.02
-            )
-            if titles_match(extracted, m["expected_title"]):
-                lang_hit += 1
+        total = lang_totals.get(lang, 0)
+        hit = lang_hits.get(lang, 0)
         results["per_lang"][lang] = {
-            "total": len(lang_matches),
-            "matched": lang_hit,
-            "accuracy": lang_hit / len(lang_matches) if lang_matches else 0,
+            "total": total,
+            "matched": hit,
+            "accuracy": hit / total if total > 0 else 0,
         }
 
     return results
@@ -415,6 +414,51 @@ Do this for 2-3 failure images to understand the layout visually before making c
 """
 
 
+def _build_error_prompt(traceback_str: str, history: str) -> str:
+    """Build a Claude prompt to fix an evaluation error from a previous iteration."""
+    return f"""You are improving the geometric title extraction algorithm in tools/title-loop/analyze_bboxes.py.
+
+## CRITICAL: The evaluation is crashing
+
+A previous iteration introduced a bug that causes the evaluation to fail with this error:
+
+```
+{traceback_str}
+```
+
+## Your task
+
+1. Read tools/title-loop/analyze_bboxes.py
+2. Find and fix the bug that causes the error above
+3. The fix must not break any existing functionality — only fix the crash
+4. After fixing, verify by running:
+   python3 -c "
+   import json, sys; sys.path.insert(0, 'tools/title-loop')
+   from analyze_bboxes import heuristic_region_clustering, titles_match, load_ground_truth, match_images_to_ground_truth
+   all_bboxes = json.load(open('tools/title-loop/bboxes/_all.json'))
+   gt = load_ground_truth()
+   matches = match_images_to_ground_truth(all_bboxes, gt)
+   matched = sum(1 for m in matches if titles_match(heuristic_region_clustering(m['observations'], 0.03, 0.02), m['expected_title']))
+   print(f'{{matched}}/{{len(matches)}} = {{matched/len(matches):.1%}}')
+   for lang in ['pl', 'en']:
+       lm = [m for m in matches if m['lang'] == lang]
+       hit = sum(1 for m in lm if titles_match(heuristic_region_clustering(m['observations'], 0.03, 0.02), m['expected_title']))
+       print(f'  {{lang}}: {{hit}}/{{len(lm)}} = {{hit/len(lm):.1%}}')
+   "
+
+## Previous iterations
+
+{history if history else "(first iteration)"}
+
+## Rules
+
+- Only modify tools/title-loop/analyze_bboxes.py
+- Fix the crash — do NOT add new features or change heuristics in this iteration
+- Commit with a descriptive message
+- Print a one-line summary of what you changed and why
+"""
+
+
 def run_iteration(iteration: int, visualize: bool = False):
     """Run one iteration of the improvement loop."""
     iter_dir = DOCS_DIR / f"iter-{iteration}"
@@ -426,7 +470,42 @@ def run_iteration(iteration: int, visualize: bool = False):
 
     # Step 1: Evaluate
     print("\n--- Step 1: Evaluating ---")
-    results = run_evaluation()
+    eval_error = None
+    try:
+        results = run_evaluation()
+    except Exception as e:
+        eval_error = traceback.format_exc()
+        print(f"  EVALUATION CRASHED: {e}")
+        print(f"  Sending error to Claude for self-healing...")
+
+    if eval_error is not None:
+        history = LOG_FILE.read_text() if LOG_FILE.exists() else ""
+        prompt = _build_error_prompt(eval_error, history)
+
+        print("\n--- Step 2: Running Claude to fix error ---")
+        try:
+            claude_output = run_claude(prompt, log_path=iter_dir / "claude_output.txt")
+        except (ClaudeStallError, RuntimeError) as ce:
+            print(f"  Claude failed: {ce}")
+            _log_error_iteration(iteration, eval_error, f"CLAUDE FAILED: {ce}")
+            return False
+
+        (iter_dir / "claude_response.md").write_text(claude_output)
+        summary = claude_output.strip().split("\n")[-1] if claude_output.strip() else "(no output)"
+
+        # Step 3: Verify the fix actually resolves the crash
+        print("\n--- Step 3: Verifying fix ---")
+        try:
+            verify_results = run_evaluation()
+            acc = verify_results["accuracy"]
+            print(f"  Fix verified: {acc:.1%}")
+            _log_error_iteration(iteration, eval_error, f"fix verified ({acc:.1%}): {summary}")
+        except Exception as ve:
+            print(f"  Fix did NOT resolve crash: {ve}")
+            _log_error_iteration(iteration, eval_error, f"fix FAILED verification ({ve}): {summary}")
+
+        return False
+
     accuracy = results["accuracy"]
     pl_acc = results["per_lang"]["pl"]["accuracy"]
     en_acc = results["per_lang"]["en"]["accuracy"]
@@ -464,7 +543,13 @@ def run_iteration(iteration: int, visualize: bool = False):
 
     # Step 5: Re-evaluate after fix
     print("\n--- Step 4: Re-evaluating ---")
-    new_results = run_evaluation()
+    try:
+        new_results = run_evaluation()
+    except Exception as e:
+        print(f"  Re-evaluation crashed: {e}")
+        log_iteration(iteration, results, f"POST-FIX EVAL CRASHED: {e}", "")
+        return False
+
     new_accuracy = new_results["accuracy"]
     new_pl = new_results["per_lang"]["pl"]["accuracy"]
     new_en = new_results["per_lang"]["en"]["accuracy"]
@@ -478,15 +563,22 @@ def run_iteration(iteration: int, visualize: bool = False):
     return False
 
 
+def _append_to_log(entry: str) -> None:
+    """Append an entry to the persistent iteration log."""
+    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+    if LOG_FILE.exists():
+        LOG_FILE.write_text(LOG_FILE.read_text() + entry)
+    else:
+        LOG_FILE.write_text(f"# Bbox Loop — Iteration Log\n\n{entry}")
+
+
 def log_iteration(iteration: int, results: dict, summary: str, notes: str):
     """Append iteration results to the persistent log."""
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
-
     accuracy = results["accuracy"]
     pl = results["per_lang"]["pl"]
     en = results["per_lang"]["en"]
 
-    entry = f"""## Iteration {iteration}
+    _append_to_log(f"""## Iteration {iteration}
 
 - Overall: {accuracy:.1%} ({results['matched']}/{results['total']})
 - PL: {pl['accuracy']:.1%} ({pl['matched']}/{pl['total']})
@@ -494,12 +586,24 @@ def log_iteration(iteration: int, results: dict, summary: str, notes: str):
 - Fix: {summary}
 - {notes}
 
-"""
+""")
 
-    if LOG_FILE.exists():
-        LOG_FILE.write_text(LOG_FILE.read_text() + entry)
-    else:
-        LOG_FILE.write_text(f"# Bbox Loop — Iteration Log\n\n{entry}")
+
+def _log_error_iteration(iteration: int, traceback_str: str, summary: str):
+    """Append an error-recovery iteration to the persistent log."""
+    # Truncate traceback to last 5 lines for the log
+    tb_lines = traceback_str.strip().splitlines()
+    short_tb = "\n".join(tb_lines[-5:])
+
+    _append_to_log(f"""## Iteration {iteration}
+
+- EVALUATION CRASHED
+- Error: {summary}
+- ```
+{short_tb}
+```
+
+""")
 
 
 def main():

@@ -19,5 +19,5 @@ Pod::Spec.new do |s|
   s.frameworks = 'UIKit'
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'PageDewarp', '~> 2.0'
+  s.dependency 'PageDewarp'
 end

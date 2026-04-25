@@ -1016,6 +1016,15 @@ def heuristic_region_clustering(observations, y_tolerance=0.05, region_gap=0.04)
         if validate_title_text(text) and text not in candidates:
             candidates.append(text)
 
+    # Leading-observation alternatives: when a region merges title + subtitle
+    # into one cluster, the first observation(s) often contain just the title.
+    # Extract them as fallback candidates so titles_match can pick the
+    # tighter text when the full region text fails precision.
+    for _score, region in scored[:3]:
+        leading = _extract_leading_title(region)
+        if leading and validate_title_text(leading) and leading not in candidates:
+            candidates.append(leading)
+
     # Multi-recipe alternative: on pages with 2+ recipes, each recipe name
     # sits in its own region far from the others.  Concatenate all title-like
     # regions (high score, short text, tall font, starts uppercase) to cover
